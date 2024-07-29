@@ -1,0 +1,12 @@
+
+bauen pdf nach latex dokument forgabe aber mit react-pdf
+ dabei werden karten orange hintergrund die keine übersetzung haben
+
+config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
+caching für results für mehrfaches ausführen für karten je api name
+remove entry from decklist
+html api ?
+tableClass
+each tr class oder nummer kombination attribute oder innerhtml
+
+foreignnames -> scryfall id to imageurl ? tcgplayers pokemon -> selbe

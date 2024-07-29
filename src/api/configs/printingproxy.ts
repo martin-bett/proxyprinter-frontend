@@ -1,0 +1,25 @@
+import { ApiConfig } from './types';
+
+export default {
+  printingproxies: {
+    "name": "printingproxies",
+    "method": "POST",
+    "baseUrl": "https://www.printingproxies.com/wp-content/plugins/card-demo/ajax/gallery.php",
+    "parameterMap": {
+      "search": "{cardname}",
+      "type": "search",
+      "include_variations": "true",
+      "ajax_action": "searchGalleryCards",
+      "ajax_mod": "card",
+      "other": "0",
+      "nsfw": "0",
+      "order": "top"
+    },
+    "setField": "card_edition",
+    "setNumberField": "id",
+    "nameField":"search_card_name",
+    "dataListField": "data",
+    "imageUrlField": "image_url",
+    "concurrentLimit":5
+  } as ApiConfig
+};
