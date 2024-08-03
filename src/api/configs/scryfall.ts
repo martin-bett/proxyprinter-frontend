@@ -12,11 +12,15 @@ export default {
       "lang":"en",
       "unique":"true"
     },
+    "dataFormat": "json",
     "dataListField": "data",
     "imageUrlField": "image_uris.normal",
     "nameField":"name",
     "followLinkField": "prints_search_uri",
     "followLinkDataListField": "data",
+    "followLinkImageField": "image_uris.normal",
     "concurrentLimit":5
   } as ApiConfig
 };
+
+

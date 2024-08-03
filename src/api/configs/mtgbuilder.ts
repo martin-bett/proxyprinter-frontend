@@ -13,6 +13,7 @@ export default {
       "nsfw": "0",
       "order": "top"
     },
+    "dataFormat": "json",
     "dataListField": "data",
     "setField": "card_edition",
     "setNumberField": "id",

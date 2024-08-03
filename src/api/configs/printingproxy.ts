@@ -15,6 +15,7 @@ export default {
       "nsfw": "0",
       "order": "top"
     },
+    "dataFormat": "json",
     "setField": "card_edition",
     "setNumberField": "id",
     "nameField":"search_card_name",

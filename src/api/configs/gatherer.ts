@@ -8,6 +8,7 @@ export default {
   "parameterMap": {
     "name": "{cardname}"
   },
+  "dataFormat": "json",
   "dataListField": "cards",
   "imageUrlField": "imageUrl",
   "nameField":"name",

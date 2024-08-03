@@ -3,15 +3,20 @@ export interface ApiConfig {
     method: string;
     baseUrl: string;
     parameterMap: Record<string, any>;
+    concurrentLimit: number;
+    dataFormat: 'json' | 'html';
+
     dataListField: string;
     nameField: string;
-    imageUrlField: string;
-    followLinkField?: string;
-    followLinkDataListField?: string;
     setField?: string;
     setNumberField?: string;
+    imageUrlField: string;
+
+    followLinkField?: string;
+    followLinkDataListField?: string;
+    followLinkImageField?:string;
+
     nestedLanguageDataListField?: string;
     nestedLanguageImageUrlField?: string;
     nestedLanguageLanguageField?: string;
-    concurrentLimit: number;
   }

@@ -9,6 +9,7 @@ export default {
       "name": "{cardname}",
       "uniq": false 
     },
+    "dataFormat": "json",
     "dataListField": "cards",
     "imageUrlField": "img",
     "setField": "set",

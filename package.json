@@ -6,6 +6,8 @@
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^5.16.4",
+    "@types/jsdom": "^21.1.7",
+    "jsdom": "^24.1.1",
     "jspdf": "^2.5.1",
     "react": "^18.2.0",
     "react-color": "^2.19.3",

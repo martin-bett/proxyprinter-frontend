@@ -4,16 +4,23 @@ interface ApiConfig {
   name: string;
   method: string;
   baseUrl: string;
-  parameterMap: Record<string, string>;
+  parameterMap: Record<string, any>;
+  concurrentLimit: number;
+  dataFormat: 'json' | 'html';
+  
   dataListField: string;
-  imageUrlField: string;
   nameField: string;
-  languageCodeField: string;
-  setField: string;
-  setNumberField: string;
-  nestedLanguageDataListField:string;
-  nestedLanguageImageUrlField:string;
-  nestedLanguageLanguageField:string;
+  setField?: string;
+  setNumberField?: string;
+  imageUrlField: string;
+
+  followLinkField?: string;
+  followLinkDataListField?: string;
+  followLinkImageField?:string;
+
+  nestedLanguageDataListField?: string;
+  nestedLanguageImageUrlField?: string;
+  nestedLanguageLanguageField?: string;
 }
 
 interface ApiParams {
@@ -46,42 +53,42 @@ export default class ApiFactory {
     if (!config) {
       throw new Error(`Config not found for key: ${configKey}`);
     }
-    
+  
     return async (params: ApiParams): Promise<{ results: ApiResult[], rawResponse: string }> => {
       const url = new URL(config.baseUrl);
       let body: URLSearchParams | null = null;
-
+  
       if (config.method.toUpperCase() === 'POST') {
         body = new URLSearchParams();
         Object.entries(config.parameterMap).forEach(([key, value]) => {
-          const paramValue = value.replace(/\{(\w+)\}/g, (_, p) => params[p as keyof ApiParams] || '');
+          const paramValue = value.replace(/\{(\w+)\}/g, (_: string, p: string) => params[p as keyof ApiParams] || '');
           body!.append(key, paramValue);
         });
       } else {
         Object.entries(config.parameterMap).forEach(([key, value]) => {
-          const paramValue = value.replace(/\{(\w+)\}/g, (_, p) => params[p as keyof ApiParams] || '');
+          const paramValue = value.replace(/\{(\w+)\}/g, (_: string, p: string) => params[p as keyof ApiParams] || '');
           url.searchParams.append(key, paramValue);
         });
       }
-
+  
       const fetchOptions: RequestInit = {
         method: config.method,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       };
-
+  
       if (body) {
         fetchOptions.body = body;
       }
-
+  
       try {
         const response = await fetch(url.toString(), fetchOptions);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+  
         const text = await response.text();
         let data;
         try {
@@ -90,35 +97,60 @@ export default class ApiFactory {
           console.error("Error parsing JSON:", e);
           return { results: [], rawResponse: text };
         }
-
+  
         const dataList = this.getNestedValue(data, config.dataListField) || [];
         
-        const results = dataList.flatMap((item: any) => {
+        const results = await Promise.all(dataList.flatMap(async (item: any) => {
           const baseResult = {
             apiName: config.name,
             name: this.getNestedValue(item, config.nameField),
-            set: this.getNestedValue(item, config.setField),
-            setNumber: this.getNestedValue(item, config.setNumberField),
+            set: config.setField ? this.getNestedValue(item, config.setField) : undefined,
+            setNumber: config.setNumberField ? this.getNestedValue(item, config.setNumberField) : undefined,
             imageUrl: this.getNestedValue(item, config.imageUrlField),
-            languageCode: this.getNestedValue(item, config.languageCodeField)
+            languageCode: config.nestedLanguageLanguageField ? this.getNestedValue(item, config.nestedLanguageLanguageField) : undefined
           };
-        
-          const nestedLanguages = this.getNestedValue(item, config.nestedLanguageDataListField);
-        
+  
+          let followLinkResults: ApiResult[] = [];
+          if (config.followLinkField && config.followLinkDataListField && config.followLinkImageField) {
+            const followLinkUrl = this.getNestedValue(item, config.followLinkField);
+            if (followLinkUrl) {
+              const followLinkResponse = await fetch(followLinkUrl);
+              if (followLinkResponse.ok) {
+                const followLinkData = await followLinkResponse.json();
+                const followLinkDataList = this.getNestedValue(followLinkData, config.followLinkDataListField) || [];
+                followLinkResults = followLinkDataList.map((followLinkItem: any) => ({
+                  ...baseResult,
+                  imageUrl: this.getNestedValue(followLinkItem, config.followLinkImageField!)
+                }));
+              }
+            }
+          }
+  
+          const nestedLanguages = config.nestedLanguageDataListField ? 
+            this.getNestedValue(item, config.nestedLanguageDataListField) : [];
+  
           if (nestedLanguages && Array.isArray(nestedLanguages)) {
             return [
               baseResult,
               ...nestedLanguages.map((lang: any) => ({
                 ...baseResult,
-                imageUrl: this.getNestedValue(lang, config.nestedLanguageImageUrlField) || baseResult.imageUrl,
-                languageCode: this.getNestedValue(lang, config.nestedLanguageLanguageField) || baseResult.languageCode
-              }))
+                imageUrl: config.nestedLanguageImageUrlField ? 
+                  this.getNestedValue(lang, config.nestedLanguageImageUrlField) || baseResult.imageUrl : baseResult.imageUrl,
+                languageCode: config.nestedLanguageLanguageField ? 
+                  this.getNestedValue(lang, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode
+              })),
+              ...followLinkResults
             ];
           }
-        
-          return [baseResult];
-        }).filter((c: ApiResult) => c.name ? c.name === params.cardname || (c.name.indexOf('//') > -1 && c.name.indexOf(params.cardname) > -1) : true);
-        return { results, rawResponse: text };
+  
+          return [baseResult, ...followLinkResults];
+        }));
+  
+        const flattenedResults = results.flat()
+          .filter((c: ApiResult) => c.imageUrl != null && c.imageUrl)
+          .filter((c: ApiResult) => c.name ? c.name === params.cardname || (c.name.indexOf('//') > -1 && c.name.indexOf(params.cardname) > -1) : true);
+  
+        return { results: flattenedResults, rawResponse: text };
       } catch (error: unknown) {
         console.error(`Error fetching from ${configKey}:`, error);
         return { results: [], rawResponse: error instanceof Error ? error.toString() : String(error) };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ApiFactory from '../api/ApiFactory';
 import ImageSelectDialog from './ImageSelectDialog';
+import PdfProgressDialog from './PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
 import './card/CardGrid.css';
 import { SettingsDialog, defaultSettings } from './SettingsDialog';
@@ -29,6 +30,10 @@ const DeckInputAndViewer = () => {
   const [visibleApis, setVisibleApis] = useState(new Set(Object.values(apiConfigs).map(config => config.name)));
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfProgressMessage, setPdfProgressMessage] = useState('');
+
   const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -59,7 +64,6 @@ const DeckInputAndViewer = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log('apiConfigs at start of handleSubmit:', apiConfigs);
     e.preventDefault();
     setIsLoading(true);
     setCardResults({});
@@ -104,7 +108,6 @@ const DeckInputAndViewer = () => {
         completedCards += entry.count;
         setProgress(Math.round((completedCards / (totalCards * enabledApiKeys.length)) * 100));
       });
-
       await limitConcurrency(tasks, limit);
     }
 
@@ -205,34 +208,28 @@ const DeckInputAndViewer = () => {
       });
       return newSelectedCards;
     });
-  }, [visibleLanguages, visibleApis, cardResults]);
+  }, [visibleLanguages, visibleApis, cardResults, filterCard]);
 
   const handleApiToggle = (apiKey) => {
     setEnabledApis(prev => ({ ...prev, [apiKey]: !prev[apiKey] }));
   };
 
-  const logCardData = (cardName, cardData, selectedCard, visibleResults) => {
-    console.log('Card Name:', cardName);
-    console.log('Card Data:', cardData);
-    console.log('Selected Card:', selectedCard);
-    console.log('Visible Results:', visibleResults);
-    console.log('Visible Languages:', Array.from(visibleLanguages));
-    console.log('Visible APIs:', Array.from(visibleApis));
-  };
-
   const createPDF = async () => {
+    setPdfProgressDialogOpen(true);
+    setPdfProgress(0);
+    setPdfProgressMessage('Initializing PDF generation...');
+
     const createPdfDto = {
       imageUrls: Object.entries(cardResults).flatMap(([cardName, cardData]) => {
         return Array(cardData.count).fill().map((_, index) => {
           const selectedImage = selectedCards[cardName]?.[index] || cardData.results[0];
           return selectedImage?.imageUrl;
         });
-      }).filter(url => url), // Filter out any undefined URLs
+      }).filter(url => url),
       settings: settings
     };
 
     try {
-      // Start PDF generation
       const response = await fetch('http://localhost:8080/api/pdf', {
         method: 'POST',
         headers: {
@@ -246,67 +243,62 @@ const DeckInputAndViewer = () => {
       }
 
       const progressId = await response.text();
-
-      // Set up SSE for progress updates
       const eventSource = new EventSource(`http://localhost:8080/api/progress/${progressId}`);
 
-      let isPdfReady = false;
-
       eventSource.onmessage = (event) => {
-        console.log('Progress:', event.data);
-        // Update UI with progress information
-        if (event.data === "PDF generation completed") {
-          isPdfReady = true;
+        const message = event.data;
+        console.log('Progress:', message);
+
+        if (message.includes('Downloaded file')) {
+          const [current, total] = message.match(/\d+/g);
+          const downloadProgress = (parseInt(current) / parseInt(total)) * 70;
+          setPdfProgress(Math.round(downloadProgress));
+          setPdfProgressMessage(message);
+        } else if (message === 'Starting PDF compilation') {
+          setPdfProgress(70);
+          setPdfProgressMessage('Compiling PDF...');
+        } else if (message === 'PDF compilation completed') {
+          setPdfProgress(100);
+          setPdfProgressMessage('PDF generation completed');
+          eventSource.close();
+          downloadPDF(progressId);
         }
       };
 
       eventSource.onerror = (error) => {
         console.error('SSE Error:', error);
         eventSource.close();
+        setPdfProgressDialogOpen(false);
+        alert('Error during PDF generation. Please try again.');
       };
-
-      // Function to attempt PDF download
-      const attemptPdfDownload = async () => {
-        const pdfResponse = await fetch(`http://localhost:8080/api/pdf/${progressId}`);
-        if (pdfResponse.ok) {
-          const contentType = pdfResponse.headers.get('content-type');
-          if (contentType && contentType.includes('application/pdf')) {
-            eventSource.close();
-            const blob = await pdfResponse.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'deck.pdf');
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            return true;
-          }
-        }
-        return false;
-      };
-
-      // Wait for PDF to be ready with exponential backoff
-      let attempts = 0;
-      const maxAttempts = 10;
-      const initialDelay = 1000; // 1 second
-
-      while (!isPdfReady && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, initialDelay * Math.pow(2, attempts)));
-        attempts++;
-
-        if (await attemptPdfDownload()) {
-          break;
-        }
-      }
-
-      if (!isPdfReady) {
-        throw new Error('PDF generation timed out');
-      }
 
     } catch (error) {
       console.error('Error creating PDF:', error);
+      setPdfProgressDialogOpen(false);
       alert('Failed to create PDF. Please try again.');
+    }
+  };
+
+  const downloadPDF = async (progressId) => {
+    try {
+      const pdfResponse = await fetch(`http://localhost:8080/api/pdf/${progressId}`);
+      if (pdfResponse.ok) {
+        const blob = await pdfResponse.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'deck.pdf');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } else {
+        throw new Error('Failed to download PDF');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setPdfProgressDialogOpen(false);
     }
   };
 
@@ -445,8 +437,7 @@ const DeckInputAndViewer = () => {
                   });
                 })}
               </div>
-              <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
-              <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
+
             </div>
             <div className="filter-controls">
               <div className="language-filter">
@@ -474,6 +465,11 @@ const DeckInputAndViewer = () => {
                     {config.name}
                   </label>
                 ))}
+              </div>
+              <div className="pdf-controls">
+                <h3>PDF Generation</h3>
+                <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
+                <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
               </div>
             </div>
           </div>
@@ -519,6 +515,13 @@ const DeckInputAndViewer = () => {
           </div>
         </div>
       )}
+
+      <PdfProgressDialog
+        open={pdfProgressDialogOpen}
+        progress={pdfProgress}
+        message={pdfProgressMessage}
+      />
+
     </div>
   );
 };

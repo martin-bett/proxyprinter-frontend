@@ -1,7 +1,4 @@
 
-bauen pdf nach latex dokument forgabe aber mit react-pdf
- dabei werden karten orange hintergrund die keine übersetzung haben
-
 config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
 caching für results für mehrfaches ausführen für karten je api name
 remove entry from decklist
@@ -10,3 +7,13 @@ tableClass
 each tr class oder nummer kombination attribute oder innerhtml
 
 foreignnames -> scryfall id to imageurl ? tcgplayers pokemon -> selbe
+
+
+https://cards.scryfall.io/normal/front/3/d/3dfaedeb-f8ec-4f0e-b243-c850770a86f2.jpg
+http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=657&type=card
+htmlTableCss
+
+div.list_cards_layout_1 > table.dataTable 
+-> im tbody alle tr einzeln css selektor 
+td.img-col > img  | attr:src
+td.details-col > div.card-name-en-bordered | innerText
