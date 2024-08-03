@@ -46,7 +46,6 @@ const DeckInputAndViewer = () => {
       });
     });
     setAvailableLanguages(languages);
-    // Only add new languages to visibleLanguages, don't remove existing ones
     setVisibleLanguages(prev => new Set([...prev, ...languages]));
   }, [cardResults]);
 

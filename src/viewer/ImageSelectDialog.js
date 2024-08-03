@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './ImageSelectDialog.css';
 
 const NO_LANGUAGE = 'No Language';
@@ -6,15 +6,9 @@ const NO_LANGUAGE = 'No Language';
 const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage }) => {
   const [selectedImage, setSelectedImage] = useState(initialSelectedImage);
   const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(new Set([NO_LANGUAGE]));
-  const [availableLanguages, setAvailableLanguages] = useState(new Set([NO_LANGUAGE]));
-  const [dialogVisibleApis, setDialogVisibleApis] = useState(new Set(Object.keys(groupedResults)));
+  const [dialogVisibleApis, setDialogVisibleApis] = useState(new Set());
 
-
-  useEffect(() => {
-    setSelectedImage(initialSelectedImage);
-  }, [initialSelectedImage]);
-
-  useEffect(() => {
+  const availableLanguages = useMemo(() => {
     const languages = new Set([NO_LANGUAGE]);
     Object.values(groupedResults).forEach(results => {
       results.forEach(result => {
@@ -23,25 +17,39 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
         }
       });
     });
-    setAvailableLanguages(languages);
-    setDialogVisibleLanguages(languages);
-    setDialogVisibleApis(new Set(Object.keys(groupedResults)));
+    return languages;
   }, [groupedResults]);
 
-  useEffect(() => {
-    // Automatisch die erste verfügbare Karte auswählen nach Filteränderungen
-    const visibleResults = Object.entries(groupedResults)
+  const visibleResults = useMemo(() => {
+    return Object.entries(groupedResults)
       .filter(([apiName]) => dialogVisibleApis.has(apiName))
       .flatMap(([_, results]) =>
         results.filter(result =>
           dialogVisibleLanguages.has(result.languageCode || NO_LANGUAGE)
         )
       );
+  }, [groupedResults, dialogVisibleApis, dialogVisibleLanguages]);
 
-    if (visibleResults.length > 0 && !visibleResults.includes(selectedImage)) {
+  const initializeFilters = useCallback(() => {
+    setDialogVisibleLanguages(new Set(availableLanguages));
+    setDialogVisibleApis(new Set(Object.keys(groupedResults)));
+  }, [availableLanguages, groupedResults]);
+
+  useEffect(() => {
+    initializeFilters();
+  }, [initializeFilters]);
+
+  useEffect(() => {
+    if (initialSelectedImage) {
+      setSelectedImage(initialSelectedImage);
+    }
+  }, [initialSelectedImage]);
+
+  useEffect(() => {
+    if (visibleResults.length > 0 && (!selectedImage || !visibleResults.some(result => result.imageUrl === selectedImage.imageUrl))) {
       setSelectedImage(visibleResults[0]);
     }
-  }, [dialogVisibleLanguages, dialogVisibleApis, groupedResults, selectedImage]);
+  }, [visibleResults, selectedImage]);
 
   if (!open) return null;
 

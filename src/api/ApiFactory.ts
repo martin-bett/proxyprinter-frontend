@@ -1,4 +1,4 @@
-import path from 'path';
+import { parse } from 'node-html-parser';
 
 interface ApiConfig {
   name: string;
@@ -53,7 +53,7 @@ export default class ApiFactory {
     if (!config) {
       throw new Error(`Config not found for key: ${configKey}`);
     }
-  
+
     return async (params: ApiParams): Promise<{ results: ApiResult[], rawResponse: string }> => {
       const url = new URL(config.baseUrl);
       let body: URLSearchParams | null = null;
@@ -90,24 +90,27 @@ export default class ApiFactory {
         }
   
         const text = await response.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.error("Error parsing JSON:", e);
-          return { results: [], rawResponse: text };
+        let dataList: any[];
+  
+        if (config.dataFormat === 'json') {
+          const data = JSON.parse(text);
+          dataList = this.getNestedValue(data, config.dataListField) || [];
+        } else if (config.dataFormat === 'html') {
+          const root = parse(text);
+          const elements = root.querySelectorAll(config.dataListField);
+          dataList = Array.from(elements);
+        } else {
+          throw new Error(`Unsupported data format: ${config.dataFormat}`);
         }
   
-        const dataList = this.getNestedValue(data, config.dataListField) || [];
-        
         const results = await Promise.all(dataList.flatMap(async (item: any) => {
           const baseResult = {
             apiName: config.name,
-            name: this.getNestedValue(item, config.nameField),
-            set: config.setField ? this.getNestedValue(item, config.setField) : undefined,
-            setNumber: config.setNumberField ? this.getNestedValue(item, config.setNumberField) : undefined,
-            imageUrl: this.getNestedValue(item, config.imageUrlField),
-            languageCode: config.nestedLanguageLanguageField ? this.getNestedValue(item, config.nestedLanguageLanguageField) : undefined
+            name: config.dataFormat === 'json' ? this.getNestedValue(item, config.nameField) : parseHtmlValue(item, config.nameField),
+            set: config.setField ? (config.dataFormat === 'json' ? this.getNestedValue(item, config.setField) : parseHtmlValue(item, config.setField)) : undefined,
+            setNumber: config.setNumberField ? (config.dataFormat === 'json' ? this.getNestedValue(item, config.setNumberField) : parseHtmlValue(item, config.setNumberField)) : undefined,
+            imageUrl: config.dataFormat === 'json' ? this.getNestedValue(item, config.imageUrlField) : parseHtmlValue(item, config.imageUrlField),
+            languageCode: config.nestedLanguageLanguageField ? (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageLanguageField) : parseHtmlValue(item, config.nestedLanguageLanguageField)) : undefined
           };
   
           let followLinkResults: ApiResult[] = [];
@@ -127,36 +130,36 @@ export default class ApiFactory {
           }
   
           const nestedLanguages = config.nestedLanguageDataListField ? 
-            this.getNestedValue(item, config.nestedLanguageDataListField) : [];
-  
-          if (nestedLanguages && Array.isArray(nestedLanguages)) {
-            return [
-              baseResult,
-              ...nestedLanguages.map((lang: any) => ({
-                ...baseResult,
-                imageUrl: config.nestedLanguageImageUrlField ? 
-                  this.getNestedValue(lang, config.nestedLanguageImageUrlField) || baseResult.imageUrl : baseResult.imageUrl,
-                languageCode: config.nestedLanguageLanguageField ? 
-                  this.getNestedValue(lang, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode
-              })),
-              ...followLinkResults
-            ];
-          }
-  
-          return [baseResult, ...followLinkResults];
-        }));
+          (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageDataListField) : item.querySelectorAll(config.nestedLanguageDataListField)) : [];
+
+        if (nestedLanguages && Array.isArray(nestedLanguages)) {
+          return [
+            baseResult,
+            ...nestedLanguages.map((lang: any) => ({
+              ...baseResult,
+              imageUrl: config.nestedLanguageImageUrlField ? 
+                (config.dataFormat === 'json' ? this.getNestedValue(lang, config.nestedLanguageImageUrlField) : parseHtmlValue(lang, config.nestedLanguageImageUrlField)) || baseResult.imageUrl : baseResult.imageUrl,
+              languageCode: config.nestedLanguageLanguageField ? 
+                (config.dataFormat === 'json' ? this.getNestedValue(lang, config.nestedLanguageLanguageField) : parseHtmlValue(lang, config.nestedLanguageLanguageField)) || baseResult.languageCode : baseResult.languageCode
+            })),
+            ...followLinkResults
+          ];
+        }
+
+        return [baseResult, ...followLinkResults];
+      }));
   
         const flattenedResults = results.flat()
           .filter((c: ApiResult) => c.imageUrl != null && c.imageUrl)
           .filter((c: ApiResult) => c.name ? c.name === params.cardname || (c.name.indexOf('//') > -1 && c.name.indexOf(params.cardname) > -1) : true);
   
-        return { results: flattenedResults, rawResponse: text };
-      } catch (error: unknown) {
-        console.error(`Error fetching from ${configKey}:`, error);
-        return { results: [], rawResponse: error instanceof Error ? error.toString() : String(error) };
-      }
-    };
-  }
+          return { results: flattenedResults, rawResponse: text };
+        } catch (error: unknown) {
+          console.error(`Error fetching from ${configKey}:`, error);
+          return { results: [], rawResponse: error instanceof Error ? error.toString() : String(error) };
+        }
+      };
+    }
 
   async searchAllApis(cardName: string, language?: string, enabledApis?: string[]): Promise<{ [key: string]: { results: ApiResult[], rawResponse: string } }> {
     const results: { [key: string]: { results: ApiResult[], rawResponse: string } } = {};
@@ -178,4 +181,22 @@ export default class ApiFactory {
     }
     return results;
   }
+
+  
+}
+
+function parseHtmlValue(element: HTMLElement, selector: string): string {
+  const [cssSelector, valueType] = selector.split('|').map(s => s.trim());
+  const selectedElement = element.querySelector(cssSelector);
+  
+  if (!selectedElement) return '';
+
+  if (valueType === 'innerText') {
+    return selectedElement.textContent || '';
+  } else if (valueType.startsWith('attr:')) {
+    const attrName = valueType.split(':')[1];
+    return selectedElement.getAttribute(attrName) || '';
+  }
+
+  return '';
 }

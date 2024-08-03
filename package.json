@@ -9,6 +9,7 @@
     "@types/jsdom": "^21.1.7",
     "jsdom": "^24.1.1",
     "jspdf": "^2.5.1",
+    "node-html-parser": "^6.1.13",
     "react": "^18.2.0",
     "react-color": "^2.19.3",
     "react-dom": "^18.2.0",
