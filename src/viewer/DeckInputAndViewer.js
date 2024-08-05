@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ApiFactory from '../api/ApiFactory';
 import ImageSelectDialog from './ImageSelectDialog';
 import PdfProgressDialog from './PdfProgressDialog';
@@ -27,7 +27,7 @@ const DeckInputAndViewer = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(null);
   const [availableLanguages, setAvailableLanguages] = useState(new Set([NO_LANGUAGE]));
   const [visibleLanguages, setVisibleLanguages] = useState(new Set([NO_LANGUAGE]));
-  const [visibleApis, setVisibleApis] = useState(new Set(Object.values(apiConfigs).map(config => config.name)));
+  const [visibleApis, setVisibleApis] = useState(new Set(Object.keys(apiConfigs)));
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
@@ -46,7 +46,6 @@ const DeckInputAndViewer = () => {
       });
     });
     setAvailableLanguages(languages);
-    setVisibleLanguages(prev => new Set([...prev, ...languages]));
   }, [cardResults]);
 
   const addToLog = (message, configName, rawResponse) => {
@@ -57,10 +56,10 @@ const DeckInputAndViewer = () => {
     setSettings(newSettings);
   };
 
-  const filterCard = (card) => {
+  const filterCard = useMemo(() => (card) => {
     return (visibleLanguages.has(card.languageCode || NO_LANGUAGE) &&
       visibleApis.has(card.apiName));
-  };
+  }, [visibleLanguages, visibleApis]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -187,27 +186,32 @@ const DeckInputAndViewer = () => {
   useEffect(() => {
     setSelectedCards(prev => {
       const newSelectedCards = { ...prev };
+      let hasChanges = false;
+
       Object.entries(cardResults).forEach(([cardName, cardData]) => {
         const visibleResults = cardData.results.filter(filterCard);
 
-        newSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
-          const currentSelection = prev[cardName]?.[index];
-          if (visibleResults.length > 0) {
-            // Wenn es sichtbare Ergebnisse gibt, wähle eines davon
-            if (currentSelection && visibleResults.some(card => card.imageUrl === currentSelection.imageUrl)) {
-              return currentSelection;
+        if (!newSelectedCards[cardName] || newSelectedCards[cardName].length !== cardData.count) {
+          newSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
+            const currentSelection = prev[cardName]?.[index];
+            if (visibleResults.length > 0) {
+              if (currentSelection && visibleResults.some(card => card.imageUrl === currentSelection.imageUrl)) {
+                return currentSelection;
+              } else {
+                hasChanges = true;
+                return visibleResults[0];
+              }
             } else {
-              return visibleResults[0];
+              return currentSelection || cardData.results[0] || null;
             }
-          } else {
-            // Wenn keine sichtbaren Ergebnisse, behalte die aktuelle Auswahl bei
-            return currentSelection || cardData.results[0] || null;
-          }
-        });
+          });
+          hasChanges = true;
+        }
       });
-      return newSelectedCards;
+
+      return hasChanges ? newSelectedCards : prev;
     });
-  }, [visibleLanguages, visibleApis, cardResults, filterCard]);
+  }, [visibleLanguages, visibleApis, cardResults]);
 
   const handleApiToggle = (apiKey) => {
     setEnabledApis(prev => ({ ...prev, [apiKey]: !prev[apiKey] }));
@@ -405,6 +409,40 @@ const DeckInputAndViewer = () => {
             ))}
           </div>
         </div>
+        <div className="filter-controls">
+              <div className="language-filter">
+                <h3>Language Filter</h3>
+                {Array.from(availableLanguages).map(lang => (
+                  <label key={lang}>
+                    <input
+                      type="checkbox"
+                      checked={visibleLanguages.has(lang)}
+                      onChange={() => toggleLanguage(lang)}
+                    />
+                    {lang === NO_LANGUAGE ? 'No Language' : lang}
+                  </label>
+                ))}
+              </div>
+              <div className="api-filter">
+                <h3>API Filter</h3>
+                {Object.values(apiConfigs).map(config => (
+                  <label key={config.name}>
+                    <input
+                      type="checkbox"
+                      checked={visibleApis.has(config.name)}
+                      onChange={() => toggleApi(config.name)}
+                    />
+                    {config.name}
+                  </label>
+                ))}
+              </div>
+             
+            </div>
+            <div className="pdf-controls">
+                <h3>PDF Generation</h3>
+                <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
+                <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
+              </div>
       </div>
       {Object.keys(cardResults).length > 0 && (
         <div className="deck-viewer">
@@ -438,39 +476,7 @@ const DeckInputAndViewer = () => {
               </div>
 
             </div>
-            <div className="filter-controls">
-              <div className="language-filter">
-                <h3>Language Filter</h3>
-                {Array.from(availableLanguages).map(lang => (
-                  <label key={lang}>
-                    <input
-                      type="checkbox"
-                      checked={visibleLanguages.has(lang)}
-                      onChange={() => toggleLanguage(lang)}
-                    />
-                    {lang === NO_LANGUAGE ? 'No Language' : lang}
-                  </label>
-                ))}
-              </div>
-              <div className="api-filter">
-                <h3>API Filter</h3>
-                {Object.values(apiConfigs).map(config => (
-                  <label key={config.name}>
-                    <input
-                      type="checkbox"
-                      checked={visibleApis.has(config.name)}
-                      onChange={() => toggleApi(config.name)}
-                    />
-                    {config.name}
-                  </label>
-                ))}
-              </div>
-              <div className="pdf-controls">
-                <h3>PDF Generation</h3>
-                <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
-                <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
-              </div>
-            </div>
+            
           </div>
         </div>
       )}
@@ -492,8 +498,8 @@ const DeckInputAndViewer = () => {
             : null
         }
         groupedResults={
-          currentCardName
-            ? groupResultsByApi(cardResults[currentCardName]?.results || [])
+          currentCardName && cardResults[currentCardName]
+            ? groupResultsByApi(cardResults[currentCardName].results || [])
             : {}
         }
         cardName={currentCardName}

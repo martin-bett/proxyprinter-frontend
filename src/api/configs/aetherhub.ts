@@ -1,20 +1,19 @@
-import { ApiConfig } from './types';
+import { ApiConfig } from '../types/types';
 
 export default {
   aetherhub: {
     "name": "aetherhub",
     "method": "GET",
     "baseUrl": "https://aetherhub.com/Card/Search",
+    "useBackendProxy": true,
     "parameterMap": {
       "name": "{cardname}",
-      "uniq": false 
+      "uniq": "false" 
     },
-    "dataFormat": "json",
-    "dataListField": "cards",
-    "imageUrlField": "img",
-    "setField": "set",
-    "nameField":"name",
-    "setNumberField": "number",
-    "concurrentLimit":5
+    "dataFormat": "html",
+    "dataListField": "div#cards>div",
+    "imageUrlField": "img | attr:data-src",
+    "nameField":"div.item-hidden-text | innerText",
+    "concurrentLimit":2
   } as ApiConfig
 };

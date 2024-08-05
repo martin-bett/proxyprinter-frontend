@@ -1,41 +1,5 @@
 import { parse } from 'node-html-parser';
-
-interface ApiConfig {
-  name: string;
-  method: string;
-  baseUrl: string;
-  parameterMap: Record<string, any>;
-  concurrentLimit: number;
-  dataFormat: 'json' | 'html';
-  
-  dataListField: string;
-  nameField: string;
-  setField?: string;
-  setNumberField?: string;
-  imageUrlField: string;
-
-  followLinkField?: string;
-  followLinkDataListField?: string;
-  followLinkImageField?:string;
-
-  nestedLanguageDataListField?: string;
-  nestedLanguageImageUrlField?: string;
-  nestedLanguageLanguageField?: string;
-}
-
-interface ApiParams {
-  cardname: string;
-  language?: string;
-}
-
-interface ApiResult {
-  name: string;
-  apiName: string;
-  set: string;
-  setNumber: string;
-  imageUrl: string;
-  languageCode: string;
-}
+import { ApiConfig, ApiParams, ApiResult } from './types/types';
 
 export default class ApiFactory {
   private configs!: Record<string, ApiConfig>;
@@ -55,40 +19,70 @@ export default class ApiFactory {
     }
 
     return async (params: ApiParams): Promise<{ results: ApiResult[], rawResponse: string }> => {
-      const url = new URL(config.baseUrl);
-      let body: URLSearchParams | null = null;
-  
-      if (config.method.toUpperCase() === 'POST') {
-        body = new URLSearchParams();
-        Object.entries(config.parameterMap).forEach(([key, value]) => {
-          const paramValue = value.replace(/\{(\w+)\}/g, (_: string, p: string) => params[p as keyof ApiParams] || '');
-          body!.append(key, paramValue);
+
+      let url = new URL(config.baseUrl);
+      let body: URLSearchParams | FormData | string | null = null;
+      let headers: Record<string, string> = {};
+
+      const processedParams = Object.entries(config.parameterMap).reduce((acc, [key, value]) => {
+        acc[key] = value.replace(/\{(\w+)\}/g, (_: string, p: string) => {
+          const paramValue = params[p as keyof ApiParams];
+          return paramValue !== undefined ? String(paramValue) : '';
         });
+        return acc;
+      }, {} as Record<string, string>);
+
+      if (config.requiresCsrfToken && config.csrfTokenVariableName) {
+        const csrfToken = await this.fetchCsrfToken(config.baseUrl, config.csrfTokenVariableName);
+        processedParams[config.csrfTokenVariableName] = csrfToken;
+      }
+
+      if (config.method.toUpperCase() === 'POST') {
+        if (config.requestFormat === 'multipart') {
+          body = new FormData();
+          Object.entries(processedParams).forEach(([key, value]) => {
+            (body as FormData).append(key, value);
+          });
+        } else if (config.requestFormat === 'json') {
+          body = JSON.stringify(processedParams);
+          headers['Content-Type'] = 'application/json';
+        } else {
+          body = new URLSearchParams(processedParams);
+          headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        }
       } else {
-        Object.entries(config.parameterMap).forEach(([key, value]) => {
-          const paramValue = value.replace(/\{(\w+)\}/g, (_: string, p: string) => params[p as keyof ApiParams] || '');
-          url.searchParams.append(key, paramValue);
+        Object.entries(processedParams).forEach(([key, value]) => {
+          url.searchParams.append(key, value);
         });
       }
-  
+
       const fetchOptions: RequestInit = {
         method: config.method,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: headers,
       };
-  
+
       if (body) {
         fetchOptions.body = body;
       }
-  
+
+      if (config.useBackendProxy) {
+        fetchOptions.headers = {
+          ...fetchOptions.headers,
+          'X-Target-URL': url.toString(),
+          'X-Request-Format': config.requestFormat || 'urlencoded',
+          'X-Request-Method': config.method,
+        };
+        url = new URL('http://localhost:8080/api/proxy');
+        fetchOptions.method = 'post';
+      }
+
       try {
         const response = await fetch(url.toString(), fetchOptions);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-  
+
         const text = await response.text();
         let dataList: any[];
   
@@ -102,7 +96,6 @@ export default class ApiFactory {
         } else {
           throw new Error(`Unsupported data format: ${config.dataFormat}`);
         }
-  
         const results = await Promise.all(dataList.flatMap(async (item: any) => {
           const baseResult = {
             apiName: config.name,
@@ -183,6 +176,19 @@ export default class ApiFactory {
   }
 
   
+  private async fetchCsrfToken(targetUrl: string, csrfTokenVariableName: string): Promise<string> {
+    const response = await fetch('/api/proxy/csrf-token?csrfName='+csrfTokenVariableName , {
+      method: 'GET',
+      headers: {
+        'X-Target-URL': targetUrl
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch CSRF token');
+    }
+    return await response.text();
+  }
+
 }
 
 function parseHtmlValue(element: HTMLElement, selector: string): string {

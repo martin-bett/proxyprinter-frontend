@@ -1,4 +1,4 @@
-import { ApiConfig } from './types';
+import { ApiConfig } from '../types/types';
 
 export default {
   mtggatherer: {

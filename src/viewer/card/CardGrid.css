@@ -1,5 +1,4 @@
 .deck-input-and-viewer {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -74,12 +73,6 @@
   border-radius: 3px;
 }
 
-.deck-input-and-viewer {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
 .input-and-log-container {
   display: flex;
   gap: 20px;
@@ -148,14 +141,6 @@
 
 .api-toggles {
   flex: 0 0 200px;
-}
-
-.decklist-input {
-  flex: 1;
-}
-
-.log {
-  flex: 1;
 }
 
 .json-viewer-container {

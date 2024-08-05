@@ -7,7 +7,7 @@ const defaultSettings = {
   width: 63,
   height: 88,
   cutlines: false,
-  cutLineColor: '#444444',
+  cutlineColor: '#43FE43',
   corners: false,
   vmargin: 0,
   hmargin: 0,
@@ -64,7 +64,7 @@ function SettingsDialog({ open, onClose, settings, onSettingsChange }) {
         </div>
         <div>
           <label>Cut Line Color: </label>
-          <ChromePicker color={localSettings.cutLineColor} onChange={(color) => handleColorChange('cutLineColor', color)} />
+          <ChromePicker color={localSettings.cutlineColor} onChange={(color) => handleColorChange('cutlineColor', color)} />
         </div>
         <div>
           <label>Corner Color: </label>
