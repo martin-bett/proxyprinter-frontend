@@ -3,10 +3,12 @@ import './ImageSelectDialog.css';
 
 const NO_LANGUAGE = 'No Language';
 
-const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage }) => {
+const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage , 
+  initialVisibleLanguages, 
+  initialVisibleApis }) => {
   const [selectedImage, setSelectedImage] = useState(initialSelectedImage);
-  const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(new Set([NO_LANGUAGE]));
-  const [dialogVisibleApis, setDialogVisibleApis] = useState(new Set());
+  const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(initialVisibleLanguages);
+  const [dialogVisibleApis, setDialogVisibleApis] = useState(initialVisibleApis);
 
   const availableLanguages = useMemo(() => {
     const languages = new Set([NO_LANGUAGE]);
@@ -30,14 +32,14 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
       );
   }, [groupedResults, dialogVisibleApis, dialogVisibleLanguages]);
 
-  const initializeFilters = useCallback(() => {
-    setDialogVisibleLanguages(new Set(availableLanguages));
-    setDialogVisibleApis(new Set(Object.keys(groupedResults)));
-  }, [availableLanguages, groupedResults]);
+  // const initializeFilters = useCallback(() => {
+  //   setDialogVisibleLanguages(new Set(availableLanguages));
+  //   setDialogVisibleApis(new Set(Object.keys(groupedResults)));
+  // }, [availableLanguages, groupedResults]);
 
-  useEffect(() => {
-    initializeFilters();
-  }, [initializeFilters]);
+  // useEffect(() => {
+  //   initializeFilters();
+  // }, [initializeFilters]);
 
   useEffect(() => {
     if (initialSelectedImage) {
@@ -140,7 +142,7 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
                   </label>
                 ))}
               </div>
-              <div className="api-filter">
+              <div className="language-filter">
                 <h3>Filter by API</h3>
                 {Object.keys(groupedResults).map(apiName => (
                   <label key={apiName}>

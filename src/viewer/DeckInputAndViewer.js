@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import CacheService from './CacheService';
 import ApiFactory from '../api/ApiFactory';
 import ImageSelectDialog from './ImageSelectDialog';
 import PdfProgressDialog from './PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
-import './card/CardGrid.css';
+import './CardGrid.css';
 import { SettingsDialog, defaultSettings } from './SettingsDialog';
 import { apiConfigs } from '../api/configs';
+import ApiConfigWizard from '../api/ApiConfigWizard';
 console.log('apiConfigs:', apiConfigs);
 
 const factory = new ApiFactory(apiConfigs);
@@ -33,6 +35,9 @@ const DeckInputAndViewer = () => {
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfProgressMessage, setPdfProgressMessage] = useState('');
+  const [apiConfigWizardOpen, setApiConfigWizardOpen] = useState(false);
+  const [customApiConfigs, setCustomApiConfigs] = useState([]);
+
 
   const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
 
@@ -55,6 +60,27 @@ const DeckInputAndViewer = () => {
   const handleSettingsChange = (newSettings) => {
     setSettings(newSettings);
   };
+
+  const handleOpenApiConfigWizard = () => setApiConfigWizardOpen(true);
+  const handleCloseApiConfigWizard = () => setApiConfigWizardOpen(false);
+
+  const handleSaveApiConfig = (newConfig) => {
+    setCustomApiConfigs(prev => [...prev, newConfig]);
+    setEnabledApis(prev => ({ ...prev, [newConfig.name]: true }));
+    factory.updateConfigs([newConfig]);
+  };
+
+  const allApiConfigs = useMemo(() => {
+    return [...Object.values(apiConfigs), ...customApiConfigs];
+  }, [customApiConfigs]);
+
+  useEffect(() => {
+    if (typeof apiConfigs === 'object' && apiConfigs !== null) {
+      const configs = Object.values(apiConfigs);
+      factory.updateConfigs(configs);
+    }
+  }, []);
+
 
   const filterCard = useMemo(() => (card) => {
     return (visibleLanguages.has(card.languageCode || NO_LANGUAGE) &&
@@ -95,9 +121,16 @@ const DeckInputAndViewer = () => {
         if (!apiResults[apiKey][entry.name]) {
           addToLog(`Searching for: ${entry.name}`, 'System');
           try {
-            const result = await api({ cardname: entry.name });
+            let result;
+            if (CacheService.hasSearchResult(apiKey, entry.name)) {
+              result = CacheService.getSearchResult(apiKey, entry.name);
+              addToLog(`Retrieved cached results for ${entry.name}`, apiKey);
+            } else {
+              result = await api({ cardname: entry.name });
+              CacheService.setSearchResult(apiKey, entry.name, result);
+              addToLog(`Found ${result.results.length} results for ${entry.name}`, apiKey, result.rawResponse);
+            }
             apiResults[apiKey][entry.name] = result.results;
-            addToLog(`Found ${result.results.length} results for ${entry.name}`, apiKey, result.rawResponse);
           } catch (error) {
             addToLog(`Error searching for ${entry.name}: ${error.message}`, 'System');
             apiResults[apiKey][entry.name] = [];
@@ -120,26 +153,69 @@ const DeckInputAndViewer = () => {
 
     setCardResults(results);
     setIsLoading(false);
+
+    // Set initial selected cards based on cache or select first image
+    const initialSelectedCards = {};
+    Object.entries(results).forEach(([cardName, cardData]) => {
+      initialSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
+        if (CacheService.hasSelectedImage(cardName, index + 1)) {
+          const cachedImageUrl = CacheService.getSelectedImage(cardName, index + 1);
+          return cardData.results.find(card => card.imageUrl === cachedImageUrl) || cardData.results[0] || null;
+        }
+        return cardData.results[0] || null;  // Select first image if no cache or cache not found
+      });
+    });
+    setSelectedCards(initialSelectedCards);
+  };
+
+  const handleCloseImageSelectDialog = (selectedImage) => {
+    if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
+      setSelectedCards(prev => {
+        const newSelectedCards = {
+          ...prev,
+          [currentCardName]: prev[currentCardName].map((card, index) =>
+            index === currentCardIndex ? selectedImage : card
+          )
+        };
+        // Cache the selected image
+        CacheService.setSelectedImage(currentCardName, currentCardIndex + 1, selectedImage.imageUrl);
+        return newSelectedCards;
+      });
+    }
+    setImageSelectDialogOpen(false);
+    setCurrentCardName(null);
+    setCurrentCardIndex(null);
+  };
+
+  const handleRemoveCard = (cardName, index) => {
+    setCardResults(prevResults => {
+      const newResults = { ...prevResults };
+      if (newResults[cardName].count > 1) {
+        newResults[cardName] = {
+          ...newResults[cardName],
+          count: newResults[cardName].count - 1
+        };
+      } else {
+        delete newResults[cardName];
+      }
+      return newResults;
+    });
+
+    setSelectedCards(prevSelected => {
+      const newSelected = { ...prevSelected };
+      if (newSelected[cardName].length > 1) {
+        newSelected[cardName] = newSelected[cardName].filter((_, i) => i !== index);
+      } else {
+        delete newSelected[cardName];
+      }
+      return newSelected;
+    });
   };
 
   const handleCardClick = (cardName, index) => {
     setCurrentCardName(cardName);
     setCurrentCardIndex(index);
     setImageSelectDialogOpen(true);
-  };
-
-  const handleCloseImageSelectDialog = (selectedImage) => {
-    if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
-      setSelectedCards(prev => ({
-        ...prev,
-        [currentCardName]: prev[currentCardName].map((card, index) =>
-          index === currentCardIndex ? selectedImage : card
-        )
-      }));
-    }
-    setImageSelectDialogOpen(false);
-    setCurrentCardName(null);
-    setCurrentCardIndex(null);
   };
 
   const handleOpenSettingsDialog = () => setSettingsDialogOpen(true);
@@ -165,6 +241,7 @@ const DeckInputAndViewer = () => {
       }
       return newSet;
     });
+    refreshVisibleCards();
   };
 
   const toggleApi = (apiName) => {
@@ -177,10 +254,15 @@ const DeckInputAndViewer = () => {
       }
       return newSet;
     });
+    refreshVisibleCards();
   };
 
   const filterCardsByVisibleApis = (cards) => {
     return cards.filter(card => visibleApis.has(card.apiName));
+  };
+
+  const refreshVisibleCards = () => {
+
   };
 
   useEffect(() => {
@@ -355,7 +437,7 @@ const DeckInputAndViewer = () => {
 
   return (
     <div className="deck-input-and-viewer">
-      <h1>MTG Deck Analyzer</h1>
+      <h1>Universal Proxy Print</h1>
 
       {isLoading && (
         <div className="progress-bar">
@@ -365,6 +447,12 @@ const DeckInputAndViewer = () => {
       )}
 
       <div className="input-and-log-container">
+        <div>
+        <div className="api-controls">
+          <h3>API Controls</h3>
+          <button onClick={handleOpenApiConfigWizard}>Add New API Config</button>
+        </div>
+
         <div className="api-toggles">
           <h3>API Selection</h3>
           {Object.values(apiConfigs).map(config => (
@@ -379,7 +467,7 @@ const DeckInputAndViewer = () => {
             </div>
           ))}
         </div>
-
+        </div>
         <div className="decklist-input">
           <h2>Enter Decklist</h2>
           <form onSubmit={handleSubmit}>
@@ -410,39 +498,39 @@ const DeckInputAndViewer = () => {
           </div>
         </div>
         <div className="filter-controls">
-              <div className="language-filter">
-                <h3>Language Filter</h3>
-                {Array.from(availableLanguages).map(lang => (
-                  <label key={lang}>
-                    <input
-                      type="checkbox"
-                      checked={visibleLanguages.has(lang)}
-                      onChange={() => toggleLanguage(lang)}
-                    />
-                    {lang === NO_LANGUAGE ? 'No Language' : lang}
-                  </label>
-                ))}
-              </div>
-              <div className="api-filter">
-                <h3>API Filter</h3>
-                {Object.values(apiConfigs).map(config => (
-                  <label key={config.name}>
-                    <input
-                      type="checkbox"
-                      checked={visibleApis.has(config.name)}
-                      onChange={() => toggleApi(config.name)}
-                    />
-                    {config.name}
-                  </label>
-                ))}
-              </div>
-             
-            </div>
-            <div className="pdf-controls">
-                <h3>PDF Generation</h3>
-                <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
-                <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
-              </div>
+          <div className="language-filter">
+            <h3>Language Filter</h3>
+            {Array.from(availableLanguages).map(lang => (
+              <label key={lang}>
+                <input
+                  type="checkbox"
+                  checked={visibleLanguages.has(lang)}
+                  onChange={() => toggleLanguage(lang)}
+                />
+                {lang === NO_LANGUAGE ? 'No Language' : lang}
+              </label>
+            ))}
+          </div>
+          <div className="api-filter">
+            <h3>API Filter</h3>
+            {Object.values(apiConfigs).map(config => (
+              <label key={config.name}>
+                <input
+                  type="checkbox"
+                  checked={visibleApis.has(config.name)}
+                  onChange={() => toggleApi(config.name)}
+                />
+                {config.name}
+              </label>
+            ))}
+          </div>
+
+        </div>
+        <div className="pdf-controls">
+          <h3>PDF Generation</h3>
+          <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
+          <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
+        </div>
       </div>
       {Object.keys(cardResults).length > 0 && (
         <div className="deck-viewer">
@@ -455,28 +543,40 @@ const DeckInputAndViewer = () => {
                   const noMatchingCard = visibleResults.length === 0;
 
                   return Array(cardData.count).fill().map((_, index) => {
-                    const selectedCard = selectedCards[cardName]?.[index];
-
+                    let selectedCard = selectedCards[cardName]?.[index];
+                    if (visibleResults.length > 0 && visibleResults.indexOf(selectedCard) === -1) {
+                      selectedCard = visibleResults[0];
+                    }
                     return (
                       <div
                         key={`${cardName}-${index}`}
                         className={`card-tile ${noMatchingCard ? 'no-matching-card' : ''}`}
-                        onClick={() => handleCardClick(cardName, index)}
                       >
-                        {selectedCard ? (
-                          <img src={selectedCard.imageUrl} alt={cardName} />
-                        ) : (
-                          <div className="no-image">No image available</div>
-                        )}
-                        <p>{cardName}</p>
+                        <div onClick={() => handleCardClick(cardName, index)}>
+                          {selectedCard ? (
+                            <img src={selectedCard.imageUrl} alt={cardName} />
+                          ) : (
+                            <div className="no-image">No image available</div>
+                          )}
+                        </div>
+                        <div className="card-name">
+                          <span
+                            className="remove-card"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveCard(cardName, index);
+                            }}
+                          >
+                            ✕
+                          </span>
+                          <p>{cardName}</p>
+                        </div>
                       </div>
                     );
                   });
                 })}
               </div>
-
             </div>
-            
           </div>
         </div>
       )}
@@ -497,6 +597,8 @@ const DeckInputAndViewer = () => {
             ? selectedCards[currentCardName]?.[currentCardIndex] || cardResults[currentCardName]?.results[0]
             : null
         }
+        initialVisibleApis={visibleApis}
+        initialVisibleLanguages={visibleLanguages}
         groupedResults={
           currentCardName && cardResults[currentCardName]
             ? groupResultsByApi(cardResults[currentCardName].results || [])
@@ -517,6 +619,17 @@ const DeckInputAndViewer = () => {
               <button onClick={() => navigator.clipboard.writeText(rawDataDialog)}>Copy to Clipboard</button>
               <button onClick={handleCloseRawDataDialog}>Close</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {apiConfigWizardOpen && (
+        <div className="dialog-overlay">
+          <div className="dialog-content">
+            <ApiConfigWizard
+              onClose={handleCloseApiConfigWizard}
+              onSave={handleSaveApiConfig}
+            />
           </div>
         </div>
       )}

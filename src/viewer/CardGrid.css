@@ -189,4 +189,17 @@
   margin-bottom: 5px;
 }
 
+.remove-card {
+  color: red;
+  cursor: pointer;
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.card-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: small;
+}
 /* Restliche CSS-Styles bleiben unverändert */

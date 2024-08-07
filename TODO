@@ -1,8 +1,12 @@
+wizard für configs
+
+lowres warning in viewer+selectdialog + png/jpg info 
 
 config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
-caching für results für mehrfaches ausführen für karten je api name
-remove entry from decklist
 
+
+deploy auf netcup
+https://medium.com/@thearaseng/building-a-full-stack-product-app-with-react-spring-boot-and-docker-compose-64a47f4a1080
 
 foreignnames -> scryfall id to imageurl ? tcgplayers pokemon -> selbe
 customImageLink

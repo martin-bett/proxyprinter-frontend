@@ -12,6 +12,12 @@ export default class ApiFactory {
     return path ? path.split('.').reduce((o, key) => o && o[key], obj) : null;
   }
 
+  updateConfigs(newConfigs: ApiConfig[]) {
+    newConfigs.forEach(config => {
+      this.configs[config.name] = config;
+    });
+  }
+
   createApi(configKey: string): (params: ApiParams) => Promise<{ results: ApiResult[], rawResponse: string }> {
     const config = this.configs[configKey];
     if (!config) {
