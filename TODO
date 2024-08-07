@@ -1,4 +1,4 @@
-wizard für configs
+wizard für configs ,disabled öffnen für vorhandene , formatierung ordnen (einfach untereinander)
 
 lowres warning in viewer+selectdialog + png/jpg info 
 
@@ -12,10 +12,6 @@ foreignnames -> scryfall id to imageurl ? tcgplayers pokemon -> selbe
 customImageLink
 customImageLinkField
 nestedCustomImageLinkField
-
-
 https://api.scryfall.com/cards/56ebc372-aabd-4174-a943-c7bf59e5028d?format=image
 http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=657&type=card
-
-
 https://images.pokemoncard.io/images/xy12/xy12-83.png
