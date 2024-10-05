@@ -2,6 +2,7 @@
   "name": "mtg-deck-analyzer",
   "version": "1.0.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
@@ -12,6 +13,7 @@
     "formdata-node": "^6.0.3",
     "jsdom": "^24.1.1",
     "jspdf": "^2.5.1",
+    "mtg-deck-analyzer": "file:",
     "node-html-parser": "^6.1.13",
     "react": "^18.2.0",
     "react-color": "^2.19.3",

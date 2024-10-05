@@ -4,10 +4,11 @@ import ApiFactory from '../api/ApiFactory';
 import ImageSelectDialog from './ImageSelectDialog';
 import PdfProgressDialog from './PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
-import './CardGrid.css';
+import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings } from './SettingsDialog';
 import { apiConfigs } from '../api/configs';
 import ApiConfigWizard from '../api/ApiConfigWizard';
+import CardImage from './CardImage';
 import CustomCardDialog from './CustomCardDialog';
 
 console.log('apiConfigs:', apiConfigs);
@@ -23,6 +24,7 @@ const DeckInputAndViewer = () => {
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [rawDataDialog, setRawDataDialog] = useState(null);
+  const [categoryStates, setCategoryStates] = useState({});
   const [enabledApis, setEnabledApis] = useState(() =>
     Object.keys(apiConfigs).reduce((acc, key) => ({ ...acc, [apiConfigs[key].name]: true }), {})
   );
@@ -55,6 +57,15 @@ const DeckInputAndViewer = () => {
     setAvailableLanguages(languages);
   }, [cardResults]);
 
+  useEffect(() => {
+    const initialCategoryStates = {};
+    const categories = [...new Set(Object.values(apiConfigs).map(config => config.category))];
+    categories.forEach(category => {
+      initialCategoryStates[category] = false;
+    });
+    setCategoryStates(initialCategoryStates);
+  }, [apiConfigs]);
+
   const addToLog = (message, configName, rawResponse) => {
     setLog((prevLog) => [...prevLog, { message, configName, rawResponse }]);
   };
@@ -72,26 +83,16 @@ const DeckInputAndViewer = () => {
   };
 
   const handleSaveCustomCard = async (cardName, imageUrl, file) => {
-    let finalImageUrl = imageUrl;
+    console.log(cardName);
+    console.log(imageUrl);
+    console.log(file);
+    let finalImageUrl;
+    if(imageUrl){
+      finalImageUrl = imageUrl;
+    }
 
-    if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      try {
-        const response = await fetch('http://localhost:8080/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        if (response.ok) {
-          finalImageUrl = await response.text();
-        } else {
-          throw new Error('Upload failed');
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        alert('Failed to upload image. Please try again.');
-        return;
-      }
+    if(file){
+      finalImageUrl = '/api/files/download/'+file;
     }
 
     setCardResults(prev => ({
@@ -319,7 +320,7 @@ const DeckInputAndViewer = () => {
   };
 
   const refreshVisibleCards = () => {
-
+    
   };
 
   useEffect(() => {
@@ -330,20 +331,22 @@ const DeckInputAndViewer = () => {
       Object.entries(cardResults).forEach(([cardName, cardData]) => {
         const visibleResults = cardData.results.filter(filterCard);
 
-        if (!newSelectedCards[cardName] || newSelectedCards[cardName].length !== cardData.count) {
-          newSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
-            const currentSelection = prev[cardName]?.[index];
-            if (visibleResults.length > 0) {
-              if (currentSelection && visibleResults.some(card => card.imageUrl === currentSelection.imageUrl)) {
-                return currentSelection;
-              } else {
-                hasChanges = true;
-                return visibleResults[0];
-              }
+        newSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
+          const currentSelection = prev[cardName]?.[index];
+          if (visibleResults.length > 0) {
+            if (currentSelection && visibleResults.some(card => card.imageUrl === currentSelection.imageUrl)) {
+              return currentSelection;
             } else {
-              return currentSelection || cardData.results[0] || null;
+              hasChanges = true;
+              return visibleResults[0];
             }
-          });
+          } else {
+            return null; // If no visible results, set to null instead of keeping old selection
+          }
+        });
+        
+        if (newSelectedCards[cardName].every(card => card === null)) {
+          delete newSelectedCards[cardName]; // Remove the card if all selections are null
           hasChanges = true;
         }
       });
@@ -353,7 +356,37 @@ const DeckInputAndViewer = () => {
   }, [visibleLanguages, visibleApis, cardResults]);
 
   const handleApiToggle = (apiKey) => {
-    setEnabledApis(prev => ({ ...prev, [apiKey]: !prev[apiKey] }));
+    setEnabledApis(prev => {
+      const updated = { ...prev, [apiKey]: !prev[apiKey] };
+      return updated;
+    });
+  };
+
+  const handleCategoryToggle = (category) => {
+    const categoryApis = Object.values(apiConfigs).filter(config => config.category === category);
+    const allChecked = categoryApis.every(config => enabledApis[config.name]);
+    const newState = !allChecked;
+
+    setEnabledApis(prev => {
+      const updated = { ...prev };
+      categoryApis.forEach(config => {
+        updated[config.name] = newState;
+      });
+      return updated;
+    });
+
+    setCategoryStates(prev => ({ ...prev, [category]: newState }));
+  };
+
+
+
+  const getCategoryState = (category) => {
+    const categoryApis = Object.values(apiConfigs).filter(config => config.category === category);
+    const checkedCount = categoryApis.filter(config => enabledApis[config.name]).length;
+
+    if (checkedCount === 0) return 'unchecked';
+    if (checkedCount === categoryApis.length) return 'checked';
+    return 'indeterminate';
   };
 
   const createPDF = async () => {
@@ -362,17 +395,14 @@ const DeckInputAndViewer = () => {
     setPdfProgressMessage('Initializing PDF generation...');
 
     const createPdfDto = {
-      imageUrls: Object.entries(cardResults).flatMap(([cardName, cardData]) => {
-        return Array(cardData.count).fill().map((_, index) => {
-          const selectedImage = selectedCards[cardName]?.[index] || cardData.results[0];
-          return selectedImage?.imageUrl;
-        });
-      }).filter(url => url),
+      imageUrls: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
+        return cardSelections.map(selectedCard => selectedCard?.imageUrl).filter(url => url);
+      }),
       settings: settings
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/pdf', {
+      const response = await fetch('/api/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -385,7 +415,7 @@ const DeckInputAndViewer = () => {
       }
 
       const progressId = await response.text();
-      const eventSource = new EventSource(`http://localhost:8080/api/progress/${progressId}`);
+      const eventSource = new EventSource(`/api/progress/${progressId}`);
 
       eventSource.onmessage = (event) => {
         const message = event.data;
@@ -423,7 +453,7 @@ const DeckInputAndViewer = () => {
 
   const downloadPDF = async (progressId) => {
     try {
-      const pdfResponse = await fetch(`http://localhost:8080/api/pdf/${progressId}`);
+      const pdfResponse = await fetch(`/api/pdf/${progressId}`);
       if (pdfResponse.ok) {
         const blob = await pdfResponse.blob();
         const url = window.URL.createObjectURL(blob);
@@ -482,6 +512,31 @@ const DeckInputAndViewer = () => {
     });
   };
 
+  const renderCheckbox = (id, label, checked, onChange, isIndeterminate = false) => (
+    <div className="flex items-center mb-2">
+      <div className="relative flex items-center">
+        <input
+          type="checkbox"
+          id={id}
+          checked={checked}
+          onChange={onChange}
+          className="sr-only"
+        />
+        <div className={`w-5 h-5 border rounded ${checked ? 'bg-blue-500' : 'bg-white'} ${isIndeterminate ? 'bg-blue-500' : ''}`}>
+          {checked && !isIndeterminate && (
+            <div className="w-3 h-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 before:content-[''] before:block before:w-2 before:h-1 before:border-r-2 before:border-b-2 before:border-white before:transform before:rotate-45"></div>
+          )}
+          {isIndeterminate && <div className="w-3 h-3 bg-white m-1"></div>}
+        </div>
+      </div>
+      <label htmlFor={id} className="ml-2 text-sm font-medium">{label}</label>
+    </div>
+  );
+
+
+  const handleImageLoad = (cardName, index, imageInfo) => {
+  };
+
   const groupResultsByApi = (results) => {
     return results.reduce((acc, result) => {
       if (!acc[result.apiName]) {
@@ -494,66 +549,144 @@ const DeckInputAndViewer = () => {
 
   return (
     <div className="deck-input-and-viewer">
+    <div className="headline">
       <h1>Universal Proxy Print</h1>
+    </div>
 
-      {isLoading && (
+
+
+      <div className="api-controls">
+        <div className="api-controls">
+          <h3>API Controls</h3>
+          <button onClick={handleOpenApiConfigWizard}>Add New API Config</button>
+        </div>
+
+        <div className="api-toggles checkbox-group">
+        <h3 className="text-lg font-semibold mb-4">API Selection</h3>
+      {Object.entries(categoryStates).map(([category, _]) => (
+        <div key={category} className="mb-4">
+          {renderCheckbox(
+            category,
+            category.toUpperCase(),
+            getCategoryState(category) === 'checked',
+            () => handleCategoryToggle(category),
+            getCategoryState(category) === 'indeterminate'
+          )}
+          <div className="ml-6">
+            {Object.values(apiConfigs)
+              .filter(config => config.category === category)
+              .map(config => (
+                <div key={config.name} className="ml-2">
+                  {renderCheckbox(
+                    config.name,
+                    config.name,
+                    enabledApis[config.name] || false,
+                    () => handleApiToggle(config.name)
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      ))}
+        </div>
+      </div>
+
+      <div className="decklist-input">
+        <h2>Enter Decklist</h2>
+        <form onSubmit={handleSubmit}>
+          <textarea
+            value={decklist}
+            onChange={(e) => setDecklist(e.target.value)}
+            placeholder="Enter your decklist here (e.g., '1 Stonecoil Serpent')..."
+            rows={10}
+            cols={50}
+          />
+          <br />
+          <button type="submit" disabled={isLoading}>Analyze Deck</button>
+        </form>
+
+      </div>
+
+      <div className="log">
+        <h2>Search Log</h2>
+        <div className="log-content">
+          {log.map((entry, index) => (
+            <div key={index} className="log-entry">
+              <span className="config-name">[{entry.configName}]</span>
+              <span>{entry.message}</span>
+              {entry.rawResponse && (
+                <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse)}>🔍</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="decklist-viewer">
+        {isLoading && (
         <div className="progress-bar">
           <div className="progress" style={{ width: `${progress}%` }}></div>
           <span>{progress}%</span>
         </div>
-      )}
+       )}
+       <div className="deck-viewer">
+       <div className="deck-viewer-content">
+              <div className="card-grid">
+                <h2>Deck Viewer</h2>
+          
+                <div className="card-tiles">
+                {Object.entries(cardResults).map(([cardName, cardData]) => {
+                  const visibleResults = cardData.results.filter(filterCard);
+                  const noMatchingCard = visibleResults.length === 0;
 
-      <div className="input-and-log-container">
-        <div>
-          <div className="api-controls">
-            <h3>API Controls</h3>
-            <button onClick={handleOpenApiConfigWizard}>Add New API Config</button>
-          </div>
+                  return Array(cardData.count).fill().map((_, index) => {
+                    let selectedCard = selectedCards[cardName]?.[index];
+                    if (visibleResults.length > 0 && visibleResults.indexOf(selectedCard) === -1) {
+                      selectedCard = visibleResults[0];
+                    }
+                    return (
+                      <div
+                        key={`${cardName}-${index}`}
+                        className={`card-tile ${noMatchingCard ? 'no-matching-card' : ''} ${selectedCard?.apiName === 'custom' ? 'custom-card' : ''}`}
+                      >
+                        <div onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
+                          {selectedCard ? (
+                            <CardImage
+                              src={selectedCard.imageUrl}
+                              alt={cardName}
+                              onLoad={(imageInfo) => handleImageLoad(cardName, index, imageInfo)}
+                            />
+                          ) : (
+                            <div className="no-image">No image available</div>
+                          )}
+                        </div>
+                        <div className="card-name">
+                          <span
+                            className="remove-card"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveCard(cardName, index);
+                            }}
+                          >
+                            ✕
+                          </span>
+                          <p>{cardName}</p>
+                        </div>
+                      </div>
+                    );
+                  });
+                })}
+                
+                <div className="add-custom-card" onClick={handleAddCustomCard}>
+                  <img src='/green-add-button.png' />
+                </div>
+                </div>
+        </div>
+        </div>
+      </div>
+      </div>
 
-          <div className="api-toggles checkbox-group">
-            <h3>API Selection</h3>
-            {Object.values(apiConfigs).map(config => (
-              <div key={config.name}>
-                <input
-                  type="checkbox"
-                  id={config.name}
-                  checked={enabledApis[config.name]}
-                  onChange={() => handleApiToggle(config.name)}
-                />
-                <label htmlFor={config.name}>{config.name}</label>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="decklist-input">
-          <h2>Enter Decklist</h2>
-          <form onSubmit={handleSubmit}>
-            <textarea
-              value={decklist}
-              onChange={(e) => setDecklist(e.target.value)}
-              placeholder="Enter your decklist here (e.g., '1 Stonecoil Serpent')..."
-              rows={10}
-              cols={50}
-            />
-            <br />
-            <button type="submit" disabled={isLoading}>Analyze Deck</button>
-          </form>
-        </div>
-
-        <div className="log">
-          <h2>Search Log</h2>
-          <div className="log-content">
-            {log.map((entry, index) => (
-              <div key={index} className="log-entry">
-                <span className="config-name">[{entry.configName}]</span>
-                <span>{entry.message}</span>
-                {entry.rawResponse && (
-                  <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse)}>🔍</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="view-selection">
         <div className="filter-controls">
           <h2>View Selection</h2>
           <div className="language-filter checkbox-group">
@@ -583,64 +716,13 @@ const DeckInputAndViewer = () => {
             ))}
           </div>
         </div>
-        <div className="pdf-controls">
-          <h3>PDF Generation</h3>
-          <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
-          <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
-        </div>
       </div>
-      {Object.keys(cardResults).length > 0 && (
-        <div className="deck-viewer">
-          <div className="deck-viewer-content">
-            <div className="card-grid">
-              <h2>Deck Viewer</h2>
-              <div className="card-tiles">
-                {Object.entries(cardResults).map(([cardName, cardData]) => {
-                  const visibleResults = cardData.results.filter(filterCard);
-                  const noMatchingCard = visibleResults.length === 0;
 
-                  return Array(cardData.count).fill().map((_, index) => {
-                    let selectedCard = selectedCards[cardName]?.[index];
-                    if (visibleResults.length > 0 && visibleResults.indexOf(selectedCard) === -1) {
-                      selectedCard = visibleResults[0];
-                    }
-                    return (
-                      <div
-                        key={`${cardName}-${index}`}
-                        className={`card-tile ${noMatchingCard ? 'no-matching-card' : ''} ${selectedCard?.apiName === 'custom' ? 'custom-card' : ''}`}
-                      >
-                        <div onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
-                          {selectedCard ? (
-                            <img src={selectedCard.imageUrl} alt={cardName} />
-                          ) : (
-                            <div className="no-image">No image available</div>
-                          )}
-                        </div>
-                        <div className="card-name">
-                          <span
-                            className="remove-card"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveCard(cardName, index);
-                            }}
-                          >
-                            ✕
-                          </span>
-                          <p>{cardName}</p>
-                        </div>
-                      </div>
-                    );
-                  });
-                })}
-                <div className="add-custom-card" onClick={handleAddCustomCard}>
-                  +
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <div className="pdf-controls">
+        <h3>PDF Generation</h3>
+        <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
+        <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
+      </div>
 
       <SettingsDialog
         open={settingsDialogOpen}

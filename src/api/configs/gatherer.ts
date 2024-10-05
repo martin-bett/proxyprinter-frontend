@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   mtggatherer: {
+    "category": "mtg",
   "name": "mtggatherer",
   "method": "GET",
   "baseUrl": "https://api.magicthegathering.io/v1/cards",

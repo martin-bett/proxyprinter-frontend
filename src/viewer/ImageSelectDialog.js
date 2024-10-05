@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import './ImageSelectDialog.css';
+import '../viewer/ImageSelectDialog.css';
+import CardImage from './CardImage';
 
 const NO_LANGUAGE = 'No Language';
 
@@ -22,6 +23,11 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
     return languages;
   }, [groupedResults]);
 
+  const handleImageLoad = (result, imageInfo) => {
+    // Update the result with the new image info
+    Object.assign(result, imageInfo);
+  };
+
   const visibleResults = useMemo(() => {
     return Object.entries(groupedResults)
       .filter(([apiName]) => dialogVisibleApis.has(apiName))
@@ -32,14 +38,6 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
       );
   }, [groupedResults, dialogVisibleApis, dialogVisibleLanguages]);
 
-  // const initializeFilters = useCallback(() => {
-  //   setDialogVisibleLanguages(new Set(availableLanguages));
-  //   setDialogVisibleApis(new Set(Object.keys(groupedResults)));
-  // }, [availableLanguages, groupedResults]);
-
-  // useEffect(() => {
-  //   initializeFilters();
-  // }, [initializeFilters]);
 
   useEffect(() => {
     if (initialSelectedImage) {
@@ -87,7 +85,7 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
     onClose(selectedImage);
   };
 
-  return (
+ return (
     <div className="image-select-dialog">
       <div className="dialog-overlay" onClick={handleClose}>
         <div className="dialog-content" onClick={e => e.stopPropagation()}>
@@ -115,12 +113,14 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
                             className={`image-option ${result === selectedImage ? 'selected' : ''}`}
                             onClick={() => handleImageSelect(result)}
                           >
-                            <div className="image-container">
-                              <img src={result.imageUrl} alt={result.name} />
-                              <span className="image-symbol">
-                                {result.languageCode || apiName.toUpperCase()}
-                              </span>
-                            </div>
+                            <CardImage 
+                              src={result.imageUrl} 
+                              alt={result.name}
+                              onLoad={(imageInfo) => handleImageLoad(result, imageInfo)}
+                            />
+                            <span className="image-symbol">
+                              {result.languageCode || apiName.toUpperCase()}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -129,7 +129,7 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
                 })}
             </div>
             <div className="filter-controls">
-              <div className="language-filter">
+            <div className="language-filter">
                 <h3>Filter by Language</h3>
                 {Array.from(availableLanguages).map(lang => (
                   <label key={lang}>
@@ -142,6 +142,8 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
                   </label>
                 ))}
               </div>
+              </div>
+            <div className="filter-controls">
               <div className="language-filter">
                 <h3>Filter by API</h3>
                 {Object.keys(groupedResults).map(apiName => (

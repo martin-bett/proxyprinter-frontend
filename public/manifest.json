@@ -8,6 +8,11 @@
       "type": "image/x-icon"
     },
     {
+      "src": "green-add-button.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
       "src": "logo192.png",
       "type": "image/png",
       "sizes": "192x192"

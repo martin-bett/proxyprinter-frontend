@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   scryfall: {
+    "category": "mtg",
     "name": "scryfall",
     "method": "GET",
     "baseUrl": "https://api.scryfall.com/cards/search",
@@ -9,18 +10,20 @@ export default {
       "q": "{cardname}",
       "include_multilingual": "true",
       "include_variations": "true",
-      "lang":"en",
-      "unique":"true"
+      "unique":"prints"
     },
     "dataFormat": "json",
     "dataListField": "data",
-    "imageUrlField": "image_uris.normal",
+    "languageField":"lang",
+    "setField": "set",
+    "imageUrlField": "image_uris.large",
     "nameField":"name",
+    "nameSplitCharacter": "//",
     "followLinkField": "prints_search_uri",
     "followLinkDataListField": "data",
-    "followLinkImageField": "image_uris.normal",
+    "followLinkLanguageField": "lang",
+    "followLinkImageField": "image_uris.large",
     "concurrentLimit":5
   } as ApiConfig
 };
-
 

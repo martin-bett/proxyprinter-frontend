@@ -1,4 +1,8 @@
 export interface ApiConfig {
+  //Info
+  category: 'mtg' | 'poke' | 'yugi';
+  officialWebsite?: string;
+
   //Request
   name: string;
   method: string;
@@ -16,7 +20,9 @@ export interface ApiConfig {
   //Datalocator
   dataListField: string;
   nameField: string;
+  nameSplitCharacter?: string;
   imageUrlField: string;
+  languageField?: string;
   setField?: string;
   setNumberField?: string;
 
@@ -24,6 +30,7 @@ export interface ApiConfig {
   followLinkField?: string;
   followLinkDataListField?: string;
   followLinkImageField?:string;
+  followLinkLanguageField?:string;
 
   //Language Support
   nestedLanguageDataListField?: string;

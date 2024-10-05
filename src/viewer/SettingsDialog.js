@@ -11,7 +11,8 @@ const defaultSettings = {
   corners: false,
   vmargin: 0,
   hmargin: 0,
-  cornerColor: '#000000'
+  cornerColor: '#000000',
+  cornerColorAuto: true
 };
 
 function SettingsDialog({ open, onClose, settings, onSettingsChange }) {
@@ -46,6 +47,7 @@ function SettingsDialog({ open, onClose, settings, onSettingsChange }) {
           control={<Checkbox checked={localSettings.corners} onChange={(e) => handleChange('corners', e.target.checked)} />}
           label="Corners"
         />
+
         <div>
           <label>Width: </label>
           <input type="number" value={localSettings.width} onChange={(e) => handleChange('width', Number(e.target.value))} />
@@ -62,13 +64,51 @@ function SettingsDialog({ open, onClose, settings, onSettingsChange }) {
           <label>Horizontal Margin: </label>
           <input type="number" value={localSettings.hmargin} onChange={(e) => handleChange('hmargin', Number(e.target.value))} />
         </div>
-        <div>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
           <label>Cut Line Color: </label>
           <ChromePicker color={localSettings.cutlineColor} onChange={(color) => handleColorChange('cutlineColor', color)} />
+          {!localSettings.cutlines && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                cursor: 'not-allowed',
+                zIndex: 1,  // Stellt sicher, dass das Overlay oben liegt
+              }}
+            ></div>
+          )}
         </div>
+        <div> <label>Corner Color: </label></div>
         <div>
-          <label>Corner Color: </label>
-          <ChromePicker color={localSettings.cornerColor} onChange={(color) => handleColorChange('cornerColor', color)} />
+         
+          <FormControlLabel
+            control={<Checkbox disabled={!localSettings.corners} checked={localSettings.cornerColorAuto} onChange={(e) => handleChange('cornerColorAuto', e.target.checked)} />}
+            label="Corner Detect BorderColor"
+          />
+        </div>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <ChromePicker
+            color={localSettings.cornerColor}
+            onChange={(color) => handleColorChange('cornerColor', color)}
+          />
+          {localSettings.cornerColorAuto && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                cursor: 'not-allowed',
+                zIndex: 1,  // Stellt sicher, dass das Overlay oben liegt
+              }}
+            ></div>
+          )}
         </div>
       </DialogContent>
       <DialogActions>

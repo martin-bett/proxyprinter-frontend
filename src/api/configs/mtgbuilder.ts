@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   mtgbuilder: {
+    "category": "mtg",
     "name": "mtgbuilder",
     "method": "POST",
     "baseUrl": "https://mtgcardbuilder.com/wp-admin/admin-ajax.php",

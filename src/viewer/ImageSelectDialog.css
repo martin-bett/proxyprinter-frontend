@@ -15,7 +15,7 @@
     background-color: white;
     padding: 20px;
     border-radius: 8px;
-    width: 65vw;
+    width: 85vw;
     height: 75vh;
     display: flex;
     flex-direction: column;
@@ -31,8 +31,6 @@
   }
   
   .image-select-dialog .selected-image-container {
-    width: 250px;
-    height: 350px;
     flex-shrink: 0;
     margin-right: 20px;
     display: flex;
@@ -43,6 +41,8 @@
   .image-select-dialog .selected-image-container img {
     max-width: 100%;
     max-height: 100%;
+    display:flex;
+    min-height: 60%;
     object-fit: contain;
     opacity: 1;
   }

@@ -8,7 +8,7 @@ export default class ApiFactory {
     this.configs = configs;
   }
 
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(obj: any, path: string|undefined): any {
     return path ? path.split('.').reduce((o, key) => o && o[key], obj) : null;
   }
 
@@ -78,20 +78,20 @@ export default class ApiFactory {
           'X-Request-Format': config.requestFormat || 'urlencoded',
           'X-Request-Method': config.method,
         };
-        url = new URL('http://localhost:8080/api/proxy');
+        url = new URL('/api/proxy');
         fetchOptions.method = 'post';
       }
 
       try {
         const response = await fetch(url.toString(), fetchOptions);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const text = await response.text();
         let dataList: any[];
-  
+
         if (config.dataFormat === 'json') {
           const data = JSON.parse(text);
           dataList = this.getNestedValue(data, config.dataListField) || [];
@@ -105,60 +105,78 @@ export default class ApiFactory {
         const results = await Promise.all(dataList.flatMap(async (item: any) => {
           const baseResult = {
             apiName: config.name,
-            name: config.dataFormat === 'json' ? this.getNestedValue(item, config.nameField) : parseHtmlValue(item, config.nameField),
-            set: config.setField ? (config.dataFormat === 'json' ? this.getNestedValue(item, config.setField) : parseHtmlValue(item, config.setField)) : undefined,
-            setNumber: config.setNumberField ? (config.dataFormat === 'json' ? this.getNestedValue(item, config.setNumberField) : parseHtmlValue(item, config.setNumberField)) : undefined,
-            imageUrl: config.dataFormat === 'json' ? this.getNestedValue(item, config.imageUrlField) : parseHtmlValue(item, config.imageUrlField),
-            languageCode: config.nestedLanguageLanguageField ? (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageLanguageField) : parseHtmlValue(item, config.nestedLanguageLanguageField)) : undefined
+            name: this.getValue(item, config, config.nameField),
+            set: config.setField ? this.getValue(item, config, config.setField) : undefined,
+            setNumber: config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
+            imageUrl: this.getValue(item, config, config.imageUrlField),
+            languageCode: config.languageField ? this.getValue(item, config, config.languageField) : undefined
           };
-  
+
           let followLinkResults: ApiResult[] = [];
           if (config.followLinkField && config.followLinkDataListField && config.followLinkImageField) {
-            const followLinkUrl = this.getNestedValue(item, config.followLinkField);
+            const followLinkUrl = this.getValue(item, config, config.followLinkField);
             if (followLinkUrl) {
               const followLinkResponse = await fetch(followLinkUrl);
               if (followLinkResponse.ok) {
                 const followLinkData = await followLinkResponse.json();
-                const followLinkDataList = this.getNestedValue(followLinkData, config.followLinkDataListField) || [];
+                const followLinkDataList = this.getValue(followLinkData, config, config.followLinkDataListField) || [];
                 followLinkResults = followLinkDataList.map((followLinkItem: any) => ({
                   ...baseResult,
-                  imageUrl: this.getNestedValue(followLinkItem, config.followLinkImageField!)
+                  imageUrl: this.getValue(followLinkItem, config, config.followLinkImageField!),
+                  languageCode: config.followLinkLanguageField ? this.getValue(followLinkItem, config, config.followLinkLanguageField) : baseResult.languageCode
                 }));
               }
             }
           }
-  
-          const nestedLanguages = config.nestedLanguageDataListField ? 
-          (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageDataListField) : item.querySelectorAll(config.nestedLanguageDataListField)) : [];
 
-        if (nestedLanguages && Array.isArray(nestedLanguages)) {
-          return [
-            baseResult,
-            ...nestedLanguages.map((lang: any) => ({
-              ...baseResult,
-              imageUrl: config.nestedLanguageImageUrlField ? 
-                (config.dataFormat === 'json' ? this.getNestedValue(lang, config.nestedLanguageImageUrlField) : parseHtmlValue(lang, config.nestedLanguageImageUrlField)) || baseResult.imageUrl : baseResult.imageUrl,
-              languageCode: config.nestedLanguageLanguageField ? 
-                (config.dataFormat === 'json' ? this.getNestedValue(lang, config.nestedLanguageLanguageField) : parseHtmlValue(lang, config.nestedLanguageLanguageField)) || baseResult.languageCode : baseResult.languageCode
-            })),
-            ...followLinkResults
-          ];
-        }
+          const nestedLanguages = config.nestedLanguageDataListField ?
+            (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageDataListField) : item.querySelectorAll(config.nestedLanguageDataListField)) : [];
 
-        return [baseResult, ...followLinkResults];
-      }));
-  
+          if (nestedLanguages && Array.isArray(nestedLanguages)) {
+            return [
+              baseResult,
+              ...nestedLanguages.filter((lang:any) => this.getValue(lang, config, config.nestedLanguageImageUrlField) ).map((lang: any) => ({
+                ...baseResult,
+                imageUrl: config.nestedLanguageImageUrlField ? this.getValue(lang, config, config.nestedLanguageImageUrlField) || baseResult.imageUrl : baseResult.imageUrl,
+                languageCode: config.nestedLanguageLanguageField ? this.getValue(lang, config, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode
+              })),
+              ...followLinkResults
+            ];
+          }
+
+          return [baseResult, ...followLinkResults];
+        }));
+
         const flattenedResults = results.flat()
-          .filter((c: ApiResult) => c.imageUrl != null && c.imageUrl)
-          .filter((c: ApiResult) => c.name ? c.name === params.cardname || (c.name.indexOf('//') > -1 && c.name.indexOf(params.cardname) > -1) : true);
-  
-          return { results: flattenedResults, rawResponse: text };
-        } catch (error: unknown) {
-          console.error(`Error fetching from ${configKey}:`, error);
-          return { results: [], rawResponse: error instanceof Error ? error.toString() : String(error) };
-        }
-      };
-    }
+        .reduce((acc: ApiResult[], current: ApiResult) => {
+          const isDuplicate = acc.some(item => 
+            item.imageUrl === current.imageUrl &&
+            item.apiName === current.apiName &&
+            item.name === current.name
+          );
+          if (!isDuplicate) {
+            acc.push(current);
+          }
+          return acc;
+        }, [])
+          .filter((c: ApiResult) => this.checkSearchResultValid(c, params, config))
+
+        return { results: flattenedResults, rawResponse: text };
+      } catch (error: unknown) {
+        console.error(`Error fetching from ${configKey}:`, error);
+        return { results: [], rawResponse: error instanceof Error ? error.toString() : String(error) };
+      }
+    };
+  }
+
+  private checkSearchResultValid(res :ApiResult, para: ApiParams, config: ApiConfig) : boolean{
+    return Boolean(res.imageUrl) && 
+      (config.nameSplitCharacter ? res.name.split(config.nameSplitCharacter).map(name => name.trim()).filter(name => name === para.cardname).length >= 1 : para.cardname === res.name);
+  }
+
+  private getValue(item: any, config: ApiConfig, fieldName: string|undefined) {
+    return config.dataFormat === 'json' ? this.getNestedValue(item, fieldName) : parseHtmlValue(item, fieldName);
+  }
 
   async searchAllApis(cardName: string, language?: string, enabledApis?: string[]): Promise<{ [key: string]: { results: ApiResult[], rawResponse: string } }> {
     const results: { [key: string]: { results: ApiResult[], rawResponse: string } } = {};
@@ -171,9 +189,9 @@ export default class ApiFactory {
           results[configKey] = apiResults;
         } catch (error: unknown) {
           console.error(`Error fetching from ${configKey}:`, error);
-          results[configKey] = { 
-            results: [], 
-            rawResponse: error instanceof Error ? error.toString() : String(error) 
+          results[configKey] = {
+            results: [],
+            rawResponse: error instanceof Error ? error.toString() : String(error)
           };
         }
       }
@@ -181,9 +199,9 @@ export default class ApiFactory {
     return results;
   }
 
-  
+
   private async fetchCsrfToken(targetUrl: string, csrfTokenVariableName: string): Promise<string> {
-    const response = await fetch('/api/proxy/csrf-token?csrfName='+csrfTokenVariableName , {
+    const response = await fetch('/api/proxy/csrf-token?csrfName=' + csrfTokenVariableName, {
       method: 'GET',
       headers: {
         'X-Target-URL': targetUrl
@@ -197,10 +215,10 @@ export default class ApiFactory {
 
 }
 
-function parseHtmlValue(element: HTMLElement, selector: string): string {
-  const [cssSelector, valueType] = selector.split('|').map(s => s.trim());
+function parseHtmlValue(element: HTMLElement, selector: string|undefined): string {
+  const [cssSelector, valueType] = selector? selector.split('|').map(s => s.trim()) : '';
   const selectedElement = element.querySelector(cssSelector);
-  
+
   if (!selectedElement) return '';
 
   if (valueType === 'innerText') {

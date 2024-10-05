@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   printingproxies: {
+    "category": "mtg",
     "name": "printingproxies",
     "method": "POST",
     "baseUrl": "https://www.printingproxies.com/wp-content/plugins/card-demo/ajax/gallery.php",

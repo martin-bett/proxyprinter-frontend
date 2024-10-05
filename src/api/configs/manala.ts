@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   manala: {
+    "category": "mtg",
     "name": "manala",
     "method": "POST",
     "baseUrl": "https://www.mtgdatabase.com/en/search/",
