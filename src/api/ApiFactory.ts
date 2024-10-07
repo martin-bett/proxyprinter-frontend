@@ -25,129 +25,152 @@ export default class ApiFactory {
     }
 
     return async (params: ApiParams): Promise<{ results: ApiResult[], rawResponse: string }> => {
+      let allResults: ApiResult[] = [];
+      let allRawResponses: string[] = [];
+      let currentUrl: string = config.baseUrl;
 
-      let url = new URL(config.baseUrl);
-      let body: URLSearchParams | FormData | string | null = null;
-      let headers: Record<string, string> = {};
+      do {
+        let requestUrl: URL;
+        let body: URLSearchParams | FormData | string | null = null;
+        let headers: Record<string, string> = {};
 
-      const processedParams = Object.entries(config.parameterMap).reduce((acc, [key, value]) => {
-        acc[key] = value.replace(/\{(\w+)\}/g, (_: string, p: string) => {
-          const paramValue = params[p as keyof ApiParams];
-          return paramValue !== undefined ? String(paramValue) : '';
-        });
-        return acc;
-      }, {} as Record<string, string>);
-
-      if (config.requiresCsrfToken && config.csrfTokenVariableName) {
-        const csrfToken = await this.fetchCsrfToken(config.baseUrl, config.csrfTokenVariableName);
-        processedParams[config.csrfTokenVariableName] = csrfToken;
-      }
-
-      if (config.method.toUpperCase() === 'POST') {
-        if (config.requestFormat === 'multipart') {
-          body = new FormData();
-          Object.entries(processedParams).forEach(([key, value]) => {
-            (body as FormData).append(key, value);
+        const processedParams = Object.entries(config.parameterMap).reduce((acc, [key, value]) => {
+          acc[key] = value.replace(/\{(\w+)\}/g, (_: string, p: string) => {
+            const paramValue = params[p as keyof ApiParams];
+            return paramValue !== undefined ? String(paramValue) : '';
           });
-        } else if (config.requestFormat === 'json') {
-          body = JSON.stringify(processedParams);
-          headers['Content-Type'] = 'application/json';
-        } else {
-          body = new URLSearchParams(processedParams);
-          headers['Content-Type'] = 'application/x-www-form-urlencoded';
+          return acc;
+        }, {} as Record<string, string>);
+
+        if (config.requiresCsrfToken && config.csrfTokenVariableName) {
+          const csrfToken = await this.fetchCsrfToken(config.baseUrl, config.csrfTokenVariableName);
+          processedParams[config.csrfTokenVariableName] = csrfToken;
         }
-      } else {
-        Object.entries(processedParams).forEach(([key, value]) => {
-          url.searchParams.append(key, value);
-        });
-      }
 
-      const fetchOptions: RequestInit = {
-        method: config.method,
-        headers: headers,
-      };
+        if (config.method.toUpperCase() === 'POST') {
+          if (config.requestFormat === 'multipart') {
+            body = new FormData();
+            Object.entries(processedParams).forEach(([key, value]) => {
+              (body as FormData).append(key, value);
+            });
+          } else if (config.requestFormat === 'json') {
+            body = JSON.stringify(processedParams);
+            headers['Content-Type'] = 'application/json';
+          } else {
+            body = new URLSearchParams(processedParams);
+            headers['Content-Type'] = 'application/x-www-form-urlencoded';
+          }
+          requestUrl = new URL(currentUrl);
+        } else {
+          requestUrl = new URL(currentUrl);
+          Object.entries(processedParams).forEach(([key, value]) => {
+            requestUrl.searchParams.append(key, value);
+          });
+        }
 
-      if (body) {
-        fetchOptions.body = body;
-      }
-
-      if (config.useBackendProxy) {
-        fetchOptions.headers = {
-          ...fetchOptions.headers,
-          'X-Target-URL': url.toString(),
-          'X-Request-Format': config.requestFormat || 'urlencoded',
-          'X-Request-Method': config.method,
+        const fetchOptions: RequestInit = {
+          method: config.method,
+          headers: headers,
         };
-        url = new URL('/api/proxy');
-        fetchOptions.method = 'post';
-      }
 
-      try {
-        const response = await fetch(url.toString(), fetchOptions);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (body) {
+          fetchOptions.body = body;
         }
 
-        const text = await response.text();
-        let dataList: any[];
-
-        if (config.dataFormat === 'json') {
-          const data = JSON.parse(text);
-          dataList = this.getNestedValue(data, config.dataListField) || [];
-        } else if (config.dataFormat === 'html') {
-          const root = parse(text);
-          const elements = root.querySelectorAll(config.dataListField);
-          dataList = Array.from(elements);
-        } else {
-          throw new Error(`Unsupported data format: ${config.dataFormat}`);
-        }
-        const results = await Promise.all(dataList.flatMap(async (item: any) => {
-          const baseResult = {
-            apiName: config.name,
-            name: this.getValue(item, config, config.nameField),
-            set: config.setField ? this.getValue(item, config, config.setField) : undefined,
-            setNumber: config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
-            imageUrl: this.getValue(item, config, config.imageUrlField),
-            languageCode: config.languageField ? this.getValue(item, config, config.languageField) : undefined
+        if (config.useBackendProxy) {
+          fetchOptions.headers = {
+            ...fetchOptions.headers,
+            'X-Target-URL': requestUrl.toString(),
+            'X-Request-Format': config.requestFormat || 'urlencoded',
+            'X-Request-Method': config.method,
           };
+          requestUrl = new URL('/api/proxy', window.location.origin);
+          fetchOptions.method = 'POST';
+        }
 
-          let followLinkResults: ApiResult[] = [];
-          if (config.followLinkField && config.followLinkDataListField && config.followLinkImageField) {
-            const followLinkUrl = this.getValue(item, config, config.followLinkField);
-            if (followLinkUrl) {
-              const followLinkResponse = await fetch(followLinkUrl);
-              if (followLinkResponse.ok) {
-                const followLinkData = await followLinkResponse.json();
-                const followLinkDataList = this.getValue(followLinkData, config, config.followLinkDataListField) || [];
-                followLinkResults = followLinkDataList.map((followLinkItem: any) => ({
-                  ...baseResult,
-                  imageUrl: this.getValue(followLinkItem, config, config.followLinkImageField!),
-                  languageCode: config.followLinkLanguageField ? this.getValue(followLinkItem, config, config.followLinkLanguageField) : baseResult.languageCode
-                }));
+        try {
+          const response = await fetch(requestUrl.toString(), fetchOptions);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const text = await response.text();
+          allRawResponses.push(text);
+          let dataList: any[];
+
+          if (config.dataFormat === 'json') {
+            const data = JSON.parse(text);
+            dataList = this.getNestedValue(data, config.dataListField) || [];
+            if (config.paginationField) {
+              currentUrl = this.getNestedValue(data, config.paginationField) || '';
+            }
+          } else if (config.dataFormat === 'html') {
+            const root = parse(text);
+            const elements = root.querySelectorAll(config.dataListField);
+            dataList = Array.from(elements);
+            if (config.paginationField) {
+              const paginationElement = root.querySelector(config.paginationField);
+              currentUrl = paginationElement ? (paginationElement.getAttribute('href') || '') : '';
+            }
+          } else {
+            throw new Error(`Unsupported data format: ${config.dataFormat}`);
+          }
+
+          const pageResults = await Promise.all(dataList.flatMap(async (item: any) => {
+            const baseResult: ApiResult = {
+              apiName: config.name,
+              name: this.getValue(item, config, config.nameField),
+              set: config.setField ? this.getValue(item, config, config.setField) : undefined,
+              setNumber: config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
+              imageUrl: this.getValue(item, config, config.imageUrlField),
+              languageCode: config.languageField ? this.getValue(item, config, config.languageField) : undefined
+            };
+
+            let followLinkResults: ApiResult[] = [];
+            if (config.followLinkField && config.followLinkDataListField && config.followLinkImageField) {
+              const followLinkUrl = this.getValue(item, config, config.followLinkField);
+              if (followLinkUrl) {
+                const followLinkResponse = await fetch(followLinkUrl);
+                if (followLinkResponse.ok) {
+                  const followLinkData = await followLinkResponse.json();
+                  const followLinkDataList = this.getValue(followLinkData, config, config.followLinkDataListField) || [];
+                  followLinkResults = followLinkDataList.map((followLinkItem: any) => ({
+                    ...baseResult,
+                    imageUrl: this.getValue(followLinkItem, config, config.followLinkImageField!),
+                    languageCode: config.followLinkLanguageField ? this.getValue(followLinkItem, config, config.followLinkLanguageField) : baseResult.languageCode
+                  }));
+                }
               }
             }
-          }
 
-          const nestedLanguages = config.nestedLanguageDataListField ?
-            (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageDataListField) : item.querySelectorAll(config.nestedLanguageDataListField)) : [];
+            const nestedLanguages = config.nestedLanguageDataListField ?
+              (config.dataFormat === 'json' ? this.getNestedValue(item, config.nestedLanguageDataListField) : item.querySelectorAll(config.nestedLanguageDataListField)) : [];
 
-          if (nestedLanguages && Array.isArray(nestedLanguages)) {
-            return [
-              baseResult,
-              ...nestedLanguages.filter((lang:any) => this.getValue(lang, config, config.nestedLanguageImageUrlField) ).map((lang: any) => ({
-                ...baseResult,
-                imageUrl: config.nestedLanguageImageUrlField ? this.getValue(lang, config, config.nestedLanguageImageUrlField) || baseResult.imageUrl : baseResult.imageUrl,
-                languageCode: config.nestedLanguageLanguageField ? this.getValue(lang, config, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode
-              })),
-              ...followLinkResults
-            ];
-          }
+            if (nestedLanguages && Array.isArray(nestedLanguages)) {
+              return [
+                baseResult,
+                ...nestedLanguages.filter((lang: any) => this.getValue(lang, config, config.nestedLanguageImageUrlField)).map((lang: any) => ({
+                  ...baseResult,
+                  imageUrl: config.nestedLanguageImageUrlField ? this.getValue(lang, config, config.nestedLanguageImageUrlField) || baseResult.imageUrl : baseResult.imageUrl,
+                  languageCode: config.nestedLanguageLanguageField ? this.getValue(lang, config, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode
+                })),
+                ...followLinkResults
+              ];
+            }
 
-          return [baseResult, ...followLinkResults];
-        }));
+            return [baseResult, ...followLinkResults];
+          }));
 
-        const flattenedResults = results.flat()
+          allResults = allResults.concat(pageResults.flat());
+
+        } catch (error: unknown) {
+          console.error(`Error fetching from ${configKey}:`, error);
+          break;
+        }
+      } while (currentUrl && currentUrl !== config.baseUrl);
+
+      const flattenedResults = allResults
         .reduce((acc: ApiResult[], current: ApiResult) => {
           const isDuplicate = acc.some(item => 
             item.imageUrl === current.imageUrl &&
@@ -159,13 +182,9 @@ export default class ApiFactory {
           }
           return acc;
         }, [])
-          .filter((c: ApiResult) => this.checkSearchResultValid(c, params, config))
+        .filter((c: ApiResult) => this.checkSearchResultValid(c, params, config));
 
-        return { results: flattenedResults, rawResponse: text };
-      } catch (error: unknown) {
-        console.error(`Error fetching from ${configKey}:`, error);
-        return { results: [], rawResponse: error instanceof Error ? error.toString() : String(error) };
-      }
+      return { results: flattenedResults, rawResponse: allRawResponses.join('\n') };
     };
   }
 

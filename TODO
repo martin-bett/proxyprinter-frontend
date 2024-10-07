@@ -16,10 +16,5 @@ https://api.scryfall.com/cards/56ebc372-aabd-4174-a943-c7bf59e5028d?format=image
 http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=657&type=card
 https://images.pokemoncard.io/images/xy12/xy12-83.png
 
-pagination in datalist apifactory
-bps scrylfall -> 
- "has_more": true,
-  "next_page": "https://api.scryfall.com/cards/search?format=json&include_extras=false&include_multilingual=true&include_variations=true&order=name&page=2&q=forest&unique=prints",
 
-
-  asynchronität von anfragen ist je apis nacheinander müsste aber versch apis parallel
+  in decklist counter erhöhen für mehrfachdruck , checkbox an textinput "unique prints"

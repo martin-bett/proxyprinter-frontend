@@ -19,11 +19,8 @@ export default {
     "imageUrlField": "image_uris.large",
     "nameField":"name",
     "nameSplitCharacter": "//",
-    "followLinkField": "prints_search_uri",
-    "followLinkDataListField": "data",
-    "followLinkLanguageField": "lang",
-    "followLinkImageField": "image_uris.large",
-    "concurrentLimit":5
+    "concurrentLimit":5,
+    "paginationField": "next_page",
   } as ApiConfig
 };
 

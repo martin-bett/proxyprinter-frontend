@@ -25,6 +25,7 @@ export interface ApiConfig {
   languageField?: string;
   setField?: string;
   setNumberField?: string;
+  paginationField?:string;
 
   //Extended Datalocator
   followLinkField?: string;

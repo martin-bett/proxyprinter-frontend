@@ -151,7 +151,7 @@ const DeckInputAndViewer = () => {
     setCardResults({});
     setLog([]);
     setProgress(0);
-
+  
     const cardEntries = decklist.split('\n')
       .map(line => line.trim())
       .filter(line => line)
@@ -163,43 +163,65 @@ const DeckInputAndViewer = () => {
         return null;
       })
       .filter(entry => entry !== null);
-
+  
     const totalCards = cardEntries.reduce((sum, entry) => sum + entry.count, 0);
     let completedCards = 0;
-
+  
     const apiResults = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
-
-    for (const apiKey of enabledApiKeys) {
-      apiResults[apiKey] = {};
-      const limit = apiConfigs[apiKey]?.concurrentLimit || Infinity;
-      const api = factory.createApi(apiKey);
-
-      const tasks = cardEntries.map(entry => async () => {
-        if (!apiResults[apiKey][entry.name]) {
-          addToLog(`Searching for: ${entry.name}`, 'System');
-          try {
-            let result;
-            if (CacheService.hasSearchResult(apiKey, entry.name)) {
-              result = CacheService.getSearchResult(apiKey, entry.name);
-              addToLog(`Retrieved cached results for ${entry.name}`, apiKey);
-            } else {
-              result = await api({ cardname: entry.name });
-              CacheService.setSearchResult(apiKey, entry.name, result);
-              addToLog(`Found ${result.results.length} results for ${entry.name}`, apiKey, result.rawResponse);
+  
+    // Group APIs
+    const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
+    const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
+  
+    // Function to process a single API or proxy group
+    const processApiGroup = async (apiKeys) => {
+      const groupResults = {};
+      for (const apiKey of apiKeys) {
+        groupResults[apiKey] = {};
+        const limit = apiConfigs[apiKey]?.concurrentLimit || Infinity;
+        const api = factory.createApi(apiKey);
+  
+        const tasks = cardEntries.map(entry => async () => {
+          if (!groupResults[apiKey][entry.name]) {
+            addToLog(`Searching for: ${entry.name}`, 'System');
+            try {
+              let result;
+              if (CacheService.hasSearchResult(apiKey, entry.name)) {
+                result = CacheService.getSearchResult(apiKey, entry.name);
+                addToLog(`Retrieved cached results for ${entry.name}`, apiKey);
+              } else {
+                result = await api({ cardname: entry.name });
+                CacheService.setSearchResult(apiKey, entry.name, result);
+                addToLog(`Found ${result.results.length} results for ${entry.name}`, apiKey, result.rawResponse);
+              }
+              groupResults[apiKey][entry.name] = result.results;
+            } catch (error) {
+              addToLog(`Error searching for ${entry.name}: ${error.message}`, 'System');
+              groupResults[apiKey][entry.name] = [];
             }
-            apiResults[apiKey][entry.name] = result.results;
-          } catch (error) {
-            addToLog(`Error searching for ${entry.name}: ${error.message}`, 'System');
-            apiResults[apiKey][entry.name] = [];
           }
-        }
-        completedCards += entry.count;
-        setProgress(Math.round((completedCards / (totalCards * enabledApiKeys.length)) * 100));
-      });
-      await limitConcurrency(tasks, limit);
-    }
-
+          completedCards += entry.count;
+          setProgress(Math.round((completedCards / (totalCards * enabledApiKeys.length)) * 100));
+        });
+        await limitConcurrency(tasks, limit);
+      }
+      return groupResults;
+    };
+  
+    // Process all API groups concurrently
+    const apiGroupPromises = [
+      processApiGroup(proxyGroup),
+      ...nonProxyApis.map(apiKey => processApiGroup([apiKey]))
+    ];
+  
+    const apiGroupResults = await Promise.all(apiGroupPromises);
+  
+    // Combine results from all groups
+    apiGroupResults.forEach(groupResult => {
+      Object.assign(apiResults, groupResult);
+    });
+  
     // Combine results
     const results = {};
     cardEntries.forEach(entry => {
@@ -208,10 +230,10 @@ const DeckInputAndViewer = () => {
         results: enabledApiKeys.flatMap(apiKey => apiResults[apiKey][entry.name] || [])
       };
     });
-
+  
     setCardResults(results);
     setIsLoading(false);
-
+  
     // Set initial selected cards based on cache or select first image
     const initialSelectedCards = {};
     Object.entries(results).forEach(([cardName, cardData]) => {
