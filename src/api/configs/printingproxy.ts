@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   printingproxies: {
+    "officialWebsite": "https://www.printingproxies.com/mtg-proxy-custom-card/?index=1",
     "category": "mtg",
     "name": "printingproxies",
     "method": "POST",

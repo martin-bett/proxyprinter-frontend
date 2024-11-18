@@ -117,6 +117,7 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
                               src={result.imageUrl} 
                               alt={result.name}
                               onLoad={(imageInfo) => handleImageLoad(result, imageInfo)}
+                              onError={() => console.log('error on load', result.imageUrl)}
                             />
                             <span className="image-symbol">
                               {result.languageCode || apiName.toUpperCase()}
@@ -130,7 +131,7 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
             </div>
             <div className="filter-controls">
             <div className="language-filter">
-                <h3>Filter by Language</h3>
+                <h3 className='title is-4'>Filter by Language</h3>
                 {Array.from(availableLanguages).map(lang => (
                   <label key={lang}>
                     <input
@@ -142,10 +143,10 @@ const ImageSelectDialog = ({ open, onClose, groupedResults, initialSelectedImage
                   </label>
                 ))}
               </div>
-              </div>
-            <div className="filter-controls">
+              {/* </div>
+            <div className="filter-controls"> */}
               <div className="language-filter">
-                <h3>Filter by API</h3>
+                <h3 className='title is-4'>Filter by API</h3>
                 {Object.keys(groupedResults).map(apiName => (
                   <label key={apiName}>
                     <input

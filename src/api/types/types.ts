@@ -1,6 +1,6 @@
 export interface ApiConfig {
   //Info
-  category: 'mtg' | 'poke' | 'yugi';
+  category: 'mtg' | 'poke' | 'yugi' | 'misc';
   officialWebsite?: string;
 
   //Request
@@ -51,5 +51,5 @@ export interface ApiResult {
   set: string;
   setNumber: string;
   imageUrl: string;
-  languageCode: string;
+  languageCode?: string;
 }

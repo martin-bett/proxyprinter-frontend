@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   mtgbuilder: {
+    "officialWebsite": "https://mtgcardbuilder.com/",
     "category": "mtg",
     "name": "mtgbuilder",
     "method": "POST",

@@ -1,188 +1,444 @@
-// ApiConfigWizard.js
+import React, { useState, useEffect } from 'react';
+import TuneIcon from '@mui/icons-material/Tune';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import PublicIcon from '@mui/icons-material/Public';
+import LockIcon from '@mui/icons-material/Lock';
 
-import React, { useState } from 'react';
-
-const ApiConfigWizard = ({ onClose, onSave }) => {
+const ApiConfigWizard = ({ onClose, onSave,onPublish,onDelete, onCopy, initialConfig }) => {
+  const [isOwner, setIsOwner] = useState(false);
+  const [fingerprint, setFingerprint] = useState(null);
   const [config, setConfig] = useState({
     name: '',
+    category: 'misc',
+    officialWebsite: '',
+    customArts: false,
     method: 'GET',
-    requestFormat: 'urlencoded',
+    dataFormat: 'json',
     baseUrl: '',
     parameterMap: {},
     concurrentLimit: 1,
-    dataFormat: 'json',
-    dataListField: '',
-    nameField: '',
-    imageUrlField: '',
-    setField: '',
-    setNumberField: '',
+    requestFormat: 'urlencoded',
     csrfTokenVariableName: '',
     requiresCsrfToken: false,
     useBackendProxy: false,
+    paginationField: '',
+    dataListField: '',
+    nameField: '',
+    imageUrlField: '',
+    languageField: '',
+    setField: '',
+    nameSplitCharacter: '',
+    setNumberField: '',
     followLinkField: '',
     followLinkDataListField: '',
     followLinkImageField: '',
+    followLinkLanguageField: '',
     nestedLanguageDataListField: '',
     nestedLanguageImageUrlField: '',
     nestedLanguageLanguageField: ''
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setConfig(prev => ({ ...prev, [name]: value }));
-  };
+  const [expandedSections, setExpandedSections] = useState({
+    baseInfo: true,
+    requestBasic: false,
+    requestAdvanced: false,
+    locatorBasic: false,
+    locatorAdvanced: false,
+  });
 
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setConfig(prev => ({ ...prev, [name]: checked }));
+  // Fingerprint-Initialisierung
+  useEffect(() => {
+    const initFingerprint = async () => {
+      const fp = await FingerprintJS.load();
+      const result = await fp.get();
+      setFingerprint(result.visitorId);
+    };
+    initFingerprint();
+  }, []);
+
+  useEffect(() => {
+    if (initialConfig) {
+      setConfig((prevConfig) => ({
+        ...prevConfig,
+        ...Object.fromEntries(
+          Object.entries(initialConfig).map(([key, value]) => [
+            key,
+            value !== undefined && value !== null ? value : ''
+          ])
+        ),
+      }));
+    }
+  }, [JSON.stringify(initialConfig)]);
+
+  useEffect(() => {
+    if (config.name && fingerprint) {
+      fetch(`/api/configs/${config.id}/check`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Fingerprint': fingerprint, // Falls benötigt
+        }
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to check ownership');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setIsOwner(data); // Erwartet ein Boolean vom Server
+        })
+        .catch((error) => {
+          console.error('Error checking ownership:', error);
+          setIsOwner(false);
+        });
+    }
+  }, [fingerprint, config.name]);
+
+  const handleSave = () => { }
+  const handlePublish = () => { onPublish(config.id);}
+  const handleDelete = () => { onDelete(config.id);}
+  const handleCopyConfig = () => {onCopy(config.id);}
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setConfig((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleParameterMapChange = (e) => {
     try {
       const parameterMap = JSON.parse(e.target.value);
-      setConfig(prev => ({ ...prev, parameterMap }));
+      setConfig((prev) => ({ ...prev, parameterMap }));
     } catch (error) {
       console.error('Invalid JSON for parameterMap');
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleToggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  const handleSubmit = () => {
     onSave(config);
-    onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>New API Configuration</h2>
-      
-      <label>
-        Name:
-        <input type="text" name="name" value={config.name} onChange={handleInputChange} required />
-      </label>
+    <div className="wizard-container">
+      <h1 className='title is-4'>Config Settings</h1>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="wizard-form">
 
-      <label>
-        Method:
-        <select name="method" value={config.method} onChange={handleInputChange}>
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-        </select>
-      </label>
+        {/* Base Info */}
+        <div className='wizard-category'>
+          <button className="button setting-category" type="button" onClick={() => handleToggleSection('baseInfo')}>
+            <TuneIcon/>Base Info {expandedSections.baseInfo ? <VisibilityIcon/>: <VisibilityOffIcon/>}
+          </button>
+          {expandedSections.baseInfo && (
+            <div>
+              <label>Name:</label>
+              <input
+                type="text"
+                name="name"
+                value={config.name}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+                required
+              />
+              <label>Category:</label>
+              <select name="category"  disabled={!isOwner} value={config.category} onChange={handleInputChange}>
+                <option value="MTG">MTG</option>
+                <option value="POKE">Poke</option>
+                <option value="YUGIOH">Yugi</option>
+                <option value="MISC">Misc</option>
+              </select>
+              <label>Official Website:</label>
+              <input
+                type="text"
+                name="officialWebsite"
+                value={config.officialWebsite}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Custom Arts:</label>
+              <input
+                type="checkbox"
+                name="customArts"
+                checked={config.customArts}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+            </div>
+          )}
+        </div>
 
-      <label>
-        Request Format:
-        <select name="requestFormat" value={config.requestFormat} onChange={handleInputChange}>
-          <option value="urlencoded">URL Encoded</option>
-          <option value="multipart">Multipart</option>
-          <option value="json">JSON</option>
-        </select>
-      </label>
+        {/* Request Basic */}
+        <div className='wizard-category'>
+          <button className="button setting-category" type="button" onClick={() => handleToggleSection('requestBasic')}>
+          <TuneIcon/>Request Basic {expandedSections.requestBasic ? <VisibilityIcon/>: <VisibilityOffIcon/>}
+          </button>
+          {expandedSections.requestBasic && (
+            <div>
+              <label>Method:</label>
+              <select  disabled={!isOwner} name="method" value={config.method} onChange={handleInputChange}>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+              </select>
+              <label>Data Format:</label>
+              <select  disabled={!isOwner} name="dataFormat" value={config.dataFormat} onChange={handleInputChange}>
+                <option value="json">JSON</option>
+                <option value="html">HTML</option>
+              </select>
+              <label>Base URL:</label>
+              <input
+                type="text"
+                name="baseUrl"
+                value={config.baseUrl}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Parameter Map:</label>
+              <textarea
+                name="parameterMap"
+                value={JSON.stringify(config.parameterMap, null, 2)}
+                onChange={handleParameterMapChange}
+                disabled={!isOwner}
+              />
+              <label>Concurrent Limit:</label>
+              <input
+                type="number"
+                name="concurrentLimit"
+                value={config.concurrentLimit}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Request Format:</label>
+              <select
+                name="requestFormat"
+                value={config.requestFormat}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              >
+                <option value="urlencoded">URL Encoded</option>
+                <option value="multipart">Multipart</option>
+                <option value="json">JSON</option>
+              </select>
+            </div>
+          )}
+        </div>
 
-      <label>
-        Base URL:
-        <input type="url" name="baseUrl" value={config.baseUrl} onChange={handleInputChange} required />
-      </label>
+        {/* Request Advanced */}
+        <div className='wizard-category'>
+          <button className="button setting-category" type="button" onClick={() => handleToggleSection('requestAdvanced')}>
+          <TuneIcon/>Request Advanced {expandedSections.requestAdvanced ? <VisibilityIcon/>: <VisibilityOffIcon/>}
+          </button>
+          {expandedSections.requestAdvanced && (
+            <div>
+              <label>CSRF Token Variable Name:</label>
+              <input
+                type="text"
+                name="csrfTokenVariableName"
+                value={config.csrfTokenVariableName}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Requires CSRF Token:</label>
+              <input
+                type="checkbox"
+                name="requiresCsrfToken"
+                checked={config.requiresCsrfToken}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Use Backend Proxy:</label>
+              <input
+                type="checkbox"
+                name="useBackendProxy"
+                checked={config.useBackendProxy}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+            </div>
+          )}
+        </div>
 
-      <label>
-        Parameter Map:
-        <textarea 
-          name="parameterMap" 
-          value={JSON.stringify(config.parameterMap, null, 2)} 
-          onChange={handleParameterMapChange}
-        />
-      </label>
+        {/* Locator Basic */}
+        <div className='wizard-category'>
+          <button className="button setting-category" type="button" onClick={() => handleToggleSection('locatorBasic')}>
+          <TuneIcon/>Locator Basic {expandedSections.locatorBasic ? <VisibilityIcon/>: <VisibilityOffIcon/>}
+          </button>
+          {expandedSections.locatorBasic && (
+            <div>
+              <label>Pagination Field:</label>
+              <input
+                type="text"
+                name="paginationField"
+                value={config.paginationField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Data List Field:</label>
+              <input
+                type="text"
+                name="dataListField"
+                value={config.dataListField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Name Field:</label>
+              <input
+                type="text"
+                name="nameField"
+                value={config.nameField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Image URL Field:</label>
+              <input
+                type="text"
+                name="imageUrlField"
+                value={config.imageUrlField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Language Field:</label>
+              <input
+                type="text"
+                name="languageField"
+                value={config.languageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Set Field:</label>
+              <input
+                type="text"
+                name="setField"
+                value={config.setField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+            </div>
+          )}
+        </div>
 
-      <label>
-        Concurrent Limit:
-        <input type="number" name="concurrentLimit" value={config.concurrentLimit} onChange={handleInputChange} required />
-      </label>
-
-      <label>
-        Data Format:
-        <select name="dataFormat" value={config.dataFormat} onChange={handleInputChange}>
-          <option value="json">JSON</option>
-          <option value="html">HTML</option>
-        </select>
-      </label>
-
-      <label>
-        Data List Field:
-        <input type="text" name="dataListField" value={config.dataListField} onChange={handleInputChange} required />
-      </label>
-
-      <label>
-        Name Field:
-        <input type="text" name="nameField" value={config.nameField} onChange={handleInputChange} required />
-      </label>
-
-      <label>
-        Image URL Field:
-        <input type="text" name="imageUrlField" value={config.imageUrlField} onChange={handleInputChange} required />
-      </label>
-
-      <label>
-        Set Field:
-        <input type="text" name="setField" value={config.setField} onChange={handleInputChange} />
-      </label>
-
-      <label>
-        Set Number Field:
-        <input type="text" name="setNumberField" value={config.setNumberField} onChange={handleInputChange} />
-      </label>
-
-      <h3>Custom Request Options</h3>
-      <label>
-        <input type="checkbox" name="requiresCsrfToken" checked={config.requiresCsrfToken} onChange={handleCheckboxChange} />
-        Requires CSRF Token
-      </label>
-
-      {config.requiresCsrfToken && (
-        <label>
-          CSRF Token Variable Name:
-          <input type="text" name="csrfTokenVariableName" value={config.csrfTokenVariableName} onChange={handleInputChange} />
-        </label>
-      )}
-
-      <label>
-        <input type="checkbox" name="useBackendProxy" checked={config.useBackendProxy} onChange={handleCheckboxChange} />
-        Use Backend Proxy
-      </label>
-
-      <h3>Extended Data Locator</h3>
-      <label>
-        Follow Link Field:
-        <input type="text" name="followLinkField" value={config.followLinkField} onChange={handleInputChange} />
-      </label>
-
-      <label>
-        Follow Link Data List Field:
-        <input type="text" name="followLinkDataListField" value={config.followLinkDataListField} onChange={handleInputChange} />
-      </label>
-
-      <label>
-        Follow Link Image Field:
-        <input type="text" name="followLinkImageField" value={config.followLinkImageField} onChange={handleInputChange} />
-      </label>
-
-      <h3>Language Support</h3>
-      <label>
-        Nested Language Data List Field:
-        <input type="text" name="nestedLanguageDataListField" value={config.nestedLanguageDataListField} onChange={handleInputChange} />
-      </label>
-
-      <label>
-        Nested Language Image URL Field:
-        <input type="text" name="nestedLanguageImageUrlField" value={config.nestedLanguageImageUrlField} onChange={handleInputChange} />
-      </label>
-
-      <label>
-        Nested Language Language Field:
-        <input type="text" name="nestedLanguageLanguageField" value={config.nestedLanguageLanguageField} onChange={handleInputChange} />
-      </label>
-
-      <button type="submit">Save Configuration</button>
-      <button type="button" onClick={onClose}>Cancel</button>
-    </form>
+        {/* Locator Advanced */}
+        <div className='wizard-category'>
+          <button className="button setting-category" type="button" onClick={() => handleToggleSection('locatorAdvanced')}>
+          <TuneIcon/>Locator Advanced {expandedSections.locatorAdvanced ? <VisibilityIcon/>: <VisibilityOffIcon/>}
+          </button>
+          {expandedSections.locatorAdvanced && (
+            <div>
+              <label>Name Split Character:</label>
+              <input
+                type="text"
+                name="nameSplitCharacter"
+                value={config.nameSplitCharacter}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Set Number Field:</label>
+              <input
+                type="text"
+                name="setNumberField"
+                value={config.setNumberField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Follow Link Field:</label>
+              <input
+                type="text"
+                name="followLinkField"
+                value={config.followLinkField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Follow Link Data List Field:</label>
+              <input
+                type="text"
+                name="followLinkDataListField"
+                value={config.followLinkDataListField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Follow Link Image Field:</label>
+              <input
+                type="text"
+                name="followLinkImageField"
+                value={config.followLinkImageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Follow Link Language Field:</label>
+              <input
+                type="text"
+                name="followLinkLanguageField"
+                value={config.followLinkLanguageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Nested Language Data List Field:</label>
+              <input
+                type="text"
+                name="nestedLanguageDataListField"
+                value={config.nestedLanguageDataListField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Nested Language Image URL Field:</label>
+              <input
+                type="text"
+                name="nestedLanguageImageUrlField"
+                value={config.nestedLanguageImageUrlField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Nested Language Field:</label>
+              <input
+                type="text"
+                name="nestedLanguageLanguageField"
+                value={config.nestedLanguageLanguageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+            </div>
+          )}
+        </div>
+        {isOwner ? (
+          <>
+            <div className="wizard-category">
+              <button className="button is-secondary submit" type="submit" >
+                <SaveIcon/>Save
+              </button>
+            </div>
+            <div className="wizard-category">
+              <button className="button is-secondary publish" type="button" onClick={handlePublish}>
+                {config.published ? <LockIcon/>: <PublicIcon/> }
+                {config.published ? 'Unpublish' : 'Publish'}
+              </button>
+            </div>
+            <div className="wizard-category">
+              <button className="button is-secondary remove" type="button" onClick={handleDelete}>
+                <DeleteForeverIcon/>Delete
+              </button>
+            </div>
+          </>
+        ) : null }
+          <div className="wizard-category">
+            <button className="button is-secondary copy" type="button" onClick={handleCopyConfig}>
+              <ContentCopyIcon/>Copy Config
+            </button>
+          </div>
+      </form>
+    </div>
   );
 };
 

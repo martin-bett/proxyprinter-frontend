@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const CardImage = ({ src, alt, onLoad }) => {
+const CardImage = ({ src, alt, onLoad, onError }) => {
   const [imageInfo, setImageInfo] = useState(null);
   const imgRef = useRef(null);
 
@@ -28,19 +28,20 @@ const CardImage = ({ src, alt, onLoad }) => {
   };
 
   return (
-    <div className="card-image-container card-tile">
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt}
-        onLoad={handleLoad}
-      />
-      {imageInfo && (
-        <div className="image-info">
-          {imageInfo.resolution} {imageInfo.fileType}
-        </div>
-      )}
-    </div>
+    <>
+    <img
+      ref={imgRef}
+      src={src}
+      alt={alt}
+      onLoad={handleLoad}
+      onError={() => onError(src)}
+    />
+    {imageInfo && (
+      <div className="image-info">
+        {imageInfo.resolution} {imageInfo.fileType}
+      </div>
+    )}
+    </>
   );
 };
 

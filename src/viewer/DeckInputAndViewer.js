@@ -6,14 +6,24 @@ import PdfProgressDialog from './PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings } from './SettingsDialog';
-import { apiConfigs } from '../api/configs';
-import ApiConfigWizard from '../api/ApiConfigWizard';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
+import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import SettingsIcon from '@mui/icons-material/Settings';
 import CardImage from './CardImage';
 import CustomCardDialog from './CustomCardDialog';
+import ApiConfigDialog from './ApiConfigDialog';
+import TranslateIcon from '@mui/icons-material/Translate';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import PaletteIcon from '@mui/icons-material/Palette';
+import PayPalDonateButton from './PayPalDonateButton';
+import GitHubButton from './GitHubButton';
+import TitleDiv from './TitleDiv';
+import AddCardButton from './AddCardButton';
+import VersionInfo from './VersionInfo';
+import { Minus, Plus } from 'lucide-react';
+import EyeTriangle from './EyeTriangle';
 
-console.log('apiConfigs:', apiConfigs);
-
-const factory = new ApiFactory(apiConfigs);
 const NO_LANGUAGE = 'No Language';
 
 const DeckInputAndViewer = () => {
@@ -25,6 +35,8 @@ const DeckInputAndViewer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rawDataDialog, setRawDataDialog] = useState(null);
   const [categoryStates, setCategoryStates] = useState({});
+  const [apiConfigs, setApiConfigs] = useState({}); // New state for API configs
+  const [apiFactory, setApiFactory] = useState(null); // State for API factory
   const [enabledApis, setEnabledApis] = useState(() =>
     Object.keys(apiConfigs).reduce((acc, key) => ({ ...acc, [apiConfigs[key].name]: true }), {})
   );
@@ -32,28 +44,47 @@ const DeckInputAndViewer = () => {
   const [currentCardName, setCurrentCardName] = useState(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(null);
   const [availableLanguages, setAvailableLanguages] = useState(new Set([NO_LANGUAGE]));
+
   const [visibleLanguages, setVisibleLanguages] = useState(new Set([NO_LANGUAGE]));
   const [visibleApis, setVisibleApis] = useState(new Set(Object.keys(apiConfigs)));
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfProgressMessage, setPdfProgressMessage] = useState('');
-  const [customApiConfigs, setCustomApiConfigs] = useState([]);
+  const [uniquePrints, setUniquePrints] = useState(true);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
-  const [apiConfigWizardOpen, setApiConfigWizardOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
+  const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
 
   useEffect(() => {
+    setApiFactory(new ApiFactory(apiConfigs));
+  }, [apiConfigs]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('setConfigs');
+    console.log('storage content', saved);
+    if (saved) {
+      handleSaveApiConfigs(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
     const languages = new Set([NO_LANGUAGE]);
+    const apis = new Set();
     Object.values(cardResults).forEach(cardData => {
       cardData.results.forEach(card => {
         if (card.languageCode) {
           languages.add(card.languageCode);
         }
+        if (card.apiName) {
+          apis.add(card.apiName);
+        }
       });
     });
+    console.log(apis);
+    setVisibleApis(apis);
     setAvailableLanguages(languages);
   }, [cardResults]);
 
@@ -82,17 +113,32 @@ const DeckInputAndViewer = () => {
     setCustomCardDialogOpen(false);
   };
 
+  const handleCloseApiConfigDialog = () => {
+    setApiConfigDialogOpen(false);
+  };
+
+  const handleSaveApiConfigs = async (apiconfigList) => {
+    const configsObject = apiconfigList.reduce((acc, config) => {
+      if (config.name) {
+        acc[config.name] = config;
+      }
+      return acc;
+    }, {});
+    console.log('Saving new API configs:', configsObject);
+    setApiConfigs(configsObject); // Update internal API configs state
+  };
+
   const handleSaveCustomCard = async (cardName, imageUrl, file) => {
     console.log(cardName);
     console.log(imageUrl);
     console.log(file);
     let finalImageUrl;
-    if(imageUrl){
+    if (imageUrl) {
       finalImageUrl = imageUrl;
     }
 
-    if(file){
-      finalImageUrl = '/api/files/download/'+file;
+    if (file) {
+      finalImageUrl = '/api/files/download/' + file;
     }
 
     setCardResults(prev => ({
@@ -119,30 +165,21 @@ const DeckInputAndViewer = () => {
     handleCloseCustomCardDialog();
   };
 
-  const handleOpenApiConfigWizard = () => setApiConfigWizardOpen(true);
-  const handleCloseApiConfigWizard = () => setApiConfigWizardOpen(false);
-
-  const handleSaveApiConfig = (newConfig) => {
-    setCustomApiConfigs(prev => [...prev, newConfig]);
-    setEnabledApis(prev => ({ ...prev, [newConfig.name]: true }));
-    factory.updateConfigs([newConfig]);
-  };
-
-  const allApiConfigs = useMemo(() => {
-    return [...Object.values(apiConfigs), ...customApiConfigs];
-  }, [customApiConfigs]);
-
   useEffect(() => {
-    if (typeof apiConfigs === 'object' && apiConfigs !== null) {
+    if (typeof apiConfigs === 'object' && apiConfigs !== null && apiFactory !== null) {
       const configs = Object.values(apiConfigs);
-      factory.updateConfigs(configs);
+      apiFactory.updateConfigs(configs);
     }
   }, []);
 
+  const handleWebsiteClick = (url, event) => {
+    event.stopPropagation();
+    window.open(url, "_blank");
+  };
 
   const filterCard = useMemo(() => (card) => {
     return (visibleLanguages.has(card.languageCode || NO_LANGUAGE) &&
-      visibleApis.has(card.apiName));
+      visibleApis.has(card.apiName) || card.apiName == 'custom');
   }, [visibleLanguages, visibleApis]);
 
   const handleSubmit = async (e) => {
@@ -151,7 +188,7 @@ const DeckInputAndViewer = () => {
     setCardResults({});
     setLog([]);
     setProgress(0);
-  
+
     const cardEntries = decklist.split('\n')
       .map(line => line.trim())
       .filter(line => line)
@@ -163,41 +200,40 @@ const DeckInputAndViewer = () => {
         return null;
       })
       .filter(entry => entry !== null);
-  
+
     const totalCards = cardEntries.reduce((sum, entry) => sum + entry.count, 0);
     let completedCards = 0;
-  
+
     const apiResults = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
-  
+
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
     const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
-  
+
     // Function to process a single API or proxy group
     const processApiGroup = async (apiKeys) => {
       const groupResults = {};
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
         const limit = apiConfigs[apiKey]?.concurrentLimit || Infinity;
-        const api = factory.createApi(apiKey);
-  
+        const api = apiFactory.createApi(apiKey);
+
         const tasks = cardEntries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
-            addToLog(`Searching for: ${entry.name}`, 'System');
             try {
               let result;
               if (CacheService.hasSearchResult(apiKey, entry.name)) {
                 result = CacheService.getSearchResult(apiKey, entry.name);
-                addToLog(`Retrieved cached results for ${entry.name}`, apiKey);
+                addToLog(`Cached ${result.results.length} ${entry.name}`, apiKey);
               } else {
                 result = await api({ cardname: entry.name });
                 CacheService.setSearchResult(apiKey, entry.name, result);
-                addToLog(`Found ${result.results.length} results for ${entry.name}`, apiKey, result.rawResponse);
+                addToLog(`Found ${result.results.length} ${entry.name}`, apiKey, result.rawResponse);
               }
               groupResults[apiKey][entry.name] = result.results;
             } catch (error) {
-              addToLog(`Error searching for ${entry.name}: ${error.message}`, 'System');
+              addToLog(`Error ${entry.name}: ${error.message}`, apiKey);
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -208,20 +244,20 @@ const DeckInputAndViewer = () => {
       }
       return groupResults;
     };
-  
+
     // Process all API groups concurrently
     const apiGroupPromises = [
       processApiGroup(proxyGroup),
       ...nonProxyApis.map(apiKey => processApiGroup([apiKey]))
     ];
-  
+
     const apiGroupResults = await Promise.all(apiGroupPromises);
-  
+
     // Combine results from all groups
     apiGroupResults.forEach(groupResult => {
       Object.assign(apiResults, groupResult);
     });
-  
+
     // Combine results
     const results = {};
     cardEntries.forEach(entry => {
@@ -230,10 +266,10 @@ const DeckInputAndViewer = () => {
         results: enabledApiKeys.flatMap(apiKey => apiResults[apiKey][entry.name] || [])
       };
     });
-  
+
     setCardResults(results);
     setIsLoading(false);
-  
+
     // Set initial selected cards based on cache or select first image
     const initialSelectedCards = {};
     Object.entries(results).forEach(([cardName, cardData]) => {
@@ -251,13 +287,15 @@ const DeckInputAndViewer = () => {
   const handleCloseImageSelectDialog = (selectedImage) => {
     if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
       setSelectedCards(prev => {
+        const currentCards = prev[currentCardName] || [];
+
         const newSelectedCards = {
           ...prev,
-          [currentCardName]: prev[currentCardName].map((card, index) =>
+          [currentCardName]: currentCards.map((card, index) =>
             index === currentCardIndex ? selectedImage : card
           )
         };
-        // Cache the selected image
+
         CacheService.setSelectedImage(currentCardName, currentCardIndex + 1, selectedImage.imageUrl);
         return newSelectedCards;
       });
@@ -270,7 +308,7 @@ const DeckInputAndViewer = () => {
   const handleRemoveCard = (cardName, index) => {
     setCardResults(prevResults => {
       const newResults = { ...prevResults };
-      if (newResults[cardName].count > 1) {
+      if (uniquePrints && newResults[cardName].count > 1) {
         newResults[cardName] = {
           ...newResults[cardName],
           count: newResults[cardName].count - 1
@@ -301,10 +339,7 @@ const DeckInputAndViewer = () => {
   const handleOpenSettingsDialog = () => setSettingsDialogOpen(true);
   const handleCloseSettingsDialog = () => setSettingsDialogOpen(false);
 
-  const handleOpenRawDataDialog = (rawResponse) => {
-    setRawDataDialog(rawResponse);
-    setRawDataDialogOpen(true);
-  };
+  const handleOpenApiConfigDialog = () => setApiConfigDialogOpen(true);
 
   const handleCloseRawDataDialog = () => {
     setRawDataDialog(null);
@@ -321,7 +356,6 @@ const DeckInputAndViewer = () => {
       }
       return newSet;
     });
-    refreshVisibleCards();
   };
 
   const toggleApi = (apiName) => {
@@ -334,15 +368,6 @@ const DeckInputAndViewer = () => {
       }
       return newSet;
     });
-    refreshVisibleCards();
-  };
-
-  const filterCardsByVisibleApis = (cards) => {
-    return cards.filter(card => visibleApis.has(card.apiName));
-  };
-
-  const refreshVisibleCards = () => {
-    
   };
 
   useEffect(() => {
@@ -366,13 +391,13 @@ const DeckInputAndViewer = () => {
             return null; // If no visible results, set to null instead of keeping old selection
           }
         });
-        
+
         if (newSelectedCards[cardName].every(card => card === null)) {
           delete newSelectedCards[cardName]; // Remove the card if all selections are null
           hasChanges = true;
         }
       });
-
+      console.log(newSelectedCards);
       return hasChanges ? newSelectedCards : prev;
     });
   }, [visibleLanguages, visibleApis, cardResults]);
@@ -418,7 +443,16 @@ const DeckInputAndViewer = () => {
 
     const createPdfDto = {
       imageUrls: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
-        return cardSelections.map(selectedCard => selectedCard?.imageUrl).filter(url => url);
+        if (uniquePrints) {
+          // Wenn uniquePrints true ist, nehmen wir einfach alle URLs wie sie sind
+          return cardSelections.map(selectedCard => selectedCard?.imageUrl).filter(url => url);
+        } else {
+          // Wenn uniquePrints false ist, nehmen wir nur die erste URL und duplizieren sie entsprechend dem count
+          const firstValidUrl = cardSelections.find(selectedCard => selectedCard?.imageUrl)?.imageUrl;
+          if (!firstValidUrl) return [];
+          const count = cardResults[cardName]?.count || 1;
+          return Array(count).fill(firstValidUrl);
+        }
       }),
       settings: settings
     };
@@ -534,8 +568,8 @@ const DeckInputAndViewer = () => {
     });
   };
 
-  const renderCheckbox = (id, label, checked, onChange, isIndeterminate = false) => (
-    <div className="flex items-center mb-2">
+  const renderCheckbox = (id, label, checked, onChange, isIndeterminate = false, labelClass) => (
+    <div className="flex items-center">
       <div className="relative flex items-center">
         <input
           type="checkbox"
@@ -551,7 +585,7 @@ const DeckInputAndViewer = () => {
           {isIndeterminate && <div className="w-3 h-3 bg-white m-1"></div>}
         </div>
       </div>
-      <label htmlFor={id} className="ml-2 text-sm font-medium">{label}</label>
+      <label htmlFor={id} className={`ml-2 text-sm font-medium ${labelClass? labelClass : ''}`}>{label}</label>
     </div>
   );
 
@@ -569,99 +603,291 @@ const DeckInputAndViewer = () => {
     }, {});
   };
 
+  const getImageLabelCategory = (category) => {
+    switch (category.toLowerCase()) {
+      case 'mtg':
+        return <img src='/icons/mtg.png' alt="MTG Icon" className="categoryIcon" />;
+      case 'poke':
+        return <img src='/icons/poke.png' alt="Pokemon Icon" className="categoryIcon" />;
+      case 'yugioh':
+        return <div className='categoryIcon'><EyeTriangle /></div>;
+      case 'misc':
+        return <img src='/icons/misc.webp' alt="Misc Icon" className="categoryIcon" />;
+      default:
+        return null;
+    }
+  }
+
+  const updateCardCount = (cardName, increment) => {
+    setCardResults(prevResults => ({
+      ...prevResults,
+      [cardName]: {
+        ...prevResults[cardName],
+        count: Math.max(0, prevResults[cardName].count + increment)
+      }
+    }));
+  };
+
+  const getApiConfigLabelForCheckbox = (config) => {
+    return (
+      <div className="label-container">
+        <span>{config.name}</span>
+        {config.languageField || config.nestedLanguageLanguageField ? (
+          <span>
+            <TranslateIcon className="subCategoryIcon" />
+          </span>
+        ) : null}
+        {config.customArts ? (
+          <span>
+            <PaletteIcon className="subCategoryIcon" />
+          </span>
+        ) : null}
+        {config.officialWebsite && (
+          <span class="external-link" onClick={(e) => handleWebsiteClick(config.officialWebsite, e)}>
+            <ExitToAppIcon />
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const handleUniquePrintsChanged = (event) => {
+    setUniquePrints(event.target.checked);
+  }
+
+  const searchForApis = async (cardName) => {
+    setIsLoading(true);
+    setProgress(0);
+
+    // Erstelle einen einzelnen Card Entry mit count 1
+    const cardEntry = { count: 1, name: cardName };
+    let completedCards = 0;
+
+    const apiResults = {};
+    const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
+
+    // Group APIs
+    const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
+    const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
+
+    // Function to process a single API or proxy group
+    const processApiGroup = async (apiKeys) => {
+      const groupResults = {};
+      for (const apiKey of apiKeys) {
+        groupResults[apiKey] = {};
+        const limit = apiConfigs[apiKey]?.concurrentLimit || Infinity;
+        const api = apiFactory.createApi(apiKey);
+
+        try {
+          if (CacheService.hasSearchResult(apiKey, cardEntry.name)) {
+            const result = CacheService.getSearchResult(apiKey, cardEntry.name);
+            addToLog(`Cached ${result.results.length} ${cardEntry.name}`, apiKey);
+            groupResults[apiKey][cardEntry.name] = result.results;
+          } else {
+            const result = await api({ cardname: cardEntry.name });
+            CacheService.setSearchResult(apiKey, cardEntry.name, result);
+            addToLog(`Found ${result.results.length} ${cardEntry.name}`, apiKey, result.rawResponse);
+            groupResults[apiKey][cardEntry.name] = result.results;
+          }
+        } catch (error) {
+          addToLog(`Error ${cardEntry.name}: ${error.message}`, apiKey);
+          groupResults[apiKey][cardEntry.name] = [];
+        }
+
+        completedCards++;
+        setProgress(Math.round((completedCards / enabledApiKeys.length) * 100));
+      }
+      return groupResults;
+    };
+
+    // Process all API groups concurrently
+    const apiGroupPromises = [
+      processApiGroup(proxyGroup),
+      ...nonProxyApis.map(apiKey => processApiGroup([apiKey]))
+    ];
+
+    const apiGroupResults = await Promise.all(apiGroupPromises);
+
+    // Combine results from all groups
+    apiGroupResults.forEach(groupResult => {
+      Object.assign(apiResults, groupResult);
+    });
+
+    // Combine results for the single card
+    const results = {
+      [cardEntry.name]: {
+        count: cardEntry.count,
+        results: enabledApiKeys.flatMap(apiKey => apiResults[apiKey][cardEntry.name] || [])
+      }
+    };
+
+    setCardResults(prevResults => ({
+      ...prevResults,
+      ...results
+    }));
+
+    // Set initial selected cards based on cache or select first image
+    const initialSelectedCards = {};
+    Object.entries(results).forEach(([cardName, cardData]) => {
+      initialSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
+        if (CacheService.hasSelectedImage(cardName, index + 1)) {
+          const cachedImageUrl = CacheService.getSelectedImage(cardName, index + 1);
+          return cardData.results.find(card => card.imageUrl === cachedImageUrl) || cardData.results[0] || null;
+        }
+        return cardData.results[0] || null;  // Select first image if no cache or cache not found
+      });
+    });
+
+    setSelectedCards(prevSelected => ({
+      ...prevSelected,
+      ...initialSelectedCards
+    }));
+
+    setIsLoading(false);
+  };
+
+  const handleImageError = (cardName, failedImageUrl, apiName) => {
+    console.log(`Image failed to load: ${failedImageUrl} for card ${cardName} from API ${apiName}`);
+
+    setCardResults(prevResults => {
+      const updatedResults = { ...prevResults };
+      if (updatedResults[cardName]) {
+        // Filter out the failed image from the results
+        updatedResults[cardName].results = updatedResults[cardName].results.filter(
+          result => result.imageUrl !== failedImageUrl
+        );
+
+        // If no results remain for this card from any API, keep the structure but with empty results
+        if (updatedResults[cardName].results.length === 0) {
+          updatedResults[cardName].results = [];
+        }
+      }
+      return updatedResults;
+    });
+
+    // Update selected cards if the failed image was selected
+    setSelectedCards(prevSelected => {
+      const updatedSelected = { ...prevSelected };
+      if (updatedSelected[cardName]) {
+        // Replace any instances of the failed image with the next available image
+        updatedSelected[cardName] = updatedSelected[cardName].map(selectedCard => {
+          if (selectedCard?.imageUrl === failedImageUrl) {
+            const availableResults = cardResults[cardName]?.results.filter(
+              result => result.imageUrl !== failedImageUrl
+            );
+            return availableResults?.[0] || null;
+          }
+          return selectedCard;
+        });
+      }
+      return updatedSelected;
+    });
+  };
+
   return (
     <div className="deck-input-and-viewer">
-    <div className="headline">
-      <h1>Universal Proxy Print</h1>
-    </div>
+      <TitleDiv />
 
 
-
-      <div className="api-controls">
+      <div className="input-controls">
         <div className="api-controls">
-          <h3>API Controls</h3>
-          <button onClick={handleOpenApiConfigWizard}>Add New API Config</button>
-        </div>
+          <div className="api-controls">
+            <h3 className='title is-5'>API Controls</h3>
+            <button className="button" onClick={handleOpenApiConfigDialog}><SettingsIcon />Manage Apis</button>
 
-        <div className="api-toggles checkbox-group">
-        <h3 className="text-lg font-semibold mb-4">API Selection</h3>
-      {Object.entries(categoryStates).map(([category, _]) => (
-        <div key={category} className="mb-4">
-          {renderCheckbox(
-            category,
-            category.toUpperCase(),
-            getCategoryState(category) === 'checked',
-            () => handleCategoryToggle(category),
-            getCategoryState(category) === 'indeterminate'
-          )}
-          <div className="ml-6">
-            {Object.values(apiConfigs)
-              .filter(config => config.category === category)
-              .map(config => (
-                <div key={config.name} className="ml-2">
-                  {renderCheckbox(
-                    config.name,
-                    config.name,
-                    enabledApis[config.name] || false,
-                    () => handleApiToggle(config.name)
-                  )}
+          </div>
+
+          <div className="api-toggles checkbox-group">
+            <h3 className="text-lg font-semibold mb-4 title is-4">API Selection</h3>
+            {Object.entries(categoryStates).map(([category, _]) => (
+              <div key={category} className="mb-4">
+                {renderCheckbox(
+                  category,
+                  getImageLabelCategory(category.toUpperCase()),
+                  getCategoryState(category) === 'checked',
+                  () => handleCategoryToggle(category),
+                  getCategoryState(category) === 'indeterminate',
+                  'category-label'
+                )}
+
+                <div className="ml-2">
+                  <ul>
+                    {Object.values(apiConfigs)
+                      .filter(config => config.category === category)
+                      .map(config => (
+                        <li key={config.name}>
+                          <div>
+                            {renderCheckbox(
+                              config.name,
+                              getApiConfigLabelForCheckbox(config),
+                              enabledApis[config.name] || false,
+                              () => handleApiToggle(config.name),
+                              false,
+                              'api-config-label'
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                  </ul>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         </div>
-      ))}
+
+        <div className="decklist-input">
+          <h2 className='title is-4'>Enter Decklist</h2>
+          <form onSubmit={handleSubmit}>
+            <textarea
+              value={decklist}
+              onChange={(e) => setDecklist(e.target.value)}
+              placeholder="1 Forest"
+              rows={10}
+              cols={50}
+            />
+            <br />
+            <button className="button mt-2 mb-2" type="submit" disabled={isLoading}><SearchIcon />Analyze Deck</button>
+          </form>
+
         </div>
-      </div>
-
-      <div className="decklist-input">
-        <h2>Enter Decklist</h2>
-        <form onSubmit={handleSubmit}>
-          <textarea
-            value={decklist}
-            onChange={(e) => setDecklist(e.target.value)}
-            placeholder="Enter your decklist here (e.g., '1 Stonecoil Serpent')..."
-            rows={10}
-            cols={50}
-          />
-          <br />
-          <button type="submit" disabled={isLoading}>Analyze Deck</button>
-        </form>
-
-      </div>
-
-      <div className="log">
-        <h2>Search Log</h2>
-        <div className="log-content">
-          {log.map((entry, index) => (
-            <div key={index} className="log-entry">
-              <span className="config-name">[{entry.configName}]</span>
-              <span>{entry.message}</span>
-              {entry.rawResponse && (
-                <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse)}>🔍</span>
-              )}
-            </div>
-          ))}
+        {isLoading && (
+          <div className="progress-bar">
+            <div className="progress" style={{ width: `${progress}%` }}></div>
+            <span>{progress}%</span>
+          </div>
+        )}
+        <div className="log">
+          <h2 className='title is-4'>Search Log</h2>
+          <div className="log-content">
+            {log.map((entry, index) => (
+              <div key={index} className="log-entry">
+                <span className="config-name">[{entry.configName}]</span>
+                <span>{entry.message}</span>
+                {entry.rawResponse && (
+                  <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse)}>🔍</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="decklist-viewer">
-        {isLoading && (
-        <div className="progress-bar">
-          <div className="progress" style={{ width: `${progress}%` }}></div>
-          <span>{progress}%</span>
-        </div>
-       )}
-       <div className="deck-viewer">
-       <div className="deck-viewer-content">
-              <div className="card-grid">
-                <h2>Deck Viewer</h2>
-          
-                <div className="card-tiles">
+
+        <div className="deck-viewer">
+          <div className="deck-viewer-content">
+            <div className="card-grid">
+              <h2 className='title is-4'>Deck Viewer </h2>
+
+              <div className="card-tiles">
                 {Object.entries(cardResults).map(([cardName, cardData]) => {
                   const visibleResults = cardData.results.filter(filterCard);
                   const noMatchingCard = visibleResults.length === 0;
 
-                  return Array(cardData.count).fill().map((_, index) => {
+                  // Bestimme die Anzahl der anzuzeigenden Tiles
+                  const tilesToRender = uniquePrints ? cardData.count : 1;
+
+                  return Array(tilesToRender).fill().map((_, index) => {
                     let selectedCard = selectedCards[cardName]?.[index];
                     if (visibleResults.length > 0 && visibleResults.indexOf(selectedCard) === -1) {
                       selectedCard = visibleResults[0];
@@ -671,48 +897,77 @@ const DeckInputAndViewer = () => {
                         key={`${cardName}-${index}`}
                         className={`card-tile ${noMatchingCard ? 'no-matching-card' : ''} ${selectedCard?.apiName === 'custom' ? 'custom-card' : ''}`}
                       >
-                        <div onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
+                        <div className="card-image-container" onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
                           {selectedCard ? (
                             <CardImage
                               src={selectedCard.imageUrl}
                               alt={cardName}
                               onLoad={(imageInfo) => handleImageLoad(cardName, index, imageInfo)}
+                              onError={() => handleImageError(cardName, selectedCard.imageUrl, selectedCard.apiName)}
                             />
                           ) : (
                             <div className="no-image">No image available</div>
                           )}
                         </div>
                         <div className="card-name">
-                          <span
-                            className="remove-card"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveCard(cardName, index);
-                            }}
-                          >
-                            ✕
-                          </span>
                           <p>{cardName}</p>
+                        </div>
+                        <div className="card-name">
+
+                          <p>
+                            {!uniquePrints ? <span
+                              className="remove-card"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveCard(cardName, index);
+                              }}
+                            >
+                              ✕
+                            </span> : null}
+                            <button
+                              onClick={() => updateCardCount(cardName, -1)}
+                              className="px-2 py-1 mx-1 bg-gray-200 rounded"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            {cardData.count}
+                            <button
+                              onClick={() => updateCardCount(cardName, 1)}
+                              className="px-2 py-1 mx-1 bg-gray-200 rounded"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </p>
                         </div>
                       </div>
                     );
                   });
                 })}
-                
-                <div className="add-custom-card" onClick={handleAddCustomCard}>
-                  <img src='/green-add-button.png' />
+                <div className='card-tile'>
+                  <div className="add-custom-card" onClick={handleAddCustomCard}>
+                    <AddCardButton />
+                  </div>
+                  <div className="card-name">
+                    <p>Add Image</p>
+                  </div>
+                  <div className="card-name">
+                    <p>by search, url or upload</p>
+                  </div>
                 </div>
-                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        </div>
-      </div>
       </div>
 
       <div className="view-selection">
         <div className="filter-controls">
-          <h2>View Selection</h2>
+          <h2 className='title is-4'>View Selection</h2>
           <div className="language-filter checkbox-group">
-            <h3>Language Filter</h3>
+            {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
+          </div>
+          <div className="language-filter checkbox-group">
+            <h3 className='title is-5'>Language Filter</h3>
             {Array.from(availableLanguages).map(lang => (
               <label key={lang}>
                 <input
@@ -721,30 +976,40 @@ const DeckInputAndViewer = () => {
                   onChange={() => toggleLanguage(lang)}
                 />
                 {lang === NO_LANGUAGE ? 'No Language' : lang}
+                {/* <img src="%PUBLIC_URL%/flags/phyrex.png"></img> */}
               </label>
             ))}
           </div>
           <div className="api-filter checkbox-group">
-            <h3>API Filter</h3>
-            {Object.values(apiConfigs).map(config => (
-              <label key={config.name}>
-                <input
-                  type="checkbox"
-                  checked={visibleApis.has(config.name)}
-                  onChange={() => toggleApi(config.name)}
-                />
-                {config.name}
-              </label>
-            ))}
+            <h3 className='title is-5'>API Filter</h3>
+            {Object.values(apiConfigs)
+              .filter((c) => enabledApis.hasOwnProperty(c.name))
+              .map((config) =>
+                renderCheckbox(
+                  config.name,
+                  getApiConfigLabelForCheckbox(config),
+                  visibleApis.has(config.name),
+                  () => toggleApi(config.name),
+                  false,
+                  'api-config-label'
+                )
+              )}
           </div>
         </div>
       </div>
 
       <div className="pdf-controls">
-        <h3>PDF Generation</h3>
-        <button onClick={handleOpenSettingsDialog}>Open PDF Settings</button>
-        <button onClick={() => createPDF().catch(console.error)}>Create PDF of Visible Cards</button>
+        <h3 className='title is-5'>PDF Generation</h3>
+        <button className="button" onClick={handleOpenSettingsDialog}><PictureAsPdfOutlinedIcon />Settings</button>
+        <button className="button" disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}><LocalPrintshopOutlinedIcon />Create PDF</button>
       </div>
+
+      <div className="bottom">
+        <div><PayPalDonateButton /></div>
+        <div><GitHubButton /></div>
+        <div><VersionInfo /></div>
+      </div>
+
 
       <SettingsDialog
         open={settingsDialogOpen}
@@ -775,7 +1040,7 @@ const DeckInputAndViewer = () => {
       {rawDataDialog && (
         <div className="dialog-overlay" onClick={handleCloseRawDataDialog}>
           <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Raw API Response</h3>
+            <h3 className='title is-5'>Raw API Response</h3>
             <div className="json-viewer-container">
               <JsonView data={JSON.parse(rawDataDialog)} />
             </div>
@@ -783,17 +1048,6 @@ const DeckInputAndViewer = () => {
               <button onClick={() => navigator.clipboard.writeText(rawDataDialog)}>Copy to Clipboard</button>
               <button onClick={handleCloseRawDataDialog}>Close</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {apiConfigWizardOpen && (
-        <div className="dialog-overlay">
-          <div className="dialog-content">
-            <ApiConfigWizard
-              onClose={handleCloseApiConfigWizard}
-              onSave={handleSaveApiConfig}
-            />
           </div>
         </div>
       )}
@@ -807,7 +1061,15 @@ const DeckInputAndViewer = () => {
         open={customCardDialogOpen}
         onClose={handleCloseCustomCardDialog}
         onSave={handleSaveCustomCard}
+        searchForApis={searchForApis}
       />
+
+      <ApiConfigDialog
+        open={apiConfigDialogOpen}
+        onClose={handleCloseApiConfigDialog}
+        onSave={handleSaveApiConfigs}
+      ></ApiConfigDialog>
+
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { parse } from 'node-html-parser';
 import { ApiConfig, ApiParams, ApiResult } from './types/types';
+import ISO6391 from 'iso-639-1';
 
 export default class ApiFactory {
   private configs!: Record<string, ApiConfig>;
@@ -124,7 +125,7 @@ export default class ApiFactory {
               set: config.setField ? this.getValue(item, config, config.setField) : undefined,
               setNumber: config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
               imageUrl: this.getValue(item, config, config.imageUrlField),
-              languageCode: config.languageField ? this.getValue(item, config, config.languageField) : undefined
+              languageCode: config.languageField ? this.normalizeLanguageName(this.getValue(item, config, config.languageField)) : undefined
             };
 
             let followLinkResults: ApiResult[] = [];
@@ -138,7 +139,7 @@ export default class ApiFactory {
                   followLinkResults = followLinkDataList.map((followLinkItem: any) => ({
                     ...baseResult,
                     imageUrl: this.getValue(followLinkItem, config, config.followLinkImageField!),
-                    languageCode: config.followLinkLanguageField ? this.getValue(followLinkItem, config, config.followLinkLanguageField) : baseResult.languageCode
+                    languageCode: this.normalizeLanguageName(config.followLinkLanguageField ? this.getValue(followLinkItem, config, config.followLinkLanguageField) : baseResult.languageCode)
                   }));
                 }
               }
@@ -153,7 +154,7 @@ export default class ApiFactory {
                 ...nestedLanguages.filter((lang: any) => this.getValue(lang, config, config.nestedLanguageImageUrlField)).map((lang: any) => ({
                   ...baseResult,
                   imageUrl: config.nestedLanguageImageUrlField ? this.getValue(lang, config, config.nestedLanguageImageUrlField) || baseResult.imageUrl : baseResult.imageUrl,
-                  languageCode: config.nestedLanguageLanguageField ? this.getValue(lang, config, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode
+                  languageCode: this.normalizeLanguageName(config.nestedLanguageLanguageField ? this.getValue(lang, config, config.nestedLanguageLanguageField) || baseResult.languageCode : baseResult.languageCode)
                 })),
                 ...followLinkResults
               ];
@@ -196,6 +197,58 @@ export default class ApiFactory {
   private getValue(item: any, config: ApiConfig, fieldName: string|undefined) {
     return config.dataFormat === 'json' ? this.getNestedValue(item, fieldName) : parseHtmlValue(item, fieldName);
   }
+
+  // Funktion zum Normalisieren von Sprachcodes
+  private normalizeLanguageName(input:string) :string{
+    // Entfernen Sie Klammern und ihren Inhalt
+    const cleanInput = input.replace(/\s*\([^)]*\)/g, "").trim();
+    
+    // Aufteilen des Inputs für mehrteilige Sprachnamen
+    const parts = cleanInput.split(/\s+/);
+    
+    // Versuchen Sie, einen Code für den gesamten Input zu finden
+    let code = ISO6391.getCode(cleanInput);
+    
+    // Wenn kein Code gefunden wurde, versuchen Sie es mit dem ersten Teil
+    if (!code && parts.length > 1) {
+      // Prüfen Sie zuerst den zweiten Teil (falls vorhanden)
+      code = ISO6391.getCode(parts[1]);
+      
+      // Wenn immer noch kein Code gefunden wurde, versuchen Sie es mit dem ersten Teil
+      if (!code) {
+        code = ISO6391.getCode(parts[0]);
+      }
+    }
+    
+    // Wenn immer noch kein Code gefunden wurde, durchsuchen Sie bekannte Sonderfälle
+    if (!code) {
+      const specialCases:any = {
+        'chinese traditional': 'zh',
+        'chinese simplified': 'zh',
+        'portuguese brazil': 'pt-BR',
+        'brazilian portuguese': 'pt-BR',
+        'zhs': 'zh',
+        'zht': 'zh'
+      };
+      code = specialCases[cleanInput.toLowerCase()];
+    }
+    
+    // Wenn ein Code gefunden wurde, geben Sie den vollen Namen zurück
+    if (code) {
+      return ISO6391.getName(code);
+    }
+    if(ISO6391.validate(input)){
+      return ISO6391.getName(input);
+    }
+    if('ph'=== input || 'Phyrexian' === input){
+      return 'Phyrexian';
+    }
+    // Wenn kein passender Code gefunden wurde
+    console.warn(`Konnte keinen gültigen Sprachcode für "${input}" finden.`);
+    return input; // Geben Sie den Originalinput zurück
+  }
+
+
 
   async searchAllApis(cardName: string, language?: string, enabledApis?: string[]): Promise<{ [key: string]: { results: ApiResult[], rawResponse: string } }> {
     const results: { [key: string]: { results: ApiResult[], rawResponse: string } } = {};

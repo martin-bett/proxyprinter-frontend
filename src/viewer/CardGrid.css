@@ -5,9 +5,9 @@
   grid-template-columns: 1fr 7fr 1fr;
   grid-template-areas:
     ". headline ."
-    "api-controls decklist-viewer pdf-controls"
-    "decklist-input decklist-viewer view-selection"
-    "log decklist-viewer .";
+    "input-controls decklist-viewer view-selection"
+    "input-controls decklist-viewer pdf-controls"
+    "input-controls decklist-viewer bottom";
   gap: 20px;
 }
 
@@ -16,28 +16,22 @@
   grid-area: headline;
 }
 
-.api-controls {
-  grid-area: api-controls;
+.input-controls {
+  grid-area: input-controls;
 }
 
-.decklist-input {
-  grid-area: decklist-input;
-}
 
 .add-custom-card {
-
-  border: solid black 5px;
-
+  padding: 1rem;
 }
+
 .add-custom-card img {
   width: 120px;
   height: 120px;
-  margin-top: 50px;
+  margin-top: 90px;
+  margin-bottom: 40px;
 }
 
-.log {
-  grid-area: log;
-}
 
 .decklist-viewer {
   grid-area: decklist-viewer;
@@ -47,26 +41,38 @@
   grid-area: view-selection;
 }
 
+.bottom {
+  grid-area: bottom;
+}
+
 .pdf-controls {
   grid-area: pdf-controls;
 }
 
 .card-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 10px;
 }
 
 .card-tile {
-  cursor: pointer;
   text-align: center;
 }
-
-.card-tile img {
+.card-image-container  {
+  cursor: pointer;
+  height: auto;
+}
+.card-image-container img {
   width: 100%;
-  height: 210px;
+  height: 140px;
   object-fit: cover;
   border-radius: 4.75% / 3.5%;
+}
+
+
+.card-image-container img {
+  height: auto;
+  display: block;
 }
 
 .progress-bar {
@@ -78,11 +84,44 @@
   overflow: hidden;
   position: relative;
 }
+.settings-category {
+  display: inline-block;
+  margin: 5px 25px 5px 25px;
+}
 
 .progress {
   height: 100%;
   background-color: #4CAF50;
   transition: width 0.5s ease-in-out;
+}
+
+.label-container {
+  display: flex;
+  justify-content: flex-start; /* Icon alignment to the left */
+  align-items: center;
+  gap: 2px; /* Optional: space between name and icons */
+}
+
+.label-container span {
+  display: flex;
+  align-items: center;
+}
+
+.subCategoryIcon {
+  margin-left: 8px;
+  width: 1rem; 
+  height: 1rem; 
+}
+
+.label-container span:last-child {
+  margin-left: auto; /* Push icons to the right side */
+}
+
+.decklist-input textarea{
+  font-size: large;
+  background-color: rgb(214, 238, 248);
+  padding-left: 10px;
+  width: 320px;
 }
 
 .progress-bar span {
@@ -96,14 +135,31 @@
 .log {
   border: 1px solid #ccc;
   padding: 10px;
-  height: 300px;
   overflow-y: auto;
+  background-color: rgb(214, 238, 248);
+  max-height: 20vh;
+  min-height: 20vh;
 }
 
 .log-content {
   font-family: monospace;
 }
+.card-image-container {
+  position: relative; /* Container als Referenz für absolute Positionierung */
+}
 
+
+
+.image-info {
+  position: absolute; /* Positioniert relativ zum Container */
+  bottom: 0; /* Am unteren Rand */
+  left: 0; /* Am linken Rand */
+  background-color: rgba(0, 0, 0, 0.7); /* Halbtransparenter Hintergrund */
+  color: white;
+  padding: 8px;
+  width: 100%; /* Optional: volle Breite */
+  font-size: x-small;
+}
 .log-entry {
   display: flex;
   align-items: center;
@@ -134,19 +190,6 @@
   gap: 10px;
 }
 
-.dialog-buttons button {
-  padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.dialog-buttons button:hover {
-  background-color: #45a049;
-}
-
 .deck-viewer-content {
   display: flex;
   justify-content: space-between;
@@ -154,15 +197,37 @@
 
 .card-grid {
   flex: 3;
+  overflow-y: auto;
+  height: auto;
+  max-height: 82vh;
+  padding: 0.5rem;
+}
+
+/* Webkit-Stile für benutzerdefinierte Scrollbalken */
+.card-grid::-webkit-scrollbar {
+  width: 6px; /* Breite des vertikalen Scrollbalkens */
+  height: 6px; /* Höhe des horizontalen Scrollbalkens */
+}
+
+/* Hintergrund des Scrollbalkens entfernen */
+.card-grid::-webkit-scrollbar-track {
+  background: transparent; /* Hintergrund des Scrollbalkens transparent */
+}
+
+/* Der Scrollbalken (der eigentliche Balken) */
+.card-grid::-webkit-scrollbar-thumb {
+  background: white; /* Farbe des Scrollbalkens (weiß) */
+  border-radius: 3px; /* Optionale Abrundung der Ecken */
+}
+
+/* Optional: Hover-Effekt für den Scrollbalken */
+.card-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7); /* Hellerer weißer Balken beim Hover */
 }
 
 .language-filter label {
   display: block;
   margin-bottom: 5px;
-}
-
-.pdf-controls button {
-  display: flex;
 }
 
 .remove-card {
@@ -176,7 +241,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: small;
+  font-size: normal;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  p {
+    white-space: nowrap;         /* Verhindert Umbrüche, sodass der Text immer in einer Zeile bleibt */
+    overflow: hidden;            /* Verhindert, dass der Text über das Element hinaus geht */
+    text-overflow: ellipsis;     /* Zeigt "..." an, wenn der Text abgeschnitten wird */
+    text-align: left;            /* Macht den Text linksbündig */
+  }
 }
 
 
@@ -233,7 +306,6 @@
 .checkbox-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   margin-bottom: 20px;
 }
 
@@ -246,8 +318,12 @@
   display: flex;
   align-items: center;
   margin-bottom: 1px;
+  .api-config-label{
+    width: 100%;
+  }
 }
 
-.checkbox-group input[type="checkbox"] {
-  margin-right: 5px;
+
+.button {
+  margin-bottom: 15px;
 }

@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   aetherhub: {
+    "officialWebsite": "https://aetherhub.com/",
     "category": "mtg",
     "name": "aetherhub",
     "method": "GET",

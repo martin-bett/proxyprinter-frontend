@@ -2,6 +2,7 @@ import { ApiConfig } from '../types/types';
 
 export default {
   scryfall: {
+    "officialWebsite": "https://scryfall.com/",
     "category": "mtg",
     "name": "scryfall",
     "method": "GET",
@@ -16,7 +17,7 @@ export default {
     "dataListField": "data",
     "languageField":"lang",
     "setField": "set",
-    "imageUrlField": "image_uris.large",
+    "imageUrlField": "image_uris.png",
     "nameField":"name",
     "nameSplitCharacter": "//",
     "concurrentLimit":5,

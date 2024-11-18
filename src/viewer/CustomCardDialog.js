@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Button, Divider, TextField, CircularProgress } from '@mui/material';
 
-const CustomCardDialog = ({ open, onClose, onSave }) => {
+const CustomCardDialog = ({ open, onClose, onSave, searchForApis }) => {
   const [cardName, setCardName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [file, setFile] = useState(null);
@@ -28,7 +29,9 @@ const CustomCardDialog = ({ open, onClose, onSave }) => {
       
       setIsUploading(false);
       if (response.ok && data.success) {
-        return data.generatedId; // Angenommen, der Server gibt die Datei-URL in der Nachricht zurück
+        onSave(file.name, null, data.generatedId);
+        setFile(null);
+        return data.generatedId;
       } else {
         setUploadError(data.message || 'Ein Fehler ist beim Hochladen aufgetreten.');
         return null;
@@ -41,26 +44,22 @@ const CustomCardDialog = ({ open, onClose, onSave }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleNameSearch = async () => {
     if (!cardName) {
-      alert('Bitte geben Sie einen Kartennamen ein');
+      alert('Bitte geben Sie einen Namen ein');
       return;
     }
-
-    let uploadedImageUrl;
-    if (file) {
-      uploadedImageUrl = await handleFileUpload();
-      if (!uploadedImageUrl) {
-        // Wenn der Datei-Upload fehlgeschlagen ist, nicht fortfahren
-        return;
-      }
-    }
-
-    onSave(cardName, imageUrl, uploadedImageUrl);
+    await searchForApis(cardName);
     setCardName('');
+  };
+
+  const handleUrlSubmit = () => {
+    if (!imageUrl) {
+      alert('Bitte geben Sie eine URL ein');
+      return;
+    }
+    onSave(imageUrl.split('/').pop() || 'custom-card', imageUrl, null);
     setImageUrl('');
-    setFile(null);
   };
 
   const handleFileChange = (e) => {
@@ -68,47 +67,110 @@ const CustomCardDialog = ({ open, onClose, onSave }) => {
   };
 
   return (
-    <div className="dialog-overlay">
-      <div className="dialog-content">
-        <h2>Benutzerdefinierte Karte hinzufügen</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="cardName">Kartenname:</label>
-            <input
-              type="text"
-              id="cardName"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              placeholder="Kartennamen eingeben"
-              required
-            />
+    <div className="modal is-active">
+      <div className="modal-background" onClick={onClose} />
+      <div className="modal-card">
+        <header className="modal-card-head">
+          <p className="modal-card-title">Add Custom Card</p>
+        </header>
+        
+        <section className="modal-card-body">
+          {/* Name Search Section */}
+          <div className="box">
+            <h3 className="title is-5">Search Apis</h3>
+            <div className="field">
+              <TextField
+                fullWidth
+                label="cardname"
+                value={cardName}
+                onChange={(e) => setCardName(e.target.value)}
+                variant="outlined"
+                size="small"
+                className="mb-3"
+              />
+            </div>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={handleNameSearch}
+              fullWidth
+            >
+              Search
+            </Button>
           </div>
-          <div>
-            <label htmlFor="imageUrl">Bild-URL:</label>
-            <input
-              type="text"
-              id="imageUrl"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="Bild-URL eingeben"
-            />
+
+          <Divider className="my-4" />
+
+          {/* External URL Section */}
+          <div className="box">
+            <h3 className="title is-5">Insert ImageUrl</h3>
+            <div className="field">
+              <TextField
+                fullWidth
+                label="image url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                variant="outlined"
+                size="small"
+                className="mb-3"
+              />
+            </div>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={handleUrlSubmit}
+              fullWidth
+            >
+              add url
+            </Button>
           </div>
-          <div>
-            <label htmlFor="imageFile">Oder ein Bild hochladen:</label>
-            <input
-              type="file"
-              id="imageFile"
-              onChange={handleFileChange}
-              accept="image/*"
-            />
+
+          <Divider className="my-4" />
+
+          {/* File Upload Section */}
+          <div className="box">
+            <h3 className="title is-5">upload filew</h3>
+            <div className="field">
+              <div className="file has-name is-fullwidth">
+                <label className="file-label">
+                  <input 
+                    className="file-input" 
+                    type="file" 
+                    onChange={handleFileChange}
+                    accept="image/*"
+                  />
+                  <span className="file-cta">
+                    <span className="file-label">choose file...</span>
+                  </span>
+                  <span className="file-name">
+                    {file ? file.name : 'no file chosen'}
+                  </span>
+                </label>
+              </div>
+            </div>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={handleFileUpload}
+              disabled={!file || isUploading}
+              fullWidth
+            >
+              {isUploading ? <CircularProgress size={24} /> : 'upload'}
+            </Button>
+            {uploadError && (
+              <p className="help is-danger mt-2">{uploadError}</p>
+            )}
           </div>
-          {isUploading && <p>Wird hochgeladen...</p>}
-          {uploadError && <p className="error">{uploadError}</p>}
-          <div className="dialog-buttons">
-            <button type="submit" disabled={isUploading}>Speichern</button>
-            <button type="button" onClick={onClose}>Abbrechen</button>
-          </div>
-        </form>
+        </section>
+
+        <footer className="modal-card-foot is-justify-content-flex-end">
+          <Button 
+            variant="outlined" 
+            onClick={onClose}
+          >
+            close
+          </Button>
+        </footer>
       </div>
     </div>
   );
