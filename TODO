@@ -12,33 +12,46 @@ http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=657&type=card
 https://images.pokemoncard.io/images/xy12/xy12-83.png
 
 
- ignore basic lands / energy 
+save+ load decksearch (selectedCards + deckinput + selectedapis) auto deactivate bei customcards
 
-auto remove results mit fehler beim laden
+ ignore basic resource + configparameter "basic,resource fields" comma seperated alle names
+
 
   config erweitern um auto english language setter
 
-  
 
-  set support mit () für pokemon pfilcht
+url + upload crop image viewport / für gallery komplett oder single einstellbar
+
+imageurl +gallery gridimport mit margins / only outermargin
+  
+config feld lastused wird gesetzt bei suche mit api oder edit -> älter als 3 wochen automatisch löschen
+
+set support mit () für pokemon pfilcht
 
 filter anzahl der jeweiligen einstellung in iamageselectdialog
 in deckviewer min-max zahl (je karte) der jeweiligen einstellung 
 
+keep aspect ratio checkbox und funktionalität für printsettings
 
-keep aspect ratio checkbox und funktionalität
+reset crop settings + keep aspect ratio
+
+mehrfach select zulassen für datalistfield + imgurlfield
 
 Adminkram
 # deploy auf netcup
 # https://medium.com/@thearaseng/building-a-full-stack-product-app-with-react-spring-boot-and-docker-compose-64a47f4a1080
 
-  add footer git + donate (donate konto anlegen)
 
   auf https und auf richtige domain
 
   umstellen auf docker mit umzug auf domain?
 
-  postgres für log info + config +config-voting
+  postgres für log info 
 
 
-  docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+  docker run --name local-postgres-dev -p 5432:5432 -e POSTGRES_DB=proxymaster -e POSTGRES_USER=mtguser -e POSTGRES_PASSWORD=mtgpassword -d postgres
+
+
+ git clone https://martin-bett@github.com/martin-bett/mtgprint-front.git
+
+FAQf8nO9nHnhRFK

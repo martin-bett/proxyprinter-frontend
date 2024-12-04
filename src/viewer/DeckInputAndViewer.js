@@ -1,28 +1,30 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import CacheService from './CacheService';
-import ApiFactory from '../api/ApiFactory';
-import ImageSelectDialog from './ImageSelectDialog';
-import PdfProgressDialog from './PdfProgressDialog';
+import CacheService from '../service/cache/CacheService';
+import ImageSelectDialog from './grid/ImageSelectDialog';
+import PdfProgressDialog from './pdf/PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
 import '../viewer/CardGrid.css';
-import { SettingsDialog, defaultSettings } from './SettingsDialog';
+import { SettingsDialog, defaultSettings } from './pdf/SettingsDialog';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
-import CardImage from './CardImage';
-import CustomCardDialog from './CustomCardDialog';
-import ApiConfigDialog from './ApiConfigDialog';
+import CardImage from './grid/CardImage';
+import CustomCardDialog from './grid/CustomCardDialog';
+import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import TranslateIcon from '@mui/icons-material/Translate';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PaletteIcon from '@mui/icons-material/Palette';
-import PayPalDonateButton from './PayPalDonateButton';
-import GitHubButton from './GitHubButton';
-import TitleDiv from './TitleDiv';
-import AddCardButton from './AddCardButton';
-import VersionInfo from './VersionInfo';
+import PayPalDonateButton from './info/PayPalDonateButton';
+import GitHubButton from './info/GitHubButton';
+import TitleDiv from '../svg/TitleDiv';
+import AddCardButton from './grid/AddCardButton';
+import VersionInfo from './info/VersionInfo';
 import { Minus, Plus } from 'lucide-react';
-import EyeTriangle from './EyeTriangle';
+import EyeTriangle from '../svg/EyeTriangle';
+import { Dialog } from '@mui/material';
+import ClosableDialog from '../container/ClosableDialog';
+import ApiFactory from '../service/ApiFactory';
 
 const NO_LANGUAGE = 'No Language';
 
@@ -50,6 +52,7 @@ const DeckInputAndViewer = () => {
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfProgressMessage, setPdfProgressMessage] = useState('');
   const [uniquePrints, setUniquePrints] = useState(true);
+  const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
@@ -57,6 +60,8 @@ const DeckInputAndViewer = () => {
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
+  const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
+
 
   useEffect(() => {
     setApiFactory(new ApiFactory(apiConfigs));
@@ -117,6 +122,11 @@ const DeckInputAndViewer = () => {
     setApiConfigDialogOpen(false);
   };
 
+  const handleGridSizeChange = (event) => {
+    setGridSize(event.target.value);
+  };
+
+
   const handleSaveApiConfigs = async (apiconfigList) => {
     const configsObject = apiconfigList.reduce((acc, config) => {
       if (config.name) {
@@ -128,42 +138,98 @@ const DeckInputAndViewer = () => {
     setApiConfigs(configsObject); // Update internal API configs state
   };
 
-  const handleSaveCustomCard = async (cardName, imageUrl, file) => {
-    console.log(cardName);
-    console.log(imageUrl);
-    console.log(file);
+  const handleSaveCustomCard = async (cardName, imageUrl, file, gridSettings) => {
+    console.log(cardName, imageUrl, file, gridSettings);
+
     let finalImageUrl;
     if (imageUrl) {
       finalImageUrl = imageUrl;
     }
-
     if (file) {
       finalImageUrl = '/api/files/download/' + file;
     }
 
-    setCardResults(prev => ({
-      ...prev,
-      [cardName]: {
-        count: 1,
-        results: [{
-          imageUrl: finalImageUrl,
-          apiName: 'custom',
-          languageCode: NO_LANGUAGE
-        }]
-      }
-    }));
+    if (!gridSettings) {
+      gridSettings = {}; // Falls gridSettings nicht definiert ist, initialisiere es als leeres Objekt
+    }
 
-    setSelectedCards(prev => ({
-      ...prev,
-      [cardName]: [{
-        imageUrl: finalImageUrl,
-        apiName: 'custom',
-        languageCode: NO_LANGUAGE
-      }]
-    }));
+    if (!gridSettings.rows) {
+      gridSettings.rows = 1; // Setze 1 für rows, wenn es leer oder undefined ist
+    }
+
+    if (!gridSettings.cols) {
+      gridSettings.cols = 1; // Setze 1 für cols, wenn es leer oder undefined ist
+    }
+
+    // Bild laden, um die Dimensionen zu ermitteln
+    const img = new Image();
+    img.src = finalImageUrl;
+
+    img.onload = () => {
+      const { width, height } = img;
+
+      const cellWidth = Math.floor(width / gridSettings.cols);
+      const cellHeight = Math.floor(height / gridSettings.rows);
+
+      let cropIndex = 0; // Initialisieren des Indexes
+
+      // Berechnung der Crops
+      for (let row = 0; row < gridSettings.rows; row++) {
+        for (let col = 0; col < gridSettings.cols; col++) {
+          const crop = {
+            offSetX: col * cellWidth,
+            offSetY: row * cellHeight,
+            width: cellWidth,
+            height: cellHeight,
+            isStretch: true
+          };
+
+          // Eintrag in cardResults für jedes Crop
+          const cropKey = `${cardName}_crop${cropIndex}`;
+
+          // cardResults aktualisieren
+          setCardResults((prev) => ({
+            ...prev,
+            [cropKey]: {
+              count: 1,
+              results: [
+                {
+                  imageUrl: finalImageUrl,
+                  apiName: 'custom',
+                  languageCode: NO_LANGUAGE,
+                  cropSettings: crop,
+                },
+              ],
+              cropSettings: crop,
+            },
+          }));
+
+          // selectedCards aktualisieren
+          setSelectedCards((prev) => ({
+            ...prev,
+            [cropKey]: [
+              {
+                imageUrl: finalImageUrl,
+                apiName: 'custom',
+                languageCode: NO_LANGUAGE,
+                cropSettings: crop,
+              },
+            ],
+          }));
+
+          cropIndex++; // Index erhöhen für das nächste Crop
+        }
+      }
+
+    };
+
+    img.onerror = () => {
+      console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
+    };
 
     handleCloseCustomCardDialog();
   };
+
 
   useEffect(() => {
     if (typeof apiConfigs === 'object' && apiConfigs !== null && apiFactory !== null) {
@@ -190,12 +256,17 @@ const DeckInputAndViewer = () => {
     setProgress(0);
 
     const cardEntries = decklist.split('\n')
-      .map(line => line.trim())
-      .filter(line => line)
+      .map(line => line.trim()) // Entfernt führende und nachfolgende Leerzeichen
+      .filter(line => line) // Entfernt leere Zeilen
       .map(line => {
-        const match = line.match(/^(\d+)\s+(.+?)(?:\s+\([^)]+\)\s*\d*)?$/);
+        // Angepasster Regex zur Erkennung von "(set)"
+        const match = line.match(/^(\d+)\s+(.+?)(?:\s+\(([^)]+)\))?\s*$/);
         if (match) {
-          return { count: parseInt(match[1], 10), name: match[2].trim() };
+          return {
+            count: parseInt(match[1], 10), // Extrahiert die Anzahl
+            name: match[2].trim(),        // Extrahiert den Kartennamen
+            set: match[3]?.trim() || null // Extrahiert das Set, falls vorhanden
+          };
         }
         return null;
       })
@@ -227,7 +298,7 @@ const DeckInputAndViewer = () => {
                 result = CacheService.getSearchResult(apiKey, entry.name);
                 addToLog(`Cached ${result.results.length} ${entry.name}`, apiKey);
               } else {
-                result = await api({ cardname: entry.name });
+                result = await api({ cardname: entry.name, set: entry.set });
                 CacheService.setSearchResult(apiKey, entry.name, result);
                 addToLog(`Found ${result.results.length} ${entry.name}`, apiKey, result.rawResponse);
               }
@@ -263,7 +334,13 @@ const DeckInputAndViewer = () => {
     cardEntries.forEach(entry => {
       results[entry.name] = {
         count: entry.count,
-        results: enabledApiKeys.flatMap(apiKey => apiResults[apiKey][entry.name] || [])
+        results: enabledApiKeys.flatMap(apiKey => {
+          const apiResultsForCard = apiResults[apiKey][entry.name] || [];
+          return apiResultsForCard.map(result => ({
+            ...result,
+            cropSettings: { ...defaultCropSettings }
+          }));
+        })
       };
     });
 
@@ -282,6 +359,14 @@ const DeckInputAndViewer = () => {
       });
     });
     setSelectedCards(initialSelectedCards);
+  };
+
+  const defaultCropSettings = {
+    offSetX: 0, // Default value for CropSettings
+    offSetY: 0, // Default value for CropSettings
+    width: 0, // Default value for CropSettings
+    height: 0, // Default value for CropSettings
+    isStretch: true
   };
 
   const handleCloseImageSelectDialog = (selectedImage) => {
@@ -397,7 +482,6 @@ const DeckInputAndViewer = () => {
           hasChanges = true;
         }
       });
-      console.log(newSelectedCards);
       return hasChanges ? newSelectedCards : prev;
     });
   }, [visibleLanguages, visibleApis, cardResults]);
@@ -442,21 +526,29 @@ const DeckInputAndViewer = () => {
     setPdfProgressMessage('Initializing PDF generation...');
 
     const createPdfDto = {
-      imageUrls: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
+      images: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
         if (uniquePrints) {
-          // Wenn uniquePrints true ist, nehmen wir einfach alle URLs wie sie sind
-          return cardSelections.map(selectedCard => selectedCard?.imageUrl).filter(url => url);
+          // Wenn uniquePrints true ist, nehmen wir alle URLs mit cropSettings wie sie sind
+          return cardSelections
+            .map(selectedCard =>
+              selectedCard?.imageUrl
+                ? { imageUrl: selectedCard.imageUrl, cropSettings: selectedCard.cropSettings }
+                : null
+            )
+            .filter(item => item); // Entferne ungültige Einträge
         } else {
-          // Wenn uniquePrints false ist, nehmen wir nur die erste URL und duplizieren sie entsprechend dem count
-          const firstValidUrl = cardSelections.find(selectedCard => selectedCard?.imageUrl)?.imageUrl;
-          if (!firstValidUrl) return [];
+          // Wenn uniquePrints false ist, nehmen wir die erste gültige URL und duplizieren sie mit cropSettings entsprechend dem count
+          const firstValidCard = cardSelections.find(selectedCard => selectedCard?.imageUrl);
+          if (!firstValidCard) return [];
           const count = cardResults[cardName]?.count || 1;
-          return Array(count).fill(firstValidUrl);
+          return Array(count).fill({
+            imageUrl: firstValidCard.imageUrl,
+            cropSettings: firstValidCard.cropSettings
+          });
         }
       }),
       settings: settings
     };
-
     try {
       const response = await fetch('/api/pdf', {
         method: 'POST',
@@ -585,14 +677,25 @@ const DeckInputAndViewer = () => {
           {isIndeterminate && <div className="w-3 h-3 bg-white m-1"></div>}
         </div>
       </div>
-      <label htmlFor={id} className={`ml-2 text-sm font-medium ${labelClass? labelClass : ''}`}>{label}</label>
+      <label htmlFor={id} className={`ml-2 text-sm font-medium ${labelClass ? labelClass : ''}`}>{label}</label>
     </div>
   );
 
 
-  const handleImageLoad = (cardName, index, imageInfo) => {
+  const handleImageLoad = (card, imageInfo) => {
+    setCardResults((prevResults) => {
+      // Suche nach der Karte in der Struktur und aktualisiere sie
+      const updatedResults = { ...prevResults };
+      for (const [cardName, cardData] of Object.entries(updatedResults)) {
+        const targetCard = cardData.results.find((result) => result === card);
+        if (targetCard) {
+          targetCard.imageInfo = imageInfo; // Füge `imageInfo` hinzu
+        }
+      }
+      return updatedResults; // Aktualisierter Zustand
+    });
   };
-
+  
   const groupResultsByApi = (results) => {
     return results.reduce((acc, result) => {
       if (!acc[result.apiName]) {
@@ -643,7 +746,7 @@ const DeckInputAndViewer = () => {
           </span>
         ) : null}
         {config.officialWebsite && (
-          <span class="external-link" onClick={(e) => handleWebsiteClick(config.officialWebsite, e)}>
+          <span className="external-link" onClick={(e) => handleWebsiteClick(config.officialWebsite, e)}>
             <ExitToAppIcon />
           </span>
         )}
@@ -653,6 +756,10 @@ const DeckInputAndViewer = () => {
 
   const handleUniquePrintsChanged = (event) => {
     setUniquePrints(event.target.checked);
+  }
+
+  const handleShowImageSettingsChanged = (event) => {
+    setShowImageSettings(event.target.checked);
   }
 
   const searchForApis = async (cardName) => {
@@ -713,38 +820,29 @@ const DeckInputAndViewer = () => {
       Object.assign(apiResults, groupResult);
     });
 
-    // Combine results for the single card
+    // Combine results for the single card and transform into CardEntry objects
     const results = {
       [cardEntry.name]: {
         count: cardEntry.count,
-        results: enabledApiKeys.flatMap(apiKey => apiResults[apiKey][cardEntry.name] || [])
+        results: enabledApiKeys.flatMap(apiKey => {
+          const apiResultsForCard = apiResults[apiKey][cardEntry.name] || [];
+          return apiResultsForCard.map(result => ({
+            ...result,
+            cropSettings: { ...defaultCropSettings }
+          }));
+        })
       }
     };
 
+    // Set CardResults with transformed CardEntry objects
     setCardResults(prevResults => ({
       ...prevResults,
       ...results
     }));
 
-    // Set initial selected cards based on cache or select first image
-    const initialSelectedCards = {};
-    Object.entries(results).forEach(([cardName, cardData]) => {
-      initialSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
-        if (CacheService.hasSelectedImage(cardName, index + 1)) {
-          const cachedImageUrl = CacheService.getSelectedImage(cardName, index + 1);
-          return cardData.results.find(card => card.imageUrl === cachedImageUrl) || cardData.results[0] || null;
-        }
-        return cardData.results[0] || null;  // Select first image if no cache or cache not found
-      });
-    });
-
-    setSelectedCards(prevSelected => ({
-      ...prevSelected,
-      ...initialSelectedCards
-    }));
-
     setIsLoading(false);
   };
+
 
   const handleImageError = (cardName, failedImageUrl, apiName) => {
     console.log(`Image failed to load: ${failedImageUrl} for card ${cardName} from API ${apiName}`);
@@ -877,14 +975,17 @@ const DeckInputAndViewer = () => {
         <div className="deck-viewer">
           <div className="deck-viewer-content">
             <div className="card-grid">
-              <h2 className='title is-4'>Deck Viewer </h2>
-
-              <div className="card-tiles">
+              <div
+                className="card-tiles"
+                style={{
+                  gridTemplateColumns: `repeat(auto-fill, minmax(${gridSize}rem, ${gridSize}rem))`,
+                  gap: '10px',
+                }}
+              >
                 {Object.entries(cardResults).map(([cardName, cardData]) => {
                   const visibleResults = cardData.results.filter(filterCard);
                   const noMatchingCard = visibleResults.length === 0;
 
-                  // Bestimme die Anzahl der anzuzeigenden Tiles
                   const tilesToRender = uniquePrints ? cardData.count : 1;
 
                   return Array(tilesToRender).fill().map((_, index) => {
@@ -900,9 +1001,9 @@ const DeckInputAndViewer = () => {
                         <div className="card-image-container" onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
                           {selectedCard ? (
                             <CardImage
-                              src={selectedCard.imageUrl}
-                              alt={cardName}
-                              onLoad={(imageInfo) => handleImageLoad(cardName, index, imageInfo)}
+                              cardInput={selectedCard}
+                              showImageSettings={showImageSettings}
+                              onLoad={(imageInfo) => handleImageLoad(selectedCard, imageInfo)}
                               onError={() => handleImageError(cardName, selectedCard.imageUrl, selectedCard.apiName)}
                             />
                           ) : (
@@ -947,12 +1048,6 @@ const DeckInputAndViewer = () => {
                   <div className="add-custom-card" onClick={handleAddCustomCard}>
                     <AddCardButton />
                   </div>
-                  <div className="card-name">
-                    <p>Add Image</p>
-                  </div>
-                  <div className="card-name">
-                    <p>by search, url or upload</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -965,19 +1060,29 @@ const DeckInputAndViewer = () => {
           <h2 className='title is-4'>View Selection</h2>
           <div className="language-filter checkbox-group">
             {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
+            {renderCheckbox('showImageSettings', 'Show Image Info', showImageSettings, (event) => handleShowImageSettingsChanged(event))}
+            <div className="grid-size-control">
+            <label htmlFor="gridSize" className="block text-sm font-medium text-gray-700">
+              Grid Size {gridSize}
+            </label>
+            </div>
+            <div>
+            <input
+              id="gridSize"
+              type="range"
+              min="4"
+              max="50"
+              step="1"
+              value={gridSize}
+              onChange={handleGridSizeChange}
+              className="w-full"
+            />
+          </div>
           </div>
           <div className="language-filter checkbox-group">
             <h3 className='title is-5'>Language Filter</h3>
             {Array.from(availableLanguages).map(lang => (
-              <label key={lang}>
-                <input
-                  type="checkbox"
-                  checked={visibleLanguages.has(lang)}
-                  onChange={() => toggleLanguage(lang)}
-                />
-                {lang === NO_LANGUAGE ? 'No Language' : lang}
-                {/* <img src="%PUBLIC_URL%/flags/phyrex.png"></img> */}
-              </label>
+              renderCheckbox(lang, lang === NO_LANGUAGE ? 'No Language' : lang, visibleLanguages.has(lang), () => toggleLanguage(lang))
             ))}
           </div>
           <div className="api-filter checkbox-group">
@@ -1000,8 +1105,10 @@ const DeckInputAndViewer = () => {
 
       <div className="pdf-controls">
         <h3 className='title is-5'>PDF Generation</h3>
-        <button className="button" onClick={handleOpenSettingsDialog}><PictureAsPdfOutlinedIcon />Settings</button>
-        <button className="button" disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}><LocalPrintshopOutlinedIcon />Create PDF</button>
+
+        <div><button className="button" onClick={handleOpenSettingsDialog}><PictureAsPdfOutlinedIcon />Settings</button></div>
+        <div><button className="button" disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}><LocalPrintshopOutlinedIcon />Create PDF</button></div>
+        
       </div>
 
       <div className="bottom">
@@ -1011,12 +1118,21 @@ const DeckInputAndViewer = () => {
       </div>
 
 
-      <SettingsDialog
+      <ClosableDialog
         open={settingsDialogOpen}
         onClose={handleCloseSettingsDialog}
-        settings={settings}
-        onSettingsChange={handleSettingsChange}
+        maxWidth='md'
+        children={
+          <SettingsDialog
+            open={settingsDialogOpen}
+            onClose={handleCloseSettingsDialog}
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+          />
+        }
       />
+
+
 
       <ImageSelectDialog
         open={imageSelectDialogOpen}
@@ -1035,6 +1151,7 @@ const DeckInputAndViewer = () => {
         }
         cardName={currentCardName}
         cardIndex={currentCardIndex}
+        onImageLoadError={(card) => handleImageError(card.name, card.imageUrl, card.apiName)}
       />
 
       {rawDataDialog && (
@@ -1052,24 +1169,38 @@ const DeckInputAndViewer = () => {
         </div>
       )}
 
-      <PdfProgressDialog
-        open={pdfProgressDialogOpen}
-        progress={pdfProgress}
-        message={pdfProgressMessage}
-      />
-      <CustomCardDialog
+      <ClosableDialog
         open={customCardDialogOpen}
         onClose={handleCloseCustomCardDialog}
-        onSave={handleSaveCustomCard}
-        searchForApis={searchForApis}
+        children={<CustomCardDialog
+          open={customCardDialogOpen}
+          onClose={handleCloseCustomCardDialog}
+          onSave={handleSaveCustomCard}
+          searchForApis={searchForApis}
+        />}
       />
+      <Dialog 
+      maxWidth = 'xl'
+      fullWidth
+      open={pdfProgressDialogOpen}>
+        <PdfProgressDialog
+          open={pdfProgressDialogOpen}
+          progress={pdfProgress}
+          message={pdfProgressMessage}
+        />
+      </Dialog>
 
-      <ApiConfigDialog
+      <ClosableDialog
         open={apiConfigDialogOpen}
         onClose={handleCloseApiConfigDialog}
-        onSave={handleSaveApiConfigs}
-      ></ApiConfigDialog>
-
+        children={
+          <ApiConfigDialog
+            open={apiConfigDialogOpen}
+            onClose={handleCloseApiConfigDialog}
+            onSave={handleSaveApiConfigs}
+          />
+        }
+      ></ClosableDialog>
     </div>
   );
 };

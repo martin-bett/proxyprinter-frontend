@@ -3,7 +3,7 @@ const PdfProgressDialog = ({ open, progress, message }) => {
   
     return (
       <div className="dialog-overlay">
-        <div className="dialog-content">
+        <div className="">
           <h3>Generating PDF</h3>
           <div className="progress-bar">
             <div className="progress" style={{ width: `${progress}%` }}></div>

@@ -1,5 +1,5 @@
 // apiConfigs/index.ts
-import { ApiConfig } from '../types/types';
+import { ApiConfig } from "../../service/ApiFactory";
 
 const context = require.context('./', false, /\.ts$/);
 const apiConfigs: Record<string, ApiConfig> = {};

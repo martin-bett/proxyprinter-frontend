@@ -2,7 +2,7 @@
   margin: 0 auto;
   padding: 20px;
   display: grid;
-  grid-template-columns: 1fr 7fr 1fr;
+  grid-template-columns: 2fr 10fr 1fr;
   grid-template-areas:
     ". headline ."
     "input-controls decklist-viewer view-selection"
@@ -51,28 +51,120 @@
 
 .card-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 10rem));
+  gap: 0px;
 }
 
 .card-tile {
   text-align: center;
+  border: solid 1px hsl(283, 88%, 20%);
+  padding: 5px;
+  border-radius: 5%;
 }
-.card-image-container  {
-  cursor: pointer;
-  height: auto;
-}
-.card-image-container img {
+.card-image-container {
+  position: relative;  /* Wichtig für das absolute Positionieren des Spinners */
   width: 100%;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 4.75% / 3.5%;
+  min-height: 3rem;
+  overflow: hidden; /* Verhindert das Überlaufen des Bildes */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  loading-spinner {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.card-image-container canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Wenn cropSettings gesetzt sind, wird das Bild angepasst */
+  object-position: center; /* Bild wird zentriert */
+}
+.custom-card {
+  border: 1px solid green;
+  padding: 2px;
+}
+
+.custom-card canvas {
+  cursor: default;
+}
+.image-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Hintergrund für bessere Lesbarkeit */
+  color: white;
+  padding: 8px;
+  width: 100%;
+  font-size: x-small;
+  text-align: left;
+  svg {
+    height: 15px;
+  }
+}
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10; /* Sicherstellen, dass der Spinner über anderen Elementen liegt */
+} 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 
-.card-image-container img {
+.card-grid {
+  flex: 3;
+  overflow-y: auto;
   height: auto;
-  display: block;
+  max-height: 82vh;
+  padding: 0.5rem;
+}
+
+/* Webkit-Stile für benutzerdefinierte Scrollbalken */
+.card-grid::-webkit-scrollbar {
+  width: 6px; /* Breite des vertikalen Scrollbalkens */
+  height: 6px; /* Höhe des horizontalen Scrollbalkens */
+}
+
+/* Hintergrund des Scrollbalkens entfernen */
+.card-grid::-webkit-scrollbar-track {
+  background: transparent; /* Hintergrund des Scrollbalkens transparent */
+}
+
+/* Der Scrollbalken (der eigentliche Balken) */
+.card-grid::-webkit-scrollbar-thumb {
+  background: white; /* Farbe des Scrollbalkens (weiß) */
+  border-radius: 3px; /* Optionale Abrundung der Ecken */
+}
+
+/* Optional: Hover-Effekt für den Scrollbalken */
+.card-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7); /* Hellerer weißer Balken beim Hover */
+}
+
+.card-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: normal;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  p {
+    white-space: nowrap;         /* Verhindert Umbrüche, sodass der Text immer in einer Zeile bleibt */
+    overflow: hidden;            /* Verhindert, dass der Text über das Element hinaus geht */
+    text-overflow: ellipsis;     /* Zeigt "..." an, wenn der Text abgeschnitten wird */
+    text-align: left;            /* Macht den Text linksbündig */
+  }
+  
 }
 
 .progress-bar {
@@ -144,22 +236,9 @@
 .log-content {
   font-family: monospace;
 }
-.card-image-container {
-  position: relative; /* Container als Referenz für absolute Positionierung */
-}
 
 
 
-.image-info {
-  position: absolute; /* Positioniert relativ zum Container */
-  bottom: 0; /* Am unteren Rand */
-  left: 0; /* Am linken Rand */
-  background-color: rgba(0, 0, 0, 0.7); /* Halbtransparenter Hintergrund */
-  color: white;
-  padding: 8px;
-  width: 100%; /* Optional: volle Breite */
-  font-size: x-small;
-}
 .log-entry {
   display: flex;
   align-items: center;
@@ -195,35 +274,6 @@
   justify-content: space-between;
 }
 
-.card-grid {
-  flex: 3;
-  overflow-y: auto;
-  height: auto;
-  max-height: 82vh;
-  padding: 0.5rem;
-}
-
-/* Webkit-Stile für benutzerdefinierte Scrollbalken */
-.card-grid::-webkit-scrollbar {
-  width: 6px; /* Breite des vertikalen Scrollbalkens */
-  height: 6px; /* Höhe des horizontalen Scrollbalkens */
-}
-
-/* Hintergrund des Scrollbalkens entfernen */
-.card-grid::-webkit-scrollbar-track {
-  background: transparent; /* Hintergrund des Scrollbalkens transparent */
-}
-
-/* Der Scrollbalken (der eigentliche Balken) */
-.card-grid::-webkit-scrollbar-thumb {
-  background: white; /* Farbe des Scrollbalkens (weiß) */
-  border-radius: 3px; /* Optionale Abrundung der Ecken */
-}
-
-/* Optional: Hover-Effekt für den Scrollbalken */
-.card-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.7); /* Hellerer weißer Balken beim Hover */
-}
 
 .language-filter label {
   display: block;
@@ -237,33 +287,16 @@
   font-weight: bold;
 }
 
-.card-name {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: normal;
-  margin-top: 5px;
-  margin-bottom: 0px;
-  p {
-    white-space: nowrap;         /* Verhindert Umbrüche, sodass der Text immer in einer Zeile bleibt */
-    overflow: hidden;            /* Verhindert, dass der Text über das Element hinaus geht */
-    text-overflow: ellipsis;     /* Zeigt "..." an, wenn der Text abgeschnitten wird */
-    text-align: left;            /* Macht den Text linksbündig */
+
+
+
+.add-custom-card{
+  svg{
+    width: 3rem;
+    height: 3rem;
   }
 }
 
-
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 .dialog-content {
   background-color: white;
@@ -295,13 +328,7 @@
   margin: 10px;
 } */
 
-.custom-card {
-  border: 2px solid green;
-}
 
-.custom-card img {
-  cursor: default;
-}
 
 .checkbox-group {
   display: flex;

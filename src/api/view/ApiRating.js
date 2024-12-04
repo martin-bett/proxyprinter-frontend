@@ -159,8 +159,8 @@ const ApiRating = ({ conf, ratingChanged }) => {
 
   return (
     <>
-    <div className="rating-container">
-    <button className="button" type="button" >
+    <div className="rating-container wizard-category">
+    <button className="button is-secondary copy setting-category" type="button" >
             Rating
     </button>
       <div className="is-flex is-justify-content-center" style={{ gap: '4rem' }}>

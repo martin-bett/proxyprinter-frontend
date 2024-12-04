@@ -1,4 +1,7 @@
 import React from 'react';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import SearchIcon from '@mui/icons-material/Search';
+import AddLinkIcon from '@mui/icons-material/AddLink';
 
 const AddCardButton = () => {
   // Kartenabmessungen
@@ -6,6 +9,7 @@ const AddCardButton = () => {
   const cardHeight = 132; // 88 * 1.5 (50% größer)
 
   return (
+    <>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox={`0 0 ${cardWidth} ${cardHeight}`}
@@ -45,6 +49,12 @@ const AddCardButton = () => {
         strokeLinecap="round" // Abgerundete Enden
       />
     </svg>
+   <div className="card-name">
+    <SearchIcon/>
+    <AddLinkIcon/>
+    <FileUploadIcon/>
+   </div>
+   </>
   );
 };
 
