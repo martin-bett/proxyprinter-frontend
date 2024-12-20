@@ -1071,7 +1071,7 @@ const DeckInputAndViewer = () => {
               id="gridSize"
               type="range"
               min="4"
-              max="50"
+              max="20"
               step="1"
               value={gridSize}
               onChange={handleGridSizeChange}
