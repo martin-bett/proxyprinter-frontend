@@ -51,6 +51,8 @@ Adminkram
 
   docker run --name local-postgres-dev -p 5432:5432 -e POSTGRES_DB=proxymaster -e POSTGRES_USER=mtguser -e POSTGRES_PASSWORD=mtgpassword -d postgres
 
+docker stop $(docker ps -q) && docker rm $(docker ps -aq)
+
 
  git clone https://martin-bett@github.com/martin-bett/mtgprint-front.git
 
