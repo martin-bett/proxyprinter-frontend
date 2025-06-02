@@ -20,7 +20,7 @@ const ImageSelectDialog = ({
 
   const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(initialVisibleLanguages);
   const [dialogVisibleApis, setDialogVisibleApis] = useState(initialVisibleApis);
-
+  // const imageLoaderCacheSize = useImageLoaderCacheSize();
 
   const availableLanguages = useMemo(() => {
     const languages = new Set([NO_LANGUAGE]);
@@ -170,6 +170,9 @@ const ImageSelectDialog = ({
                 </label>
               ))}
             </div>
+            {/* <div>
+              {imageLoaderCacheSize}
+            </div> */}
           </div>
         </div>
       </div>

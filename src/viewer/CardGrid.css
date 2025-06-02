@@ -4,7 +4,7 @@
   display: grid;
   grid-template-columns: 2fr 10fr 1fr;
   grid-template-areas:
-    ". headline ."
+    "headline headline headline"
     "input-controls decklist-viewer view-selection"
     "input-controls decklist-viewer pdf-controls"
     "input-controls decklist-viewer bottom";
@@ -209,12 +209,21 @@
   margin-left: auto; /* Push icons to the right side */
 }
 
-.decklist-input textarea{
-  font-size: large;
+.decklist-input textarea {
+  font-size: 1rem;           /* Etwas kleiner als "large" */
   background-color: rgb(214, 238, 248);
   padding-left: 10px;
-  width: 320px;
+  width: 100%;              /* Feste Breite */
+  height: 380px;             /* Feste Höhe */
+  min-width: 100%;
+  max-width: 100%;
+  min-height: 380px;
+  max-height: 380px;
+  resize: none;              /* Kein Resize durch User */
+  box-sizing: border-box;
+  margin-bottom: 10px;
 }
+
 
 .progress-bar span {
   position: absolute;

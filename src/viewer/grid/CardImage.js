@@ -10,8 +10,9 @@ const CardImage = ({
   showImageSettings,
   onlyDimensions = false,
   priority = 1,
+  isPermanent = false, 
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(isPermanent); 
   const containerRef = useRef(null);
   const [card, setCard] = useState({});
   const [imageInfo, setImageInfo] = useState(null);
@@ -20,8 +21,14 @@ const CardImage = ({
   const canvasRef = useRef(null);
   const [status, setStatus] = useState("");
   const imageRef = useRef(null); // Referenz zum geladenen Bild
+  const [proxyTried, setProxyTried] = useState(false);
+  const [lastError, setLastError] = useState(null);
 
   useEffect(() => {
+    if (isPermanent) {
+      setIsVisible(true);
+      return; // Observer nicht aktivieren!
+    }
     // Intersection Observer erstellen
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -42,7 +49,7 @@ const CardImage = ({
         observer.unobserve(containerRef.current);
       }
     };
-  }, []);
+  }, [isPermanent]);
 
   useEffect(() => {
     setShow(showImageSettings ? showImageSettings : false);
@@ -55,25 +62,74 @@ const CardImage = ({
   useEffect(() => {
     if (isVisible && card && card.imageUrl) {
       setIsLoading(true);
+      setProxyTried(false);
+      setLastError(null);
 
-      imageLoaderService.addToQueue({
-        url: card.imageUrl,
-        priority,
-        cardInput: card,
-        category: 'selectgrid',
-        onLoad: (img) => {
-          imageRef.current = img; // Bild speichern
-          handleLoad(img);
-          renderCanvas(img);
-        },
-        onError: () => {
-          setIsLoading(false);
-          if (onError) onError(card);
-        },
-        onProcessListChange: (newStatus) => {
-          setStatus(newStatus);
-        },
-      });
+      // Hilfsfunktion für Bild laden (direkt oder via Proxy)
+      const loadImage = (url, tryProxy = false, prevError = null) => {
+        imageLoaderService.addToQueue({
+          url,
+          priority,
+          cardInput: card,
+          category: 'selectgrid',
+          onLoad: (img) => {
+            imageRef.current = img;
+            handleLoad(img);
+            renderCanvas(img);
+          },
+          onError: (error) => {
+            if (!tryProxy) {
+              // Erster Versuch fehlgeschlagen, jetzt Proxy probieren
+              setProxyTried(true);
+              // Proxy-URL holen
+              fetch("/api/proxy/image", {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                  "X-Target-URL": url,
+                },
+              })
+                .then((response) => {
+                  if (!response.ok) throw new Error("Proxy-Fehler: " + response.statusText);
+                  return response.blob();
+                })
+                .then((blob) => {
+                  const proxyUrl = URL.createObjectURL(blob);
+                  // Bild aus Blob laden
+                  const img = new window.Image();
+                  img.onload = () => {
+                    imageRef.current = img;
+                    handleLoad(img);
+                    renderCanvas(img);
+                  };
+                  img.onerror = (e) => {
+                    const proxyError = "Proxy-Image-Load-Fehler";
+                    setIsLoading(false);
+                    setLastError((prev) => [prevError, proxyError].filter(Boolean).join(" | "));
+                    if (onError) onError({ ...card, error: [prevError, proxyError].filter(Boolean).join(" | ") });
+                  };
+                  img.src = proxyUrl;
+                })
+                .catch((proxyError) => {
+                  setIsLoading(false);
+                  setLastError((prev) => [prevError, proxyError.message].filter(Boolean).join(" | "));
+                  if (onError) onError({ ...card, error: [prevError, proxyError.message].filter(Boolean).join(" | ") });
+                });
+            } else {
+              // Proxy auch fehlgeschlagen
+              setIsLoading(false);
+              setLastError((prev) => [prevError, error].filter(Boolean).join(" | "));
+              if (onError) onError({ ...card, error: [prevError, error].filter(Boolean).join(" | ") });
+            }
+          },
+          onProcessListChange: (newStatus) => {
+            setStatus(newStatus);
+          },
+        });
+      };
+
+      // Starte mit dem normalen Bild
+      loadImage(card.imageUrl, false, null);
     }
   }, [card, priority, isVisible]);
 

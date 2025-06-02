@@ -31,7 +31,6 @@ const CropImageOverlay = ({ selectedImage, handleCropSettings, fixedHeight }) =>
     isStretch: true
   });
   const debounceTimeoutRef = useRef(null);
-  const previousCropRef = useRef(null); // Ref für den vorherigen Crop
   const [cropMode, setCropMode] = useState(false);
 
   useEffect(() => {
@@ -259,9 +258,11 @@ const CropImageOverlay = ({ selectedImage, handleCropSettings, fixedHeight }) =>
 
   return (
     <div>
+      <div style={{fontSize: "small"}} >{selectedImage?.imageUrl}</div>
       <div className="selected-image-container">
         {selectedImage && (
           cropMode ? (
+            
             <div
               ref={containerRef}
               className="cropped-image-container"
@@ -297,12 +298,62 @@ const CropImageOverlay = ({ selectedImage, handleCropSettings, fixedHeight }) =>
               )}
             </div>
           ) : (
-            <img src={selectedImage.imageUrl} style={{ height: fixedHeight+'px', margin: '10px' }} alt={selectedImage.name} />
+
+             <>
+              {loading && (
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                </div>
+              )}
+              {!loading && imageSrc && (
+                <img
+                  src={imageSrc}
+                  style={{ height: fixedHeight + 'px', margin: '10px' }}
+                  alt={selectedImage.name}
+                />
+              )}
+            </>
           )
         )}
       </div>
 
       <div>
+        {/* Basisinformationen zur Karte */}
+        {selectedImage && (
+          <table style={{ margin: "10px 0", width: "100%" }}>
+            <tbody>
+              <tr>
+                <td style={{ fontWeight: "bold", paddingRight: 8 }}>Name:</td>
+                <td>{selectedImage.name}</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: "bold", paddingRight: 8 }}>Set:</td>
+                <td>
+                  {selectedImage.set}
+                  {selectedImage.setNumber ? ` (${selectedImage.setNumber})` : ""}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: "bold", paddingRight: 8 }}>API:</td>
+                <td>{selectedImage.apiName}</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: "bold", paddingRight: 8 }}>Sprache:</td>
+                <td>{selectedImage.languageCode || "—"}</td>
+              </tr>
+              {selectedImage.imageInfo && (
+                <tr>
+                  <td style={{ fontWeight: "bold", paddingRight: 8 }}>Bildgröße:</td>
+                  <td>
+                    {selectedImage.imageInfo.width} × {selectedImage.imageInfo.height}
+                    {selectedImage.imageInfo.fileType ? ` (${selectedImage.imageInfo.fileType})` : ""}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+
         <label>
           <ToggleButton
             value="crop"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import CacheService from '../service/cache/CacheService';
+import { imageLoaderService } from '../service/cache/ImageLoaderService';
+import SearchCacheService from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import PdfProgressDialog from './pdf/PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
@@ -15,6 +16,8 @@ import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import TranslateIcon from '@mui/icons-material/Translate';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PaletteIcon from '@mui/icons-material/Palette';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import PayPalDonateButton from './info/PayPalDonateButton';
 import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
@@ -25,8 +28,13 @@ import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ApiFactory from '../service/ApiFactory';
+import CacheManagerDialog from './cache/CacheManagerDialog';
+import { CacheProgressBar } from './cache/CacheProgressBar';
+import QueueManagerDialog from './cache/QueueManagerDialog';
 
 const NO_LANGUAGE = 'No Language';
+
+
 
 const DeckInputAndViewer = () => {
   const [decklist, setDecklist] = useState('');
@@ -55,6 +63,8 @@ const DeckInputAndViewer = () => {
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [imageCacheDialogOpen, setImageCacheDialogOpen] = useState(false);
+  const [queueDialogOpen, setQueueDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
@@ -256,16 +266,15 @@ const DeckInputAndViewer = () => {
     setProgress(0);
 
     const cardEntries = decklist.split('\n')
-      .map(line => line.trim()) // Entfernt führende und nachfolgende Leerzeichen
-      .filter(line => line) // Entfernt leere Zeilen
+      .map(line => line.trim())
+      .filter(line => line)
       .map(line => {
-        // Angepasster Regex zur Erkennung von "(set)"
         const match = line.match(/^(\d+)\s+(.+?)(?:\s+\(([^)]+)\))?\s*$/);
         if (match) {
           return {
-            count: parseInt(match[1], 10), // Extrahiert die Anzahl
-            name: match[2].trim(),        // Extrahiert den Kartennamen
-            set: match[3]?.trim() || null // Extrahiert das Set, falls vorhanden
+            count: parseInt(match[1], 10),
+            name: match[2].trim(),
+            set: match[3]?.trim() || null
           };
         }
         return null;
@@ -294,15 +303,18 @@ const DeckInputAndViewer = () => {
           if (!groupResults[apiKey][entry.name]) {
             try {
               let result;
-              if (CacheService.hasSearchResult(apiKey, entry.name)) {
-                result = CacheService.getSearchResult(apiKey, entry.name);
-                addToLog(`Cached ${result.results.length} ${entry.name}`, apiKey);
+              if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
+                result = await SearchCacheService.getSearchResult(apiKey, entry.name);
+                const resultsArr = result?.results || [];
+                addToLog(`Cached ${resultsArr.length} ${entry.name}`, apiKey);
+                groupResults[apiKey][entry.name] = resultsArr;
               } else {
                 result = await api({ cardname: entry.name, set: entry.set });
-                CacheService.setSearchResult(apiKey, entry.name, result);
-                addToLog(`Found ${result.results.length} ${entry.name}`, apiKey, result.rawResponse);
+                await SearchCacheService.setSearchResult(apiKey, entry.name, result);
+                const resultsArr = result?.results || [];
+                addToLog(`Found ${resultsArr.length} ${entry.name}`, apiKey, result.rawResponse);
+                groupResults[apiKey][entry.name] = resultsArr;
               }
-              groupResults[apiKey][entry.name] = result.results;
             } catch (error) {
               addToLog(`Error ${entry.name}: ${error.message}`, apiKey);
               groupResults[apiKey][entry.name] = [];
@@ -351,11 +363,11 @@ const DeckInputAndViewer = () => {
     const initialSelectedCards = {};
     Object.entries(results).forEach(([cardName, cardData]) => {
       initialSelectedCards[cardName] = Array(cardData.count).fill().map((_, index) => {
-        if (CacheService.hasSelectedImage(cardName, index + 1)) {
-          const cachedImageUrl = CacheService.getSelectedImage(cardName, index + 1);
+        if (SearchCacheService.hasSelectedImage(cardName, index + 1)) {
+          const cachedImageUrl = SearchCacheService.getSelectedImage(cardName, index + 1);
           return cardData.results.find(card => card.imageUrl === cachedImageUrl) || cardData.results[0] || null;
         }
-        return cardData.results[0] || null;  // Select first image if no cache or cache not found
+        return cardData.results[0] || null;
       });
     });
     setSelectedCards(initialSelectedCards);
@@ -381,7 +393,7 @@ const DeckInputAndViewer = () => {
           )
         };
 
-        CacheService.setSelectedImage(currentCardName, currentCardIndex + 1, selectedImage.imageUrl);
+        SearchCacheService.setSelectedImage(currentCardName, currentCardIndex + 1, selectedImage.imageUrl);
         return newSelectedCards;
       });
     }
@@ -423,6 +435,10 @@ const DeckInputAndViewer = () => {
 
   const handleOpenSettingsDialog = () => setSettingsDialogOpen(true);
   const handleCloseSettingsDialog = () => setSettingsDialogOpen(false);
+  const handleOpenImageCacheDialog = () => setImageCacheDialogOpen(true);
+  const handleCloseImageCacheDialog = () => setImageCacheDialogOpen(false);
+  const handleOpenQueueDialog = () => setQueueDialogOpen(true);
+  const handleCloseQueueDialog = () => setQueueDialogOpen(false);
 
   const handleOpenApiConfigDialog = () => setApiConfigDialogOpen(true);
 
@@ -695,7 +711,7 @@ const DeckInputAndViewer = () => {
       return updatedResults; // Aktualisierter Zustand
     });
   };
-  
+
   const groupResultsByApi = (results) => {
     return results.reduce((acc, result) => {
       if (!acc[result.apiName]) {
@@ -786,15 +802,18 @@ const DeckInputAndViewer = () => {
         const api = apiFactory.createApi(apiKey);
 
         try {
-          if (CacheService.hasSearchResult(apiKey, cardEntry.name)) {
-            const result = CacheService.getSearchResult(apiKey, cardEntry.name);
-            addToLog(`Cached ${result.results.length} ${cardEntry.name}`, apiKey);
-            groupResults[apiKey][cardEntry.name] = result.results;
+          let result;
+          if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
+            result = await SearchCacheService.getSearchResult(apiKey, cardEntry.name);
+            const resultsArr = result?.results || [];
+            addToLog(`Cached ${resultsArr.length} ${cardEntry.name}`, apiKey);
+            groupResults[apiKey][cardEntry.name] = resultsArr;
           } else {
-            const result = await api({ cardname: cardEntry.name });
-            CacheService.setSearchResult(apiKey, cardEntry.name, result);
-            addToLog(`Found ${result.results.length} ${cardEntry.name}`, apiKey, result.rawResponse);
-            groupResults[apiKey][cardEntry.name] = result.results;
+            result = await api({ cardname: cardEntry.name });
+            await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
+            const resultsArr = result?.results || [];
+            addToLog(`Found ${resultsArr.length} ${cardEntry.name}`, apiKey, result.rawResponse);
+            groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
           addToLog(`Error ${cardEntry.name}: ${error.message}`, apiKey);
@@ -1002,6 +1021,7 @@ const DeckInputAndViewer = () => {
                           {selectedCard ? (
                             <CardImage
                               cardInput={selectedCard}
+                              isPermanent={true}
                               showImageSettings={showImageSettings}
                               onLoad={(imageInfo) => handleImageLoad(selectedCard, imageInfo)}
                               onError={() => handleImageError(cardName, selectedCard.imageUrl, selectedCard.apiName)}
@@ -1056,28 +1076,44 @@ const DeckInputAndViewer = () => {
       </div>
 
       <div className="view-selection">
+        <div >
+          <div><h3 className='title is-5'>Image Cache</h3></div>
+          <div>
+            <button onClick={handleOpenImageCacheDialog} title='Cache Verwalten'><RemoveRedEyeIcon></RemoveRedEyeIcon></button>
+            <button onClick={() => imageLoaderService.clearCache()} title='Cache leeren'><DeleteIcon></DeleteIcon></button>
+            <CacheProgressBar onClick={handleOpenImageCacheDialog} />
+          </div>
+          {/* Cache-Progressbar */}
+        </div>      
+        <div >
+          <div><h3 className='title is-5'>Download Queue</h3></div>
+          <div>
+            <button onClick={handleOpenQueueDialog} title='Open Queue'><RemoveRedEyeIcon></RemoveRedEyeIcon></button>
+          </div>
+          {/* Cache-Progressbar */}
+        </div>
         <div className="filter-controls">
-          <h2 className='title is-4'>View Selection</h2>
+          <h2 className='title is-5'>View Selection</h2>
           <div className="language-filter checkbox-group">
             {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
             {renderCheckbox('showImageSettings', 'Show Image Info', showImageSettings, (event) => handleShowImageSettingsChanged(event))}
             <div className="grid-size-control">
-            <label htmlFor="gridSize" className="block text-sm font-medium text-gray-700">
-              Grid Size {gridSize}
-            </label>
+              <label htmlFor="gridSize" className="block text-sm font-medium text-gray-700">
+                Grid Size {gridSize}
+              </label>
             </div>
             <div>
-            <input
-              id="gridSize"
-              type="range"
-              min="4"
-              max="20"
-              step="1"
-              value={gridSize}
-              onChange={handleGridSizeChange}
-              className="w-full"
-            />
-          </div>
+              <input
+                id="gridSize"
+                type="range"
+                min="4"
+                max="20"
+                step="1"
+                value={gridSize}
+                onChange={handleGridSizeChange}
+                className="w-full"
+              />
+            </div>
           </div>
           <div className="language-filter checkbox-group">
             <h3 className='title is-5'>Language Filter</h3>
@@ -1108,7 +1144,7 @@ const DeckInputAndViewer = () => {
 
         <div><button className="button" onClick={handleOpenSettingsDialog}><PictureAsPdfOutlinedIcon />Settings</button></div>
         <div><button className="button" disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}><LocalPrintshopOutlinedIcon />Create PDF</button></div>
-        
+
       </div>
 
       <div className="bottom">
@@ -1132,8 +1168,23 @@ const DeckInputAndViewer = () => {
         }
       />
 
+      <ClosableDialog
+        open={imageCacheDialogOpen}
+        onClose={handleCloseImageCacheDialog}
+        maxWidth='md'
+        children={
+          <CacheManagerDialog open={imageCacheDialogOpen} onClose={handleCloseImageCacheDialog} />
+        }
+      />
 
-
+      <ClosableDialog
+        open={queueDialogOpen}
+        onClose={handleCloseQueueDialog}
+        maxWidth='md'
+        children={
+          <QueueManagerDialog open={queueDialogOpen} onClose={handleCloseQueueDialog} />
+        }
+      />
       <ImageSelectDialog
         open={imageSelectDialogOpen}
         onClose={handleCloseImageSelectDialog}
@@ -1179,10 +1230,10 @@ const DeckInputAndViewer = () => {
           searchForApis={searchForApis}
         />}
       />
-      <Dialog 
-      maxWidth = 'xl'
-      fullWidth
-      open={pdfProgressDialogOpen}>
+      <Dialog
+        maxWidth='xl'
+        fullWidth
+        open={pdfProgressDialogOpen}>
         <PdfProgressDialog
           open={pdfProgressDialogOpen}
           progress={pdfProgress}

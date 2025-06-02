@@ -113,10 +113,21 @@ export interface ImageInfo {
   fileType?:string;
 }
 
+export interface CardEntrySelection {
+  name: string; // Kartenname oder generierter Name
+  selectionCategory: string; // z.B. "api", "custom", "upload"
+  count: number; // Wie viele Karten werden benötigt
+  results: SearchResult[]; // Alle auswählbaren Bilder (z.B. alle Prints)
+  selectedIndexes: number[]; // Für jeden Slot: Index in results[]
+  imageInfoByIndex: { [idx: number]: ImageInfo };
+  cropSettingsByIndex: { [idx: number]: CropSettings };
+}
+
 export interface CardEntry {
   results: SearchResult[];
   cropSettings: CropSettings;
   imageInfo: ImageInfo;
+  name: string;
   count?:number;
 }
 
@@ -636,17 +647,27 @@ export default class ApiFactory {
 
 }
 
-function parseHtmlValue(element: HTMLElement, selector: string|undefined): string {
-  const [cssSelector, valueType] = selector? selector.split('|').map(s => s.trim()) : '';
-  const selectedElement = element.querySelector(cssSelector);
+function parseHtmlValue(element: HTMLElement, selector: string | undefined): string {
+  if (!selector) return '';
 
-  if (!selectedElement) return '';
+  // Splitte nach || für Alternativen, z.B. "img.media-lightbox-img | attr:src || img.media-lightbox-img | attr:data-lazy-srcset"
+  const alternatives = selector.split('||').map(s => s.trim());
 
-  if (valueType === 'innerText') {
-    return selectedElement.textContent || '';
-  } else if (valueType.startsWith('attr:')) {
-    const attrName = valueType.split(':')[1];
-    return selectedElement.getAttribute(attrName) || '';
+  for (const alt of alternatives) {
+    // Splitte wie gehabt in cssSelector und valueType
+    const [cssSelector, valueType] = alt.split('|').map(s => s.trim());
+    const selectedElement = element.querySelector(cssSelector);
+
+    if (!selectedElement) continue;
+
+    if (valueType === 'innerText') {
+      const val = selectedElement.textContent || '';
+      if (val) return val;
+    } else if (valueType.startsWith('attr:')) {
+      const attrName = valueType.split(':')[1];
+      const val = selectedElement.getAttribute(attrName) || '';
+      if (val) return val;
+    }
   }
 
   return '';

@@ -1,32 +1,25 @@
 config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
 
+config erweitern um artist/creator
+  config erweitern um auto english language setter
+
 custom picture imageurl über proxy als checkbox
 
+set support mit () für pokemon pfilcht
 
-foreignnames -> scryfall id to imageurl ? tcgplayers pokemon -> selbe
-customImageLink
-customImageLinkField
-nestedCustomImageLinkField
-https://api.scryfall.com/cards/56ebc372-aabd-4174-a943-c7bf59e5028d?format=image
-http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=657&type=card
-https://images.pokemoncard.io/images/xy12/xy12-83.png
+save + load decksearch (selectedCards + deckinput + selectedapis) auto deactivate bei customcards
 
 
-save+ load decksearch (selectedCards + deckinput + selectedapis) auto deactivate bei customcards
 
- ignore basic resource + configparameter "basic,resource fields" comma seperated alle names
-
-
-  config erweitern um auto english language setter
 
 
 url + upload crop image viewport / für gallery komplett oder single einstellbar
 
 imageurl +gallery gridimport mit margins / only outermargin
   
-config feld lastused wird gesetzt bei suche mit api oder edit -> älter als 3 wochen automatisch löschen
+config feld lastused wird gesetzt bei suche mit api oder edit -> älter als x monate automatisch löschen
 
-set support mit () für pokemon pfilcht
+
 
 filter anzahl der jeweiligen einstellung in iamageselectdialog
 in deckviewer min-max zahl (je karte) der jeweiligen einstellung 
@@ -36,6 +29,11 @@ keep aspect ratio checkbox und funktionalität für printsettings
 reset crop settings + keep aspect ratio
 
 mehrfach select zulassen für datalistfield + imgurlfield
+
+search log in tabellenform + dauer in 0,0 s und vielleicht progress symbol ?
+
+cache manager  darf nicht selected löschen
+
 
 Adminkram
 # deploy auf netcup
@@ -53,7 +51,11 @@ Adminkram
 
 docker stop $(docker ps -q) && docker rm $(docker ps -aq)
 
+docker build -f docker.dockerfile -t mtgprint-front .
+
 
  git clone https://martin-bett@github.com/martin-bett/mtgprint-front.git
 
 FAQf8nO9nHnhRFK
+
+papierflieger editor
