@@ -1,0 +1,93 @@
+.raw-data-dialog .MuiDialogContent-root {
+  background: var(--input-bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.raw-data-text {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* react-json-view-lite mit Theme-Farben */
+.json-view {
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--text);
+}
+
+.json-view-child {
+  margin: 0 0 0 1.25rem;
+  padding: 0;
+}
+
+.json-view-label {
+  font-weight: 600;
+  margin-right: 5px;
+  color: var(--text);
+}
+
+.json-view-clickable {
+  cursor: pointer;
+}
+
+.json-view-clickable:hover {
+  color: var(--accent);
+}
+
+.json-view-string {
+  color: var(--success);
+}
+
+.json-view-number {
+  color: var(--accent);
+}
+
+.json-view-boolean {
+  color: var(--warning);
+}
+
+.json-view-null {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.json-view-other {
+  color: var(--text);
+}
+
+.json-view-punctuation {
+  color: var(--text-muted);
+}
+
+.json-view-icon {
+  font-size: 1.1em;
+  margin-right: 5px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-muted);
+}
+
+.json-view-expand::after {
+  content: '\25B8';
+}
+
+.json-view-collapse::after {
+  content: '\25BE';
+}
+
+.json-view-collapsed {
+  margin-right: 5px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.json-view-collapsed::after {
+  content: '...';
+  font-size: 0.8em;
+}
