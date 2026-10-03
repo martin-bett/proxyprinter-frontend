@@ -13,6 +13,27 @@ const RATING_LABEL: Record<ImageQuality["rating"], string> = {
   unknown: "kein Text erkannt",
 };
 
+// Kartenformat 63 x 88 mm, damit lässt sich die Höhe aus der Breite ableiten
+const CARD_ASPECT = 63 / 88;
+// Laden beginnt eine Kartenhöhe vor dem sichtbaren Bereich, entladen erst ab zwei Kartenhöhen
+const LOAD_MARGIN_CARDS = 1;
+const UNLOAD_MARGIN_CARDS = 2;
+
+export const QUEUE_CATEGORY_SELECT = 'selectgrid';
+const QUEUE_CATEGORY_DECK = 'deckgrid';
+
+// Nächster scrollbarer Vorfahre (z.B. das Grid im Bildauswahl-Dialog), sonst Viewport.
+// Wichtig, weil rootMargin nur am root wirkt und ein scrollender Container sonst abschneidet.
+const findScrollParent = (el: HTMLElement): HTMLElement | null => {
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    const { overflowY } = window.getComputedStyle(node);
+    if (overflowY === "auto" || overflowY === "scroll") return node;
+    node = node.parentElement;
+  }
+  return null;
+};
+
 export interface CardImageError extends CardResult {
   error: string;
 }
@@ -49,33 +70,83 @@ const CardImage: React.FC<CardImageProps> = ({
   const [lastError, setLastError] = useState<string | null>(null);
   const [quality, setQuality] = useState<ImageQuality | null>(null);
   const qualityRun = useRef(0);
+  const loadRun = useRef(0);
+  const [placeholderHeight, setPlaceholderHeight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (isPermanent) {
       setIsVisible(true);
       return; // Observer nicht aktivieren!
     }
-    // Intersection Observer erstellen
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      {
-        root: null, // Viewport als Bezugspunkt
-        threshold: 0.1, // 10% Sichtbarkeit reicht aus
-      }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
     }
+    const root = findScrollParent(el);
+    let loadObserver: IntersectionObserver | null = null;
+    let unloadObserver: IntersectionObserver | null = null;
+    let observedWidth = -1;
+
+    // Zwei Observer mit Abstand in Kartenhöhen: Laden startet schon
+    // LOAD_MARGIN_CARDS Kartenhöhen vor dem sichtbaren Bereich, entladen wird erst
+    // ab UNLOAD_MARGIN_CARDS Kartenhöhen. Die Lücke dazwischen verhindert Flackern.
+    const setupObservers = (width: number) => {
+      loadObserver?.disconnect();
+      unloadObserver?.disconnect();
+      observedWidth = width;
+      const cardHeight = Math.max(1, Math.round(width / CARD_ASPECT));
+      setPlaceholderHeight(width > 0 ? cardHeight : undefined);
+      loadObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setIsVisible(true);
+        },
+        { root, rootMargin: `${cardHeight * LOAD_MARGIN_CARDS}px 0px`, threshold: 0 }
+      );
+      unloadObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) setIsVisible(false);
+        },
+        { root, rootMargin: `${cardHeight * UNLOAD_MARGIN_CARDS}px 0px`, threshold: 0 }
+      );
+      loadObserver.observe(el);
+      unloadObserver.observe(el);
+    };
+
+    setupObservers(el.offsetWidth);
+
+    // Kartengröße ändert sich (Fenster, Grid) -> Abstände neu berechnen
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            const width = el.offsetWidth;
+            if (width > 0 && width !== observedWidth) setupObservers(width);
+          })
+        : null;
+    resizeObserver?.observe(el);
 
     return () => {
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
-      }
+      loadObserver?.disconnect();
+      unloadObserver?.disconnect();
+      resizeObserver?.disconnect();
     };
   }, [isPermanent]);
+
+  // Weit genug weggescrollt: wartenden Download abbrechen und Bild freigeben
+  useEffect(() => {
+    if (isVisible || isPermanent || !card) return;
+    imageLoaderService.cancelQueued(card, QUEUE_CATEGORY_SELECT);
+    qualityRun.current++;
+    loadRun.current++;
+    imageRef.current = null;
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    setIsLoading(true);
+    setStatus("");
+  }, [isVisible, isPermanent, card]);
 
   useEffect(() => {
     setShow(showImageSettings ? showImageSettings : false);
@@ -91,19 +162,25 @@ const CardImage: React.FC<CardImageProps> = ({
       setProxyTried(false);
       setLastError(null);
 
+      // Ergebnisse eines inzwischen entladenen Ladevorgangs ignorieren
+      const run = loadRun.current;
+      const stale = () => run !== loadRun.current;
+
       // Hilfsfunktion für Bild laden (direkt oder via Proxy)
       const loadImage = (url: string, tryProxy = false, prevError: string | null = null) => {
         imageLoaderService.addToQueue({
           url,
           priority,
           cardInput: card,
-          category: 'selectgrid',
+          category: isPermanent ? QUEUE_CATEGORY_DECK : QUEUE_CATEGORY_SELECT,
           onLoad: (img) => {
+            if (stale()) return;
             imageRef.current = img;
             handleLoad(img);
             renderCanvas(img);
           },
           onError: (error) => {
+            if (stale()) return;
             if (!tryProxy) {
               // Erster Versuch fehlgeschlagen, jetzt Proxy probieren
               setProxyTried(true);
@@ -124,11 +201,13 @@ const CardImage: React.FC<CardImageProps> = ({
                   // Bild aus Blob laden
                   const img = new window.Image();
                   img.onload = () => {
+                    if (stale()) return;
                     imageRef.current = img;
                     handleLoad(img);
                     renderCanvas(img);
                   };
                   img.onerror = () => {
+                    if (stale()) return;
                     const proxyError = "Proxy-Image-Load-Fehler";
                     setIsLoading(false);
                     const combined = [prevError, proxyError].filter(Boolean).join(" | ");
@@ -138,6 +217,7 @@ const CardImage: React.FC<CardImageProps> = ({
                   img.src = proxyUrl;
                 })
                 .catch((proxyError) => {
+                  if (stale()) return;
                   setIsLoading(false);
                   const combined = [prevError, proxyError.message].filter(Boolean).join(" | ");
                   setLastError(combined);
@@ -277,7 +357,12 @@ const CardImage: React.FC<CardImageProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="card-image-container">
+    <div
+      ref={containerRef}
+      className="card-image-container"
+      // Höhe beim Entladen halten, sonst springt das Grid beim Scrollen
+      style={!isVisible && placeholderHeight ? { minHeight: placeholderHeight } : undefined}
+    >
       <div style={{ display: isVisible ? "block" : "none" }}>
         {isLoading && (
           <div className="loading-spinner">
