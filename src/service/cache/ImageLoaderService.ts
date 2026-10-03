@@ -1,6 +1,11 @@
+import { openCacheDb } from "./openCacheDb";
+
 const DB_NAME = "mtg_cache_db";
-const DB_VERSION = 2;
+// The build deployed until 2025-06 used version 3 with separate "meta" and
+// "images" stores. Version 4 replaces that layout with a single "images" store.
+const DB_VERSION = 4;
 const STORE_NAME = "images";
+const LEGACY_META_STORE = "meta";
 
 /** Loosely-typed card reference used only to build cache keys and for display/filtering. */
 export interface CacheCardInput {
@@ -60,16 +65,17 @@ export interface CacheSnapshot {
 }
 
 function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = function (event) {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "cacheKey" });
+  return openCacheDb(DB_NAME, DB_VERSION, (db) => {
+    if (db.objectStoreNames.contains(LEGACY_META_STORE)) {
+      // Old layout: its "images" store only holds blobs without metadata, drop both.
+      db.deleteObjectStore(LEGACY_META_STORE);
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        db.deleteObjectStore(STORE_NAME);
       }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    }
+    if (!db.objectStoreNames.contains(STORE_NAME)) {
+      db.createObjectStore(STORE_NAME, { keyPath: "cacheKey" });
+    }
   });
 }
 
