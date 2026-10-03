@@ -62,10 +62,6 @@
   transition: width 0.3s;
 }
 
-.pdf-progress-row.is-done .pdf-progress-fill {
-  background: var(--success);
-}
-
 .pdf-progress-row.is-error .pdf-progress-fill {
   background: var(--danger);
 }
@@ -80,6 +76,37 @@
   );
   background-size: 24px 100%;
   animation: pdf-progress-stripes 0.7s linear infinite;
+}
+
+/* Noch nicht erreichte Phasen: gedämpfte, endlos laufende Schrägstreifen auf der ganzen Spur */
+.pdf-progress-row.is-pending .pdf-progress-track,
+.pdf-progress-row.is-pending .pdf-progress-queue {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--track) 0px,
+    var(--track) 6px,
+    var(--accent-soft) 6px,
+    var(--accent-soft) 12px
+  );
+  background-size: 16.9706px 100%;
+  animation: pdf-progress-stripes-pending 1s linear infinite;
+}
+
+.pdf-progress-row.is-pending .pdf-progress-queue-ball {
+  display: none;
+}
+
+@keyframes pdf-progress-stripes-pending {
+  from { background-position: 0 0; }
+  to { background-position: 16.9706px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-progress-fill.is-indeterminate,
+  .pdf-progress-row.is-pending .pdf-progress-track,
+  .pdf-progress-row.is-pending .pdf-progress-queue {
+    animation: none;
+  }
 }
 
 @keyframes pdf-progress-stripes {
@@ -107,10 +134,6 @@
   border: 2px solid var(--surface);
   box-shadow: 0 2px 6px var(--shadow);
   transition: left 0.4s;
-}
-
-.pdf-progress-row.is-done .pdf-progress-queue-ball {
-  background: var(--success);
 }
 
 .pdf-progress-message {
