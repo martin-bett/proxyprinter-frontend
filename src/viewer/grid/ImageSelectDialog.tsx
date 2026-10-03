@@ -10,6 +10,21 @@ import { CardResult, GroupedResults } from '../../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
 
+// Druckschärfe-Filter. Noch nicht gemessene Bilder (nicht geladen) und "kein Text erkannt"
+// laufen unter "unrated", damit sie standardmäßig sichtbar bleiben und überhaupt gemessen werden.
+type QualityFilter = 'good' | 'ok' | 'poor' | 'unrated';
+const QUALITY_FILTERS: { key: QualityFilter; label: string }[] = [
+  { key: 'good', label: 'Gut lesbar' },
+  { key: 'ok', label: 'Etwas weich' },
+  { key: 'poor', label: 'Schlecht lesbar' },
+  { key: 'unrated', label: 'Nicht bewertet' },
+];
+
+const qualityFilterOf = (result: CardResult): QualityFilter => {
+  const rating = result.imageInfo?.quality?.rating;
+  return rating === 'good' || rating === 'ok' || rating === 'poor' ? rating : 'unrated';
+};
+
 interface ImageSelectDialogProps {
   open: boolean;
   onClose: (selectedImage: CardResult | null) => void;
@@ -32,6 +47,11 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
 
   const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(initialVisibleLanguages);
   const [dialogVisibleApis, setDialogVisibleApis] = useState(initialVisibleApis);
+  const [visibleQualities, setVisibleQualities] = useState<Set<QualityFilter>>(
+    () => new Set(QUALITY_FILTERS.map(f => f.key))
+  );
+  // Schärfe kommt asynchron nach dem Laden; neu filtern, sobald sich eine Bewertung ändert
+  const [, setQualityVersion] = useState(0);
   // const imageLoaderCacheSize = useImageLoaderCacheSize();
 
   const availableLanguages = useMemo(() => {
@@ -47,7 +67,18 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   }, [groupedResults]);
 
   const handleImageLoad = (result: CardResult, imageInfo: CardResult['imageInfo']) => {
+    const before = qualityFilterOf(result);
     Object.assign(result, { imageInfo: imageInfo });
+    if (qualityFilterOf(result) !== before) setQualityVersion(v => v + 1);
+  };
+
+  const toggleQuality = (key: QualityFilter) => {
+    setVisibleQualities(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   // Take over the filters from the main page each time the dialog opens
@@ -129,7 +160,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
               .filter(([apiName]) => dialogVisibleApis.has(apiName))
               .map(([apiName, results]) => {
                 const visibleResults = results.filter(result =>
-                  dialogVisibleLanguages.has(result.languageCode || NO_LANGUAGE)
+                  dialogVisibleLanguages.has(result.languageCode || NO_LANGUAGE) &&
+                  visibleQualities.has(qualityFilterOf(result))
                 );
                 return (
                   <div key={apiName} className={visibleResults.length === 0 ? 'no-matching-card' : ''}>
@@ -177,6 +209,18 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   label={apiName}
                   checked={dialogVisibleApis.has(apiName)}
                   onChange={() => toggleApi(apiName)}
+                />
+              ))}
+            </div>
+            <div className="language-filter input-tile-group">
+              <h3 className="title is-4">Filter by Sharpness</h3>
+              {QUALITY_FILTERS.map(({ key, label }) => (
+                <ChoiceButton
+                  key={key}
+                  id={`select-quality-${key}`}
+                  label={<span><span className={`quality-dot-inline quality-${key === 'unrated' ? 'unknown' : key}`} />{label}</span>}
+                  checked={visibleQualities.has(key)}
+                  onChange={() => toggleQuality(key)}
                 />
               ))}
             </div>
