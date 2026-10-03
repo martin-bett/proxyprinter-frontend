@@ -1,0 +1,112 @@
+.progress-multi-bar.full-width {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2.2rem; /* mehr Abstand für Überschrift */
+  margin-bottom: 1.2rem;
+}
+
+.progress-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+  position: relative;
+}
+
+.progress-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0.2rem;
+}
+
+.progress-category-label {
+  font-weight: 600;
+  float: left;;
+  color: var(--color-text-2);
+  text-align: left;
+  font-size: 1.02rem;
+  width: auto;
+  font-family: var(--font-heading);
+}
+
+.filesize-label {
+  color: var(--color-text-3);
+  font-size: 0.97rem;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: right;
+}
+
+.progress-bar-outer {
+  height: 22px;
+  background: var(--color-accent-5); /* Pastellblau */
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 0.1rem;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  border-radius: 8px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: width 0.3s;
+  background: var(--color-primary-1);
+}
+
+.progress-bar-inner.progress-bar-indeterminate {
+  background: repeating-linear-gradient(
+    75deg,
+    var(--color-accent-3) 0px,
+    var(--color-accent-3) 2px,
+    transparent 2px,
+    transparent 12px
+  );
+  background-size: 12px 100%;
+  animation: progress-stripes 0.7s linear infinite;
+}
+
+@keyframes progress-stripes {
+  0% { background-position: 0 0; }
+  100% { background-position: 11px 0; }
+}
+
+/* QUEUE BAR */
+.progress-bar-queue {
+  position: relative;
+  height: 6px;
+  background: #232323; /* dunkelgrau/schwarz, ggf. eigene Variable ergänzen */
+  border-radius: 3px;
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+  overflow: visible;
+}
+
+.queue-ball {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(80,60,120,0.13);
+  border: 2px solid #fff;
+  z-index: 2;
+  /* Farbe wird inline gesetzt */
+}
+
+.queue-ball.done {
+  background: linear-gradient(135deg, #b8ffd1 0%, #a3e6b8 100%);
+  color: var(--color-text-1);
+}
+
+.progress-message {
+  margin-top: 1.5rem;
+  color: var(--color-headline-text);
+  font-size: 1.1rem;
+  text-align: center;
+}

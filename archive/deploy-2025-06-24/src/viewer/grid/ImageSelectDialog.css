@@ -1,0 +1,176 @@
+.image-select-dialog .dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .image-select-dialog .dialog-content {
+    display: grid;
+    grid-template-columns: 3fr 4fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 20px;
+    height: 85vh;
+}
+  
+.image-select-dialog .image-selection-container {
+  grid-column: 1 / 2;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+}
+  
+.image-select-dialog .crop-settings {
+  flex-shrink: 0;
+  background: #f9f9f9;
+  border-radius: 5px;
+  padding: 15px;
+  overflow: auto;
+  max-height: 200px;
+}
+
+.image-select-dialog .dialog-buttons {
+  grid-column: 1 / 4;
+  grid-row: 3 / 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  background-color: #f1f1f1;
+  border-top: 1px solid #ddd;
+}
+
+.image-select-dialog .selected-image-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+  .image-select-dialog .selected-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    display:flex;
+    min-height: 100%;
+    min-width: 100%;
+    object-fit: contain;
+    opacity: 1;
+  }
+  .image-select-dialog .image-grid-container {
+    position: relative; /* Container als Referenz für absolute Positionierung */
+    cursor: pointer;
+    overflow: "hidden";
+    width: 100%;
+    position: "relative";
+    display: "flex";
+    justify-content: "center";
+    align-items: "center";
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.image-select-dialog .language-filter {
+  grid-column: 3 / 4;
+  grid-row: 1 / 3;
+  overflow-y: auto;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+  
+  .image-select-dialog .language-filter label {
+  display: inline;
+  margin-bottom: 0;
+}
+  
+  .image-select-dialog .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 150px));
+    gap: 0px;
+  }
+  
+  .image-select-dialog .image-option {
+    cursor: pointer;
+    border-radius: 5px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    padding:5px;
+  }
+  
+  
+  .image-select-dialog .image-option.selected {
+    background-color: #91007d;
+  }
+  
+  .image-select-dialog .image-container {
+    position: relative;
+    width: 100%;
+    padding-top: 140%;
+  }
+  
+  .image-select-dialog .image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+  }
+  
+  .image-select-dialog .image-symbol {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    color: white;
+    padding: 2px 5px;
+    font-size: 0.8em;
+    border-radius: 3px;
+    opacity: 1;
+  }
+
+  .cropped-image-container {
+    position: relative;
+    width: 504px;
+    height: 704px;
+    margin: 10px;
+  }
+  
+  .ReactCrop__crop-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+.card-image-container {
+  min-height: 150px;;
+}
+
+  .ReactCrop {
+    min-width: 100%;
+    min-height: 100%;
+
+    img {
+      height: 100%;
+      width: auto;
+    }
+  }
+/* Einheitliche Höhe und Ausrichtung für Checkbox-Zeilen */
+.image-select-dialog .filter-checkbox-row {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 4px;
+}
+
