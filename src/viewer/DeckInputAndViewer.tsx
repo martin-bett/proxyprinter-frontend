@@ -35,6 +35,24 @@ import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEn
 
 const NO_LANGUAGE = 'No Language';
 
+/** Languages and APIs that occur in the given results; custom cards are always shown and therefore ignored. */
+const collectFilterOptions = (results: CardResultsMap) => {
+  const languages = new Set<string>();
+  const apis = new Set<string>();
+  Object.values(results).forEach(cardData => {
+    cardData.results.forEach(card => {
+      if (card.apiName === 'custom') {
+        return;
+      }
+      languages.add(card.languageCode || NO_LANGUAGE);
+      if (card.apiName) {
+        apis.add(card.apiName);
+      }
+    });
+  });
+  return { languages, apis };
+};
+
 const defaultCropSettings: CropSettings = {
   offSetX: 0, // Default value for CropSettings
   offSetY: 0, // Default value for CropSettings
@@ -60,10 +78,8 @@ const DeckInputAndViewer: React.FC = () => {
   const [selectedCards, setSelectedCards] = useState<SelectedCardsMap>({});
   const [currentCardName, setCurrentCardName] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
-  const [availableLanguages, setAvailableLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
-
   const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
-  const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set(Object.keys(apiConfigs)));
+  const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set());
   const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
   const pdfPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -93,23 +109,11 @@ const DeckInputAndViewer: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const languages = new Set<string>([NO_LANGUAGE]);
-    const apis = new Set<string>();
-    Object.values(cardResults).forEach(cardData => {
-      cardData.results.forEach(card => {
-        if (card.languageCode) {
-          languages.add(card.languageCode);
-        }
-        if (card.apiName) {
-          apis.add(card.apiName);
-        }
-      });
-    });
-    console.log(apis);
-    setVisibleApis(apis);
-    setAvailableLanguages(languages);
-  }, [cardResults]);
+  // Filter options always reflect the current search results only
+  const { languages: availableLanguages, apis: availableApis } = useMemo(
+    () => collectFilterOptions(cardResults),
+    [cardResults]
+  );
 
   useEffect(() => {
     const initialCategoryStates: Record<string, boolean> = {};
@@ -364,6 +368,12 @@ const DeckInputAndViewer: React.FC = () => {
       };
     });
 
+    const options = collectFilterOptions(results);
+    setVisibleApis(options.apis);
+    setVisibleLanguages(prev => {
+      const kept = new Set(Array.from(prev).filter(lang => options.languages.has(lang)));
+      return kept.size > 0 ? kept : options.languages;
+    });
     setCardResults(results);
     setIsLoading(false);
 
@@ -863,6 +873,15 @@ const DeckInputAndViewer: React.FC = () => {
       }
     };
 
+    // Make filter values that this card brings in for the first time visible
+    const newOptions = collectFilterOptions(results);
+    const addMissing = (prev: Set<string>, values: Set<string>, known: Set<string>) => {
+      const added = Array.from(values).filter(value => !known.has(value));
+      return added.length > 0 ? new Set([...Array.from(prev), ...added]) : prev;
+    };
+    setVisibleApis(prev => addMissing(prev, newOptions.apis, availableApis));
+    setVisibleLanguages(prev => addMissing(prev, newOptions.languages, availableLanguages));
+
     // Set CardResults with transformed CardEntry objects
     setCardResults(prevResults => ({
       ...prevResults,
@@ -911,20 +930,25 @@ const DeckInputAndViewer: React.FC = () => {
 
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
+      <ThemeChooser />
       <MemoryButtons />
       <TitleDiv />
 
 
       <div className="input-controls">
         <div className="api-controls">
-          <div className="api-controls">
-            <h3 className='title is-5'>API Controls</h3>
-            <button className="button" onClick={handleOpenApiConfigDialog}><SettingsIcon />Manage Apis</button>
-
-          </div>
-
           <div className="api-toggles checkbox-group">
-            <h3 className="text-lg font-semibold mb-4 title is-4">API Selection</h3>
+            <h3 className="title is-4 api-selection-header">
+              <button
+                type="button"
+                className="api-manage-button"
+                onClick={handleOpenApiConfigDialog}
+                title="Manage APIs"
+              >
+                API Selection
+                <SettingsIcon className="api-manage-icon" fontSize="small" />
+              </button>
+            </h3>
             {Object.entries(categoryStates).map(([category]) => (
               <div key={category} className="mb-4">
                 {renderCheckbox(
@@ -1016,8 +1040,9 @@ const DeckInputAndViewer: React.FC = () => {
                 className="card-tiles"
                 style={{
                   gridTemplateColumns: `repeat(auto-fill, minmax(${gridSize}rem, ${gridSize}rem))`,
-                  gap: '10px',
-                }}
+                  // Skalierungsfaktor für Text, Abstände und Buttons in den Tiles (10rem = 1)
+                  '--tile-scale': gridSize / 10,
+                } as React.CSSProperties}
               >
                 {Object.entries(cardResults).map(([cardName, cardData]) => {
                   const visibleResults = cardData.results.filter(filterCard);
@@ -1051,8 +1076,7 @@ const DeckInputAndViewer: React.FC = () => {
                         <div className="card-name">
                           <p>{cardName}</p>
                         </div>
-                        <div className="card-name">
-
+                        <div className="card-name card-count">
                           <p>
                             {!uniquePrints ? <span
                               className="remove-card"
@@ -1065,16 +1089,16 @@ const DeckInputAndViewer: React.FC = () => {
                             </span> : null}
                             <button
                               onClick={() => updateCardCount(cardName, -1)}
-                              className="px-2 py-1 mx-1 bg-gray-200 rounded"
+                              className="count-button"
                             >
-                              <Minus size={12} />
+                              <Minus />
                             </button>
                             {cardData.count}
                             <button
                               onClick={() => updateCardCount(cardName, 1)}
-                              className="px-2 py-1 mx-1 bg-gray-200 rounded"
+                              className="count-button"
                             >
-                              <Plus size={12} />
+                              <Plus />
                             </button>
                           </p>
                         </div>
@@ -1121,7 +1145,7 @@ const DeckInputAndViewer: React.FC = () => {
           <div className="api-filter checkbox-group">
             <h3 className='title is-5'>API Filter</h3>
             {Object.values(apiConfigs)
-              .filter((c) => enabledApis.hasOwnProperty(c.name))
+              .filter((c) => availableApis.has(c.name))
               .map((config) =>
                 renderCheckbox(
                   config.name,
@@ -1145,7 +1169,6 @@ const DeckInputAndViewer: React.FC = () => {
       </div>
 
       <div className="bottom">
-        <div><ThemeChooser /></div>
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
         <div><VersionInfo /></div>

@@ -1,3 +1,10 @@
+.theme-chooser-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+}
+
 .theme-chooser-button {
   gap: 0.4rem;
 }

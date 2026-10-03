@@ -4,6 +4,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import CheckIcon from '@mui/icons-material/Check';
 import { useAppTheme } from './ThemeContext';
 import { AppTheme } from './themes';
+import '../viewer/cache/MemoryButtons.css';
 import './ThemeChooser.css';
 
 const Swatch: React.FC<{ theme: AppTheme }> = ({ theme }) => (
@@ -14,14 +15,15 @@ const Swatch: React.FC<{ theme: AppTheme }> = ({ theme }) => (
   </span>
 );
 
+// Bubble oben links, im selben Stil wie die Cache-Bubbles oben rechts
 const ThemeChooser: React.FC = () => {
   const { theme, themes, setThemeId } = useAppTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   return (
-    <>
+    <div className="theme-chooser-bar">
       <button
-        className="button theme-chooser-button"
+        className="memory-button theme-chooser-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
         title="Farbschema wählen"
         aria-haspopup="menu"
@@ -42,7 +44,7 @@ const ThemeChooser: React.FC = () => {
           </MenuItem>
         ))}
       </Menu>
-    </>
+    </div>
   );
 };
 

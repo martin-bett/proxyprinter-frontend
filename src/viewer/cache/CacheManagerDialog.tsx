@@ -49,7 +49,7 @@ interface DeletableCellProps {
   onMouseLeave: () => void;
 }
 
-function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMouseEnter, onMouseLeave }: DeletableCellProps) {
+export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMouseEnter, onMouseLeave }: DeletableCellProps) {
   return (
     <td
       style={showTrash ? (hover ? cellHoverStyle : cellStyle) : { ...cellStyle, cursor: "default", background: "var(--surface)" }}

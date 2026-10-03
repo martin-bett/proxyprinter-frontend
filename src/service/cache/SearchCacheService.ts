@@ -77,10 +77,26 @@ async function deleteFromIndexedDB(cacheKey: string): Promise<void> {
   });
 }
 
+async function deleteManyFromIndexedDB(cacheKeys: string[]): Promise<void> {
+  if (cacheKeys.length === 0) return;
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  cacheKeys.forEach(key => store.delete(key));
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 async function clearAllFromIndexedDB(): Promise<void> {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
   tx.objectStore(STORE_NAME).clear();
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
 }
 
 class SearchCacheService {
@@ -163,6 +179,30 @@ class SearchCacheService {
 
   async removeSearch(apiKey: string, cardName: string): Promise<void> {
     await deleteFromIndexedDB(this.getSearchCacheKey(apiKey, cardName));
+  }
+
+  async removeSearchesForApi(apiKey: string): Promise<void> {
+    await this.removeSearchesWhere(parsed => parsed.apiKey === apiKey);
+  }
+
+  async removeSearchesForCard(cardName: string): Promise<void> {
+    await this.removeSearchesWhere(parsed => parsed.cardName === cardName);
+  }
+
+  // Löscht alle gespeicherten Suchen, die Bildauswahl im Speicher bleibt erhalten
+  async removeAllSearches(): Promise<void> {
+    await clearAllFromIndexedDB();
+  }
+
+  private async removeSearchesWhere(predicate: (parsed: { apiKey: string; cardName: string }) => boolean): Promise<void> {
+    const all = await getAllFromIndexedDB();
+    const keys = all
+      .filter(entry => {
+        const parsed = this.parseSearchCacheKey(entry);
+        return parsed !== null && predicate(parsed);
+      })
+      .map(entry => entry.cacheKey);
+    await deleteManyFromIndexedDB(keys);
   }
 
   // Ältere Einträge haben apiKey/cardName nicht gespeichert, dann aus dem cacheKey lesen
