@@ -47,6 +47,12 @@ export interface QueueSnapshotEntry {
   category?: string;
 }
 
+export interface QueueNumbers {
+  queued: number;
+  active: number;
+  cacheLoading: number;
+}
+
 export interface CacheSnapshot {
   byApi: Record<string, ImageCacheDbEntry[]>;
   byCard: Record<string, ImageCacheDbEntry[]>;
@@ -110,6 +116,7 @@ async function getFromIndexedDB(cacheKey: string): Promise<ImageCacheDbEntry | u
 class ImageLoaderService {
   private queue: QueueEntry[] = [];
   private activeLoads = 0;
+  private activeCacheLoads = 0;
   private maxConcurrent: number;
   private subscribers: Set<() => void> = new Set();
   private _lastSnapshot: CacheSnapshot | null = null;
@@ -152,25 +159,18 @@ class ImageLoaderService {
     const cacheKey = this._makeCacheKey(cardInput || {});
     const cached = await getFromIndexedDB(cacheKey);
     if (cached) {
-      // Wenn img noch nicht geladen, aus Blob erzeugen
-      if (cached.blob) {
-        this._createImageFromBlob(cached.blob).then(img => {
-          if (img) {
-            onLoad(img, cached.sizeBytes);
-          } else {
-            onError?.(new Error("Image could not be created from blob"));
-          }
-        });
-      } else {
-        // Fallback: Bild-URL laden
-        this._createImageFromUrl(cached.imageUrl).then(img => {
-          if (img) {
-            onLoad(img, cached.sizeBytes);
-          } else {
-            onError?.(new Error("Image could not be loaded from url"));
-          }
-        });
-      }
+      // Wenn img noch nicht geladen, aus Blob erzeugen, sonst Fallback: Bild-URL laden
+      this.activeCacheLoads++;
+      const load = cached.blob ? this._createImageFromBlob(cached.blob) : this._createImageFromUrl(cached.imageUrl);
+      load.then(img => {
+        if (img) {
+          onLoad(img, cached.sizeBytes);
+        } else {
+          onError?.(new Error(cached.blob ? "Image could not be created from blob" : "Image could not be loaded from url"));
+        }
+      }).finally(() => {
+        this.activeCacheLoads--;
+      });
       onProcessListChange?.("LOADING");
       return;
     }
@@ -434,6 +434,15 @@ class ImageLoaderService {
     this.queue = this.queue.filter(entry => entry.cardInput?.languageCode !== languageCode);
     this.notifyAllStatuses();
     this.notifySubscribers();
+  }
+
+  // Zähler für die Download-Bubble (wartend, aktive Downloads, Ladevorgänge aus dem Cache)
+  getQueueNumbers(): QueueNumbers {
+    return {
+      queued: this.queue.length,
+      active: this.activeLoads,
+      cacheLoading: this.activeCacheLoads,
+    };
   }
 
   // Liefert eine Kopie der aktuellen Queue (für das UI)

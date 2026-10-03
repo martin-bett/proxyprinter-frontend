@@ -4,9 +4,10 @@ import { useImageLoaderCache } from '../../service/cache/hooks/useImageLoaderCac
 
 interface CacheProgressBarProps {
   onClick?: () => void;
+  width?: number;
 }
 
-export function CacheProgressBar({ onClick }: CacheProgressBarProps) {
+export function CacheProgressBar({ onClick, width = 180 }: CacheProgressBarProps) {
   const { totalSize } = useImageLoaderCache();
   const cacheLimit = imageLoaderService.cacheLimit;
   const percent = Math.min(100, Math.round((totalSize / cacheLimit) * 100));
@@ -18,7 +19,7 @@ export function CacheProgressBar({ onClick }: CacheProgressBarProps) {
       className="cache-progressbar-container"
       style={{
         cursor: "pointer",
-        width: 180,
+        width,
         height: 18,
         background: "var(--track)",
         borderRadius: 8,
