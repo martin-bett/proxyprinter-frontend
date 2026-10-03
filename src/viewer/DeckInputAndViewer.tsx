@@ -32,6 +32,7 @@ import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } 
 import CacheManagerDialog from './cache/CacheManagerDialog';
 import { CacheProgressBar } from './cache/CacheProgressBar';
 import QueueManagerDialog from './cache/QueueManagerDialog';
+import DisclaimerDialog from './info/DisclaimerDialog';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -78,6 +79,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
+  const [disclaimerOpen, setDisclaimerOpen] = useState(true);
   const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
 
 
@@ -1143,6 +1145,8 @@ const DeckInputAndViewer: React.FC = () => {
         <div><GitHubButton /></div>
         <div><VersionInfo /></div>
       </div>
+
+      <DisclaimerDialog open={disclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
 
 
       <ClosableDialog
