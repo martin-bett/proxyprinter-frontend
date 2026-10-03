@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { imageLoaderService } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
-import PdfProgressDialog from './pdf/PdfProgressDialog';
+import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import { JsonView } from 'react-json-view-lite';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
@@ -65,8 +65,9 @@ const DeckInputAndViewer: React.FC = () => {
 
   const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
   const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set(Object.keys(apiConfigs)));
-  const [pdfProgress, setPdfProgress] = useState(0);
-  const [pdfProgressMessage, setPdfProgressMessage] = useState('');
+  const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
+  const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
+  const pdfPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [uniquePrints, setUniquePrints] = useState(true);
   const [showImageSettings, setShowImageSettings] = useState(false);
 
@@ -522,10 +523,20 @@ const DeckInputAndViewer: React.FC = () => {
     return 'indeterminate';
   };
 
+  const stopPdfPolling = useCallback(() => {
+    if (pdfPollingRef.current) {
+      clearInterval(pdfPollingRef.current);
+      pdfPollingRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => stopPdfPolling, [stopPdfPolling]);
+
   const createPDF = async () => {
+    stopPdfPolling();
+    setPdfProgressDtos([]);
+    setPdfProgressError(null);
     setPdfProgressDialogOpen(true);
-    setPdfProgress(0);
-    setPdfProgressMessage('Initializing PDF generation...');
 
     const createPdfDto = {
       images: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
@@ -565,46 +576,45 @@ const DeckInputAndViewer: React.FC = () => {
       }
 
       const progressId = await response.text();
-      const eventSource = new EventSource(`/api/progress/${progressId}`);
 
-      eventSource.onmessage = (event) => {
-        const message = event.data;
-        console.log('Progress:', message);
-
-        if (message.includes('Downloaded file')) {
-          const [current, total] = message.match(/\d+/g) as RegExpMatchArray;
-          const downloadProgress = (parseInt(current) / parseInt(total)) * 70;
-          setPdfProgress(Math.round(downloadProgress));
-          setPdfProgressMessage(message);
-        } else if (message === 'Starting PDF compilation') {
-          setPdfProgress(70);
-          setPdfProgressMessage('Compiling PDF...');
-        } else if (message === 'PDF compilation completed') {
-          setPdfProgress(100);
-          setPdfProgressMessage('PDF generation completed');
-          eventSource.close();
-          downloadPDF(progressId);
+      // Das Backend liefert die komplette Fortschritts-Historie, wir pollen bis "finishing" fertig oder fehlgeschlagen ist
+      const poll = async () => {
+        try {
+          const progressResponse = await fetch(`/api/progress/${progressId}`);
+          if (!progressResponse.ok) {
+            throw new Error(`HTTP error! status: ${progressResponse.status}`);
+          }
+          const dtos: ProgressDto[] = await progressResponse.json();
+          setPdfProgressDtos(dtos);
+          const last = dtos[dtos.length - 1];
+          if (last && (last.error || isFinished(last))) {
+            stopPdfPolling();
+          }
+        } catch (error) {
+          console.error('Error fetching PDF progress:', error);
+          stopPdfPolling();
+          setPdfProgressError('Lost connection to the PDF generation. Please try again.');
         }
       };
-
-      eventSource.onerror = (error) => {
-        console.error('SSE Error:', error);
-        eventSource.close();
-        setPdfProgressDialogOpen(false);
-        alert('Error during PDF generation. Please try again.');
-      };
-
+      pdfPollingRef.current = setInterval(poll, 1000);
+      poll();
     } catch (error) {
       console.error('Error creating PDF:', error);
-      setPdfProgressDialogOpen(false);
-      alert('Failed to create PDF. Please try again.');
+      setPdfProgressError('Failed to start PDF generation. Please try again.');
     }
   };
 
-  const downloadPDF = async (progressId: string) => {
+  const closePdfProgressDialog = useCallback(() => {
+    stopPdfPolling();
+    setPdfProgressDialogOpen(false);
+    setPdfProgressDtos([]);
+    setPdfProgressError(null);
+  }, [stopPdfPolling]);
+
+  const downloadPDF = useCallback(async (progressId: string) => {
     try {
       const pdfResponse = await fetch(`/api/pdf/${progressId}`);
-      if (pdfResponse.ok) {
+      if (pdfResponse.status === 200) {
         const blob = await pdfResponse.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -613,16 +623,16 @@ const DeckInputAndViewer: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         link.remove();
+        window.URL.revokeObjectURL(url);
+        closePdfProgressDialog();
       } else {
-        throw new Error('Failed to download PDF');
+        throw new Error(`Failed to download PDF, status: ${pdfResponse.status}`);
       }
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
-    } finally {
-      setPdfProgressDialogOpen(false);
+      setPdfProgressError('Failed to download PDF. Please try again.');
     }
-  };
+  }, [closePdfProgressDialog]);
 
   const limitConcurrency = (tasks: (() => Promise<void>)[], limit: number): Promise<void> => {
     let running = 0;
@@ -1220,13 +1230,15 @@ const DeckInputAndViewer: React.FC = () => {
         />}
       />
       <Dialog
-        maxWidth='xl'
+        maxWidth='sm'
         fullWidth
         open={pdfProgressDialogOpen}>
         <PdfProgressDialog
           open={pdfProgressDialogOpen}
-          progress={pdfProgress}
-          message={pdfProgressMessage}
+          progressDtos={pdfProgressDtos}
+          errorMessage={pdfProgressError}
+          onFinish={downloadPDF}
+          onClose={closePdfProgressDialog}
         />
       </Dialog>
 

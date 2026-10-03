@@ -1,0 +1,134 @@
+.pdf-progress-dialog {
+  padding: 1.5rem;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.pdf-progress-dialog h3 {
+  margin: 0 0 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.pdf-progress-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.pdf-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pdf-progress-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.pdf-progress-label {
+  font-weight: 600;
+}
+
+.pdf-progress-row.is-pending .pdf-progress-label {
+  color: var(--text-muted);
+}
+
+.pdf-progress-meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.pdf-progress-meta span + span {
+  margin-left: 0.75rem;
+}
+
+.pdf-progress-track {
+  height: 14px;
+  background: var(--track);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.pdf-progress-fill {
+  height: 100%;
+  border-radius: 7px;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.pdf-progress-row.is-done .pdf-progress-fill {
+  background: var(--success);
+}
+
+.pdf-progress-row.is-error .pdf-progress-fill {
+  background: var(--danger);
+}
+
+.pdf-progress-fill.is-indeterminate {
+  background: repeating-linear-gradient(
+    75deg,
+    var(--accent) 0px,
+    var(--accent) 4px,
+    var(--accent-soft) 4px,
+    var(--accent-soft) 12px
+  );
+  background-size: 24px 100%;
+  animation: pdf-progress-stripes 0.7s linear infinite;
+}
+
+@keyframes pdf-progress-stripes {
+  from { background-position: 0 0; }
+  to { background-position: 24px 0; }
+}
+
+/* Warteschlange: Kugel wandert nach vorne, je weiter vorne der Job steht */
+.pdf-progress-queue {
+  position: relative;
+  height: 6px;
+  margin: 0.8rem 0.9rem;
+  background: var(--track);
+  border-radius: 3px;
+}
+
+.pdf-progress-queue-ball {
+  position: absolute;
+  top: 50%;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 6px var(--shadow);
+  transition: left 0.4s;
+}
+
+.pdf-progress-row.is-done .pdf-progress-queue-ball {
+  background: var(--success);
+}
+
+.pdf-progress-message {
+  margin-top: 1.6rem;
+  text-align: center;
+  color: var(--text-muted);
+  min-height: 1.5em;
+}
+
+.pdf-progress-message.is-error {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.pdf-progress-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
