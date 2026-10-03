@@ -35,6 +35,24 @@ import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEn
 
 const NO_LANGUAGE = 'No Language';
 
+/** Languages and APIs that occur in the given results; custom cards are always shown and therefore ignored. */
+const collectFilterOptions = (results: CardResultsMap) => {
+  const languages = new Set<string>();
+  const apis = new Set<string>();
+  Object.values(results).forEach(cardData => {
+    cardData.results.forEach(card => {
+      if (card.apiName === 'custom') {
+        return;
+      }
+      languages.add(card.languageCode || NO_LANGUAGE);
+      if (card.apiName) {
+        apis.add(card.apiName);
+      }
+    });
+  });
+  return { languages, apis };
+};
+
 const defaultCropSettings: CropSettings = {
   offSetX: 0, // Default value for CropSettings
   offSetY: 0, // Default value for CropSettings
@@ -60,10 +78,8 @@ const DeckInputAndViewer: React.FC = () => {
   const [selectedCards, setSelectedCards] = useState<SelectedCardsMap>({});
   const [currentCardName, setCurrentCardName] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
-  const [availableLanguages, setAvailableLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
-
   const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
-  const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set(Object.keys(apiConfigs)));
+  const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set());
   const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
   const pdfPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -94,23 +110,11 @@ const DeckInputAndViewer: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const languages = new Set<string>([NO_LANGUAGE]);
-    const apis = new Set<string>();
-    Object.values(cardResults).forEach(cardData => {
-      cardData.results.forEach(card => {
-        if (card.languageCode) {
-          languages.add(card.languageCode);
-        }
-        if (card.apiName) {
-          apis.add(card.apiName);
-        }
-      });
-    });
-    console.log(apis);
-    setVisibleApis(apis);
-    setAvailableLanguages(languages);
-  }, [cardResults]);
+  // Filter options always reflect the current search results only
+  const { languages: availableLanguages, apis: availableApis } = useMemo(
+    () => collectFilterOptions(cardResults),
+    [cardResults]
+  );
 
   useEffect(() => {
     const initialCategoryStates: Record<string, boolean> = {};
@@ -365,6 +369,12 @@ const DeckInputAndViewer: React.FC = () => {
       };
     });
 
+    const options = collectFilterOptions(results);
+    setVisibleApis(options.apis);
+    setVisibleLanguages(prev => {
+      const kept = new Set(Array.from(prev).filter(lang => options.languages.has(lang)));
+      return kept.size > 0 ? kept : options.languages;
+    });
     setCardResults(results);
     setIsLoading(false);
 
@@ -865,6 +875,15 @@ const DeckInputAndViewer: React.FC = () => {
       }
     };
 
+    // Make filter values that this card brings in for the first time visible
+    const newOptions = collectFilterOptions(results);
+    const addMissing = (prev: Set<string>, values: Set<string>, known: Set<string>) => {
+      const added = Array.from(values).filter(value => !known.has(value));
+      return added.length > 0 ? new Set([...Array.from(prev), ...added]) : prev;
+    };
+    setVisibleApis(prev => addMissing(prev, newOptions.apis, availableApis));
+    setVisibleLanguages(prev => addMissing(prev, newOptions.languages, availableLanguages));
+
     // Set CardResults with transformed CardEntry objects
     setCardResults(prevResults => ({
       ...prevResults,
@@ -1123,7 +1142,7 @@ const DeckInputAndViewer: React.FC = () => {
           <div className="api-filter checkbox-group">
             <h3 className='title is-5'>API Filter</h3>
             {Object.values(apiConfigs)
-              .filter((c) => enabledApis.hasOwnProperty(c.name))
+              .filter((c) => availableApis.has(c.name))
               .map((config) =>
                 renderCheckbox(
                   config.name,
