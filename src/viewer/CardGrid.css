@@ -40,16 +40,19 @@
 }
 
 .card-tiles {
+  /* --tile-scale wird aus der Grid Size gesetzt (10rem = 1) */
+  --tile-scale: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 10rem));
-  gap: 0px;
+  gap: calc(10px * var(--tile-scale));
 }
 
 .card-tile {
   text-align: center;
   border: solid 1px var(--card-border);
-  padding: 5px;
+  padding: calc(5px * var(--tile-scale));
   border-radius: 5%;
+  font-size: calc(1rem * var(--tile-scale));
 }
 .card-image-container {
   position: relative;  /* Wichtig für das absolute Positionieren des Spinners */
@@ -73,7 +76,7 @@
 }
 .custom-card {
   border: 1px solid var(--success);
-  padding: 2px;
+  padding: calc(2px * var(--tile-scale));
 }
 
 .custom-card canvas {
@@ -85,12 +88,12 @@
   left: 0;
   background-color: var(--overlay-bg); /* Hintergrund für bessere Lesbarkeit */
   color: var(--text-inverse);
-  padding: 8px;
+  padding: 0.5em;
   width: 100%;
-  font-size: x-small;
+  font-size: 0.625em;
   text-align: left;
   svg {
-    height: 15px;
+    height: 1.5em;
   }
 }
 .loading-spinner {
@@ -145,8 +148,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: normal;
-  margin-top: 5px;
+  margin-top: 0.3em;
   margin-bottom: 0px;
   p {
     white-space: nowrap;         /* Verhindert Umbrüche, sodass der Text immer in einer Zeile bleibt */
@@ -283,8 +285,27 @@
 .remove-card {
   color: var(--danger);
   cursor: pointer;
-  margin-right: 5px;
+  margin-right: 0.3em;
   font-weight: bold;
+}
+
+.card-count p {
+  display: flex;
+  align-items: center;
+}
+
+.count-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25em 0.5em;
+  margin: 0 0.25em;
+  font-size: inherit;
+  border-radius: 0.25em;
+  svg {
+    width: 0.75em;
+    height: 0.75em;
+  }
 }
 
 

@@ -1018,8 +1018,9 @@ const DeckInputAndViewer: React.FC = () => {
                 className="card-tiles"
                 style={{
                   gridTemplateColumns: `repeat(auto-fill, minmax(${gridSize}rem, ${gridSize}rem))`,
-                  gap: '10px',
-                }}
+                  // Skalierungsfaktor für Text, Abstände und Buttons in den Tiles (10rem = 1)
+                  '--tile-scale': gridSize / 10,
+                } as React.CSSProperties}
               >
                 {Object.entries(cardResults).map(([cardName, cardData]) => {
                   const visibleResults = cardData.results.filter(filterCard);
@@ -1053,8 +1054,7 @@ const DeckInputAndViewer: React.FC = () => {
                         <div className="card-name">
                           <p>{cardName}</p>
                         </div>
-                        <div className="card-name">
-
+                        <div className="card-name card-count">
                           <p>
                             {!uniquePrints ? <span
                               className="remove-card"
@@ -1067,16 +1067,16 @@ const DeckInputAndViewer: React.FC = () => {
                             </span> : null}
                             <button
                               onClick={() => updateCardCount(cardName, -1)}
-                              className="px-2 py-1 mx-1 bg-gray-200 rounded"
+                              className="count-button"
                             >
-                              <Minus size={12} />
+                              <Minus />
                             </button>
                             {cardData.count}
                             <button
                               onClick={() => updateCardCount(cardName, 1)}
-                              className="px-2 py-1 mx-1 bg-gray-200 rounded"
+                              className="count-button"
                             >
-                              <Plus size={12} />
+                              <Plus />
                             </button>
                           </p>
                         </div>
