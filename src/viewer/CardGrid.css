@@ -179,26 +179,33 @@
   transition: width 0.5s ease-in-out;
 }
 
+/* Filter- und Auswahlbeschriftung: Name links, alle Symbole rechtsbündig */
 .label-container {
   display: flex;
-  justify-content: flex-start; /* Icon alignment to the left */
   align-items: center;
-  gap: 2px; /* Optional: space between name and icons */
+  gap: 6px;
+  min-width: 0;
 }
 
-.label-container span {
+.label-container > span,
+.label-container > img {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
+}
+
+.label-container > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .subCategoryIcon {
-  margin-left: 8px;
-  width: 1rem; 
-  height: 1rem; 
-}
-
-.label-container span:last-child {
-  margin-left: auto; /* Push icons to the right side */
+  width: 1rem;
+  height: 1rem;
 }
 
 .decklist-input textarea {
@@ -402,16 +409,27 @@
 }
 
 /* Druckschärfe des Textfeldes (siehe service/quality/ImageQuality.ts) */
-.quality-dot {
+/* Sprachflagge und Schärfepunkt oben rechts auf der Kartenvorschau */
+.card-badges {
   position: absolute;
   top: 6px;
   right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+  pointer-events: auto;
+}
+.card-badges .language-flag {
+  box-shadow: 0 0 0 1px var(--surface), 0 0 2px 1px var(--shadow);
+}
+.quality-dot {
+  flex: 0 0 auto;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   border: 1px solid var(--surface);
   box-shadow: 0 0 2px var(--shadow);
-  z-index: 2;
 }
 .quality-good { background-color: var(--success); }
 .quality-ok { background-color: var(--warning); }
@@ -421,7 +439,7 @@
   display: inline-block;
   width: 10px;
   height: 10px;
-  margin: 0 6px 0 2px;
+  margin: 0 3px;
   border-radius: 50%;
   vertical-align: middle;
 }
