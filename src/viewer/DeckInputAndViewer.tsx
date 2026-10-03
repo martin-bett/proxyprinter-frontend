@@ -24,7 +24,6 @@ import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import PayPalDonateButton from './info/PayPalDonateButton';
 import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
-import AddCardButton from './grid/AddCardButton';
 import VersionInfo from './info/VersionInfo';
 import ThemeChooser from '../theme/ThemeChooser';
 import { Minus, Plus } from 'lucide-react';
@@ -1094,11 +1093,6 @@ const DeckInputAndViewer: React.FC = () => {
                     );
                   });
                 })}
-                <div className='card-tile'>
-                  <div className="add-custom-card" onClick={handleAddCustomCard}>
-                    <AddCardButton />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
