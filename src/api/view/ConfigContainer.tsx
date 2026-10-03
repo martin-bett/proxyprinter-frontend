@@ -59,7 +59,7 @@ const ConfigContainer: React.FC<ConfigContainerProps> = ({ configs, clickedConfi
                         <Star
                             key={score}
                             strokeWidth={` ${score <= (config.ratingValue || 0) ? '0' : '0.3' }`}
-                            fill={` ${score <= (config.ratingValue || 0) ? '#3273a8' : 'none' }`}
+                            style={{ fill: score <= (config.ratingValue || 0) ? 'var(--rating)' : 'none' }}
                             // className={`cursor-pointer ${score <= config.ratingValue
                             //     ? 'text-light-blue-400 fill-light-blue-400'
                             //     : 'text-gray-300'

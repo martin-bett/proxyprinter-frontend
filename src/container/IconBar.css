@@ -3,7 +3,7 @@
         width: 100%;
         height: 100%;
     }
-    border: solid #DDDDDD 1px;
+    border: solid var(--border) 1px;
 }
 
 
@@ -17,15 +17,15 @@
 }
 
 .bar-icon:hover {
-    background-color: hsl(0, 0%, 65%);
+    background-color: var(--hover);
 }
 
 .bar-icon.selected {
-    border: solid #383838 2px;
+    border: solid var(--border-strong) 2px;
 }
 
 .icon-bar{
-    background-color: #EEEEEE;
+    background-color: var(--surface-raised);
     display: flex;
     
     width: max-content;

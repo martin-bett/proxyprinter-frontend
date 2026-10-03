@@ -6,17 +6,17 @@ import { useImageLoaderQueue } from "../../service/cache/hooks/useImageLoaderQue
 function TrashIcon({ style = {} }: { style?: CSSProperties }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ ...style }}>
-      <path d="M3 6h18M9 6v12m6-12v12M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 6h18M9 6v12m6-12v12M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6" style={{ stroke: "var(--text-muted)" }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
 
 const cellStyle: CSSProperties = {
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   padding: 4,
   position: "relative",
   textAlign: "center",
-  background: "#f9f9f9",
+  background: "var(--surface-muted)",
   cursor: "pointer"
 };
 
@@ -41,7 +41,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
   if (!open) return null;
 
   return (
-    <div className="queue-manager-dialog" style={{ background: "#fff", padding: 24, borderRadius: 8, maxWidth: 900, margin: "40px auto" }}>
+    <div className="queue-manager-dialog" style={{ background: "var(--surface)", color: "var(--text)", padding: 24, borderRadius: 8, maxWidth: 900, margin: "40px auto" }}>
       <h2>Queue Manager</h2>
       <div style={{ marginBottom: 12 }}>
         <b>API abbrechen:</b>{" "}

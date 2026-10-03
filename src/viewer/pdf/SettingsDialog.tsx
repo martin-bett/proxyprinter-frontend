@@ -106,7 +106,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange }: SettingsDialogP
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                  backgroundColor: 'var(--disabled-overlay)',
                   cursor: 'not-allowed',
                   zIndex: 1,  // Stellt sicher, dass das Overlay oben liegt
                 }}
@@ -141,7 +141,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange }: SettingsDialogP
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backgroundColor: 'var(--disabled-overlay)',
                 cursor: 'not-allowed',
                 zIndex: 1,  // Stellt sicher, dass das Overlay oben liegt
               }}

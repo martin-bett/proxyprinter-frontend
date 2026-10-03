@@ -12,18 +12,18 @@ interface CacheEntryLike {
 function TrashIcon({ style = {} }: { style?: React.CSSProperties }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ ...style }}>
-      <path d="M3 6h18M9 6v12m6-12v12M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 6h18M9 6v12m6-12v12M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6" style={{ stroke: "var(--text-muted)" }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
 
 // CSS für das Overlay
 const cellStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   padding: 4,
   position: "relative",
   textAlign: "center",
-  background: "#f9f9f9",
+  background: "var(--surface-muted)",
   cursor: "pointer"
 };
 const trashOverlayStyle: React.CSSProperties = {
@@ -36,7 +36,7 @@ const trashOverlayStyle: React.CSSProperties = {
 };
 const cellHoverStyle: React.CSSProperties = {
   ...cellStyle,
-  background: "#ffeaea"
+  background: "var(--danger-soft)"
 };
 
 interface DeletableCellProps {
@@ -52,7 +52,7 @@ interface DeletableCellProps {
 function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMouseEnter, onMouseLeave }: DeletableCellProps) {
   return (
     <td
-      style={showTrash ? (hover ? cellHoverStyle : cellStyle) : { ...cellStyle, cursor: "default", background: "#fafafa" }}
+      style={showTrash ? (hover ? cellHoverStyle : cellStyle) : { ...cellStyle, cursor: "default", background: "var(--surface)" }}
       onClick={showTrash ? onDelete : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -85,12 +85,12 @@ function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMouseEnte
 function ApiSumRow({ allApis, byApi, toMB }: { allApis: string[]; byApi: Record<string, CacheEntryLike[]>; toMB: (bytes: number) => string }) {
   return (
     <tr>
-      <td style={{ border: "1px solid #ccc", padding: 4, fontWeight: "bold", background: "#f8f8f8" }}>API gesamt</td>
+      <td style={{ border: "1px solid var(--border)", padding: 4, fontWeight: "bold", background: "var(--surface-muted)" }}>API gesamt</td>
       {allApis.map(api => (
         <DeletableApiSumCells key={api} api={api} entries={byApi[api] || []} toMB={toMB} />
       ))}
-      <td style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}></td>
-      <td style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}></td>
+      <td style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}></td>
+      <td style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}></td>
     </tr>
   );
 }
@@ -125,7 +125,7 @@ function CardRow({ cardName, allApis, byCard, toMB }: { cardName: string; allApi
   const entries = byCard[cardName] || [];
   return (
     <tr>
-      <td style={{ border: "1px solid #ccc", padding: 4, fontWeight: "bold" }}>{cardName}</td>
+      <td style={{ border: "1px solid var(--border)", padding: 4, fontWeight: "bold" }}>{cardName}</td>
       {allApis.map(api => (
         <DeletableCardCells
           key={api}
@@ -234,21 +234,21 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
       <table style={{ borderCollapse: "collapse", width: "100%", marginTop: 16 }}>
         <thead>
           <tr>
-            <th rowSpan={2} style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}></th>
+            <th rowSpan={2} style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}></th>
             {allApis.map(api => (
-              <th key={api} colSpan={2} style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8", textAlign: "center" }}>{api}</th>
+              <th key={api} colSpan={2} style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)", textAlign: "center" }}>{api}</th>
             ))}
-            <th colSpan={2} style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8", textAlign: "center" }}>Alle der Karte</th>
+            <th colSpan={2} style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)", textAlign: "center" }}>Alle der Karte</th>
           </tr>
           <tr>
             {allApis.map(api => (
               <React.Fragment key={api + "_sub"}>
-                <th style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}>Anzahl</th>
-                <th style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}>MB</th>
+                <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>Anzahl</th>
+                <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>MB</th>
               </React.Fragment>
             ))}
-            <th style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}>Anzahl</th>
-            <th style={{ border: "1px solid #ccc", padding: 4, background: "#f8f8f8" }}>MB</th>
+            <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>Anzahl</th>
+            <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>MB</th>
           </tr>
         </thead>
         <tbody>
