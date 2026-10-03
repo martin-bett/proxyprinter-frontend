@@ -19,8 +19,6 @@ import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PaletteIcon from '@mui/icons-material/Palette';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import PayPalDonateButton from './info/PayPalDonateButton';
 import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
@@ -30,10 +28,8 @@ import { Minus, Plus } from 'lucide-react';
 import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
+import MemoryButtons from './cache/MemoryButtons';
 import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
-import CacheManagerDialog from './cache/CacheManagerDialog';
-import { CacheProgressBar } from './cache/CacheProgressBar';
-import QueueManagerDialog from './cache/QueueManagerDialog';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
@@ -75,8 +71,6 @@ const DeckInputAndViewer: React.FC = () => {
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const [imageCacheDialogOpen, setImageCacheDialogOpen] = useState(false);
-  const [queueDialogOpen, setQueueDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
@@ -442,10 +436,6 @@ const DeckInputAndViewer: React.FC = () => {
 
   const handleOpenSettingsDialog = () => setSettingsDialogOpen(true);
   const handleCloseSettingsDialog = () => setSettingsDialogOpen(false);
-  const handleOpenImageCacheDialog = () => setImageCacheDialogOpen(true);
-  const handleCloseImageCacheDialog = () => setImageCacheDialogOpen(false);
-  const handleOpenQueueDialog = () => setQueueDialogOpen(true);
-  const handleCloseQueueDialog = () => setQueueDialogOpen(false);
 
   const handleOpenApiConfigDialog = () => setApiConfigDialogOpen(true);
 
@@ -922,7 +912,8 @@ const DeckInputAndViewer: React.FC = () => {
   };
 
   return (
-    <div className="deck-input-and-viewer">
+    <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
+      <MemoryButtons />
       <TitleDiv />
 
 
@@ -1100,22 +1091,6 @@ const DeckInputAndViewer: React.FC = () => {
       </div>
 
       <div className="view-selection">
-        <div >
-          <div><h3 className='title is-5'>Image Cache</h3></div>
-          <div>
-            <button onClick={handleOpenImageCacheDialog} title='Cache Verwalten'><RemoveRedEyeIcon></RemoveRedEyeIcon></button>
-            <button onClick={() => imageLoaderService.clearCache()} title='Cache leeren'><DeleteIcon></DeleteIcon></button>
-            <CacheProgressBar onClick={handleOpenImageCacheDialog} />
-          </div>
-          {/* Cache-Progressbar */}
-        </div>
-        <div >
-          <div><h3 className='title is-5'>Download Queue</h3></div>
-          <div>
-            <button onClick={handleOpenQueueDialog} title='Open Queue'><RemoveRedEyeIcon></RemoveRedEyeIcon></button>
-          </div>
-          {/* Cache-Progressbar */}
-        </div>
         <div className="filter-controls">
           <h2 className='title is-5'>View Selection</h2>
           <div className="language-filter checkbox-group">
@@ -1195,23 +1170,6 @@ const DeckInputAndViewer: React.FC = () => {
         }
       />
 
-      <ClosableDialog
-        open={imageCacheDialogOpen}
-        onClose={handleCloseImageCacheDialog}
-        maxWidth='md'
-        children={
-          <CacheManagerDialog open={imageCacheDialogOpen} onClose={handleCloseImageCacheDialog} />
-        }
-      />
-
-      <ClosableDialog
-        open={queueDialogOpen}
-        onClose={handleCloseQueueDialog}
-        maxWidth='md'
-        children={
-          <QueueManagerDialog open={queueDialogOpen} onClose={handleCloseQueueDialog} />
-        }
-      />
       <ImageSelectDialog
         open={imageSelectDialogOpen}
         onClose={handleCloseImageSelectDialog}

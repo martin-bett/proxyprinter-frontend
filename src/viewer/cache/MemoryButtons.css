@@ -1,0 +1,43 @@
+.memory-buttons-bar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+  align-items: center;
+}
+
+/* Runde Bubbles: links und rechts abgerundet, gleiche Höhe */
+.memory-button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 6px var(--shadow);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.memory-button:hover {
+  background: var(--hover);
+}
+
+.memory-button svg {
+  margin-right: 2px;
+}
+
+.memory-button-count {
+  margin-left: 4px;
+  min-width: 1.5em;
+  text-align: center;
+  display: inline-block;
+}
