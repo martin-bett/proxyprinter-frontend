@@ -913,6 +913,7 @@ const DeckInputAndViewer: React.FC = () => {
 
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
+      <ThemeChooser />
       <MemoryButtons />
       <TitleDiv />
 
@@ -1147,7 +1148,6 @@ const DeckInputAndViewer: React.FC = () => {
       </div>
 
       <div className="bottom">
-        <div><ThemeChooser /></div>
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
         <div><VersionInfo /></div>
