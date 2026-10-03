@@ -34,11 +34,19 @@ export interface ImageQuality {
   millis?: number;
 }
 
+// Erhöhen, wenn sich Messung oder Schwellen ändern, damit alte Werte im Cache nicht mehr gelten
+export const QUALITY_VERSION = 1;
+
 export interface CropRect {
   offSetX?: number;
   offSetY?: number;
   width?: number;
   height?: number;
+}
+
+/** Schlüssel für gespeicherte Messungen: Version plus Crop-Ausschnitt. */
+export function qualityCacheKey(crop?: CropRect): string {
+  return `v${QUALITY_VERSION}:${crop?.offSetX || 0},${crop?.offSetY || 0},${crop?.width || 0},${crop?.height || 0}`;
 }
 
 // Kantenpixel: Gradient über diesem Anteil des 0..255-Bereichs

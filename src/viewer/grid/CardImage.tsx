@@ -4,7 +4,7 @@ import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
 import { CardResult } from "../../api/types/types";
-import { ImageQuality, queueImageQuality } from "../../service/quality/ImageQuality";
+import { ImageQuality, qualityCacheKey, queueImageQuality } from "../../service/quality/ImageQuality";
 
 const RATING_LABEL: Record<ImageQuality["rating"], string> = {
   good: "gut lesbar",
@@ -199,8 +199,13 @@ const CardImage: React.FC<CardImageProps> = ({
   const measureQuality = (img: HTMLImageElement) => {
     const run = ++qualityRun.current;
     const crop = cardInput.cropSettings;
-    queueImageQuality(img, crop).then((result) => {
+    const cacheInput = card || cardInput;
+    const key = qualityCacheKey(crop);
+    imageLoaderService.getCachedQuality(cacheInput, key).then(async (cached) => {
+      if (run !== qualityRun.current) return;
+      const result = cached || (await queueImageQuality(img, crop));
       if (run !== qualityRun.current || !result) return;
+      if (!cached) imageLoaderService.saveQuality(cacheInput, key, result);
       setQuality(result);
       const info: ImageInfo = {
         width: img.naturalWidth,
