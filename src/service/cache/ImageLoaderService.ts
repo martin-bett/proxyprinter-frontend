@@ -260,6 +260,16 @@ class ImageLoaderService {
     console.log('stoped category :' + category, this.queue.length);
   }
 
+  // Wartenden Eintrag einer Karte abbrechen, aber nur wenn er zu dieser Kategorie gehört
+  cancelQueued(cardInput: CacheCardInput, category: string): void {
+    const cacheKey = this._makeCacheKey(cardInput);
+    const before = this.queue.length;
+    this.queue = this.queue.filter(
+      (entry) => entry.category !== category || this._makeCacheKey(entry.cardInput) !== cacheKey
+    );
+    if (this.queue.length !== before) this.notifyAllStatuses();
+  }
+
   subscribe(fn: () => void): () => void {
     this.subscribers.add(fn);
     return () => this.subscribers.delete(fn);
