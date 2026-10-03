@@ -55,14 +55,31 @@ export interface QueueSnapshotEntry {
 // Höchstens so viele Bilder gleichzeitig über das Backend laden
 const MAX_CONCURRENT_PROXY_LOADS = 4;
 
+// Über den Proxy gescheiterte Bilder (URL -> Grund). Werden in dieser Sitzung nicht erneut angefragt.
+const proxyFailures = new Map<string, string>();
+
+export function proxyFailure(url: string): string | undefined {
+  return proxyFailures.get(url);
+}
+
+export function clearProxyFailures(): void {
+  proxyFailures.clear();
+}
+
 /** Lädt ein Bild über /api/proxy/image (gleiche Origin, also CORS-sauber), gedrosselt pro Ziel-Host. */
 export async function fetchImageViaProxy(url: string): Promise<Blob> {
+  const known = proxyFailures.get(url);
+  if (known) throw new Error(known);
   const response = await throttledFetch(
     "/api/proxy/image",
     { method: "GET", cache: "no-store", headers: { "X-Target-URL": url } },
     url
   );
-  if (!response.ok) throw new Error(`Proxy-Fehler ${response.status} für ${url}`);
+  if (!response.ok) {
+    const reason = `Bild nicht ladbar: ${response.headers.get("X-Proxy-Error") || `Proxy-Fehler ${response.status}`}`;
+    proxyFailures.set(url, reason);
+    throw new Error(reason);
+  }
   return response.blob();
 }
 
@@ -224,6 +241,13 @@ class ImageLoaderService {
         this.activeCacheLoads--;
       });
       onProcessListChange?.("LOADING");
+      return;
+    }
+
+    // Schon über den Proxy gescheitert: sofort melden statt erneut anzufragen
+    const failure = this.usesProxy(cardInput) ? proxyFailure(url) : undefined;
+    if (failure) {
+      onError?.(new Error(failure));
       return;
     }
 
@@ -413,6 +437,7 @@ class ImageLoaderService {
 
   async clearCache(): Promise<void> {
     await clearIndexedDB();
+    clearProxyFailures();
     this.queue = [];
     this.activeLoads = 0;
     this.notifyAllStatuses();
