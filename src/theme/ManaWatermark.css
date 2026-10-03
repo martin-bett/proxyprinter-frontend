@@ -1,0 +1,17 @@
+/* Dezentes Mana-Symbol unten rechts im Hintergrund, hinter allen Inhalten */
+.mana-watermark {
+  position: fixed;
+  right: -6vmin;
+  bottom: -6vmin;
+  width: 46vmin;
+  height: 46vmin;
+  color: var(--accent);
+  opacity: 0.09;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+html[data-theme="dark"] .mana-watermark {
+  opacity: 0.12;
+}

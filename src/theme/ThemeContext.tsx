@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { AppTheme, THEMES, getThemeById } from './themes';
+import ManaSymbol from './ManaSymbol';
 import './dialogs.css';
+import './ManaWatermark.css';
 
 const STORAGE_KEY = 'appTheme';
 
@@ -119,7 +121,10 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <AppThemeContext.Provider value={value}>
-      <MuiThemeProvider theme={muiTheme}>{children}</MuiThemeProvider>
+      <MuiThemeProvider theme={muiTheme}>
+        {theme.mana && <ManaSymbol color={theme.mana} className="mana-watermark" />}
+        {children}
+      </MuiThemeProvider>
     </AppThemeContext.Provider>
   );
 };
