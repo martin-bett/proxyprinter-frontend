@@ -31,9 +31,14 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
         [config.name]: config,
       };
       const api = new ApiFactory(singleConfigRecord).createApi(config.name);
-      const result = await api({});
-      handleGalleryResults(result.results);
-      console.log(result);
+      try {
+        const result = await api({});
+        handleGalleryResults(result.results);
+        console.log(result);
+      } catch (error) {
+        console.error(`Error fetching gallery ${config.name}:`, error);
+        handleGalleryResults([]);
+      }
     }
 
     const handleConfigOperation = async (method: string, operation: string, body?: unknown) => {

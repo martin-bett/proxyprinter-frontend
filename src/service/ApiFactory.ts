@@ -1,5 +1,6 @@
 import { parse } from 'node-html-parser';
 import ISO6391 from 'iso-639-1';
+import { throttledFetch } from './RequestThrottle';
 
 interface BaseConfig {
   id:number;
@@ -221,8 +222,10 @@ export default class ApiFactory {
             }
 
         } catch (error: unknown) {
+            // Weiterwerfen statt abbrechen: sonst landet ein leeres oder
+            // unvollständiges Ergebnis (z.B. nach 429) dauerhaft im Such-Cache.
             console.error(`Error fetching from ${config.name}:`, error);
-            break;
+            throw error;
         }
     } while (currentUrl.length > 0 || (maxPage && pageCount < maxPage)); // maxPage wird hier genutzt
 
@@ -243,7 +246,8 @@ export default class ApiFactory {
     const processedParams = await this.processRequestParameters(config, params);
     const { requestUrl, fetchOptions } = this.buildRequest(config, processedParams, currentUrl);
 
-    const response = await fetch(requestUrl.toString(), fetchOptions);
+    const targetUrl = (fetchOptions.headers as Record<string, string> | undefined)?.['X-Target-URL'];
+    const response = await throttledFetch(requestUrl.toString(), fetchOptions, targetUrl);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -354,7 +358,11 @@ export default class ApiFactory {
   private buildGetRequest(params: Record<string, string>, currentUrl: string): URL {
     const requestUrl = new URL(currentUrl);
     Object.entries(params).forEach(([key, value]) => {
-      requestUrl.searchParams.append(key, value);
+      // Pagination-Links (z.B. Scryfall next_page) enthalten die Parameter
+      // bereits; erneut anhängen würde sie doppelt in die URL schreiben.
+      if (!requestUrl.searchParams.has(key)) {
+        requestUrl.searchParams.append(key, value);
+      }
     });
     return requestUrl;
   }
@@ -473,7 +481,7 @@ export default class ApiFactory {
     }
 
     try {
-      const followLinkResponse = await fetch(followLinkUrl);
+      const followLinkResponse = await throttledFetch(followLinkUrl);
       if (!followLinkResponse.ok) {
         return [];
       }
