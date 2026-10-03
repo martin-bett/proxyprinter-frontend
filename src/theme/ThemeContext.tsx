@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { AppTheme, THEMES, getThemeById } from './themes';
+import './dialogs.css';
 
 const STORAGE_KEY = 'appTheme';
 
@@ -60,6 +61,57 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         secondary: theme.colors['text-muted'],
       },
       divider: theme.colors.border,
+    },
+    components: {
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            // Ohne backgroundImage: 'none' legt MUI im Dark Mode ein helles Overlay drüber
+            backgroundImage: 'var(--dialog-bg)',
+            backgroundColor: 'var(--surface)',
+            color: 'var(--text)',
+            border: '1px solid var(--dialog-border)',
+            borderTop: '4px solid var(--accent)',
+            borderRadius: 12,
+            boxShadow: '0 24px 60px var(--shadow)',
+          },
+        },
+      },
+      MuiBackdrop: {
+        styleOverrides: {
+          root: {
+            // unsichtbare Backdrops (Menüs, Popover) nicht einfärben
+            '&:not(.MuiBackdrop-invisible)': {
+              backgroundColor: 'var(--dialog-backdrop)',
+              backdropFilter: 'blur(3px)',
+            },
+          },
+        },
+      },
+      MuiDialogTitle: {
+        styleOverrides: {
+          root: {
+            color: 'var(--accent)',
+            fontWeight: 600,
+            paddingRight: 56,
+          },
+        },
+      },
+      MuiDialogContent: {
+        styleOverrides: {
+          dividers: {
+            borderColor: 'var(--border)',
+          },
+        },
+      },
+      MuiDialogActions: {
+        styleOverrides: {
+          root: {
+            padding: '12px 24px',
+            gap: 8,
+          },
+        },
+      },
     },
   }), [theme]);
 

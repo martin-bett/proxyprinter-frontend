@@ -3,7 +3,6 @@ import { imageLoaderService } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
-import { JsonView } from 'react-json-view-lite';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
@@ -31,6 +30,7 @@ import ClosableDialog from '../container/ClosableDialog';
 import MemoryButtons from './cache/MemoryButtons';
 import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
+import RawDataDialog from './log/RawDataDialog';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -92,7 +92,6 @@ const DeckInputAndViewer: React.FC = () => {
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
-  const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
   const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
 
@@ -451,7 +450,6 @@ const DeckInputAndViewer: React.FC = () => {
 
   const handleCloseRawDataDialog = () => {
     setRawDataDialog(null);
-    setRawDataDialogOpen(false);
   };
 
   const toggleLanguage = (languageCode: string) => {
@@ -1211,20 +1209,7 @@ const DeckInputAndViewer: React.FC = () => {
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
       />
 
-      {rawDataDialog && (
-        <div className="dialog-overlay" onClick={handleCloseRawDataDialog}>
-          <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className='title is-5'>Raw API Response</h3>
-            <div className="json-viewer-container">
-              <JsonView data={JSON.parse(rawDataDialog)} />
-            </div>
-            <div className="dialog-buttons">
-              <button onClick={() => navigator.clipboard.writeText(rawDataDialog)}>Copy to Clipboard</button>
-              <button onClick={handleCloseRawDataDialog}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RawDataDialog rawData={rawDataDialog} onClose={handleCloseRawDataDialog} />
 
       <ClosableDialog
         open={customCardDialogOpen}
