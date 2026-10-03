@@ -4,6 +4,14 @@ import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
 import { CardResult } from "../../api/types/types";
+import { ImageQuality, qualityCacheKey, queueImageQuality } from "../../service/quality/ImageQuality";
+
+const RATING_LABEL: Record<ImageQuality["rating"], string> = {
+  good: "gut lesbar",
+  ok: "lesbar, etwas weich",
+  poor: "Text vermutlich schlecht lesbar",
+  unknown: "kein Text erkannt",
+};
 
 export interface CardImageError extends CardResult {
   error: string;
@@ -39,6 +47,8 @@ const CardImage: React.FC<CardImageProps> = ({
   const imageRef = useRef<HTMLImageElement | null>(null); // Referenz zum geladenen Bild
   const [proxyTried, setProxyTried] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [quality, setQuality] = useState<ImageQuality | null>(null);
+  const qualityRun = useRef(0);
 
   useEffect(() => {
     if (isPermanent) {
@@ -157,6 +167,7 @@ const CardImage: React.FC<CardImageProps> = ({
   useEffect(() => {
     if (cardInput.cropSettings && imageRef.current) {
       renderCanvas(imageRef.current);
+      measureQuality(imageRef.current);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardInput.cropSettings]);
@@ -181,6 +192,30 @@ const CardImage: React.FC<CardImageProps> = ({
         fileType,
       });
     }
+    measureQuality(img);
+  };
+
+  // Schärfe/Lesbarkeit des Textfeldes schätzen und als Meta-Info nachreichen
+  const measureQuality = (img: HTMLImageElement) => {
+    const run = ++qualityRun.current;
+    const crop = cardInput.cropSettings;
+    const cacheInput = card || cardInput;
+    const key = qualityCacheKey(crop);
+    imageLoaderService.getCachedQuality(cacheInput, key).then(async (cached) => {
+      if (run !== qualityRun.current) return;
+      const result = cached || (await queueImageQuality(img, crop));
+      if (run !== qualityRun.current || !result) return;
+      if (!cached) imageLoaderService.saveQuality(cacheInput, key, result);
+      setQuality(result);
+      const info: ImageInfo = {
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        fileType: extractFileType(card?.imageUrl || cardInput.imageUrl || ''),
+        quality: result,
+      };
+      setImageInfo(info);
+      if (onLoad) onLoad(info);
+    });
   };
 
   const extractFileType = (url: string): string => {
@@ -253,6 +288,12 @@ const CardImage: React.FC<CardImageProps> = ({
           ref={canvasRef}
           style={{ display: isLoading ? "none" : "block" }}
         />
+        {!isLoading && quality && (
+          <span
+            className={`quality-dot quality-${quality.rating}`}
+            title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
+          />
+        )}
         <div className="image-info">
           {isLoading && <div className="info-row">{status}</div>}
           {imageInfo && show && (
@@ -263,6 +304,11 @@ const CardImage: React.FC<CardImageProps> = ({
                   : "Unknown resolution"}{" "}
                 ({imageInfo.fileType})
               </div>
+              {quality && (
+                <div className="info-row">
+                  Schärfe {quality.sharpness.toFixed(2)} · {quality.effectiveDpi} DPI · {RATING_LABEL[quality.rating]}
+                </div>
+              )}
               {!onlyDimensions && card && (
                 <>
                   {card.cropSettings && (

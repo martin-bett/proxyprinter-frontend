@@ -1,6 +1,7 @@
 import { parse } from 'node-html-parser';
 import ISO6391 from 'iso-639-1';
 import { throttledFetch } from './RequestThrottle';
+import { ImageQuality } from "./quality/ImageQuality";
 
 interface BaseConfig {
   id:number;
@@ -122,6 +123,7 @@ export interface ImageInfo {
   width?:number;
   height?:number;
   fileType?:string;
+  quality?: ImageQuality; // Druckschärfe des Textfeldes, kommt asynchron nach dem Laden
 }
 
 export interface CardEntrySelection {

@@ -1,3 +1,5 @@
+import { ImageQuality } from "../quality/ImageQuality";
+
 const DB_NAME = "mtg_cache_db";
 const DB_VERSION = 2;
 const STORE_NAME = "images";
@@ -17,6 +19,8 @@ interface ImageCacheDbEntry {
   timestamp: number;
   imageUrl: string;
   blob: Blob | null;
+  // Druckschärfe je Crop-Ausschnitt, Schlüssel aus qualityCacheKey()
+  quality?: Record<string, ImageQuality>;
 }
 
 export interface AddToQueueParams {
@@ -149,6 +153,26 @@ class ImageLoaderService {
       total -= entry.sizeBytes || 0;
       if (total <= this.cacheLimit) break;
     }
+  }
+
+  /** Gespeicherte Schärfemessung für Bild + Ausschnitt, falls das Bild im Cache liegt. */
+  async getCachedQuality(cardInput: CacheCardInput, qualityKey: string): Promise<ImageQuality | undefined> {
+    try {
+      const entry = await getFromIndexedDB(this._makeCacheKey(cardInput));
+      return entry?.quality?.[qualityKey];
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  /** Schärfemessung am Cache-Eintrag speichern. Ohne Cache-Eintrag (z.B. Proxy-Fallback) passiert nichts. */
+  async saveQuality(cardInput: CacheCardInput, qualityKey: string, quality: ImageQuality): Promise<void> {
+    try {
+      const entry = await getFromIndexedDB(this._makeCacheKey(cardInput));
+      if (!entry) return;
+      entry.quality = { ...(entry.quality || {}), [qualityKey]: quality };
+      await saveToIndexedDB(entry);
+    } catch (e) { }
   }
 
   private _makeCacheKey(cardInput: CacheCardInput): string {
