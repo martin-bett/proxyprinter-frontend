@@ -61,6 +61,7 @@
     "@types/lodash": "^4.17.25",
     "@types/react-color": "^3.0.13",
     "@types/react-dom": "^18.3.7",
-    "@types/webpack-env": "^1.18.5"
+    "@types/webpack-env": "^1.18.5",
+    "fake-indexeddb": "^6.2.5"
   }
 }
