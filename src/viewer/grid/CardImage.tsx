@@ -360,8 +360,8 @@ const CardImage: React.FC<CardImageProps> = ({
     <div
       ref={containerRef}
       className="card-image-container"
-      // Höhe beim Entladen halten, sonst springt das Grid beim Scrollen
-      style={!isVisible && placeholderHeight ? { minHeight: placeholderHeight } : undefined}
+      // Kartenhöhe halten solange kein Bild da ist (entladen oder lädt), sonst springt das Grid
+      style={(!isVisible || isLoading) && placeholderHeight ? { minHeight: placeholderHeight } : undefined}
     >
       <div style={{ display: isVisible ? "block" : "none" }}>
         {isLoading && (
