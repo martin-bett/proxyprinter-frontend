@@ -1,0 +1,70 @@
+/* Gemeinsames Aussehen aller Dialoge. Die MUI-Dialoge bekommen das über
+   die Komponenten-Overrides in ThemeContext.tsx, eigene Overlays
+   (z.B. ImageSelectDialog) nutzen dieselben Variablen. */
+:root {
+  --dialog-bg: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--app-bg-gradient-start) 38%, var(--surface)) 0%,
+    color-mix(in srgb, var(--app-bg) 16%, var(--surface)) 50%,
+    color-mix(in srgb, var(--app-bg-gradient-end) 38%, var(--surface)) 100%
+  );
+  --dialog-border: color-mix(in srgb, var(--accent) 35%, var(--border));
+  --dialog-panel-bg: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+  --dialog-backdrop: color-mix(in srgb, var(--app-bg) 35%, rgba(0, 0, 0, 0.55));
+}
+
+/* Innere Container, die bisher selbst eine (weiße) Fläche gemalt haben,
+   werden durchsichtig, damit der Dialog-Hintergrund durchkommt. */
+.MuiDialog-paper .pdf-progress-dialog,
+.MuiDialog-paper .dialog-content,
+.MuiDialog-paper .modal-card-head,
+.MuiDialog-paper .modal-card-body,
+.MuiDialog-paper .modal-card-foot {
+  background: transparent;
+  box-shadow: none;
+}
+
+.MuiDialog-paper .modal-card-title,
+.MuiDialog-paper .title {
+  color: var(--text);
+}
+
+/* Bulma-Boxen als leicht abgesetzte Panels statt weißer Kästen */
+.MuiDialog-paper .box {
+  background: var(--dialog-panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+/* .button hat global margin-bottom: 15px, in der Button-Leiste stört das */
+.MuiDialogActions-root .button {
+  margin-bottom: 0;
+}
+
+.dialog-close-button.MuiIconButton-root {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  color: var(--text-muted);
+}
+
+.dialog-close-button.MuiIconButton-root:hover {
+  color: var(--text);
+}
+
+/* ImageSelectDialog ist (noch) ein eigenes Overlay statt MUI-Dialog */
+.image-select-dialog .dialog-overlay {
+  background: var(--dialog-backdrop);
+  backdrop-filter: blur(3px);
+}
+
+.image-select-dialog .dialog-content {
+  background-color: var(--surface);
+  background-image: var(--dialog-bg);
+  color: var(--text);
+  border: 1px solid var(--dialog-border);
+  border-top: 4px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px var(--shadow);
+}
