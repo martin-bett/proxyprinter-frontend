@@ -28,6 +28,7 @@ import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
+import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
@@ -935,70 +936,67 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="input-controls">
         <div className="api-controls">
           <div className="api-toggles checkbox-group">
-            <h3 className="title is-4 api-selection-header">
-              <button
-                type="button"
-                className="api-manage-button"
-                onClick={handleOpenApiConfigDialog}
-                title="Manage APIs"
-              >
-                API Selection
-                <SettingsIcon className="api-manage-icon" fontSize="small" />
-              </button>
-            </h3>
-            {Object.entries(categoryStates).map(([category]) => (
-              <div key={category} className="mb-4">
-                <CategoryToggle
-                  icon={getImageLabelCategory(category.toUpperCase())}
-                  title={category}
-                  checked={getCategoryState(category) === 'checked'}
-                  indeterminate={getCategoryState(category) === 'indeterminate'}
-                  onClick={() => handleCategoryToggle(category)}
-                />
+            <CollapsibleSection
+              storageKey="api-selection"
+              title="API Selection"
+              action={{ icon: <SettingsIcon />, title: 'Manage APIs', onClick: handleOpenApiConfigDialog }}
+            >
+              {Object.entries(categoryStates).map(([category]) => (
+                <div key={category} className="mb-4">
+                  <CategoryToggle
+                    icon={getImageLabelCategory(category.toUpperCase())}
+                    title={category}
+                    checked={getCategoryState(category) === 'checked'}
+                    indeterminate={getCategoryState(category) === 'indeterminate'}
+                    onClick={() => handleCategoryToggle(category)}
+                  />
 
-                <div className="ml-2">
-                  <ul>
-                    {Object.values(apiConfigs)
-                      .filter(config => config.category === category)
-                      .map(config => (
-                        <li key={config.name}>
-                          <div>
-                            {renderCheckbox(
-                              config.name,
-                              getApiConfigLabelForCheckbox(config),
-                              enabledApis[config.name] || false,
-                              () => handleApiToggle(config.name),
-                              false,
-                              'api-config-label'
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                  </ul>
+                  <div className="ml-2">
+                    <ul>
+                      {Object.values(apiConfigs)
+                        .filter(config => config.category === category)
+                        .map(config => (
+                          <li key={config.name}>
+                            <div>
+                              {renderCheckbox(
+                                config.name,
+                                getApiConfigLabelForCheckbox(config),
+                                enabledApis[config.name] || false,
+                                () => handleApiToggle(config.name),
+                                false,
+                                'api-config-label'
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </CollapsibleSection>
           </div>
         </div>
 
         <div className="decklist-input">
-          <h2 className='title is-4'>Enter Decklist</h2>
-          <form onSubmit={handleSubmit}>
-            <textarea
-              value={decklist}
-              onChange={(e) => setDecklist(e.target.value)}
-              placeholder="1 Forest"
-              rows={10}
-              cols={50}
-            />
-            <br />
-            <ActionButton type="submit" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
-          </form>
-          <h2 className='title is-4'>Add Single</h2>
-          <div className="add-single-buttons">
-            <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
-            <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
-          </div>
+          <CollapsibleSection storageKey="decklist" title="Enter Decklist">
+            <form onSubmit={handleSubmit}>
+              <textarea
+                value={decklist}
+                onChange={(e) => setDecklist(e.target.value)}
+                placeholder="1 Forest"
+                rows={10}
+                cols={50}
+              />
+              <br />
+              <ActionButton type="submit" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+            </form>
+          </CollapsibleSection>
+          <CollapsibleSection storageKey="add-single" title="Add Single">
+            <div className="add-single-buttons">
+              <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
+              <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
+            </div>
+          </CollapsibleSection>
 
         </div>
         {isLoading && (
@@ -1007,20 +1005,21 @@ const DeckInputAndViewer: React.FC = () => {
             <span>{progress}%</span>
           </div>
         )}
-        <div className="log">
-          <h2 className='title is-4'>Search Log</h2>
-          <div className="log-content">
-            {log.map((entry, index) => (
-              <div key={index} className="log-entry">
-                <span className="config-name">[{entry.configName}]</span>
-                <span>{entry.message}</span>
-                {entry.rawResponse && (
-                  <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse!)}>🔍</span>
-                )}
-              </div>
-            ))}
+        <CollapsibleSection storageKey="search-log" title="Search Log" defaultOpen={false}>
+          <div className="log">
+            <div className="log-content">
+              {log.map((entry, index) => (
+                <div key={index} className="log-entry">
+                  <span className="config-name">[{entry.configName}]</span>
+                  <span>{entry.message}</span>
+                  {entry.rawResponse && (
+                    <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse!)}>🔍</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </CollapsibleSection>
       </div>
 
       <div className="decklist-viewer">
