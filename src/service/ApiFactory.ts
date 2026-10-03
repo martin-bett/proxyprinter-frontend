@@ -6,8 +6,16 @@ interface BaseConfig {
   type:string;
   //Info
   name: string;
-  category: 'mtg' | 'poke' | 'yugi' | 'misc';
+  // Server-controlled, free-form (observed values include both "MTG" and "mtg" casing).
+  category: string;
   officialWebsite?: string;
+  customArts?: boolean;
+
+  //Publishing / Rating (server-managed)
+  published?: boolean;
+  ratingCount?: number;
+  averageRating?: number;
+  ratingValue?: number;
 
   //Request
   method: 'GET' | 'POST';
@@ -80,10 +88,12 @@ export function isGalleryConfig(config: Config): config is GalleryConfig {
 }
 
 export interface ApiParams {
-  cardname: string;
+  // Optional: gallery configs are executed without a search term.
+  cardname?: string;
   language?: string;
   set?:string;
-  pageCount:number;
+  // Optional: executeApiRequest tracks/overwrites the page counter internally.
+  pageCount?:number;
 }
 
 export interface GalleryParams{
@@ -104,7 +114,7 @@ export interface CropSettings {
   offSetY?:number;
   width?:number;
   height?:number;
-  isStretch:true;
+  isStretch:boolean;
 }
 
 export interface ImageInfo {
@@ -187,7 +197,7 @@ export default class ApiFactory {
             // Setze die aktuelle Seite als Parameter
             params = { ...params, pageCount: pageCount };
 
-            const { response, requestUrl } = await this.makeRequest(config, params, currentUrl);
+            const { response } = await this.makeRequest(config, params, currentUrl);
             const text = await response.text();
             allRawResponses.push(text);
 
@@ -545,7 +555,7 @@ export default class ApiFactory {
         (config.nameSplitCharacter ? 
           (res.name.split(config.nameSplitCharacter).map(name => name.trim()).filter(name => name === para.cardname).length >= 1)
           : 
-          (res.name != null && res.name == para.cardname));
+          (res.name != null && res.name === para.cardname));
     }
     if(isGalleryConfig(config)){
       return Boolean(res.imageUrl);
