@@ -277,7 +277,7 @@
 }
 
 
-.language-filter label {
+.language-filter label:not(.input-tile) {
   display: block;
   margin-bottom: 5px;
 }
@@ -417,3 +417,7 @@
 .quality-ok { background-color: var(--warning); }
 .quality-poor { background-color: var(--danger); }
 .quality-unknown { background-color: var(--text-muted); }
+
+.decklist-input form {
+  margin-bottom: 12px;
+}

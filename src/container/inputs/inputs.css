@@ -24,7 +24,7 @@
   border-color: var(--accent);
 }
 
-.input-tile:focus-within,
+.input-tile:has(.input-tile-native:focus-visible),
 .input-tile:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;

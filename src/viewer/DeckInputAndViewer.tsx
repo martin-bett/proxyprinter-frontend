@@ -265,6 +265,7 @@ const DeckInputAndViewer: React.FC = () => {
 
   const handleWebsiteClick = (url: string, event: React.MouseEvent) => {
     event.stopPropagation();
+    event.preventDefault(); // Klick auf den Link soll die API nicht umschalten
     window.open(url, "_blank");
   };
 

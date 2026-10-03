@@ -95,7 +95,7 @@
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
 }
   
   .image-select-dialog .image-grid {
