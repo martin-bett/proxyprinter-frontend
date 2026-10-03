@@ -49,6 +49,15 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     Object.assign(result, { imageInfo: imageInfo });
   };
 
+  // Take over the filters from the main page each time the dialog opens
+  useEffect(() => {
+    if (open) {
+      setDialogVisibleLanguages(new Set(initialVisibleLanguages));
+      setDialogVisibleApis(new Set(initialVisibleApis));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   useEffect(() => {
     if (initialSelectedImage) {
       setSelectedImage(initialSelectedImage);
