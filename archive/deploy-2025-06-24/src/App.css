@@ -1,0 +1,27 @@
+
+
+
+
+:root {
+  --color-bg: #f1c1eb;
+  --color-bg-gradient: linear-gradient(135deg, #f1c1eb 0%, #a5d3f3 100%);
+  --color-bg-dialog: #d6eef8;
+  --color-bg-dialog-inner: #ffffff;
+  --color-primary-1: #a084ca;
+  --color-primary-2: #6a8cff;
+  --color-accent-1: #6bb6e9;
+  --color-accent-2: #43aa8b;
+  --color-accent-3: #ffd1b8;
+  --color-accent-4: #f7b801;
+  --color-accent-5: #a5d3f3;
+  --color-button-bg: #a084ca;
+  --color-button-text: #fff;
+  --color-text: #22223b;
+  --color-text-1: #22223b;
+  --color-text-2: #444;
+  --color-text-3: #888;
+  --color-headline: #5a3577;
+  --color-headline-text: #5a3577;
+  --font-main: 'JetBrains Mono', monospace;
+  --font-heading: 'JetBrains Mono', monospace;
+}

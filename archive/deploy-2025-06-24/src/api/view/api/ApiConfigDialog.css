@@ -1,0 +1,189 @@
+.config-checkbox {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.dialog-content {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--color-bg-dialog);
+  color: var(--color-text);
+  font-family: var(--font-main);
+}
+
+.config-dialog {
+  flex: 1;
+  padding: 1.5rem;
+  height: 70rem;
+  min-height: 70rem;
+  border-right: 1px solid var(--color-accent-5);
+  overflow-y: auto;
+  color: var(--color-text);
+  font-family: var(--font-main);
+}
+
+.configs-container {
+  margin: 0 auto;
+  width: 100%;
+  margin: 1rem;
+  background: var(--color-bg-dialog-inner);
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.configs-flex-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.config-item {
+  background-color: var(--color-bg-dialog-inner);
+  border: 1px solid var(--color-accent-5);
+  border-radius: 6px;
+  flex: 1 1 300px;
+  max-width: 220px;
+  min-width: 220px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color: var(--color-text);
+  font-family: var(--font-main);
+}
+
+.config-item.selected-config {
+  background-color: var(--color-accent-3) !important;
+  color: var(--color-button-text);
+}
+
+.config-item.active-config {
+  border: 2px solid var(--color-accent-2);
+  border-bottom-width: 1rem;
+}
+
+.right-side {
+  flex: 2;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.rating-container {
+  border: 1px solid var(--color-accent-5);
+  border-radius: 4px;
+  margin-bottom: 15px;
+  padding: 1rem;
+}
+
+.rating-label, 
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-3);
+  font-size: small;
+}
+
+.wizard-form {
+  gap: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--color-accent-5);
+  border-radius: 4px;
+}
+
+.wizard-labels {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--color-bg-dialog-inner);
+  border-radius: 4px;
+}
+
+.wizard-category button {
+  width: 100%;
+}
+
+.wizard-category .submit {
+  background-color: var(--color-accent-2);
+}
+
+.wizard-category .publish {
+  background-color: var(--color-accent-2);
+}
+
+.wizard-category .remove {
+  background-color: var(--color-accent-3);
+}
+
+.wizard-category .copy {
+  background-color: var(--color-accent-4);
+}
+
+.wizard-category .setting-category {
+  background-color: var(--color-accent-5);
+}
+
+.wizard-category {
+  margin-bottom: 20px;
+}
+
+.wizard-category div {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.wizard-category label {
+  text-align: right;
+  align-self: center;
+}
+
+.wizard-category input,
+.wizard-category select,
+.wizard-category textarea {
+  width: 100%;
+  padding: 8px;
+}
+
+.wizard-category input[type="checkbox"] {
+  width: 16px;
+  margin-left: 0;
+}
+.wizard-category .button {
+  margin-bottom: 20px;
+}
+
+.wizard-category textarea {
+  height: 10em;
+}
+
+.section-title {
+  grid-column: span 2;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-headline-text);
+  font-family: var(--font-heading);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categoryIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.inline-icon {
+  margin-bottom: -5px;
+}
