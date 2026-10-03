@@ -14,6 +14,7 @@
   font: inherit;
   font-size: 0.875rem;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   overflow: hidden;
   user-select: none;
@@ -22,6 +23,7 @@
 
 .input-tile:hover {
   border-color: var(--accent);
+  color: var(--text);
 }
 
 .input-tile:has(.input-tile-native:focus-visible),
@@ -142,6 +144,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: none;
+  box-sizing: border-box;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -170,7 +174,11 @@
   outline-offset: 2px;
 }
 
+/* margin: 0 überschreibt die globale .categoryIcon-Regel aus ApiConfigDialog.css,
+   deren margin-right das Icon sonst aus dem Ring schiebt */
 .category-toggle .categoryIcon {
+  flex: none;
+  margin: 0;
   width: 32px;
   height: 32px;
   border-radius: 50%;
