@@ -4,6 +4,7 @@ import './ImageSelectDialog.css';
 import CardImage, { CardImageError } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
+import ChoiceButton from '../../container/inputs/ChoiceButton';
 import { imageLoaderService } from "../../service/cache/ImageLoaderService";
 import { CardResult, GroupedResults } from '../../api/types/types';
 
@@ -155,30 +156,28 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
               })}
           </div>
           <div className="filter-controls">
-            <div className="language-filter">
+            <div className="language-filter input-tile-group">
               <h3 className="title is-4">Filter by Language</h3>
               {Array.from(availableLanguages).map(lang => (
-                <label key={lang}>
-                  <input
-                    type="checkbox"
-                    checked={dialogVisibleLanguages.has(lang)}
-                    onChange={() => toggleLanguage(lang)}
-                  />
-                  {lang === NO_LANGUAGE ? 'No Language' : lang}
-                </label>
+                <ChoiceButton
+                  key={lang}
+                  id={`select-lang-${lang}`}
+                  label={lang === NO_LANGUAGE ? 'No Language' : lang}
+                  checked={dialogVisibleLanguages.has(lang)}
+                  onChange={() => toggleLanguage(lang)}
+                />
               ))}
             </div>
-            <div className="language-filter">
+            <div className="language-filter input-tile-group">
               <h3 className="title is-4">Filter by API</h3>
               {Object.keys(groupedResults).map(apiName => (
-                <label key={apiName}>
-                  <input
-                    type="checkbox"
-                    checked={dialogVisibleApis.has(apiName)}
-                    onChange={() => toggleApi(apiName)}
-                  />
-                  {apiName}
-                </label>
+                <ChoiceButton
+                  key={apiName}
+                  id={`select-api-${apiName}`}
+                  label={apiName}
+                  checked={dialogVisibleApis.has(apiName)}
+                  onChange={() => toggleApi(apiName)}
+                />
               ))}
             </div>
             {/* <div>

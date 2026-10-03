@@ -98,11 +98,6 @@
   gap: 10px;
 }
   
-  .image-select-dialog .language-filter label {
-    display: block;
-    margin-bottom: 10px;
-  }
-  
   .image-select-dialog .image-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 150px));

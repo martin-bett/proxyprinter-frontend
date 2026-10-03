@@ -27,6 +27,9 @@ import { Minus, Plus } from 'lucide-react';
 import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
+import ChoiceButton from '../container/inputs/ChoiceButton';
+import ActionButton from '../container/inputs/ActionButton';
+import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
 import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
@@ -698,26 +701,16 @@ const DeckInputAndViewer: React.FC = () => {
     isIndeterminate = false,
     labelClass?: string
   ) => (
-    <div className="flex items-center">
-      <div className="relative flex items-center">
-        <input
-          type="checkbox"
-          id={id}
-          checked={checked}
-          onChange={onChange}
-          className="sr-only"
-        />
-        <div className={`w-5 h-5 border rounded ${checked ? 'bg-blue-500' : 'bg-white'} ${isIndeterminate ? 'bg-blue-500' : ''}`}>
-          {checked && !isIndeterminate && (
-            <div className="w-3 h-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 before:content-[''] before:block before:w-2 before:h-1 before:border-r-2 before:border-b-2 before:border-white before:transform before:rotate-45"></div>
-          )}
-          {isIndeterminate && <div className="w-3 h-3 bg-white m-1"></div>}
-        </div>
-      </div>
-      <label htmlFor={id} className={`ml-2 text-sm font-medium ${labelClass ? labelClass : ''}`}>{label}</label>
-    </div>
+    <ChoiceButton
+      key={id}
+      id={id}
+      label={label}
+      checked={checked}
+      onChange={onChange}
+      indeterminate={isIndeterminate}
+      className={labelClass}
+    />
   );
-
 
   const handleImageLoad = (card: CardResult, imageInfo: ImageInfo) => {
     setCardResults((prevResults) => {
@@ -951,14 +944,13 @@ const DeckInputAndViewer: React.FC = () => {
             </h3>
             {Object.entries(categoryStates).map(([category]) => (
               <div key={category} className="mb-4">
-                {renderCheckbox(
-                  category,
-                  getImageLabelCategory(category.toUpperCase()),
-                  getCategoryState(category) === 'checked',
-                  () => handleCategoryToggle(category),
-                  getCategoryState(category) === 'indeterminate',
-                  'category-label'
-                )}
+                <CategoryToggle
+                  icon={getImageLabelCategory(category.toUpperCase())}
+                  title={category}
+                  checked={getCategoryState(category) === 'checked'}
+                  indeterminate={getCategoryState(category) === 'indeterminate'}
+                  onClick={() => handleCategoryToggle(category)}
+                />
 
                 <div className="ml-2">
                   <ul>
@@ -996,16 +988,12 @@ const DeckInputAndViewer: React.FC = () => {
               cols={50}
             />
             <br />
-            <button className="button mt-2 mb-2" type="submit" disabled={isLoading}><SearchIcon />Analyze Deck</button>
+            <ActionButton type="submit" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
           </form>
           <h2 className='title is-4'>Add Single</h2>
           <div className="add-single-buttons">
-            <button className="button mt-2 mb-2" type="button" onClick={handleAddCustomCard}>
-              <AddIcon /> Add
-            </button>
-            <button className="button mt-2 mb-2" type="button" onClick={handleOpenGalleryDialog}>
-              <PhotoLibraryIcon /> Gallery
-            </button>
+            <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
+            <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
           </div>
 
         </div>
@@ -1163,8 +1151,8 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="pdf-controls">
         <h3 className='title is-5'>PDF Generation</h3>
 
-        <div><button className="button" onClick={handleOpenSettingsDialog}><PictureAsPdfOutlinedIcon />Settings</button></div>
-        <div><button className="button" disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}><LocalPrintshopOutlinedIcon />Create PDF</button></div>
+        <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
+        <ActionButton icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
 
       </div>
 
