@@ -11,9 +11,12 @@ import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlin
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CardImage, { CardImageError } from './grid/CardImage';
-import CustomCardDialog, { SaveCustomCardFn } from './grid/CustomCardDialog';
+import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
+import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import TranslateIcon from '@mui/icons-material/Translate';
+import AddIcon from '@mui/icons-material/Add';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PaletteIcon from '@mui/icons-material/Palette';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -77,6 +80,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
+  const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [rawDataDialogOpen, setRawDataDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
@@ -137,6 +141,21 @@ const DeckInputAndViewer: React.FC = () => {
 
   const handleCloseCustomCardDialog = () => {
     setCustomCardDialogOpen(false);
+  };
+
+  const handleOpenGalleryDialog = () => {
+    setGalleryDialogOpen(true);
+  };
+
+  const handleCloseGalleryDialog = () => {
+    setGalleryDialogOpen(false);
+  };
+
+  const handleGalleryResults = (results: SearchResult[]) => {
+    if (results) {
+      results.forEach(r => handleSaveCustomCard(r.name, r.imageUrl, null));
+    }
+    handleCloseGalleryDialog();
   };
 
   const handleCloseApiConfigDialog = () => {
@@ -957,6 +976,15 @@ const DeckInputAndViewer: React.FC = () => {
             <br />
             <button className="button mt-2 mb-2" type="submit" disabled={isLoading}><SearchIcon />Analyze Deck</button>
           </form>
+          <h2 className='title is-4'>Add Single</h2>
+          <div className="add-single-buttons">
+            <button className="button mt-2 mb-2" type="button" onClick={handleAddCustomCard}>
+              <AddIcon /> Add
+            </button>
+            <button className="button mt-2 mb-2" type="button" onClick={handleOpenGalleryDialog}>
+              <PhotoLibraryIcon /> Gallery
+            </button>
+          </div>
 
         </div>
         {isLoading && (
@@ -1216,11 +1244,22 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={customCardDialogOpen}
         onClose={handleCloseCustomCardDialog}
-        children={<CustomCardDialog
+        maxWidth='sm'
+        children={<AddCardDialog
           open={customCardDialogOpen}
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
           searchForApis={searchForApis}
+        />}
+      />
+      <ClosableDialog
+        open={galleryDialogOpen}
+        onClose={handleCloseGalleryDialog}
+        maxWidth='md'
+        children={<GalleryConfigDialog
+          open={galleryDialogOpen}
+          onClose={handleCloseGalleryDialog}
+          handleGalleryResults={handleGalleryResults}
         />}
       />
       <Dialog
