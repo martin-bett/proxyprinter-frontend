@@ -364,3 +364,7 @@
 .button {
   margin-bottom: 15px;
 }
+.add-single-buttons {
+  display: flex;
+  gap: 8px;
+}

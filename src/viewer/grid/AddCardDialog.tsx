@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Divider, TextField, CircularProgress } from '@mui/material';
-import GalleryConfigDialog from '../../api/view/gallery/GalleryConfigDialog';
 import { Box } from '@mui/material';
-import { SearchResult } from '../../service/ApiFactory';
 
 export type CustomCardGridSettings = { rows: number; cols: number };
 
@@ -13,14 +11,14 @@ export type SaveCustomCardFn = (
   gridSettings?: CustomCardGridSettings
 ) => void;
 
-interface CustomCardDialogProps {
+interface AddCardDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: SaveCustomCardFn;
   searchForApis: (cardName: string) => Promise<void>;
 }
 
-const CustomCardDialog: React.FC<CustomCardDialogProps> = ({ open, onClose, onSave, searchForApis }) => {
+const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis }) => {
   const [gridRows, setGridRows] = useState(1);
   const [gridCols, setGridCols] = useState(1);
   const [cardName, setCardName] = useState('');
@@ -74,20 +72,9 @@ const CustomCardDialog: React.FC<CustomCardDialogProps> = ({ open, onClose, onSa
     setCardName('');
   };
 
-  const handleGalleryResults = (results: SearchResult[]) => {
-    console.log(results);
-    if (results) {
-      results.forEach(r => onSave(r.name, r.imageUrl, null));
-    }
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
   };
-
-  const handleWizardClose = () => {
-
-  }
 
   return (
     <>
@@ -103,8 +90,6 @@ const CustomCardDialog: React.FC<CustomCardDialogProps> = ({ open, onClose, onSa
           gap: 2 // Abstand zwischen den divs
         }}
       >
-        <Box sx={{ width: '45%' }}>
-
           <section className="modal-card-body">
             {/* Name Search Section */}
             <div className="box">
@@ -221,15 +206,6 @@ const CustomCardDialog: React.FC<CustomCardDialogProps> = ({ open, onClose, onSa
             </div>
 
           </section>
-        </Box>
-        <Box sx={{ width: '45%' }}>
-          <section>
-            <GalleryConfigDialog
-              onClose={handleWizardClose}
-              handleGalleryResults={handleGalleryResults}
-            />
-          </section>
-        </Box>
       </Box>
       {/* <footer className="modal-card-foot is-justify-content-flex-end">
         <Button
@@ -243,4 +219,4 @@ const CustomCardDialog: React.FC<CustomCardDialogProps> = ({ open, onClose, onSa
   );
 };
 
-export default CustomCardDialog;
+export default AddCardDialog;
