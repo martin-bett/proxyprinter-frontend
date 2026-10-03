@@ -340,3 +340,20 @@
   display: flex;
   gap: 8px;
 }
+
+/* Druckschärfe des Textfeldes (siehe service/quality/ImageQuality.ts) */
+.quality-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--surface);
+  box-shadow: 0 0 2px var(--shadow);
+  z-index: 2;
+}
+.quality-good { background-color: var(--success); }
+.quality-ok { background-color: var(--warning); }
+.quality-poor { background-color: var(--danger); }
+.quality-unknown { background-color: var(--text-muted); }
