@@ -1,4 +1,5 @@
 import { ImageQuality } from "../quality/ImageQuality";
+import { throttledFetch } from "../RequestThrottle";
 
 const DB_NAME = "mtg_cache_db";
 const DB_VERSION = 2;
@@ -49,6 +50,20 @@ export interface QueueSnapshotEntry {
   url: string;
   priority: number;
   category?: string;
+}
+
+// Höchstens so viele Bilder gleichzeitig über das Backend laden
+const MAX_CONCURRENT_PROXY_LOADS = 4;
+
+/** Lädt ein Bild über /api/proxy/image (gleiche Origin, also CORS-sauber), gedrosselt pro Ziel-Host. */
+export async function fetchImageViaProxy(url: string): Promise<Blob> {
+  const response = await throttledFetch(
+    "/api/proxy/image",
+    { method: "GET", cache: "no-store", headers: { "X-Target-URL": url } },
+    url
+  );
+  if (!response.ok) throw new Error(`Proxy-Fehler ${response.status} für ${url}`);
+  return response.blob();
 }
 
 export interface QueueNumbers {
@@ -120,6 +135,8 @@ async function getFromIndexedDB(cacheKey: string): Promise<ImageCacheDbEntry | u
 class ImageLoaderService {
   private queue: QueueEntry[] = [];
   private activeLoads = 0;
+  private activeProxyLoads = 0;
+  private proxyImageApis: Set<string> = new Set();
   private activeCacheLoads = 0;
   private maxConcurrent: number;
   private subscribers: Set<() => void> = new Set();
@@ -175,6 +192,15 @@ class ImageLoaderService {
     } catch (e) { }
   }
 
+  /** API-Namen, deren Bilder über das Backend geladen werden (Feld "Proxy Images" der API-Config). */
+  setProxyImageApis(apiNames: string[]): void {
+    this.proxyImageApis = new Set(apiNames);
+  }
+
+  usesProxy(cardInput?: CacheCardInput): boolean {
+    return !!cardInput?.apiName && this.proxyImageApis.has(cardInput.apiName);
+  }
+
   private _makeCacheKey(cardInput: CacheCardInput): string {
     return `${cardInput.apiName || "NOAPI"}::${cardInput.name || "NONAME"}::${cardInput.imageUrl || ""}`;
   }
@@ -185,7 +211,9 @@ class ImageLoaderService {
     if (cached) {
       // Wenn img noch nicht geladen, aus Blob erzeugen, sonst Fallback: Bild-URL laden
       this.activeCacheLoads++;
-      const load = cached.blob ? this._createImageFromBlob(cached.blob) : this._createImageFromUrl(cached.imageUrl);
+      const load = cached.blob
+        ? this._createImageFromBlob(cached.blob)
+        : this._createImageFromUrl(cached.imageUrl, this.usesProxy(cardInput));
       load.then(img => {
         if (img) {
           onLoad(img, cached.sizeBytes);
@@ -243,43 +271,64 @@ class ImageLoaderService {
   }
 
   processQueue(): void {
-    while (this.activeLoads < this.maxConcurrent && this.queue.length > 0) {
-      const { url, onLoad, onError, onProcessListChange, cardInput } = this.queue.shift()!;
+    while (this.activeLoads < this.maxConcurrent) {
+      // Proxy-Bilder haben ein eigenes, kleineres Limit; solange es voll ist, kommen direkte Bilder dran.
+      const index = this.queue.findIndex(entry =>
+        !this.usesProxy(entry.cardInput) || this.activeProxyLoads < MAX_CONCURRENT_PROXY_LOADS
+      );
+      if (index < 0) break;
+      const [{ url, onLoad, onError, onProcessListChange, cardInput }] = this.queue.splice(index, 1);
+      const proxied = this.usesProxy(cardInput);
       this.activeLoads++;
+      if (proxied) this.activeProxyLoads++;
       this.notifyAllStatuses();
 
-      const img = new window.Image();
-      img.crossOrigin = "Anonymous";
-      img.src = url;
+      const finish = () => {
+        this.activeLoads--;
+        if (proxied) this.activeProxyLoads--;
+        this.notifyAllStatuses();
+        this.processQueue();
+      };
 
-      img.onload = async () => {
-        let sizeBytes = 0;
-        let blob: Blob | null = null;
-        try {
-          const response = await fetch(url, { mode: "cors" });
-          blob = await response.blob();
-          sizeBytes = blob.size;
-        } catch (e) { }
+      const load = proxied ? this._loadViaProxy(url) : this._loadDirect(url);
+      load.then(async ({ img, blob }) => {
+        const sizeBytes = blob?.size || 0;
         const cacheKey = this._makeCacheKey(cardInput || {});
         const cacheEntry: ImageCacheDbEntry = { sizeBytes, cardInput, timestamp: Date.now(), cacheKey, imageUrl: url, blob };
         await saveToIndexedDB(cacheEntry);
         await this._enforceCacheLimit();
         onLoad(img, sizeBytes);
-        this.activeLoads--;
-        this.notifyAllStatuses();
         this.notifySubscribers();
-        this.processQueue();
-      };
-
-      img.onerror = (err) => {
+      }, (err) => {
         onError?.(err);
-        this.activeLoads--;
-        this.notifyAllStatuses();
-        this.processQueue();
-      };
+      }).finally(finish);
 
       onProcessListChange?.("LOADING");
     }
+  }
+
+  private _loadDirect(url: string): Promise<{ img: HTMLImageElement; blob: Blob | null }> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = async () => {
+        let blob: Blob | null = null;
+        try {
+          const response = await fetch(url, { mode: "cors" });
+          blob = await response.blob();
+        } catch (e) { }
+        resolve({ img, blob });
+      };
+      img.onerror = (err) => reject(err);
+      img.src = url;
+    });
+  }
+
+  private async _loadViaProxy(url: string): Promise<{ img: HTMLImageElement; blob: Blob | null }> {
+    const blob = await fetchImageViaProxy(url);
+    const img = await this._createImageFromBlob(blob);
+    if (!img) throw new Error("Proxy-Bild konnte nicht dekodiert werden");
+    return { img, blob };
   }
 
   private _createImageFromBlob(blob: Blob): Promise<HTMLImageElement | null> {
@@ -292,12 +341,14 @@ class ImageLoaderService {
     });
   }
 
-  private _createImageFromUrl(url: string): Promise<HTMLImageElement | null> {
-    return fetch(url, { mode: "cors" })
-      .then(response => {
+  private _createImageFromUrl(url: string, proxied = false): Promise<HTMLImageElement | null> {
+    const blob = proxied
+      ? fetchImageViaProxy(url)
+      : fetch(url, { mode: "cors" }).then(response => {
         if (!response.ok) throw new Error("Image fetch failed");
         return response.blob();
-      })
+      });
+    return blob
       .then(blob => {
         return new Promise<HTMLImageElement | null>((resolve) => {
           const img = new window.Image();
@@ -433,7 +484,7 @@ class ImageLoaderService {
       return await this._createImageFromBlob(entry.blob);
     }
     // Fallback: Bild-URL laden
-    return await this._createImageFromUrl(entry.imageUrl);
+    return await this._createImageFromUrl(entry.imageUrl, this.usesProxy(entry.cardInput));
   }
 
   // Entfernt einen Eintrag aus der Queue anhand des cacheKeys

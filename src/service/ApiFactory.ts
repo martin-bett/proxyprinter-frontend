@@ -43,6 +43,8 @@ export interface ApiConfig extends BaseConfig {
   //Custom Request
   csrfTokenVariableName?: string;
   requiresCsrfToken?: boolean;
+  // Bilder über /api/proxy/image laden (Host ohne CORS-Header)
+  proxyImages?: boolean;
  
 
   //Datalocator

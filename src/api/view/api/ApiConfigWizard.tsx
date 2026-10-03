@@ -28,6 +28,7 @@ export interface ApiConfigFormState {
   csrfTokenVariableName: string;
   requiresCsrfToken: boolean;
   useBackendProxy: boolean;
+  proxyImages: boolean;
   paginationField: string;
   dataListField: string;
   nameField: string;
@@ -73,6 +74,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     csrfTokenVariableName: '',
     requiresCsrfToken: false,
     useBackendProxy: false,
+    proxyImages: false,
     paginationField: '',
     dataListField: '',
     nameField: '',
@@ -312,6 +314,14 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
                 type="checkbox"
                 name="useBackendProxy"
                 checked={config.useBackendProxy}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label title="Bilder dieser API über das Backend laden (für Hosts ohne CORS-Header)">Proxy Images:</label>
+              <input
+                type="checkbox"
+                name="proxyImages"
+                checked={!!config.proxyImages}
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />
