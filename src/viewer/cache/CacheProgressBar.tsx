@@ -11,7 +11,7 @@ export function CacheProgressBar({ onClick }: CacheProgressBarProps) {
   const cacheLimit = imageLoaderService.cacheLimit;
   const percent = Math.min(100, Math.round((totalSize / cacheLimit) * 100));
   const color =
-    percent > 90 ? "#e74c3c" : percent > 70 ? "#f1c40f" : "#2ecc71";
+    percent > 90 ? "var(--danger)" : percent > 70 ? "var(--warning)" : "var(--success)";
 
   return (
     <div
@@ -20,10 +20,10 @@ export function CacheProgressBar({ onClick }: CacheProgressBarProps) {
         cursor: "pointer",
         width: 180,
         height: 18,
-        background: "#eee",
+        background: "var(--track)",
         borderRadius: 8,
         overflow: "hidden",
-        border: "1px solid #bbb",
+        border: "1px solid var(--border)",
         position: "relative",
         userSelect: "none",
       }}
@@ -45,7 +45,7 @@ export function CacheProgressBar({ onClick }: CacheProgressBarProps) {
           width: "100%",
           textAlign: "center",
           fontSize: 12,
-          color: "#222",
+          color: "var(--text)",
           fontWeight: 600,
           lineHeight: "18px",
           pointerEvents: "none",

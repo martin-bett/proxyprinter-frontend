@@ -382,7 +382,7 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, fixe
             }}
             sx={{
               "&.Mui-selected": {
-                backgroundColor: "rgba(0, 0, 0, 0.1)", // Farbe für den ausgewählten Zustand
+                backgroundColor: "var(--shadow)", // Farbe für den ausgewählten Zustand
               },
             }}
           >

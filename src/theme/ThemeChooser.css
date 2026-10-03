@@ -1,0 +1,21 @@
+.theme-chooser-button {
+  gap: 0.4rem;
+}
+
+.theme-swatch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 0.5rem;
+}
+
+.theme-swatch span {
+  display: inline-block;
+  width: 12px;
+  height: 20px;
+}
+
+.theme-chooser-check {
+  margin-left: 1rem;
+}

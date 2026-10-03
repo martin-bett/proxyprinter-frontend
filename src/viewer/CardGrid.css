@@ -57,7 +57,7 @@
 
 .card-tile {
   text-align: center;
-  border: solid 1px hsl(283, 88%, 20%);
+  border: solid 1px var(--card-border);
   padding: 5px;
   border-radius: 5%;
 }
@@ -82,7 +82,7 @@
   object-position: center; /* Bild wird zentriert */
 }
 .custom-card {
-  border: 1px solid green;
+  border: 1px solid var(--success);
   padding: 2px;
 }
 
@@ -93,8 +93,8 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.7); /* Hintergrund für bessere Lesbarkeit */
-  color: white;
+  background-color: var(--overlay-bg); /* Hintergrund für bessere Lesbarkeit */
+  color: var(--text-inverse);
   padding: 8px;
   width: 100%;
   font-size: x-small;
@@ -106,8 +106,8 @@
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-top: 4px solid #3498db;
+  border: 4px solid var(--shadow);
+  border-top: 4px solid var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   top: 50%;
@@ -142,13 +142,13 @@
 
 /* Der Scrollbalken (der eigentliche Balken) */
 .card-grid::-webkit-scrollbar-thumb {
-  background: white; /* Farbe des Scrollbalkens (weiß) */
+  background: var(--scrollbar);
   border-radius: 3px; /* Optionale Abrundung der Ecken */
 }
 
 /* Optional: Hover-Effekt für den Scrollbalken */
 .card-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.7); /* Hellerer weißer Balken beim Hover */
+  background: var(--scrollbar-hover);
 }
 
 .card-name {
@@ -170,7 +170,7 @@
 .progress-bar {
   width: 100%;
   height: 20px;
-  background-color: #f0f0f0;
+  background-color: var(--track);
   border-radius: 10px;
   margin-bottom: 20px;
   overflow: hidden;
@@ -183,7 +183,7 @@
 
 .progress {
   height: 100%;
-  background-color: #4CAF50;
+  background-color: var(--success);
   transition: width 0.5s ease-in-out;
 }
 
@@ -211,7 +211,8 @@
 
 .decklist-input textarea {
   font-size: 1rem;           /* Etwas kleiner als "large" */
-  background-color: rgb(214, 238, 248);
+  background-color: var(--input-bg);
+  color: var(--text);
   padding-left: 10px;
   width: 100%;              /* Feste Breite */
   height: 380px;             /* Feste Höhe */
@@ -230,14 +231,14 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: black;
+  color: var(--text);
 }
 
 .log {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   padding: 10px;
   overflow-y: auto;
-  background-color: rgb(214, 238, 248);
+  background-color: var(--input-bg);
   max-height: 20vh;
   min-height: 20vh;
 }
@@ -268,7 +269,7 @@
   max-height: 400px;
   overflow-y: auto;
   margin-bottom: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 
@@ -290,7 +291,7 @@
 }
 
 .remove-card {
-  color: red;
+  color: var(--danger);
   cursor: pointer;
   margin-right: 5px;
   font-weight: bold;
@@ -308,7 +309,7 @@
 
 
 .dialog-content {
-  background-color: white;
+  background-color: var(--surface);
   padding: 20px;
   border-radius: 5px;
 }

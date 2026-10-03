@@ -2,16 +2,29 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { AppThemeProvider, applyThemeToDocument } from './theme/ThemeContext';
+import { getThemeById } from './theme/themes';
 import reportWebVitals from './reportWebVitals';
 
 const container = document.getElementById('root');
 if (!container) {
   throw new Error("Root element with id 'root' not found");
 }
+// Gespeichertes Farbschema vor dem ersten Rendern setzen, damit nichts aufblitzt
+let storedThemeId: string | null = null;
+try {
+  storedThemeId = localStorage.getItem('appTheme');
+} catch {
+  // localStorage nicht verfügbar
+}
+applyThemeToDocument(getThemeById(storedThemeId));
+
 const root = ReactDOM.createRoot(container);
 root.render(
   <React.StrictMode>
-    <App />
+    <AppThemeProvider>
+      <App />
+    </AppThemeProvider>
   </React.StrictMode>
 );
 

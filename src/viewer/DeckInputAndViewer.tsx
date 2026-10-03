@@ -23,6 +23,7 @@ import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
 import AddCardButton from './grid/AddCardButton';
 import VersionInfo from './info/VersionInfo';
+import ThemeChooser from '../theme/ThemeChooser';
 import { Minus, Plus } from 'lucide-react';
 import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
@@ -1137,6 +1138,7 @@ const DeckInputAndViewer: React.FC = () => {
       </div>
 
       <div className="bottom">
+        <div><ThemeChooser /></div>
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
         <div><VersionInfo /></div>

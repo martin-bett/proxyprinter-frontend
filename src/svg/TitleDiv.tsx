@@ -40,7 +40,7 @@ const TitleDiv: React.FC = () => {
         height="140"
         viewBox={`0 0 ${cardCount * CARD_SPACING} 140`}
         xmlns="http://www.w3.org/2000/svg"
-        style={{ display: "block" }}
+        style={{ display: "block", color: "var(--text)" }}
       >
         {labels.map((label, i) => (
           <g
@@ -54,7 +54,7 @@ const TitleDiv: React.FC = () => {
               height="120"
               rx="10"
               fill="none"
-              stroke="black"
+              stroke="currentColor"
               strokeWidth="2"
             />
             {label && (
@@ -63,7 +63,7 @@ const TitleDiv: React.FC = () => {
                 y="95"
                 fontFamily="Arial Black"
                 fontSize="48"
-                fill="black"
+                fill="currentColor"
               >
                 {label}
               </text>

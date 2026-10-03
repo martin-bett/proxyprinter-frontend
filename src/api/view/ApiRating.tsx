@@ -152,10 +152,10 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                stroke: starScore <= (hoverScore || score) ? 'var(--rating)' : 'var(--border)',
+                fill: starScore <= (hoverScore || score) ? 'var(--rating)' : 'transparent'
               }}
-              stroke={starScore <= (hoverScore || score) ? '#3b82f6' : '#dbdbdb'}
-              fill={starScore <= (hoverScore || score) ? '#3b82f6' : 'transparent'}
             />
           </div>
         ))}
