@@ -98,6 +98,9 @@ const DeckInputAndViewer: React.FC = () => {
 
   useEffect(() => {
     setApiFactory(new ApiFactory(apiConfigs));
+    imageLoaderService.setProxyImageApis(
+      Object.values(apiConfigs).filter(config => (config as ApiConfig).proxyImages).map(config => config.name)
+    );
   }, [apiConfigs]);
 
   useEffect(() => {

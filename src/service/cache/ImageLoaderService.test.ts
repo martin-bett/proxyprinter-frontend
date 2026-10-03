@@ -1,0 +1,109 @@
+// Minimaler IndexedDB-Ersatz für jsdom: nur was ImageLoaderService benutzt.
+const stores = new Map<string, any>();
+const request = (result?: any) => {
+  const req: any = { result };
+  setTimeout(() => req.onsuccess?.({ target: req }), 0);
+  return req;
+};
+(global as any).indexedDB = {
+  open: () => {
+    const db = {
+      objectStoreNames: { contains: () => true },
+      transaction: () => ({
+        objectStore: () => ({
+          put: (entry: any) => { stores.set(entry.cacheKey, entry); },
+          delete: (key: string) => { stores.delete(key); },
+          clear: () => stores.clear(),
+          get: (key: string) => request(stores.get(key)),
+          getAll: () => request([...stores.values()]),
+        }),
+      }),
+    };
+    return request(db);
+  },
+};
+(global as any).URL.createObjectURL = () => "blob:test";
+class FakeImage {
+  onload: (() => void) | null = null;
+  onerror: ((e: unknown) => void) | null = null;
+  crossOrigin = "";
+  set src(_: string) { setTimeout(() => this.onload?.(), 0); }
+}
+(window as any).Image = FakeImage;
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { imageLoaderService } = require("./ImageLoaderService");
+
+describe("ImageLoaderService mit Proxy Images", () => {
+  let pending: (() => void)[] = [];
+  let maxParallel = 0;
+  let calls: { input: string; target?: string }[] = [];
+
+  beforeEach(() => {
+    pending = [];
+    maxParallel = 0;
+    calls = [];
+    (global as any).fetch = jest.fn((input: string, init?: RequestInit) => {
+      const target = (init?.headers as Record<string, string> | undefined)?.["X-Target-URL"];
+      calls.push({ input, target });
+      return new Promise(resolve => {
+        pending.push(() => resolve({
+          ok: true,
+          status: 200,
+          headers: { get: () => null },
+          blob: () => Promise.resolve({ size: 10 }),
+          clone() { return this; },
+        }));
+        maxParallel = Math.max(maxParallel, pending.length);
+      });
+    });
+  });
+
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+
+  it("lädt Bilder einer Proxy-API über /api/proxy/image, höchstens 4 gleichzeitig", async () => {
+    imageLoaderService.setProxyImageApis(["LowRes"]);
+    const loaded: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const url = `https://img.example.com/${i}.jpg`;
+      await imageLoaderService.addToQueue({
+        url,
+        priority: 1,
+        cardInput: { apiName: "LowRes", name: `Karte ${i}`, imageUrl: url },
+        onLoad: () => loaded.push(url),
+      });
+    }
+    // Drosselung pro Host (100ms) abwarten, bis alle freien Plätze angefragt haben
+    for (let i = 0; i < 10 && pending.length < 4; i++) await new Promise(r => setTimeout(r, 120));
+
+    expect(calls.every(c => c.input === "/api/proxy/image")).toBe(true);
+    expect(calls[0].target).toBe("https://img.example.com/0.jpg");
+    expect(pending.length).toBe(4);
+
+    while (loaded.length < 6) {
+      pending.splice(0).forEach(resolve => resolve());
+      await new Promise(r => setTimeout(r, 150));
+    }
+    expect(maxParallel).toBe(4);
+    expect(imageLoaderService.getQueueNumbers()).toEqual({ queued: 0, active: 0, cacheLoading: 0 });
+  });
+
+  it("andere APIs laden weiter direkt", async () => {
+    imageLoaderService.setProxyImageApis(["LowRes"]);
+    const url = "https://cards.example.com/a.jpg";
+    let done = false;
+    await imageLoaderService.addToQueue({
+      url,
+      priority: 1,
+      cardInput: { apiName: "Scryfall", name: "Direkt", imageUrl: url },
+      onLoad: () => { done = true; },
+    });
+    await flush();
+    await flush();
+    expect(calls[0]).toEqual({ input: url, target: undefined });
+    pending.splice(0).forEach(resolve => resolve());
+    for (let i = 0; i < 5 && !done; i++) await flush();
+    expect(done).toBe(true);
+  });
+});
+export {};

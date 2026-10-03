@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { imageLoaderService } from "../../service/cache/ImageLoaderService";
+import { fetchImageViaProxy, imageLoaderService } from "../../service/cache/ImageLoaderService";
 import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
@@ -181,21 +181,11 @@ const CardImage: React.FC<CardImageProps> = ({
           },
           onError: (error) => {
             if (stale()) return;
-            if (!tryProxy) {
+            // Lief das Bild schon über den Proxy (Feld "Proxy Images"), bringt ein zweiter Versuch nichts
+            if (!tryProxy && !imageLoaderService.usesProxy(card)) {
               // Erster Versuch fehlgeschlagen, jetzt Proxy probieren
               setProxyTried(true);
-              // Proxy-URL holen
-              fetch("/api/proxy/image", {
-                method: "GET",
-                cache: "no-store",
-                headers: {
-                  "X-Target-URL": url,
-                },
-              })
-                .then((response) => {
-                  if (!response.ok) throw new Error("Proxy-Fehler: " + response.statusText);
-                  return response.blob();
-                })
+              fetchImageViaProxy(url)
                 .then((blob) => {
                   const proxyUrl = URL.createObjectURL(blob);
                   // Bild aus Blob laden
