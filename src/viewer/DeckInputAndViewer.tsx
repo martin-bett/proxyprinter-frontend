@@ -939,14 +939,18 @@ const DeckInputAndViewer: React.FC = () => {
 
       <div className="input-controls">
         <div className="api-controls">
-          <div className="api-controls">
-            <h3 className='title is-5'>API Controls</h3>
-            <button className="button" onClick={handleOpenApiConfigDialog}><SettingsIcon />Manage Apis</button>
-
-          </div>
-
           <div className="api-toggles checkbox-group">
-            <h3 className="text-lg font-semibold mb-4 title is-4">API Selection</h3>
+            <h3 className="title is-4 api-selection-header">
+              <button
+                type="button"
+                className="api-manage-button"
+                onClick={handleOpenApiConfigDialog}
+                title="Manage APIs"
+              >
+                API Selection
+                <SettingsIcon className="api-manage-icon" fontSize="small" />
+              </button>
+            </h3>
             {Object.entries(categoryStates).map(([category]) => (
               <div key={category} className="mb-4">
                 {renderCheckbox(

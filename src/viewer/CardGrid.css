@@ -361,3 +361,39 @@
   display: flex;
   gap: 8px;
 }
+
+.checkbox-group .api-selection-header {
+  margin-bottom: 5px;
+}
+
+.api-manage-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 6px;
+  margin-left: -6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+
+.api-manage-button .api-manage-icon {
+  color: var(--text-muted);
+  transition: color 0.15s, transform 0.3s;
+}
+
+.api-manage-button:hover,
+.api-manage-button:focus-visible {
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
+.api-manage-button:hover .api-manage-icon,
+.api-manage-button:focus-visible .api-manage-icon {
+  color: var(--accent);
+  transform: rotate(45deg);
+}
