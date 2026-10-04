@@ -458,3 +458,8 @@
 .right-toolbar .collapsible-header {
   font-size: 0.9rem;
 }
+
+/* API Selection ist einklappbar: Abstand kommt vom Abschnitt, nicht zusätzlich von der Gruppe */
+.api-toggles.checkbox-group {
+  margin-bottom: 0;
+}
