@@ -9,6 +9,7 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import { Config } from '../../../service/ApiFactory';
+import DefaultLanguageSelect from '../DefaultLanguageSelect';
 
 /** Draft state of the config-editing form. Loosely typed on purpose: it mirrors
  * whatever the (untyped) backend config-object looks like, and every input
@@ -34,7 +35,7 @@ export interface ApiConfigFormState {
   nameField: string;
   imageUrlField: string;
   languageField: string;
-  assumeEnglish: boolean;
+  defaultLanguage: string;
   setField: string;
   nameSplitCharacter: string;
   setNumberField: string;
@@ -84,7 +85,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     nameField: '',
     imageUrlField: '',
     languageField: '',
-    assumeEnglish: false,
+    defaultLanguage: '',
     setField: '',
     nameSplitCharacter: '',
     setNumberField: '',
@@ -384,14 +385,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />
-              <label title="Karten ohne Sprachangabe automatisch als Englisch markieren">Assume English:</label>
-              <input
-                type="checkbox"
-                name="assumeEnglish"
-                checked={!!config.assumeEnglish}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
+              <DefaultLanguageSelect value={config.defaultLanguage} onChange={handleInputChange} disabled={!isOwner} />
               <label>Set Field:</label>
               <input
                 type="text"

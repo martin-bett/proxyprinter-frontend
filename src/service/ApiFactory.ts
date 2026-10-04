@@ -34,6 +34,9 @@ interface BaseConfig {
 
   paginationLinkField?:string;
   paginationMaxPageField?:string;
+
+  // Sprache (ISO-639-1) für Karten ohne Sprachangabe, z. B. "en"
+  defaultLanguage?: string;
 }
 
 export interface ApiConfig extends BaseConfig {
@@ -51,8 +54,6 @@ export interface ApiConfig extends BaseConfig {
   nameSplitCharacter?: string;
  
   languageField?: string;
-  // Karten ohne Sprachangabe als Englisch markieren (Quelle liefert keine Sprache)
-  assumeEnglish?: boolean;
   setField?: string;
   setNumberField?: string;
 
@@ -474,10 +475,9 @@ export default class ApiFactory {
   }
 
   private baseLanguage(item: any, config: Config): string | undefined {
-    if (!isApiConfig(config)) return undefined;
-    const raw = config.languageField ? this.getValue(item, config, config.languageField) : undefined;
+    const raw = isApiConfig(config) && config.languageField ? this.getValue(item, config, config.languageField) : undefined;
     if (raw) return this.normalizeLanguageName(String(raw));
-    return config.assumeEnglish ? ISO6391.getName('en') : undefined;
+    return config.defaultLanguage ? this.normalizeLanguageName(config.defaultLanguage) : undefined;
   }
 
   private extractLastLink(srcset: string): string {
