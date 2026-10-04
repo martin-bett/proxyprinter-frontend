@@ -3,12 +3,14 @@
   padding: 20px;
   display: grid;
   grid-template-columns: 1.7fr 10fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     "headline headline headline"
-    "input-controls decklist-viewer view-selection"
-    "input-controls decklist-viewer pdf-controls"
-    "input-controls decklist-viewer bottom";
+    "input-controls decklist-viewer right-toolbar";
   gap: 20px;
+  /* Feste Höhe, damit die rechte Toolbar bei zu viel Inhalt scrollt statt abgeschnitten zu werden */
+  box-sizing: border-box;
+  height: calc(100 * var(--vh));
 }
 
 .headline{
@@ -27,16 +29,19 @@
   grid-area: decklist-viewer;
 }
 
-.view-selection {
-  grid-area: view-selection;
+.right-toolbar {
+  grid-area: right-toolbar;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.bottom {
-  grid-area: bottom;
-}
-
-.pdf-controls {
-  grid-area: pdf-controls;
+/* Spenden/GitHub/Version bleiben unten, solange Platz ist */
+.right-toolbar .bottom {
+  margin-top: auto;
 }
 
 .card-tiles {
