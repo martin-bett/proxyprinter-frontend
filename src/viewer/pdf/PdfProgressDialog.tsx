@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import './PdfProgressDialog.css';
+import ProgressBar from '../../components/progress/ProgressBar';
 
 export type ProgressCategory = 'queued' | 'download' | 'build' | 'finishing';
 
@@ -109,7 +110,7 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
                 </span>
               </div>
               {category === 'queued' ? (
-                <div className="pdf-progress-queue">
+                <div className={`pdf-progress-queue${state === 'is-pending' ? ' app-progress-pending-stripes' : ''}`}>
                   <div
                     className="pdf-progress-queue-ball"
                     style={{
@@ -119,12 +120,11 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
                   />
                 </div>
               ) : (
-                <div className="pdf-progress-track">
-                  <div
-                    className={`pdf-progress-fill${indeterminate ? ' is-indeterminate' : ''}`}
-                    style={{ width: indeterminate || failed ? '100%' : `${ratio * 100}%` }}
-                  />
-                </div>
+                <ProgressBar
+                  value={ratio}
+                  indeterminate={indeterminate}
+                  state={failed ? 'error' : passed ? 'done' : active ? 'active' : 'pending'}
+                />
               )}
             </div>
           );

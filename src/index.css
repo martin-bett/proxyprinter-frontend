@@ -12,3 +12,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Schieberegler (z. B. Grid Size) in der Akzentfarbe des Themes */
+input[type="range"] {
+  accent-color: var(--accent);
+}
