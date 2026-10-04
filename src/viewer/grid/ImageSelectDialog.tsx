@@ -26,6 +26,10 @@ const qualityFilterOf = (result: CardResult): QualityFilter => {
   return rating === 'good' || rating === 'ok' || rating === 'poor' ? rating : 'unrated';
 };
 
+const FilterCount: React.FC<{ count: number }> = ({ count }) => (
+  <span className={`filter-count ${count === 0 ? 'is-empty' : ''}`} title={`${count} Bilder`}>{count}</span>
+);
+
 interface ImageSelectDialogProps {
   open: boolean;
   onClose: (selectedImage: CardResult | null) => void;
@@ -66,6 +70,26 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     });
     return languages;
   }, [groupedResults]);
+
+  // Zähler je Filterwert: wie viele Bilder zu sehen wären, wenn der Wert an ist.
+  // Die jeweils anderen Filtergruppen gelten mit, die eigene Gruppe nicht.
+  // Ohne useMemo, weil die Schärfe-Bewertung erst nach dem Laden in die Ergebnisse geschrieben wird.
+  const languageCounts = new Map<string, number>();
+  const apiCounts = new Map<string, number>();
+  const qualityCounts = new Map<QualityFilter, number>();
+  const increment = <K,>(counts: Map<K, number>, key: K) => counts.set(key, (counts.get(key) ?? 0) + 1);
+  Object.entries(groupedResults).forEach(([apiName, results]) => {
+    const apiVisible = dialogVisibleApis.has(apiName);
+    results.forEach(result => {
+      const language = result.languageCode || NO_LANGUAGE;
+      const quality = qualityFilterOf(result);
+      const languageVisible = dialogVisibleLanguages.has(language);
+      const qualityVisible = visibleQualities.has(quality);
+      if (apiVisible && qualityVisible) increment(languageCounts, language);
+      if (languageVisible && qualityVisible) increment(apiCounts, apiName);
+      if (apiVisible && languageVisible) increment(qualityCounts, quality);
+    });
+  });
 
   const handleImageLoad = (result: CardResult, imageInfo: CardResult['imageInfo']) => {
     const before = qualityFilterOf(result);
@@ -189,6 +213,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   label={
                     <div className="label-container">
                       <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
+                      <FilterCount count={languageCounts.get(lang) ?? 0} />
                       <LanguageFlag language={lang} />
                     </div>
                   }
@@ -203,7 +228,12 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                 <ChoiceButton
                   key={apiName}
                   id={`select-api-${apiName}`}
-                  label={apiName}
+                  label={
+                    <div className="label-container">
+                      <span>{apiName}</span>
+                      <FilterCount count={apiCounts.get(apiName) ?? 0} />
+                    </div>
+                  }
                   checked={dialogVisibleApis.has(apiName)}
                   onChange={() => toggleApi(apiName)}
                 />
@@ -218,6 +248,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   label={
                     <div className="label-container">
                       <span>{label}</span>
+                      <FilterCount count={qualityCounts.get(key) ?? 0} />
                       <span className={`quality-dot-inline quality-${key === 'unrated' ? 'unknown' : key}`} />
                     </div>
                   }
