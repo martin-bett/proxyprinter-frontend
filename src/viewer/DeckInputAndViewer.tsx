@@ -6,6 +6,7 @@ import ProgressBar from '../components/progress/ProgressBar';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
+import { fetchPdfMailEnabled } from './pdf/pdfEmail';
 import { DEFAULT_MAX_PDF_SIZE_MB, PdfImageEntry, bytesToMb, estimatePdfBytes, fetchPdfSizeLimitMb, formatMb } from './pdf/pdfSizeLimit';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
@@ -589,8 +590,11 @@ const DeckInputAndViewer: React.FC = () => {
   }, [selectedCards, cardResults, uniquePrints]);
 
   const [pdfSizeLimitMb, setPdfSizeLimitMb] = useState(DEFAULT_MAX_PDF_SIZE_MB);
+  const [pdfMailEnabled, setPdfMailEnabled] = useState(false);
+  const pdfEmail = pdfMailEnabled ? settings.email.trim() : '';
   useEffect(() => {
     fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
+    fetchPdfMailEnabled().then(setPdfMailEnabled);
   }, []);
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
@@ -602,9 +606,11 @@ const DeckInputAndViewer: React.FC = () => {
     setPdfProgressError(null);
     setPdfProgressDialogOpen(true);
 
+    const { email, ...pdfSettings } = settings;
     const createPdfDto = {
       images: pdfImageEntries.map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
-      settings: settings
+      settings: pdfSettings,
+      ...(pdfEmail ? { email: pdfEmail } : {})
     };
     try {
       const response = await fetch('/api/pdf', {
@@ -1200,6 +1206,7 @@ const DeckInputAndViewer: React.FC = () => {
             onClose={handleCloseSettingsDialog}
             settings={settings}
             onSettingsChange={handleSettingsChange}
+            mailEnabled={pdfMailEnabled}
           />
         }
       />
@@ -1255,6 +1262,7 @@ const DeckInputAndViewer: React.FC = () => {
           errorMessage={pdfProgressError}
           onFinish={downloadPDF}
           onClose={closePdfProgressDialog}
+          email={pdfEmail}
         />
       </Dialog>
 
