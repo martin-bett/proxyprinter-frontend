@@ -13,7 +13,7 @@ const RED_FROM_PERCENT = 50;
 
 export const cacheFillColor = (percent: number): string => {
   const red = Math.round(Math.max(0, Math.min(1, (percent - RED_FROM_PERCENT) / (100 - RED_FROM_PERCENT))) * 100);
-  return red === 0 ? 'var(--accent)' : `color-mix(in srgb, var(--danger) ${red}%, var(--accent))`;
+  return red === 0 ? 'var(--accent)' : `color-mix(in oklab, var(--danger) ${red}%, var(--accent))`;
 };
 
 export function CacheProgressBar({ onClick, width = 180 }: CacheProgressBarProps) {
