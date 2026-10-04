@@ -17,6 +17,7 @@ import CardTitle from './grid/CardTitle';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
+import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
 import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
@@ -32,6 +33,7 @@ import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
+import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
@@ -41,6 +43,7 @@ import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } 
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
+import { splitCardFaces } from './cardFaces';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -82,9 +85,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [categoryStates, setCategoryStates] = useState<Record<string, boolean>>({});
   const [apiConfigs, setApiConfigs] = useState<Record<string, Config>>({}); // New state for API configs
   const [apiFactory, setApiFactory] = useState<ApiFactory | null>(null); // State for API factory
-  const [enabledApis, setEnabledApis] = useState<Record<string, boolean>>(() =>
-    Object.keys(apiConfigs).reduce((acc, key) => ({ ...acc, [apiConfigs[key].name]: true }), {})
-  );
+  const [enabledApis, setEnabledApis] = useState<Record<string, boolean>>({});
   const [selectedCards, setSelectedCards] = useState<SelectedCardsMap>({});
   const [currentCardName, setCurrentCardName] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
@@ -100,6 +101,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
+  const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
@@ -114,13 +116,34 @@ const DeckInputAndViewer: React.FC = () => {
   }, [apiConfigs]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('setConfigs');
-    console.log('storage content', saved);
+    const saved = loadSavedConfigs();
     if (saved) {
-      handleSaveApiConfigs(JSON.parse(saved));
+      handleSaveApiConfigs(saved);
+      // Gespeicherte Auswahl kann veraltet sein, aktuelle Fassung nachladen
+      fetchVisibleConfigs()
+        .then(fresh => {
+          const updated = refreshStoredSelection(fresh);
+          if (updated) handleSaveApiConfigs(updated);
+        })
+        .catch(error => console.error('Error refreshing configs:', error));
+    } else {
+      fetchAndSelectAllConfigs()
+        .then(handleSaveApiConfigs)
+        .catch(error => console.error('Error loading initial API configs:', error));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Neu hinzugekommene APIs sind standardmäßig aktiv, bestehende An/Aus-Zustände bleiben
+  useEffect(() => {
+    setEnabledApis(prev => {
+      const missing = Object.keys(apiConfigs).filter(name => !(name in prev));
+      if (missing.length === 0) return prev;
+      const updated = { ...prev };
+      missing.forEach(name => { updated[name] = true; });
+      return updated;
+    });
+  }, [apiConfigs]);
 
   // Filter options always reflect the current search results only
   const { languages: availableLanguages, apis: availableApis } = useMemo(
@@ -188,9 +211,34 @@ const DeckInputAndViewer: React.FC = () => {
     setApiConfigs(configsObject); // Update internal API configs state
   };
 
-  const handleSaveCustomCard: SaveCustomCardFn = async (cardName, imageUrl, file, gridSettings) => {
-    console.log(cardName, imageUrl, file, gridSettings);
+  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+    crops.forEach((crop, cropIndex) => {
+      // Eintrag in cardResults für jeden Zuschnitt
+      const cropKey = `${cardName}_crop${cropIndex}`;
+      const cropCard: CardResult = {
+        name: cardName,
+        imageUrl,
+        apiName: 'custom',
+        languageCode: NO_LANGUAGE,
+        cropSettings: crop,
+      };
 
+      setCardResults((prev) => ({
+        ...prev,
+        [cropKey]: {
+          count: 1,
+          results: [cropCard],
+        },
+      }));
+
+      setSelectedCards((prev) => ({
+        ...prev,
+        [cropKey]: [cropCard],
+      }));
+    });
+  };
+
+  const handleSaveCustomCard: SaveCustomCardFn = async (cardName, imageUrl, file, crops) => {
     let finalImageUrl: string | undefined;
     if (imageUrl) {
       finalImageUrl = imageUrl;
@@ -199,67 +247,22 @@ const DeckInputAndViewer: React.FC = () => {
       finalImageUrl = '/api/files/download/' + file;
     }
     if (!finalImageUrl) return;
+    const url = finalImageUrl;
 
-    const rows = gridSettings?.rows || 1;
-    const cols = gridSettings?.cols || 1;
-
-    // Bild laden, um die Dimensionen zu ermitteln
-    const img = new Image();
-    img.src = finalImageUrl;
-
-    img.onload = () => {
-      const { width, height } = img;
-
-      const cellWidth = Math.floor(width / cols);
-      const cellHeight = Math.floor(height / rows);
-
-      let cropIndex = 0; // Initialisieren des Indexes
-
-      // Berechnung der Crops
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const crop: CropSettings = {
-            offSetX: col * cellWidth,
-            offSetY: row * cellHeight,
-            width: cellWidth,
-            height: cellHeight,
-            isStretch: true
-          };
-
-          // Eintrag in cardResults für jedes Crop
-          const cropKey = `${cardName}_crop${cropIndex}`;
-          const cropCard: CardResult = {
-            name: cardName,
-            imageUrl: finalImageUrl!,
-            apiName: 'custom',
-            languageCode: NO_LANGUAGE,
-            cropSettings: crop,
-          };
-
-          // cardResults aktualisieren
-          setCardResults((prev) => ({
-            ...prev,
-            [cropKey]: {
-              count: 1,
-              results: [cropCard],
-            },
-          }));
-
-          // selectedCards aktualisieren
-          setSelectedCards((prev) => ({
-            ...prev,
-            [cropKey]: [cropCard],
-          }));
-
-          cropIndex++; // Index erhöhen für das nächste Crop
-        }
-      }
-
-    };
-
-    img.onerror = () => {
-      console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
-    };
+    if (crops && crops.length > 0) {
+      // Zuschnitte kommen fertig aus der Maske
+      addCustomCrops(cardName, url, crops);
+    } else {
+      // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+      };
+      img.onerror = () => {
+        console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
+      };
+    }
 
     handleCloseCustomCardDialog();
   };
@@ -312,6 +315,7 @@ const DeckInputAndViewer: React.FC = () => {
 
     const apiResults: Record<string, Record<string, SearchResult[]>> = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
+    markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
 
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
@@ -369,9 +373,9 @@ const DeckInputAndViewer: React.FC = () => {
     });
 
     // Combine results
-    const results: CardResultsMap = {};
+    const combinedResults: CardResultsMap = {};
     cardEntries.forEach(entry => {
-      results[entry.name] = {
+      combinedResults[entry.name] = {
         count: entry.count,
         results: enabledApiKeys.flatMap(apiKey => {
           const apiResultsForCard = apiResults[apiKey][entry.name] || [];
@@ -382,6 +386,8 @@ const DeckInputAndViewer: React.FC = () => {
         })
       };
     });
+    // Andere Seiten mehrseitiger Karten werden eigene Einträge
+    const results = splitCardFaces(combinedResults);
 
     const options = collectFilterOptions(results);
     setVisibleApis(options.apis);
@@ -838,6 +844,7 @@ const DeckInputAndViewer: React.FC = () => {
 
     const apiResults: Record<string, Record<string, SearchResult[]>> = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
+    markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
 
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
@@ -890,7 +897,7 @@ const DeckInputAndViewer: React.FC = () => {
     });
 
     // Combine results for the single card and transform into CardEntry objects
-    const results: CardResultsMap = {
+    const combinedResults: CardResultsMap = {
       [cardEntry.name]: {
         count: cardEntry.count,
         results: enabledApiKeys.flatMap(apiKey => {
@@ -902,6 +909,8 @@ const DeckInputAndViewer: React.FC = () => {
         })
       }
     };
+    // Andere Seiten mehrseitiger Karten werden eigene Einträge, sofern sie nicht schon in der Liste stehen
+    const results = splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name));
 
     // Make filter values that this card brings in for the first time visible
     const newOptions = collectFilterOptions(results);
@@ -971,6 +980,7 @@ const DeckInputAndViewer: React.FC = () => {
             <CollapsibleSection
               storageKey="api-selection"
               title="API Selection"
+              defaultOpen={false}
               action={{ icon: <SettingsIcon />, title: 'Manage APIs', onClick: handleOpenApiConfigDialog }}
             >
               {Object.entries(categoryStates).map(([category]) => (
@@ -1221,6 +1231,7 @@ const DeckInputAndViewer: React.FC = () => {
         }
         initialVisibleApis={visibleApis}
         initialVisibleLanguages={visibleLanguages}
+        cardAspect={settings.width / settings.height}
         groupedResults={
           currentCardName && cardResults[currentCardName]
             ? groupResultsByApi(cardResults[currentCardName].results || [])
@@ -1234,12 +1245,14 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={customCardDialogOpen}
         onClose={handleCloseCustomCardDialog}
-        maxWidth='sm'
+        maxWidth={customCardMaskOpen ? 'lg' : 'sm'}
         children={<AddCardDialog
           open={customCardDialogOpen}
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
           searchForApis={searchForApis}
+          cardAspect={settings.width / settings.height}
+          onMaskOpenChange={setCustomCardMaskOpen}
         />}
       />
       <ClosableDialog

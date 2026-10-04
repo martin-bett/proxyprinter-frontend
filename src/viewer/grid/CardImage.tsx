@@ -133,12 +133,10 @@ const CardImage: React.FC<CardImageProps> = ({
     };
   }, [isPermanent]);
 
-  // Weit genug weggescrollt: wartenden Download abbrechen und Bild freigeben
+  // Weit genug weggescrollt: Bild freigeben (der wartende Download wird beim Aufräumen des Lade-Effekts abgebrochen)
   useEffect(() => {
     if (isVisible || isPermanent || !card) return;
-    imageLoaderService.cancelQueued(card, QUEUE_CATEGORY_SELECT);
     qualityRun.current++;
-    loadRun.current++;
     imageRef.current = null;
     const canvas = canvasRef.current;
     if (canvas) {
@@ -166,6 +164,9 @@ const CardImage: React.FC<CardImageProps> = ({
       // Ergebnisse eines inzwischen entladenen Ladevorgangs ignorieren
       const run = loadRun.current;
       const stale = () => run !== loadRun.current;
+      // Karte wechselt (Filter), wird entladen oder verschwindet: wartenden Queue-Eintrag zurückziehen,
+      // damit er frisch eingeblendete Bilder nicht blockiert. Ein laufender Download wird trotzdem fertig.
+      const abort = new AbortController();
 
       // Hilfsfunktion für Bild laden (direkt oder via Proxy)
       const loadImage = (url: string, tryProxy = false, prevError: string | null = null) => {
@@ -174,6 +175,7 @@ const CardImage: React.FC<CardImageProps> = ({
           priority,
           cardInput: card,
           category: isPermanent ? QUEUE_CATEGORY_DECK : QUEUE_CATEGORY_SELECT,
+          signal: abort.signal,
           onLoad: (img) => {
             if (stale()) return;
             imageRef.current = img;
@@ -217,7 +219,8 @@ const CardImage: React.FC<CardImageProps> = ({
             } else {
               // Proxy auch fehlgeschlagen
               setIsLoading(false);
-              const combined = [prevError, String(error)].filter(Boolean).join(" | ");
+              const message = error instanceof Error ? error.message : String(error);
+              const combined = [prevError, message].filter(Boolean).join(" | ");
               setLastError(combined);
               if (onError) onError({ ...card!, error: combined });
             }
@@ -230,6 +233,11 @@ const CardImage: React.FC<CardImageProps> = ({
 
       // Starte mit dem normalen Bild
       loadImage(card.imageUrl, false, null);
+
+      return () => {
+        abort.abort();
+        loadRun.current++;
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card, priority, isVisible]);
@@ -377,6 +385,7 @@ const CardImage: React.FC<CardImageProps> = ({
         )}
         <div className="image-info">
           {isLoading && <div className="info-row">{status}</div>}
+          {!isLoading && lastError && <div className="info-row image-error">{lastError}</div>}
           {imageInfo && show && (
             <>
               <div className="info-row">

@@ -9,13 +9,14 @@ jest.mock('./CardImage', () => ({
 }));
 jest.mock('../../container/CropImageOverlay', () => ({ __esModule: true, default: () => null }));
 jest.mock('../../service/cache/ImageLoaderService', () => ({
-  imageLoaderService: { stopForFilters: jest.fn(), stopByCategory: jest.fn() },
+  imageLoaderService: { stopByCategory: jest.fn() },
 }));
 
-const card = (name: string, rating?: 'good' | 'ok' | 'poor' | 'unknown') =>
+const card = (name: string, rating?: 'good' | 'ok' | 'poor' | 'unknown', languageCode?: string, apiName = 'scryfall') =>
   ({
     name,
-    apiName: 'scryfall',
+    apiName,
+    languageCode,
     imageUrl: `https://example.org/${name}.jpg`,
     cropSettings: {},
     imageInfo: rating ? { quality: { rating, sharpness: 0, effectiveDpi: 0, edgeCoverage: 0, contrast: 0 } } : undefined,
@@ -37,10 +38,44 @@ it('blendet Bilder nach Druckschärfe aus', () => {
   );
   expect(shown()).toEqual(['scharf', 'weich', 'matsch', 'neu']);
 
-  fireEvent.click(screen.getByLabelText('Schlecht lesbar'));
+  fireEvent.click(screen.getByLabelText(/^Schlecht lesbar/));
   expect(shown()).toEqual(['scharf', 'weich', 'neu']);
 
-  fireEvent.click(screen.getByLabelText('Etwas weich'));
-  fireEvent.click(screen.getByLabelText('Nicht bewertet'));
+  fireEvent.click(screen.getByLabelText(/^Etwas weich/));
+  fireEvent.click(screen.getByLabelText(/^Nicht bewertet/));
   expect(shown()).toEqual(['scharf']);
+});
+
+const countOf = (id: string) =>
+  document.getElementById(id)!.closest('label')!.querySelector('.filter-count')!.textContent;
+
+it('zeigt an jedem Filterwert, wie viele Bilder dahinter stecken', () => {
+  render(
+    <ImageSelectDialog
+      open={true}
+      onClose={() => {}}
+      groupedResults={{
+        scryfall: [card('a', 'good', 'en'), card('b', 'poor', 'de'), card('c', undefined, 'en')],
+        mpc: [card('d', 'good', 'en', 'mpc'), card('e', 'good', undefined, 'mpc')],
+      }}
+      initialSelectedImage={null}
+      onImageLoadError={() => {}}
+      initialVisibleLanguages={new Set(['No Language', 'en', 'de'])}
+      initialVisibleApis={new Set(['scryfall', 'mpc'])}
+    />
+  );
+  expect(countOf('select-lang-en')).toBe('3');
+  expect(countOf('select-lang-de')).toBe('1');
+  expect(countOf('select-lang-No Language')).toBe('1');
+  expect(countOf('select-api-scryfall')).toBe('3');
+  expect(countOf('select-api-mpc')).toBe('2');
+  expect(countOf('select-quality-good')).toBe('3');
+  expect(countOf('select-quality-unrated')).toBe('1');
+
+  // Die anderen Gruppen zählen mit: ohne mpc bleiben weniger englische und gute Bilder
+  fireEvent.click(screen.getByLabelText(/^mpc/));
+  expect(countOf('select-lang-en')).toBe('2');
+  expect(countOf('select-quality-good')).toBe('1');
+  // Die eigene Gruppe nicht: mpc zeigt weiter, was beim Einschalten dazukäme
+  expect(countOf('select-api-mpc')).toBe('2');
 });

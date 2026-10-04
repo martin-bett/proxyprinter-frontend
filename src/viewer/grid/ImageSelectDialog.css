@@ -23,16 +23,57 @@
   grid-row: 1 / 3;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.image-select-dialog .crop-image-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.image-select-dialog .crop-image-tabs {
+  min-height: 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.image-select-dialog .crop-image-tabs .MuiTab-root {
+  min-height: 40px;
+  color: inherit;
+}
+
+.image-select-dialog .crop-image-tabs .Mui-selected {
+  color: var(--accent);
+}
+
+.image-select-dialog .crop-image-tabs .MuiTabs-indicator {
+  background-color: var(--accent);
+}
+
+.image-select-dialog .crop-image-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.image-select-dialog .crop-image-preview img {
+  max-width: 100%;
+  display: block;
+}
+
+.image-select-dialog .crop-image-info td:first-child {
+  font-weight: bold;
+  padding-right: 8px;
+}
+
+.image-select-dialog .crop-image-stretch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
 }
   
-.image-select-dialog .crop-settings {
-  flex-shrink: 0;
-  background: var(--surface-muted);
-  border-radius: 5px;
-  padding: 15px;
-  overflow: auto;
-  max-height: 200px;
-}
+
 
 .image-select-dialog .dialog-buttons {
   grid-column: 1 / 4;
@@ -55,22 +96,8 @@
   font-size: x-small;
 }
 
-.image-select-dialog .selected-image-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
-}
-  .image-select-dialog .selected-image-container img {
-    max-width: 100%;
-    max-height: 100%;
-    display:flex;
-    min-height: 100%;
-    min-width: 100%;
-    object-fit: contain;
-    opacity: 1;
-  }
+
+
   .image-select-dialog .image-grid-container {
     position: relative; /* Container als Referenz für absolute Positionierung */
     cursor: pointer;
@@ -144,31 +171,19 @@
     opacity: 1;
   }
 
-  .cropped-image-container {
-    position: relative;
-    width: 504px;
-    height: 704px;
-    margin: 10px;
-  }
-  
-  .ReactCrop__crop-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
+/* Anzahl der Bilder hinter einem Filterwert */
+.image-select-dialog .filter-count {
+  min-width: 1.6em;
+  padding: 0 0.4em;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
 
-
-
-  .ReactCrop {
-    min-width: 100%;
-    min-height: 100%;
-
-    img {
-      height: 100%;
-      width: auto;
-    }
-  }
-
-  
+.image-select-dialog .filter-count.is-empty {
+  opacity: 0.5;
+}
