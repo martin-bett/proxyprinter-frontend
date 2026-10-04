@@ -132,10 +132,12 @@ class ImageLoaderService {
   private subscribers: Set<() => void> = new Set();
   private _lastSnapshot: CacheSnapshot | null = null;
   cacheLimit = 1024 * 1024 * 1024; // 1 GB
+  /** Erfüllt, sobald der persistente Cache beim Start geprüft wurde (Tests warten darauf). */
+  readonly ready: Promise<void>;
 
   constructor(maxConcurrent = 10) {
     this.maxConcurrent = maxConcurrent;
-    this._initPersistentCache();
+    this.ready = this._initPersistentCache();
   }
 
   private async _initPersistentCache(): Promise<void> {
