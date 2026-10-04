@@ -26,3 +26,21 @@
 .theme-chooser-check {
   margin-left: 1rem;
 }
+
+.theme-chooser-mana {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px var(--shadow);
+}
+
+.theme-chooser-mana-empty {
+  display: inline-block;
+  box-shadow: none;
+}
+
+.theme-chooser-bar .MuiListItemIcon-root,
+.MuiMenuItem-root .MuiListItemIcon-root {
+  align-items: center;
+}

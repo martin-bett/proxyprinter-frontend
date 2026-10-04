@@ -29,6 +29,7 @@ import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
+import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
@@ -766,6 +767,13 @@ const DeckInputAndViewer: React.FC = () => {
     }));
   };
 
+  const getLanguageLabel = (lang: string) => (
+    <div className="label-container">
+      <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
+      <LanguageFlag language={lang} />
+    </div>
+  );
+
   const getApiConfigLabelForCheckbox = (config: Config) => {
     return (
       <div className="label-container">
@@ -1130,7 +1138,7 @@ const DeckInputAndViewer: React.FC = () => {
           <div className="language-filter checkbox-group">
             <h3 className='title is-5'>Language Filter</h3>
             {Array.from(availableLanguages).map(lang => (
-              renderCheckbox(lang, lang === NO_LANGUAGE ? 'No Language' : lang, visibleLanguages.has(lang), () => toggleLanguage(lang))
+              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang))
             ))}
           </div>
           <div className="api-filter checkbox-group">

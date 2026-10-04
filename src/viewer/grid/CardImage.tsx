@@ -5,6 +5,7 @@ import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
 import { CardResult } from "../../api/types/types";
 import { ImageQuality, qualityCacheKey, queueImageQuality } from "../../service/quality/ImageQuality";
+import LanguageFlag from "../../container/LanguageFlag";
 
 const RATING_LABEL: Record<ImageQuality["rating"], string> = {
   good: "gut lesbar",
@@ -363,11 +364,16 @@ const CardImage: React.FC<CardImageProps> = ({
           ref={canvasRef}
           style={{ display: isLoading ? "none" : "block" }}
         />
-        {!isLoading && quality && (
-          <span
-            className={`quality-dot quality-${quality.rating}`}
-            title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
-          />
+        {!isLoading && (quality || card?.languageCode) && (
+          <div className="card-badges">
+            <LanguageFlag language={card?.languageCode} />
+            {quality && (
+              <span
+                className={`quality-dot quality-${quality.rating}`}
+                title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
+              />
+            )}
+          </div>
         )}
         <div className="image-info">
           {isLoading && <div className="info-row">{status}</div>}
