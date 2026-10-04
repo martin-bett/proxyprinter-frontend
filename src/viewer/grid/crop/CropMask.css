@@ -138,3 +138,9 @@
     flex-basis: auto;
   }
 }
+
+/* Die Abdunklung ist ein SVG; manche globalen Regeln setzen width/height auf auto */
+.crop-mask .ReactCrop__crop-mask {
+  width: 100%;
+  height: 100%;
+}
