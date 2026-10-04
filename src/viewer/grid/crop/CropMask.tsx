@@ -39,6 +39,8 @@ type MaskMode = 'crop' | 'cut';
 type RectField = keyof PixelRect;
 
 const THUMB_HEIGHT = 110;
+/** Breite der Seitenleiste plus Abstand im side-Layout, muss zu CropMask.css passen. */
+const SIDE_PANEL_SPACE = 360 + 24;
 const ASPECT_TOLERANCE = 0.015;
 
 const numberField = (value: number, min: number) => Math.max(min, parseInt(String(value), 10) || min);
@@ -77,15 +79,16 @@ const CropMask: React.FC<CropMaskProps> = ({
   useLayoutEffect(() => {
     const box = boxRef.current;
     if (!box) return;
-    const measure = () => setBoxWidth(box.clientWidth);
+    // side: Bild und Seitenleiste stehen zusammen mittig, das Bild bekommt den Rest der Breite
+    const measure = () => setBoxWidth(Math.max(120, box.clientWidth - (layout === 'side' ? SIDE_PANEL_SPACE : 0)));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(measure);
     observer.observe(box);
     return () => observer.disconnect();
-  }, []);
+  }, [layout]);
 
-  const maxHeight = maxImageHeight ?? Math.round(window.innerHeight * (layout === 'side' ? 0.62 : 0.5));
+  const maxHeight = maxImageHeight ?? Math.round(window.innerHeight * (layout === 'side' ? 0.58 : 0.5));
   const display = natural && boxWidth > 0 ? fitDisplaySize(natural.width, natural.height, boxWidth, maxHeight) : null;
 
   const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -273,8 +276,8 @@ const CropMask: React.FC<CropMaskProps> = ({
   );
 
   return (
-    <div className={`crop-mask crop-mask--${layout}`}>
-      <div className="crop-mask-image" ref={boxRef}>
+    <div className={`crop-mask crop-mask--${layout}`} ref={boxRef}>
+      <div className="crop-mask-image">
         {!natural && !loadError && <CircularProgress size={32} />}
         {loadError && (
           <p className="help is-danger">Das Bild konnte nicht geladen werden. Bitte die URL prüfen.</p>
