@@ -113,7 +113,6 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
       }
       return newSet;
     });
-    updateLoaderService();
   };
 
   const toggleApi = (apiName: string) => {
@@ -126,14 +125,6 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
       }
       return newSet;
     });
-    updateLoaderService();
-  };
-
-  const updateLoaderService = () => {
-    const activeLanguages = new Set(dialogVisibleLanguages);
-    const activeApis = new Set(dialogVisibleApis);
-
-    imageLoaderService.stopForFilters(activeLanguages, activeApis);
   };
 
   const handleImageLoadError = (card: CardImageError) => {

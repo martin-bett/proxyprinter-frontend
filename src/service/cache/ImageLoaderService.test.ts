@@ -105,5 +105,48 @@ describe("ImageLoaderService mit Proxy Images", () => {
     for (let i = 0; i < 5 && !done; i++) await flush();
     expect(done).toBe(true);
   });
+
+  it("abgebrochene wartende Einträge verlassen die Queue, laufende Downloads werden fertig", async () => {
+    imageLoaderService.setProxyImageApis(["Queue"]);
+    const loaded: string[] = [];
+    const controllers: AbortController[] = [];
+    for (let i = 0; i < 6; i++) {
+      const url = `https://queue.example.com/${i}.jpg`;
+      const controller = new AbortController();
+      controllers.push(controller);
+      await imageLoaderService.addToQueue({
+        url,
+        priority: 1,
+        signal: controller.signal,
+        cardInput: { apiName: "Queue", name: `Abbruch ${i}`, imageUrl: url },
+        onLoad: () => loaded.push(url),
+      });
+    }
+    // 4 laufen (Proxy-Limit), 2 warten
+    expect(imageLoaderService.getQueueNumbers()).toMatchObject({ queued: 2, active: 4 });
+
+    // Karte 0 läuft schon, Karte 5 wartet: beide weggefiltert
+    controllers[0].abort();
+    controllers[5].abort();
+    expect(imageLoaderService.getQueueNumbers()).toMatchObject({ queued: 1, active: 4 });
+
+    // Nach dem Abbruch gar nicht erst einreihen
+    await imageLoaderService.addToQueue({
+      url: "https://queue.example.com/late.jpg",
+      priority: 1,
+      signal: controllers[0].signal,
+      cardInput: { apiName: "Queue", name: "Spät", imageUrl: "https://queue.example.com/late.jpg" },
+      onLoad: () => loaded.push("late"),
+    });
+    expect(imageLoaderService.getQueueNumbers()).toMatchObject({ queued: 1 });
+
+    for (let i = 0; i < 20 && imageLoaderService.getQueueNumbers().active + imageLoaderService.getQueueNumbers().queued > 0; i++) {
+      pending.splice(0).forEach(resolve => resolve());
+      await new Promise(r => setTimeout(r, 150));
+    }
+    // 5 Downloads insgesamt (0 lief schon), aber Karte 0 bekommt kein onLoad mehr
+    expect(calls.length).toBe(5);
+    expect(loaded.sort()).toEqual([1, 2, 3, 4].map(i => `https://queue.example.com/${i}.jpg`));
+  });
 });
 export {};

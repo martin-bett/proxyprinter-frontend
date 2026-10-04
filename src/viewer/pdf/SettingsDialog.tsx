@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
+import { isValidOptionalEmail } from './pdfEmail';
 
 export interface PdfSettings {
   width: number;
@@ -15,6 +16,8 @@ export interface PdfSettings {
   cornerColor: string;
   cornerColorAuto: boolean;
   maxDpi: number;
+  /** Optional, geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. */
+  email: string;
 }
 
 const defaultSettings: PdfSettings = {
@@ -28,7 +31,8 @@ const defaultSettings: PdfSettings = {
   hmargin: 0,
   cornerColor: '#000000',
   cornerColorAuto: true,
-  maxDpi: 300
+  maxDpi: 300,
+  email: ''
 };
 
 interface SettingsDialogProps {
@@ -36,10 +40,13 @@ interface SettingsDialogProps {
   onClose: () => void;
   settings: PdfSettings;
   onSettingsChange: (settings: PdfSettings) => void;
+  /** Kann der Server Mails verschicken? Sonst ist das Feld ausgegraut. */
+  mailEnabled?: boolean;
 }
 
-function SettingsDialog({ onClose, settings, onSettingsChange }: SettingsDialogProps) {
+function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = false }: SettingsDialogProps) {
   const [localSettings, setLocalSettings] = useState<PdfSettings>(settings);
+  const emailValid = isValidOptionalEmail(localSettings.email);
 
   const handleChange = <K extends keyof PdfSettings>(key: K, value: PdfSettings[K]) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
@@ -50,12 +57,14 @@ function SettingsDialog({ onClose, settings, onSettingsChange }: SettingsDialogP
   };
 
   const handleSave = () => {
-    onSettingsChange(localSettings);
+    if (!emailValid) return;
+    onSettingsChange({ ...localSettings, email: localSettings.email.trim() });
     onClose();
   };
 
   const handleReset = () => {
-    setLocalSettings(defaultSettings);
+    // Die Adresse ist keine Druckeinstellung, Reset lässt sie stehen
+    setLocalSettings({ ...defaultSettings, email: localSettings.email });
   };
 
   return (
@@ -149,9 +158,28 @@ function SettingsDialog({ onClose, settings, onSettingsChange }: SettingsDialogP
           )}
         </div>
       </div>
+      <div className="settings-category settings-email">
+        <h3 className="title is-4">Email delivery</h3>
+        <label htmlFor="pdf-settings-email">Send the download link to (optional): </label>
+        <input
+          id="pdf-settings-email"
+          className={`input${emailValid ? '' : ' is-danger'}`}
+          type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          maxLength={254}
+          disabled={!mailEnabled}
+          value={localSettings.email}
+          onChange={(e) => handleChange('email', e.target.value)}
+        />
+        {!emailValid && <p className="help is-danger">Please enter a valid email address or leave the field empty.</p>}
+        {mailEnabled
+          ? <p className="help">Useful for large decks: you can close the page, the link arrives when the PDF is ready.</p>
+          : <p className="help">Email delivery is not set up on this server.</p>}
+      </div>
       <div className='dialog-footer'>
         <button className='button' onClick={handleReset}>Reset</button>
-        <button className='button' onClick={handleSave}>Ok</button>
+        <button className='button' onClick={handleSave} disabled={!emailValid}>Ok</button>
       </div>
     </div>
   );

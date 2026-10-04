@@ -2,14 +2,18 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { imageLoaderService } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
+import ProgressBar from '../components/progress/ProgressBar';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
+import { fetchPdfMailEnabled } from './pdf/pdfEmail';
+import { DEFAULT_MAX_PDF_SIZE_MB, PdfImageEntry, bytesToMb, estimatePdfBytes, fetchPdfSizeLimitMb, formatMb } from './pdf/pdfSizeLimit';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CardImage, { CardImageError } from './grid/CardImage';
+import CardTitle from './grid/CardTitle';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
@@ -36,6 +40,7 @@ import MemoryButtons from './cache/MemoryButtons';
 import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
+import SearchLog from './log/SearchLog';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -83,7 +88,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [selectedCards, setSelectedCards] = useState<SelectedCardsMap>({});
   const [currentCardName, setCurrentCardName] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
-  const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
+  const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set());
   const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set());
   const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
@@ -132,8 +137,8 @@ const DeckInputAndViewer: React.FC = () => {
     setCategoryStates(initialCategoryStates);
   }, [apiConfigs]);
 
-  const addToLog = (message: string, configName: string, rawResponse?: string) => {
-    setLog((prevLog) => [...prevLog, { message, configName, rawResponse }]);
+  const addToLog = (entry: LogEntry) => {
+    setLog((prevLog) => [...prevLog, entry]);
   };
 
   const handleSettingsChange = (newSettings: PdfSettings) => {
@@ -322,22 +327,23 @@ const DeckInputAndViewer: React.FC = () => {
 
         const tasks = cardEntries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
+            const startedAt = performance.now();
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
                 const resultsArr = result?.results || [];
-                addToLog(`Cached ${resultsArr.length} ${entry.name}`, apiKey);
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
               } else {
                 result = await api({ cardname: entry.name, set: entry.set });
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 const resultsArr = result?.results || [];
-                addToLog(`Found ${resultsArr.length} ${entry.name}`, apiKey, result.rawResponse);
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
               }
             } catch (error) {
-              addToLog(`Error ${entry.name}: ${error instanceof Error ? error.message : String(error)}`, apiKey);
+              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -559,35 +565,52 @@ const DeckInputAndViewer: React.FC = () => {
 
   useEffect(() => stopPdfPolling, [stopPdfPolling]);
 
+  // Alle Karten, die ins PDF kommen, mit Bildinfos für die Größenschätzung
+  const pdfImageEntries = useMemo<PdfImageEntry[]>(() => {
+    // Die Auswahl kann eine Kopie sein, die Bildinfos hängen am Ergebnis in cardResults
+    const withInfo = (cardName: string, card: CardResult): PdfImageEntry => ({
+      imageUrl: card.imageUrl,
+      cropSettings: card.cropSettings,
+      imageInfo: card.imageInfo
+        ?? cardResults[cardName]?.results.find(r => r.imageUrl === card.imageUrl && r.imageInfo)?.imageInfo,
+    });
+    return Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
+      if (uniquePrints) {
+        // Wenn uniquePrints true ist, nehmen wir alle URLs mit cropSettings wie sie sind
+        return cardSelections
+          .filter((selectedCard): selectedCard is CardResult => !!selectedCard?.imageUrl)
+          .map(selectedCard => withInfo(cardName, selectedCard));
+      }
+      // Wenn uniquePrints false ist, nehmen wir die erste gültige URL und duplizieren sie entsprechend dem count
+      const firstValidCard = cardSelections.find((selectedCard): selectedCard is CardResult => !!selectedCard?.imageUrl);
+      if (!firstValidCard) return [];
+      const count = cardResults[cardName]?.count || 1;
+      return Array(count).fill(withInfo(cardName, firstValidCard));
+    });
+  }, [selectedCards, cardResults, uniquePrints]);
+
+  const [pdfSizeLimitMb, setPdfSizeLimitMb] = useState(DEFAULT_MAX_PDF_SIZE_MB);
+  const [pdfMailEnabled, setPdfMailEnabled] = useState(false);
+  const pdfEmail = pdfMailEnabled ? settings.email.trim() : '';
+  useEffect(() => {
+    fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
+    fetchPdfMailEnabled().then(setPdfMailEnabled);
+  }, []);
+  const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
+  const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
+
   const createPDF = async () => {
+    if (pdfTooLarge) return;
     stopPdfPolling();
     setPdfProgressDtos([]);
     setPdfProgressError(null);
     setPdfProgressDialogOpen(true);
 
+    const { email, ...pdfSettings } = settings;
     const createPdfDto = {
-      images: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
-        if (uniquePrints) {
-          // Wenn uniquePrints true ist, nehmen wir alle URLs mit cropSettings wie sie sind
-          return cardSelections
-            .map(selectedCard =>
-              selectedCard?.imageUrl
-                ? { imageUrl: selectedCard.imageUrl, cropSettings: selectedCard.cropSettings }
-                : null
-            )
-            .filter((item): item is { imageUrl: string; cropSettings: CropSettings } => item !== null); // Entferne ungültige Einträge
-        } else {
-          // Wenn uniquePrints false ist, nehmen wir die erste gültige URL und duplizieren sie mit cropSettings entsprechend dem count
-          const firstValidCard = cardSelections.find(selectedCard => selectedCard?.imageUrl);
-          if (!firstValidCard) return [];
-          const count = cardResults[cardName]?.count || 1;
-          return Array(count).fill({
-            imageUrl: firstValidCard.imageUrl,
-            cropSettings: firstValidCard.cropSettings
-          });
-        }
-      }),
-      settings: settings
+      images: pdfImageEntries.map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
+      settings: pdfSettings,
+      ...(pdfEmail ? { email: pdfEmail } : {})
     };
     try {
       const response = await fetch('/api/pdf', {
@@ -827,22 +850,23 @@ const DeckInputAndViewer: React.FC = () => {
         groupResults[apiKey] = {};
         const api = apiFactory!.createApi(apiKey);
 
+        const startedAt = performance.now();
         try {
           let result: SearchApiResult | undefined;
           if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
             result = await SearchCacheService.getSearchResult(apiKey, cardEntry.name);
             const resultsArr = result?.results || [];
-            addToLog(`Cached ${resultsArr.length} ${cardEntry.name}`, apiKey);
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
           } else {
             result = await api({ cardname: cardEntry.name });
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
             const resultsArr = result?.results || [];
-            addToLog(`Found ${resultsArr.length} ${cardEntry.name}`, apiKey, result.rawResponse);
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
-          addToLog(`Error ${cardEntry.name}: ${error instanceof Error ? error.message : String(error)}`, apiKey);
+          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
           groupResults[apiKey][cardEntry.name] = [];
         }
 
@@ -996,7 +1020,7 @@ const DeckInputAndViewer: React.FC = () => {
                 cols={50}
               />
               <br />
-              <ActionButton type="submit" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+              <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
           <CollapsibleSection storageKey="add-single" title="Add Single">
@@ -1008,25 +1032,10 @@ const DeckInputAndViewer: React.FC = () => {
 
         </div>
         {isLoading && (
-          <div className="progress-bar">
-            <div className="progress" style={{ width: `${progress}%` }}></div>
-            <span>{progress}%</span>
-          </div>
+          <ProgressBar className="search-progress" value={progress / 100} height={20} label={`${progress}%`} />
         )}
         <CollapsibleSection storageKey="search-log" title="Search Log" defaultOpen={false}>
-          <div className="log">
-            <div className="log-content">
-              {log.map((entry, index) => (
-                <div key={index} className="log-entry">
-                  <span className="config-name">[{entry.configName}]</span>
-                  <span>{entry.message}</span>
-                  {entry.rawResponse && (
-                    <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse!)}>🔍</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <SearchLog entries={log} onShowRaw={setRawDataDialog} />
         </CollapsibleSection>
       </div>
 
@@ -1071,35 +1080,34 @@ const DeckInputAndViewer: React.FC = () => {
                           ) : (
                             <div className="no-image">No image available</div>
                           )}
-                        </div>
-                        <div className="card-name">
-                          <p>{cardName}</p>
-                        </div>
-                        <div className="card-name card-count">
-                          <p>
-                            {!uniquePrints ? <span
-                              className="remove-card"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveCard(cardName, index);
-                              }}
-                            >
-                              ✕
-                            </span> : null}
+                          <CardTitle name={cardName} />
+                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl */}
+                          <div className="card-count" onClick={(e) => e.stopPropagation()}>
+                            {!uniquePrints ? (
+                              <button
+                                className="count-button remove-card"
+                                title="Remove card"
+                                onClick={() => handleRemoveCard(cardName, index)}
+                              >
+                                ✕
+                              </button>
+                            ) : null}
                             <button
                               onClick={() => updateCardCount(cardName, -1)}
                               className="count-button"
+                              title="One less"
                             >
                               <Minus />
                             </button>
-                            {cardData.count}
+                            <span className="count-value">{cardData.count}</span>
                             <button
                               onClick={() => updateCardCount(cardName, 1)}
                               className="count-button"
+                              title="One more"
                             >
                               <Plus />
                             </button>
-                          </p>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1111,10 +1119,11 @@ const DeckInputAndViewer: React.FC = () => {
         </div>
       </div>
 
+      <div className="right-toolbar">
       <div className="view-selection">
         <div className="filter-controls">
-          <h2 className='title is-5'>View Selection</h2>
-          <div className="language-filter checkbox-group">
+          <CollapsibleSection storageKey="view-selection" title="View Selection">
+          <div className="checkbox-group">
             {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
             {renderCheckbox('showImageSettings', 'Show Image Info', showImageSettings, (event) => handleShowImageSettingsChanged(event))}
             <div className="grid-size-control">
@@ -1135,14 +1144,16 @@ const DeckInputAndViewer: React.FC = () => {
               />
             </div>
           </div>
+          </CollapsibleSection>
+          <CollapsibleSection storageKey="language-filter" title="Language Filter" defaultOpen={false}>
           <div className="language-filter checkbox-group">
-            <h3 className='title is-5'>Language Filter</h3>
             {Array.from(availableLanguages).map(lang => (
               renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang))
             ))}
           </div>
+          </CollapsibleSection>
+          <CollapsibleSection storageKey="api-filter" title="API Filter" defaultOpen={false}>
           <div className="api-filter checkbox-group">
-            <h3 className='title is-5'>API Filter</h3>
             {Object.values(apiConfigs)
               .filter((c) => availableApis.has(c.name))
               .map((config) =>
@@ -1156,21 +1167,30 @@ const DeckInputAndViewer: React.FC = () => {
                 )
               )}
           </div>
+          </CollapsibleSection>
         </div>
       </div>
 
       <div className="pdf-controls">
-        <h3 className='title is-5'>PDF Generation</h3>
+        <CollapsibleSection storageKey="pdf-generation" title="PDF Generation">
 
         <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
-        <ActionButton icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
-
+        <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0 || pdfTooLarge} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
+        {pdfImageEntries.length > 0 && (
+          <p className={`pdf-size-estimate${pdfTooLarge ? ' is-error' : ''}`}>
+            {pdfTooLarge
+              ? `The PDF would be about ${formatMb(estimatedPdfBytes)}, the limit is ${pdfSizeLimitMb} MB. Split the deck into several PDFs or lower Max DPI in the settings.`
+              : `Estimated size: about ${formatMb(estimatedPdfBytes)}${Number.isFinite(pdfSizeLimitMb) ? ` of max. ${pdfSizeLimitMb} MB` : ''}`}
+          </p>
+        )}
+        </CollapsibleSection>
       </div>
 
       <div className="bottom">
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
         <div><VersionInfo /></div>
+      </div>
       </div>
 
       <DisclaimerDialog open={disclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
@@ -1186,6 +1206,7 @@ const DeckInputAndViewer: React.FC = () => {
             onClose={handleCloseSettingsDialog}
             settings={settings}
             onSettingsChange={handleSettingsChange}
+            mailEnabled={pdfMailEnabled}
           />
         }
       />
@@ -1241,6 +1262,7 @@ const DeckInputAndViewer: React.FC = () => {
           errorMessage={pdfProgressError}
           onFinish={downloadPDF}
           onClose={closePdfProgressDialog}
+          email={pdfEmail}
         />
       </Dialog>
 

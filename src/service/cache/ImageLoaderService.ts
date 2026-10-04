@@ -32,14 +32,22 @@ export interface AddToQueueParams {
   onProcessListChange?: (status: string) => void;
   category?: string;
   cardInput?: CacheCardInput;
+  /** Abbruch durch den Aufrufer: wartender Eintrag fliegt raus, laufender Download wird fertig, Callbacks werden nicht mehr gerufen. */
+  signal?: AbortSignal;
+}
+
+// Ein Interessent an einem Bild; mehrere Karten mit gleichem Bild teilen sich einen Queue-Eintrag
+interface QueueListener {
+  onLoad: (img: HTMLImageElement, sizeBytes?: number) => void;
+  onError?: (error: unknown) => void;
+  onProcessListChange?: (status: string) => void;
+  signal?: AbortSignal;
 }
 
 interface QueueEntry {
   url: string;
   priority: number;
-  onLoad: (img: HTMLImageElement, sizeBytes?: number) => void;
-  onError?: (error: unknown) => void;
-  onProcessListChange?: (status: string) => void;
+  listeners: QueueListener[];
   category?: string;
   cardInput: CacheCardInput;
 }
@@ -132,10 +140,12 @@ class ImageLoaderService {
   private subscribers: Set<() => void> = new Set();
   private _lastSnapshot: CacheSnapshot | null = null;
   cacheLimit = 1024 * 1024 * 1024; // 1 GB
+  /** Erfüllt, sobald der persistente Cache beim Start geprüft wurde (Tests warten darauf). */
+  readonly ready: Promise<void>;
 
   constructor(maxConcurrent = 10) {
     this.maxConcurrent = maxConcurrent;
-    this._initPersistentCache();
+    this.ready = this._initPersistentCache();
   }
 
   private async _initPersistentCache(): Promise<void> {
@@ -195,9 +205,12 @@ class ImageLoaderService {
     return `${cardInput.apiName || "NOAPI"}::${cardInput.name || "NONAME"}::${cardInput.imageUrl || ""}`;
   }
 
-  async addToQueue({ url, priority, onLoad, onError, onProcessListChange, category, cardInput }: AddToQueueParams): Promise<void> {
+  async addToQueue({ url, priority, onLoad, onError, onProcessListChange, category, cardInput, signal }: AddToQueueParams): Promise<void> {
+    if (signal?.aborted) return;
     const cacheKey = this._makeCacheKey(cardInput || {});
     const cached = await getFromIndexedDB(cacheKey);
+    // Während des Cache-Lookups abgebrochen (z.B. Karte weggefiltert): gar nicht erst einreihen
+    if (signal?.aborted) return;
     if (cached) {
       // Wenn img noch nicht geladen, aus Blob erzeugen, sonst Fallback: Bild-URL laden
       this.activeCacheLoads++;
@@ -205,6 +218,7 @@ class ImageLoaderService {
         ? this._createImageFromBlob(cached.blob)
         : this._createImageFromUrl(cached.imageUrl, this.usesProxy(cardInput));
       load.then(img => {
+        if (signal?.aborted) return;
         if (img) {
           onLoad(img, cached.sizeBytes);
         } else {
@@ -217,47 +231,43 @@ class ImageLoaderService {
       return;
     }
 
+    const listener: QueueListener = { onLoad, onError, onProcessListChange, signal };
+    signal?.addEventListener("abort", () => this._removeListener(cacheKey, listener), { once: true });
+
     const existingEntry = this.queue.find((entry) => this._makeCacheKey(entry.cardInput) === cacheKey);
     if (existingEntry) {
       existingEntry.priority = Math.max(existingEntry.priority, priority);
-      existingEntry.onLoad = this.mergeCallbacks(existingEntry.onLoad, onLoad);
-      existingEntry.onError = this.mergeCallbacks(existingEntry.onError, onError);
+      existingEntry.listeners.push(listener);
       if (category) existingEntry.category = category;
       this.queue.sort((a, b) => b.priority - a.priority);
       this.notifyAllStatuses();
       return;
     }
 
-    this.queue.push({ url, priority, onLoad, onError, onProcessListChange, category, cardInput: cardInput || {} });
+    this.queue.push({ url, priority, listeners: [listener], category, cardInput: cardInput || {} });
     this.queue.sort((a, b) => b.priority - a.priority);
     this.notifyAllStatuses();
     this.processQueue();
   }
 
-  stopForFilters(visibleLanguages: Set<string>, visibleApis: Set<string>): void {
-    this.queue = this.queue.filter(entry => {
-      const { cardInput } = entry;
-      const language = cardInput.languageCode || 'No Language';
-      return visibleLanguages.has(language) && visibleApis.has(cardInput.apiName || '');
-    });
+  // Abgebrochener Interessent: aus seinem wartenden Eintrag austragen, leere Einträge verlassen die Queue.
+  // Läuft der Download schon, steht der Eintrag nicht mehr in der Queue und wird einfach fertig.
+  private _removeListener(cacheKey: string, listener: QueueListener): void {
+    const entry = this.queue.find(e => this._makeCacheKey(e.cardInput) === cacheKey);
+    if (!entry) return;
+    entry.listeners = entry.listeners.filter(l => l !== listener);
+    if (entry.listeners.length === 0) this.queue = this.queue.filter(e => e !== entry);
     this.notifyAllStatuses();
-    console.log('stoped filters :', this.queue.length);
+  }
+
+  private _liveListeners(entry: QueueEntry): QueueListener[] {
+    return entry.listeners.filter(l => !l.signal?.aborted);
   }
 
   stopByCategory(category: string): void {
     this.queue = this.queue.filter((entry) => entry.category !== category);
     this.notifyAllStatuses();
     console.log('stoped category :' + category, this.queue.length);
-  }
-
-  // Wartenden Eintrag einer Karte abbrechen, aber nur wenn er zu dieser Kategorie gehört
-  cancelQueued(cardInput: CacheCardInput, category: string): void {
-    const cacheKey = this._makeCacheKey(cardInput);
-    const before = this.queue.length;
-    this.queue = this.queue.filter(
-      (entry) => entry.category !== category || this._makeCacheKey(entry.cardInput) !== cacheKey
-    );
-    if (this.queue.length !== before) this.notifyAllStatuses();
   }
 
   subscribe(fn: () => void): () => void {
@@ -277,7 +287,8 @@ class ImageLoaderService {
         !this.usesProxy(entry.cardInput) || this.activeProxyLoads < MAX_CONCURRENT_PROXY_LOADS
       );
       if (index < 0) break;
-      const [{ url, onLoad, onError, onProcessListChange, cardInput }] = this.queue.splice(index, 1);
+      const [entry] = this.queue.splice(index, 1);
+      const { url, cardInput } = entry;
       const proxied = this.usesProxy(cardInput);
       this.activeLoads++;
       if (proxied) this.activeProxyLoads++;
@@ -297,13 +308,13 @@ class ImageLoaderService {
         const cacheEntry: ImageCacheDbEntry = { sizeBytes, cardInput, timestamp: Date.now(), cacheKey, imageUrl: url, blob };
         await saveToIndexedDB(cacheEntry);
         await this._enforceCacheLimit();
-        onLoad(img, sizeBytes);
+        this._liveListeners(entry).forEach(l => l.onLoad(img, sizeBytes));
         this.notifySubscribers();
       }, (err) => {
-        onError?.(err);
+        this._liveListeners(entry).forEach(l => l.onError?.(err));
       }).finally(finish);
 
-      onProcessListChange?.("LOADING");
+      this._liveListeners(entry).forEach(l => l.onProcessListChange?.("LOADING"));
     }
   }
 
@@ -446,18 +457,8 @@ class ImageLoaderService {
     const total = this.queue.length + this.activeLoads;
     this.queue.forEach((entry, index) => {
       const position = index + 1;
-      entry.onProcessListChange?.(`QUEUED(${position}/${total})`);
+      this._liveListeners(entry).forEach(l => l.onProcessListChange?.(`QUEUED(${position}/${total})`));
     });
-  }
-
-  private mergeCallbacks<T>(
-    original: ((arg: T) => void) | undefined,
-    additional: ((arg: T) => void) | undefined
-  ): (arg: T) => void {
-    return (arg: T) => {
-      if (original) original(arg);
-      if (additional) additional(arg);
-    };
   }
 
   async getSnapshot(): Promise<CacheSnapshot> {

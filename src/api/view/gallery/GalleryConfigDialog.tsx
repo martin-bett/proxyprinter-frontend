@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { Alert, LinearProgress } from '@mui/material';
 import ConfigContainer from '../ConfigContainer';
 import GalleryConfigWizard, { GalleryConfigFormState } from './GalleryConfigWizard';
 import GalleryConfigExecutor from './GallerConfigExecutor';
@@ -16,6 +17,7 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
     const [selectedConfigs, setSelectedConfigs] = useState<number[]>([]);
     const [clickedConfig, setClickedConfig] = useState<Config | null>(null); //
     const [fingerprint, setFingerprint] = useState<string | null>(null);
+    const [galleryStatus, setGalleryStatus] = useState<{ loading: boolean; error?: string }>({ loading: false });
 
     useEffect(() => {
         const initFingerprint = async () => {
@@ -31,13 +33,20 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
         [config.name]: config,
       };
       const api = new ApiFactory(singleConfigRecord).createApi(config.name);
+      setGalleryStatus({ loading: true });
       try {
         const result = await api({});
-        handleGalleryResults(result.results);
         console.log(result);
+        if (result.results.length === 0) {
+          // Dialog offen lassen, sonst sieht man nicht, dass nichts gefunden wurde
+          setGalleryStatus({ loading: false, error: 'Keine Bilder gefunden.' });
+          return;
+        }
+        setGalleryStatus({ loading: false });
+        handleGalleryResults(result.results);
       } catch (error) {
         console.error(`Error fetching gallery ${config.name}:`, error);
-        handleGalleryResults([]);
+        setGalleryStatus({ loading: false, error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -140,6 +149,12 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
       };
 
     return (<>
+        {galleryStatus.loading && <LinearProgress sx={{ mb: 1 }} />}
+        {galleryStatus.error && (
+          <Alert severity="warning" sx={{ mb: 1 }} onClose={() => setGalleryStatus({ loading: false })}>
+            {galleryStatus.error}
+          </Alert>
+        )}
         <ConfigContainer
             configs={configs}
             clickedConfig={clickedConfig}

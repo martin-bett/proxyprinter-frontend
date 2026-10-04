@@ -163,7 +163,7 @@ export default class ApiFactory {
     });
   }
 
-  createApi(configKey: string): (params: ApiParams) => Promise<{ results: SearchResult[], rawResponse: string }> {
+  createApi(configKey: string): (params: ApiParams) => Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     const config = this.configs[configKey];
     if (!config) {
       throw new Error(`Config not found for key: ${configKey}`);
@@ -190,7 +190,7 @@ export default class ApiFactory {
   private async executeApiRequest(
     config: Config, 
     params: ApiParams
-): Promise<{ results: SearchResult[], rawResponse: string }> {
+): Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     let allResults: SearchResult[] = [];
     let allRawResponses: string[] = [];
     let currentUrl = this.processUrl(config.baseUrl, config?.parameterMap?.url);
@@ -235,7 +235,8 @@ export default class ApiFactory {
 
     return {
         results: this.filterAndDeduplicateResults(allResults, params, config),
-        rawResponse: allRawResponses.join('\n')
+        rawResponse: allRawResponses.join('\n'),
+        requestCount: allRawResponses.length
     };
 }
 
@@ -253,7 +254,11 @@ export default class ApiFactory {
     const targetUrl = (fetchOptions.headers as Record<string, string> | undefined)?.['X-Target-URL'];
     const response = await throttledFetch(requestUrl.toString(), fetchOptions, targetUrl);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // Galerie-Endpunkte des Backends schicken {error: "..."} mit, das hilft mehr als nur der Status
+      const detail = await response.text()
+        .then(text => { try { return JSON.parse(text)?.error || ''; } catch { return ''; } })
+        .catch(() => '');
+      throw new Error(detail ? `HTTP error! status: ${response.status}: ${detail}` : `HTTP error! status: ${response.status}`);
     }
 
     return { response, requestUrl };
@@ -356,11 +361,11 @@ export default class ApiFactory {
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
     }
 
-    return { body, headers, requestUrl: new URL(currentUrl) };
+    return { body, headers, requestUrl: toRequestUrl(currentUrl) };
   }
 
   private buildGetRequest(params: Record<string, string>, currentUrl: string): URL {
-    const requestUrl = new URL(currentUrl);
+    const requestUrl = toRequestUrl(currentUrl);
     Object.entries(params).forEach(([key, value]) => {
       // Pagination-Links (z.B. Scryfall next_page) enthalten die Parameter
       // bereits; erneut anhängen würde sie doppelt in die URL schreiben.
@@ -667,6 +672,11 @@ export default class ApiFactory {
     return await response.text();
   }
 
+}
+
+// Relative base_url (z.B. /api/gallery/source/reddit) zeigt aufs eigene Backend
+function toRequestUrl(url: string): URL {
+  return new URL(url, window.location.origin);
 }
 
 function parseHtmlValue(element: HTMLElement, selector: string | undefined): string {
