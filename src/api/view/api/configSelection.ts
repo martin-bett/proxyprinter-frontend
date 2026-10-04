@@ -35,3 +35,17 @@ export function refreshStoredSelection(fresh: Config[]): Config[] | null {
   } catch (e) { }
   return updated;
 }
+
+/**
+ * Meldet dem Backend, mit welchen Configs gerade gesucht wird. Das Backend löscht
+ * User-Configs, die lange niemand benutzt hat. Fehler sind egal, die Suche läuft weiter.
+ */
+export function markConfigsUsed(configs: (Config | undefined)[]): void {
+  const ids = configs.map(c => c?.id).filter((id): id is number => typeof id === 'number');
+  if (ids.length === 0) return;
+  fetch('/api/configs/used', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(ids),
+  }).catch(() => undefined);
+}
