@@ -9,6 +9,7 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import { Config } from '../../../service/ApiFactory';
+import DefaultLanguageSelect from '../DefaultLanguageSelect';
 
 export interface GalleryConfigFormState {
   id?: number;
@@ -25,6 +26,7 @@ export interface GalleryConfigFormState {
   dataListField: string;
   nameField: string;
   imageUrlField: string;
+  defaultLanguage: string;
   published?: boolean;
   [key: string]: unknown;
 }
@@ -53,7 +55,8 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     paginationField: '',
     dataListField: '',
     nameField: '',
-    imageUrlField: ''
+    imageUrlField: '',
+    defaultLanguage: ''
   });
 
   const [expandedSections, setExpandedSections] = useState({
@@ -260,6 +263,7 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />
+              <DefaultLanguageSelect value={config.defaultLanguage} onChange={handleInputChange} disabled={!isOwner} />
             </div>
           )}
         </div>
