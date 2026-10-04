@@ -1,33 +1,26 @@
-config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
+config erweitern um auto english language setter
 
-config erweitern um artist/creator
-  config erweitern um auto english language setter
+custom parts -> anders als language neue karte +  am ende doppelte removen
+  (nur scryfall liefert das, suche in anderen apis schwierig -> erst konzept)
+
+config feld lastused wird gesetzt bei suche mit api oder edit -> älter als x tage automatisch löschen (scheduled task im backend)
 
 custom picture imageurl über proxy als checkbox
 
-url + upload crop image viewport / für gallery komplett oder single einstellbar
+crop als zwischenmaske für upload und url image add (single), mit keep aspect ratio beim croppen
 
 imageurl +gallery gridimport mit margins / only outermargin
 
-config feld lastused wird gesetzt bei suche mit api oder edit -> älter als x monate automatisch löschen
+filter anzahl der jeweiligen einstellung in imageselectdialog
 
-filter anzahl der jeweiligen einstellung in iamageselectdialog
-in deckviewer min-max zahl (je karte) der jeweiligen einstellung
+cache manager  darf nicht selected löschen (browser cache hält das bild, daher niedrige prio)
 
-keep aspect ratio checkbox und funktionalität für printsettings
-
-reset crop settings + keep aspect ratio
-
-mehrfach select zulassen für datalistfield + imgurlfield
-
-cache manager  darf nicht selected löschen
-
-papierflieger editor
+papierflieger editor: pdf mit druckkanten vordruck und mustern auf den flügeln (spinnerei)
 
 
 Adminkram
 
-  postgres für log info
+  backend logging in postgres statt logfile (zugriff über db viewer)
 
 
 Notizen lokale Entwicklung
