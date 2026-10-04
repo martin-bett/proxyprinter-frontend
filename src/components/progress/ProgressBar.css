@@ -1,0 +1,82 @@
+/* Gemeinsamer Fortschrittsbalken nach dem Vorbild des PDF-Dialogs:
+   Akzentfarbe, laufende Streifen für unbestimmten Fortschritt,
+   gedämpfte Schrägstreifen für noch nicht erreichte Phasen. */
+.app-progress {
+  --app-progress-height: 14px;
+  position: relative;
+  width: 100%;
+  height: var(--app-progress-height);
+  background: var(--track);
+  border-radius: calc(var(--app-progress-height) / 2);
+  overflow: hidden;
+  user-select: none;
+}
+
+.app-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--app-progress-color, var(--accent));
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.app-progress.is-error .app-progress-fill {
+  background: var(--danger);
+}
+
+.app-progress-fill.is-indeterminate {
+  background: repeating-linear-gradient(
+    75deg,
+    var(--accent) 0px,
+    var(--accent) 4px,
+    var(--accent-soft) 4px,
+    var(--accent-soft) 12px
+  );
+  background-size: 24px 100%;
+  animation: app-progress-stripes 0.7s linear infinite;
+}
+
+/* Noch nicht erreicht: gedämpfte, endlos laufende Schrägstreifen auf der ganzen Spur */
+.app-progress.is-pending,
+.app-progress-pending-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--track) 0px,
+    var(--track) 6px,
+    var(--accent-soft) 6px,
+    var(--accent-soft) 12px
+  );
+  background-size: 16.9706px 100%;
+  animation: app-progress-stripes-pending 1s linear infinite;
+}
+
+.app-progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--app-progress-height) * 0.66);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+@keyframes app-progress-stripes {
+  from { background-position: 0 0; }
+  to { background-position: 24px 0; }
+}
+
+@keyframes app-progress-stripes-pending {
+  from { background-position: 0 0; }
+  to { background-position: 16.9706px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-progress-fill.is-indeterminate,
+  .app-progress.is-pending,
+  .app-progress-pending-stripes {
+    animation: none;
+  }
+}

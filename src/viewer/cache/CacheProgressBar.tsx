@@ -1,59 +1,36 @@
 import React from 'react';
 import { imageLoaderService } from '../../service/cache/ImageLoaderService';
 import { useImageLoaderCache } from '../../service/cache/hooks/useImageLoaderCache';
+import ProgressBar from '../../components/progress/ProgressBar';
 
 interface CacheProgressBarProps {
   onClick?: () => void;
   width?: number;
 }
 
+/** Ab diesem Füllstand wird der Akzentfarbe zunehmend Rot beigemischt, bei 100 % ist der Balken rot. */
+const RED_FROM_PERCENT = 50;
+
+export const cacheFillColor = (percent: number): string => {
+  const red = Math.round(Math.max(0, Math.min(1, (percent - RED_FROM_PERCENT) / (100 - RED_FROM_PERCENT))) * 100);
+  return red === 0 ? 'var(--accent)' : `color-mix(in srgb, var(--danger) ${red}%, var(--accent))`;
+};
+
 export function CacheProgressBar({ onClick, width = 180 }: CacheProgressBarProps) {
   const { totalSize } = useImageLoaderCache();
   const cacheLimit = imageLoaderService.cacheLimit;
   const percent = Math.min(100, Math.round((totalSize / cacheLimit) * 100));
-  const color =
-    percent > 90 ? "var(--danger)" : percent > 70 ? "var(--warning)" : "var(--success)";
 
   return (
-    <div
-      className="cache-progressbar-container"
-      style={{
-        cursor: "pointer",
-        width,
-        height: 18,
-        background: "var(--track)",
-        borderRadius: 8,
-        overflow: "hidden",
-        border: "1px solid var(--border)",
-        position: "relative",
-        userSelect: "none",
-      }}
-      title={`Cache: ${Math.round(totalSize / (1024 * 1024))} MB / ${Math.round(cacheLimit / (1024 * 1024))} MB`}
-      onClick={onClick}>
-      <div
-        className="cache-progressbar-fill"
-        style={{
-          width: `${percent}%`,
-          height: "100%",
-          background: color,
-          transition: "width 0.3s",
-        }}
+    <div className="cache-progressbar-container" style={{ width }}>
+      <ProgressBar
+        value={percent / 100}
+        height={18}
+        color={cacheFillColor(percent)}
+        label={`${percent}%`}
+        title={`Cache: ${Math.round(totalSize / (1024 * 1024))} MB / ${Math.round(cacheLimit / (1024 * 1024))} MB`}
+        onClick={onClick}
       />
-      <span
-        style={{
-          position: "absolute",
-          left: 0,
-          width: "100%",
-          textAlign: "center",
-          fontSize: 12,
-          color: "var(--text)",
-          fontWeight: 600,
-          lineHeight: "18px",
-          pointerEvents: "none",
-        }}
-      >
-        {percent}%
-      </span>
     </div>
   );
 }
