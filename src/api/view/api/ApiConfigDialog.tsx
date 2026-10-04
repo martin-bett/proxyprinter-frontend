@@ -14,6 +14,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import IconBar, { IconBarElement } from '../../../container/IconBar';
 import ConfigContainer from '../ConfigContainer';
 import { ApiConfig, Config } from '../../../service/ApiFactory';
+import { refreshStoredSelection } from './configSelection';
 
 interface ApiConfigDialogProps {
   open: boolean;
@@ -88,6 +89,9 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
       const data: Config[] = await response.json();
       setConfigs(data.sort((a, b) => ('' + a.category).localeCompare(b.category)));
       setClickedConfig(data.find(c => c.id == clickConfig) || null);
+      // Aktive Auswahl auf den neuen Stand bringen (z.B. nach dem Speichern einer Config)
+      const updated = refreshStoredSelection(data);
+      if (updated) onSave(updated);
     } catch (error) {
       console.error('Error fetching configs:', error);
     }

@@ -106,6 +106,31 @@ describe("ImageLoaderService mit Proxy Images", () => {
     expect(done).toBe(true);
   });
 
+  it("meldet Proxy-Fehler und fragt dieselbe URL nicht erneut an", async () => {
+    imageLoaderService.setProxyImageApis(["LowRes"]);
+    (global as any).fetch = jest.fn(() => Promise.resolve({
+      ok: false,
+      status: 502,
+      headers: { get: (name: string) => (name === "X-Proxy-Error" ? "HTTP 308" : null) },
+      clone() { return this; },
+    }));
+    const url = "https://broken.example.com/x.jpg";
+    const errors: string[] = [];
+    const add = () => imageLoaderService.addToQueue({
+      url,
+      priority: 1,
+      cardInput: { apiName: "LowRes", name: "Kaputt", imageUrl: url },
+      onLoad: () => {},
+      onError: (e: Error) => errors.push(e.message),
+    });
+    await add();
+    for (let i = 0; i < 10 && errors.length < 1; i++) await new Promise(r => setTimeout(r, 50));
+    await add();
+    await flush();
+    expect(errors).toEqual(["Bild nicht ladbar: HTTP 308", "Bild nicht ladbar: HTTP 308"]);
+    expect((global as any).fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("abgebrochene wartende Einträge verlassen die Queue, laufende Downloads werden fertig", async () => {
     imageLoaderService.setProxyImageApis(["Queue"]);
     const loaded: string[] = [];

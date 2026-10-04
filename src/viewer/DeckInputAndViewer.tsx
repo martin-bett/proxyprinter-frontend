@@ -17,6 +17,7 @@ import CardTitle from './grid/CardTitle';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
+import { fetchVisibleConfigs, refreshStoredSelection } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
 import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
@@ -116,6 +117,13 @@ const DeckInputAndViewer: React.FC = () => {
     const saved = loadSavedConfigs();
     if (saved) {
       handleSaveApiConfigs(saved);
+      // Gespeicherte Auswahl kann veraltet sein, aktuelle Fassung nachladen
+      fetchVisibleConfigs()
+        .then(fresh => {
+          const updated = refreshStoredSelection(fresh);
+          if (updated) handleSaveApiConfigs(updated);
+        })
+        .catch(error => console.error('Error refreshing configs:', error));
     } else {
       fetchAndSelectAllConfigs()
         .then(handleSaveApiConfigs)

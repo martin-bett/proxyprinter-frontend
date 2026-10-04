@@ -219,7 +219,8 @@ const CardImage: React.FC<CardImageProps> = ({
             } else {
               // Proxy auch fehlgeschlagen
               setIsLoading(false);
-              const combined = [prevError, String(error)].filter(Boolean).join(" | ");
+              const message = error instanceof Error ? error.message : String(error);
+              const combined = [prevError, message].filter(Boolean).join(" | ");
               setLastError(combined);
               if (onError) onError({ ...card!, error: combined });
             }
@@ -384,6 +385,7 @@ const CardImage: React.FC<CardImageProps> = ({
         )}
         <div className="image-info">
           {isLoading && <div className="info-row">{status}</div>}
+          {!isLoading && lastError && <div className="info-row image-error">{lastError}</div>}
           {imageInfo && show && (
             <>
               <div className="info-row">
