@@ -25,3 +25,9 @@
   color: var(--text);
   background-color: var(--surface);
 }
+
+/* flag-icons setzt Breite über die Schriftgröße, hier gilt die feste Größe von .language-flag */
+.language-flag.fi {
+  background-size: cover;
+  line-height: 0;
+}
