@@ -1,0 +1,33 @@
+.language-flag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: 12px;
+  width: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--border, rgba(0, 0, 0, 0.25));
+  vertical-align: middle;
+}
+
+/* Schwarzes Zeichen auf hellem Grund, damit es auf dunklen Themes und Kartenbildern sichtbar bleibt */
+.language-flag-phyrexian {
+  object-fit: contain;
+  padding: 1px 0;
+  background-color: #ece6d6;
+}
+
+.language-flag-text {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  background-color: var(--surface);
+}
+
+/* flag-icons setzt Breite über die Schriftgröße, hier gilt die feste Größe von .language-flag */
+.language-flag.fi {
+  background-size: cover;
+  line-height: 0;
+}
