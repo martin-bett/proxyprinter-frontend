@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  RestoredState, Snapshot, WorkState, createSnapshot, customUploadIds, isEmptyState, restoreSnapshot, snapshotLabel,
+  RestoredState, Snapshot, WorkState, createSnapshot, customUploadIds, isEmptySnapshot, isEmptyState, restoreSnapshot, snapshotLabel,
 } from '../../service/snapshot/snapshot';
 import {
   deleteAllSnapshots, deleteSnapshot, getSnapshot, listSnapshots, putGenerateSnapshot, putSnapshot, snapshotsSize,
@@ -73,7 +73,7 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
     refreshList().then(all => {
       refreshPdfInfos(all);
       const session = all.find(s => s.kind === 'session');
-      if (session && session.label.cardCount > 0 && isEmptyState(stateRef.current)) {
+      if (session && !isEmptySnapshot(session) && isEmptyState(stateRef.current)) {
         setRestorable(session);
       }
     });

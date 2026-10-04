@@ -62,7 +62,7 @@ describe('snapshot', () => {
 
   it('takes the first decklist line before the first search', () => {
     const snapshot = createSnapshot({ ...workState(), cardResults: {}, selectedCards: {}, decklist: '4x Goblin Guide (ZEN) 126\n2 Bolt' }, 'session');
-    expect(snapshot.label).toEqual({ cardCount: 0, firstCard: 'Goblin Guide' });
+    expect(snapshot.label).toEqual({ cardCount: 6, firstCard: 'Goblin Guide' });
   });
 
   it('gives the same hash for the same content', () => {

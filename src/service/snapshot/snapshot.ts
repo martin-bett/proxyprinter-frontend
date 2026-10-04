@@ -169,7 +169,9 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
     kind,
     createdAt: now,
     label: {
-      cardCount: entries.reduce((sum, entry) => sum + entry.count, 0),
+      cardCount: entries.length > 0
+        ? entries.reduce((sum, entry) => sum + entry.count, 0)
+        : decklistCount(state.decklist),
       firstCard: firstCardName(state.decklist, entries),
     },
     contentHash: hashString(JSON.stringify({ search, pdfSettings })),
@@ -177,6 +179,18 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
     pdf: { settings: pdfSettings },
   };
 }
+
+// Vor der ersten Suche: Anzahlen aus der Decklist
+function decklistCount(decklist: string): number {
+  return decklist.split('\n').reduce((sum, line) => {
+    const match = line.trim().match(/^(\d+)x?\s+\S/);
+    return match ? sum + parseInt(match[1], 10) : sum;
+  }, 0);
+}
+
+/** true, wenn der Snapshot weder Decklist noch Karten enthält. */
+export const isEmptySnapshot = (snapshot: Snapshot): boolean =>
+  snapshot.search.decklist.trim() === '' && snapshot.search.entries.length === 0;
 
 // Erste Karte der Ergebnisse; vor der ersten Suche die erste Zeile der Decklist
 function firstCardName(decklist: string, entries: SnapshotEntry[]): string {
