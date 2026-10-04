@@ -12,6 +12,7 @@ import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlin
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CardImage, { CardImageError } from './grid/CardImage';
+import CardTitle from './grid/CardTitle';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
@@ -1073,9 +1074,7 @@ const DeckInputAndViewer: React.FC = () => {
                           ) : (
                             <div className="no-image">No image available</div>
                           )}
-                        </div>
-                        <div className="card-name">
-                          <p>{cardName}</p>
+                          <CardTitle name={cardName} />
                         </div>
                         <div className="card-name card-count">
                           <p>

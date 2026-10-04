@@ -64,6 +64,7 @@
 }
 
 .card-tile {
+  container: card-tile / inline-size;
   text-align: center;
   border: solid 1px var(--card-border);
   padding: calc(5px * var(--tile-scale));
@@ -173,6 +174,58 @@
     text-align: left;            /* Macht den Text linksbündig */
   }
   
+}
+
+/* Kartenname als Overlay oben auf dem Bild (siehe grid/CardTitle.tsx).
+   Rechts bleibt Platz für Sprachflagge und Schärfepunkt (.card-badges). */
+.card-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 5px 42px 1.4em 7px;
+  font-size: 1em;
+  text-align: left;
+  color: #fff;
+  /* Verlauf läuft nach unten aus, damit keine harte Kante im Bild entsteht */
+  background: linear-gradient(
+    to bottom,
+    var(--overlay-bg) 0%,
+    var(--overlay-bg) 60%,
+    transparent 100%
+  );
+}
+
+.card-title-text {
+  display: block;
+  font-size: calc(0.8em * var(--title-fit, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Kontur aus mehreren Schatten, hält auch auf hellen Stellen im Bild */
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Auch kleinste Schrift zu breit: zwei Zeilen, danach "…" */
+.card-title-text.card-title-wrap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Schmale Kacheln: Titel unter Flagge und Schärfepunkt, dafür volle Breite */
+@container card-tile (max-width: 120px) {
+  .card-title {
+    padding: 22px 5px 1.2em 5px;
+  }
 }
 
 .search-progress {
