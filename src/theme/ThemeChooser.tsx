@@ -4,6 +4,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import CheckIcon from '@mui/icons-material/Check';
 import { useAppTheme } from './ThemeContext';
 import { AppTheme } from './themes';
+import ManaSymbol from './ManaSymbol';
 import '../viewer/cache/MemoryButtons.css';
 import './ThemeChooser.css';
 
@@ -28,7 +29,9 @@ const ThemeChooser: React.FC = () => {
         title="Farbschema wählen"
         aria-haspopup="menu"
       >
-        <PaletteIcon />
+        {theme.mana
+          ? <ManaSymbol color={theme.mana} circle className="theme-chooser-mana" />
+          : <PaletteIcon />}
         <span>{theme.name}</span>
       </button>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
@@ -38,7 +41,12 @@ const ThemeChooser: React.FC = () => {
             selected={t.id === theme.id}
             onClick={() => { setThemeId(t.id); setAnchorEl(null); }}
           >
-            <ListItemIcon><Swatch theme={t} /></ListItemIcon>
+            <ListItemIcon>
+              <Swatch theme={t} />
+              {t.mana
+                ? <ManaSymbol color={t.mana} circle className="theme-chooser-mana" />
+                : <span className="theme-chooser-mana theme-chooser-mana-empty" />}
+            </ListItemIcon>
             <ListItemText>{t.name}</ListItemText>
             {t.id === theme.id && <CheckIcon fontSize="small" className="theme-chooser-check" />}
           </MenuItem>
