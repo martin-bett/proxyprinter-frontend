@@ -236,6 +236,11 @@
   margin: 5px 25px 5px 25px;
 }
 
+.settings-category.settings-email {
+  display: block;
+  max-width: 420px;
+}
+
 /* Filter- und Auswahlbeschriftung: Name links, alle Symbole rechtsbündig */
 .label-container {
   display: flex;
