@@ -9,7 +9,7 @@ jest.mock('./CardImage', () => ({
 }));
 jest.mock('../../container/CropImageOverlay', () => ({ __esModule: true, default: () => null }));
 jest.mock('../../service/cache/ImageLoaderService', () => ({
-  imageLoaderService: { stopForFilters: jest.fn(), stopByCategory: jest.fn() },
+  imageLoaderService: { stopByCategory: jest.fn() },
 }));
 
 const card = (name: string, rating?: 'good' | 'ok' | 'poor' | 'unknown') =>
