@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
 # Copy the rest of the application code
 COPY . .
@@ -18,14 +18,14 @@ RUN npm run build
 # Serve stage
 FROM nginx:alpine
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
+# nginx-Konfiguration fürs Image (statische Dateien + /api an den Backend-Container).
+# nginx.conf im Repo-Root ist die alte TLS-Proxy-Konfiguration und wird hier nicht benutzt.
+COPY nginx/spa.conf /etc/nginx/nginx.conf
 
-# Copy the built React app from the build stage to the nginx container
-COPY --from=build /app/build /app/build
+# Copy the built React app from the build stage
+COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose port 8081
-EXPOSE 8081
+EXPOSE 80
 
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
