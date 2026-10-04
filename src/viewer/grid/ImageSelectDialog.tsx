@@ -11,8 +11,8 @@ import { CardResult, GroupedResults } from '../../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
 
-// Druckschärfe-Filter. Noch nicht gemessene Bilder (nicht geladen) und "kein Text erkannt"
-// laufen unter "unrated", damit sie standardmäßig sichtbar bleiben und überhaupt gemessen werden.
+// Druckschärfe-Filter. "unrated" = gemessen, aber kein Text erkannt.
+// Noch nicht gemessene Bilder ("pending") fallen nie raus, sonst würden sie nie geladen und gemessen.
 type QualityFilter = 'good' | 'ok' | 'poor' | 'unrated';
 const QUALITY_FILTERS: { key: QualityFilter; label: string }[] = [
   { key: 'good', label: 'Gut lesbar' },
@@ -21,9 +21,15 @@ const QUALITY_FILTERS: { key: QualityFilter; label: string }[] = [
   { key: 'unrated', label: 'Nicht bewertet' },
 ];
 
-const qualityFilterOf = (result: CardResult): QualityFilter => {
+const qualityFilterOf = (result: CardResult): QualityFilter | 'pending' => {
   const rating = result.imageInfo?.quality?.rating;
+  if (!rating) return 'pending';
   return rating === 'good' || rating === 'ok' || rating === 'poor' ? rating : 'unrated';
+};
+
+const passesQualityFilter = (result: CardResult, visible: Set<QualityFilter>): boolean => {
+  const filter = qualityFilterOf(result);
+  return filter === 'pending' || visible.has(filter);
 };
 
 interface ImageSelectDialogProps {
@@ -162,7 +168,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
               .map(([apiName, results]) => {
                 const visibleResults = results.filter(result =>
                   dialogVisibleLanguages.has(result.languageCode || NO_LANGUAGE) &&
-                  visibleQualities.has(qualityFilterOf(result))
+                  passesQualityFilter(result, visibleQualities)
                 );
                 return (
                   <div key={apiName} className={visibleResults.length === 0 ? 'no-matching-card' : ''}>

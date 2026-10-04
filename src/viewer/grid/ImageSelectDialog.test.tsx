@@ -28,19 +28,20 @@ it('blendet Bilder nach Druckschärfe aus', () => {
     <ImageSelectDialog
       open={true}
       onClose={() => {}}
-      groupedResults={{ scryfall: [card('scharf', 'good'), card('weich', 'ok'), card('matsch', 'poor'), card('neu')] }}
+      groupedResults={{ scryfall: [card('scharf', 'good'), card('weich', 'ok'), card('matsch', 'poor'), card('ohneText', 'unknown'), card('neu')] }}
       initialSelectedImage={null}
       onImageLoadError={() => {}}
       initialVisibleLanguages={new Set(['No Language'])}
       initialVisibleApis={new Set(['scryfall'])}
     />
   );
-  expect(shown()).toEqual(['scharf', 'weich', 'matsch', 'neu']);
+  expect(shown()).toEqual(['scharf', 'weich', 'matsch', 'ohneText', 'neu']);
 
   fireEvent.click(screen.getByLabelText('Schlecht lesbar'));
-  expect(shown()).toEqual(['scharf', 'weich', 'neu']);
+  expect(shown()).toEqual(['scharf', 'weich', 'ohneText', 'neu']);
 
+  // Noch nicht gemessene Bilder bleiben sichtbar, damit sie geladen werden
   fireEvent.click(screen.getByLabelText('Etwas weich'));
   fireEvent.click(screen.getByLabelText('Nicht bewertet'));
-  expect(shown()).toEqual(['scharf']);
+  expect(shown()).toEqual(['scharf', 'neu']);
 });
