@@ -2,7 +2,7 @@
   margin: 0 auto;
   padding: 20px;
   display: grid;
-  grid-template-columns: 2fr 10fr 1fr;
+  grid-template-columns: 1.7fr 10fr 1fr;
   grid-template-areas:
     "headline headline headline"
     "input-controls decklist-viewer view-selection"
@@ -118,7 +118,7 @@
   flex: 3;
   overflow-y: auto;
   height: auto;
-  max-height: 82vh;
+  max-height: calc(82 * var(--vh));
   padding: 0.5rem;
 }
 
@@ -248,8 +248,8 @@
   padding: 10px;
   overflow-y: auto;
   background-color: var(--input-bg);
-  max-height: 20vh;
-  min-height: 20vh;
+  max-height: calc(20 * var(--vh));
+  min-height: calc(20 * var(--vh));
 }
 
 .log-content {
