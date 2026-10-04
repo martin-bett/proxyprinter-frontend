@@ -180,11 +180,10 @@
   /* Verlauf läuft nach unten aus, damit keine harte Kante im Bild entsteht */
   background: linear-gradient(
     to bottom,
-    var(--title-scrim) 0%,
-    var(--title-scrim) 45%,
+    var(--overlay-bg) 0%,
+    var(--overlay-bg) 60%,
     transparent 100%
   );
-  --title-scrim: rgba(0, 0, 0, 0.62);
 }
 
 .card-title-text {
