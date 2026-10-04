@@ -44,6 +44,9 @@ export interface ApiConfigFormState {
   nestedLanguageDataListField: string;
   nestedLanguageImageUrlField: string;
   nestedLanguageLanguageField: string;
+  cardFacesDataListField: string;
+  cardFacesImageUrlField: string;
+  cardFacesNameField: string;
   published?: boolean;
   [key: string]: unknown;
 }
@@ -89,7 +92,10 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     followLinkLanguageField: '',
     nestedLanguageDataListField: '',
     nestedLanguageImageUrlField: '',
-    nestedLanguageLanguageField: ''
+    nestedLanguageLanguageField: '',
+    cardFacesDataListField: '',
+    cardFacesImageUrlField: '',
+    cardFacesNameField: ''
   });
 
   const [expandedSections, setExpandedSections] = useState({
@@ -464,6 +470,31 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
                 type="text"
                 name="nestedLanguageLanguageField"
                 value={config.nestedLanguageLanguageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Card Faces Data List Field:</label>
+              <input
+                type="text"
+                name="cardFacesDataListField"
+                value={config.cardFacesDataListField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+                title="Liste der Kartenseiten, z.B. card_faces bei Scryfall. Jede Seite mit Bild wird ein eigener Treffer."
+              />
+              <label>Card Faces Image URL Field:</label>
+              <input
+                type="text"
+                name="cardFacesImageUrlField"
+                value={config.cardFacesImageUrlField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Card Faces Name Field:</label>
+              <input
+                type="text"
+                name="cardFacesNameField"
+                value={config.cardFacesNameField}
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />
