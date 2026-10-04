@@ -34,9 +34,11 @@ interface AddCardDialogProps {
   searchForApis: (cardName: string) => Promise<void>;
   /** Seitenverhältnis einer Karte (Breite / Höhe) aus den PDF-Einstellungen. */
   cardAspect?: number;
+  /** Meldet, ob gerade die Zuschnitt-Maske offen ist (dann braucht der Dialog mehr Breite). */
+  onMaskOpenChange?: (open: boolean) => void;
 }
 
-const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis, cardAspect = 63 / 88 }) => {
+const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis, cardAspect = 63 / 88, onMaskOpenChange }) => {
   const [maskSource, setMaskSource] = useState<MaskSource | null>(null);
   const [cardName, setCardName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -51,6 +53,13 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
       if (src?.startsWith('blob:')) URL.revokeObjectURL(src);
     };
   }, [maskSource]);
+
+  const maskOpen = maskSource !== null;
+  useEffect(() => {
+    onMaskOpenChange?.(maskOpen);
+    return () => onMaskOpenChange?.(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maskOpen]);
 
   if (!open) return null;
 

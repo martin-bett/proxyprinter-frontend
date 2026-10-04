@@ -38,6 +38,8 @@ interface ImageSelectDialogProps {
   onImageLoadError: (card: CardImageError) => void;
   initialVisibleLanguages: Set<string>;
   initialVisibleApis: Set<string>;
+  /** Seitenverhältnis einer Karte (Breite / Höhe) aus den PDF-Einstellungen. */
+  cardAspect?: number;
 }
 
 const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
@@ -47,7 +49,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   initialSelectedImage,
   onImageLoadError,
   initialVisibleLanguages,
-  initialVisibleApis }) => {
+  initialVisibleApis,
+  cardAspect }) => {
   const [selectedImage, setSelectedImage] = useState<CardResult | null>(initialSelectedImage || null);
 
   const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(initialVisibleLanguages);
@@ -167,8 +170,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
           <div className="image-selection-container">
             <CropImageOverlay
               selectedImage={selectedImage}
-              handleCropSettings={null}
-              fixedHeight={704}
+              cardAspect={cardAspect}
             />
           </div>
           <div className="image-grid-container">

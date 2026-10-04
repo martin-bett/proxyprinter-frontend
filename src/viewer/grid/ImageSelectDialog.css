@@ -23,6 +23,54 @@
   grid-row: 1 / 3;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.image-select-dialog .crop-image-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.image-select-dialog .crop-image-tabs {
+  min-height: 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.image-select-dialog .crop-image-tabs .MuiTab-root {
+  min-height: 40px;
+  color: inherit;
+}
+
+.image-select-dialog .crop-image-tabs .Mui-selected {
+  color: var(--accent);
+}
+
+.image-select-dialog .crop-image-tabs .MuiTabs-indicator {
+  background-color: var(--accent);
+}
+
+.image-select-dialog .crop-image-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.image-select-dialog .crop-image-preview img {
+  max-width: 100%;
+  display: block;
+}
+
+.image-select-dialog .crop-image-info td:first-child {
+  font-weight: bold;
+  padding-right: 8px;
+}
+
+.image-select-dialog .crop-image-stretch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
 }
   
 .image-select-dialog .crop-settings {
