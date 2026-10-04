@@ -209,9 +209,34 @@ const DeckInputAndViewer: React.FC = () => {
     setApiConfigs(configsObject); // Update internal API configs state
   };
 
-  const handleSaveCustomCard: SaveCustomCardFn = async (cardName, imageUrl, file, gridSettings) => {
-    console.log(cardName, imageUrl, file, gridSettings);
+  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+    crops.forEach((crop, cropIndex) => {
+      // Eintrag in cardResults für jeden Zuschnitt
+      const cropKey = `${cardName}_crop${cropIndex}`;
+      const cropCard: CardResult = {
+        name: cardName,
+        imageUrl,
+        apiName: 'custom',
+        languageCode: NO_LANGUAGE,
+        cropSettings: crop,
+      };
 
+      setCardResults((prev) => ({
+        ...prev,
+        [cropKey]: {
+          count: 1,
+          results: [cropCard],
+        },
+      }));
+
+      setSelectedCards((prev) => ({
+        ...prev,
+        [cropKey]: [cropCard],
+      }));
+    });
+  };
+
+  const handleSaveCustomCard: SaveCustomCardFn = async (cardName, imageUrl, file, crops) => {
     let finalImageUrl: string | undefined;
     if (imageUrl) {
       finalImageUrl = imageUrl;
@@ -220,67 +245,22 @@ const DeckInputAndViewer: React.FC = () => {
       finalImageUrl = '/api/files/download/' + file;
     }
     if (!finalImageUrl) return;
+    const url = finalImageUrl;
 
-    const rows = gridSettings?.rows || 1;
-    const cols = gridSettings?.cols || 1;
-
-    // Bild laden, um die Dimensionen zu ermitteln
-    const img = new Image();
-    img.src = finalImageUrl;
-
-    img.onload = () => {
-      const { width, height } = img;
-
-      const cellWidth = Math.floor(width / cols);
-      const cellHeight = Math.floor(height / rows);
-
-      let cropIndex = 0; // Initialisieren des Indexes
-
-      // Berechnung der Crops
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const crop: CropSettings = {
-            offSetX: col * cellWidth,
-            offSetY: row * cellHeight,
-            width: cellWidth,
-            height: cellHeight,
-            isStretch: true
-          };
-
-          // Eintrag in cardResults für jedes Crop
-          const cropKey = `${cardName}_crop${cropIndex}`;
-          const cropCard: CardResult = {
-            name: cardName,
-            imageUrl: finalImageUrl!,
-            apiName: 'custom',
-            languageCode: NO_LANGUAGE,
-            cropSettings: crop,
-          };
-
-          // cardResults aktualisieren
-          setCardResults((prev) => ({
-            ...prev,
-            [cropKey]: {
-              count: 1,
-              results: [cropCard],
-            },
-          }));
-
-          // selectedCards aktualisieren
-          setSelectedCards((prev) => ({
-            ...prev,
-            [cropKey]: [cropCard],
-          }));
-
-          cropIndex++; // Index erhöhen für das nächste Crop
-        }
-      }
-
-    };
-
-    img.onerror = () => {
-      console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
-    };
+    if (crops && crops.length > 0) {
+      // Zuschnitte kommen fertig aus der Maske
+      addCustomCrops(cardName, url, crops);
+    } else {
+      // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+      };
+      img.onerror = () => {
+        console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
+      };
+    }
 
     handleCloseCustomCardDialog();
   };
@@ -1262,6 +1242,7 @@ const DeckInputAndViewer: React.FC = () => {
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
           searchForApis={searchForApis}
+          cardAspect={settings.width / settings.height}
         />}
       />
       <ClosableDialog

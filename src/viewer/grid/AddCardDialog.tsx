@@ -1,65 +1,109 @@
-import React, { useState } from 'react';
-import { Button, Divider, TextField, CircularProgress } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Button, Divider, TextField } from '@mui/material';
 import { Box } from '@mui/material';
+import { CropSettings } from '../../service/ApiFactory';
+import CropMask from './crop/CropMask';
 
-export type CustomCardGridSettings = { rows: number; cols: number };
-
+/** crops: fertige Zuschnitte aus der Maske, je Zuschnitt eine Karte. Ohne crops wird das ganze Bild genommen. */
 export type SaveCustomCardFn = (
   cardName: string,
   imageUrl: string | null,
   file: string | null,
-  gridSettings?: CustomCardGridSettings
+  crops?: CropSettings[]
 ) => void;
+
+type MaskSource =
+  | { kind: 'url'; src: string; url: string }
+  | { kind: 'file'; src: string; file: File };
+
+/** Lädt ein Bild über den Backend-Proxy, falls die Seite das direkte Einbinden blockiert. */
+const loadViaProxy = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch('/api/proxy/image', { headers: { 'X-Target-URL': url } });
+    if (!response.ok) return null;
+    return URL.createObjectURL(await response.blob());
+  } catch {
+    return null;
+  }
+};
 
 interface AddCardDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: SaveCustomCardFn;
   searchForApis: (cardName: string) => Promise<void>;
+  /** Seitenverhältnis einer Karte (Breite / Höhe) aus den PDF-Einstellungen. */
+  cardAspect?: number;
 }
 
-const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis }) => {
-  const [gridRows, setGridRows] = useState(1);
-  const [gridCols, setGridCols] = useState(1);
+const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis, cardAspect = 63 / 88 }) => {
+  const [maskSource, setMaskSource] = useState<MaskSource | null>(null);
   const [cardName, setCardName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
+  // Object-URLs der Vorschau wieder freigeben
+  useEffect(() => {
+    const src = maskSource?.src;
+    return () => {
+      if (src?.startsWith('blob:')) URL.revokeObjectURL(src);
+    };
+  }, [maskSource]);
+
   if (!open) return null;
 
-  const handleFileUpload = async () => {
-    if (!file) return null;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    setIsUploading(true);
+  const openUrlMask = () => {
+    const url = imageUrl.trim();
+    if (!url) return;
     setUploadError('');
+    setMaskSource({ kind: 'url', src: url, url });
+  };
 
+  const openFileMask = () => {
+    if (!file) return;
+    setUploadError('');
+    setMaskSource({ kind: 'file', src: URL.createObjectURL(file), file });
+  };
+
+  const uploadFile = async (fileToUpload: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
     try {
       const response = await fetch('/api/files/upload', {
         method: 'POST',
         body: formData
       });
-
       const data = await response.json();
-
-      setIsUploading(false);
       if (response.ok && data.success) {
-        onSave(file.name, null, data.generatedId);
-        setFile(null);
         return data.generatedId;
-      } else {
-        setUploadError(data.message || 'Ein Fehler ist beim Hochladen aufgetreten.');
-        return null;
       }
+      setUploadError(data.message || 'Ein Fehler ist beim Hochladen aufgetreten.');
+      return null;
     } catch (error) {
-      setIsUploading(false);
       setUploadError('Ein Fehler ist beim Hochladen der Datei aufgetreten.');
       console.error('Upload error:', error);
       return null;
+    }
+  };
+
+  const handleConfirmCrop = async (crops: CropSettings[]) => {
+    if (!maskSource) return;
+    if (maskSource.kind === 'url') {
+      onSave(maskSource.url.split('/').pop() || 'custom-card', maskSource.url, null, crops);
+      setImageUrl('');
+      setMaskSource(null);
+      return;
+    }
+    setIsUploading(true);
+    setUploadError('');
+    const generatedId = await uploadFile(maskSource.file);
+    setIsUploading(false);
+    if (generatedId) {
+      onSave(maskSource.file.name, null, generatedId, crops);
+      setFile(null);
+      setMaskSource(null);
     }
   };
 
@@ -75,6 +119,27 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
   };
+
+  if (maskSource) {
+    return (
+      <>
+        <header className="modal-card-head">
+          <p className="modal-card-title">Crop Image</p>
+        </header>
+        <section className="modal-card-body">
+          <CropMask
+            imageSrc={maskSource.src}
+            cardAspect={cardAspect}
+            loadFallback={maskSource.kind === 'url' ? () => loadViaProxy(maskSource.url) : undefined}
+            busy={isUploading}
+            error={uploadError}
+            onBack={() => { setMaskSource(null); setUploadError(''); }}
+            onConfirm={handleConfirmCrop}
+          />
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
@@ -131,39 +196,14 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                   className="mb-3"
                 />
               </div>
-              <div className="field">
-                <TextField
-                  fullWidth
-                  label="Rows"
-                  type="number"
-                  inputProps={{ min: 1 }}
-                  value={gridRows}
-                  onChange={(e) => setGridRows(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  variant="outlined"
-                  size="small"
-                  className="mb-3"
-                />
-              </div>
-              <div className="field">
-                <TextField
-                  fullWidth
-                  label="Columns"
-                  type="number"
-                  inputProps={{ min: 1 }}
-                  value={gridCols}
-                  onChange={(e) => setGridCols(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  variant="outlined"
-                  size="small"
-                  className="mb-3"
-                />
-              </div>
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => onSave(imageUrl.split('/').pop() || 'custom-card', imageUrl, null, { rows: gridRows, cols: gridCols })}
+                onClick={openUrlMask}
+                disabled={!imageUrl.trim()}
                 fullWidth
               >
-                Add URL with Grid
+                Next: crop
               </Button>
             </div>
 
@@ -194,15 +234,12 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleFileUpload}
-                disabled={!file || isUploading}
+                onClick={openFileMask}
+                disabled={!file}
                 fullWidth
               >
-                {isUploading ? <CircularProgress size={24} /> : 'upload'}
+                Next: crop
               </Button>
-              {uploadError && (
-                <p className="help is-danger mt-2">{uploadError}</p>
-              )}
             </div>
 
           </section>
