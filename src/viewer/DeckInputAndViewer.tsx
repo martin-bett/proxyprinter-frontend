@@ -101,6 +101,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
+  const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
@@ -1230,6 +1231,7 @@ const DeckInputAndViewer: React.FC = () => {
         }
         initialVisibleApis={visibleApis}
         initialVisibleLanguages={visibleLanguages}
+        cardAspect={settings.width / settings.height}
         groupedResults={
           currentCardName && cardResults[currentCardName]
             ? groupResultsByApi(cardResults[currentCardName].results || [])
@@ -1243,13 +1245,14 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={customCardDialogOpen}
         onClose={handleCloseCustomCardDialog}
-        maxWidth='sm'
+        maxWidth={customCardMaskOpen ? 'lg' : 'sm'}
         children={<AddCardDialog
           open={customCardDialogOpen}
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
           searchForApis={searchForApis}
           cardAspect={settings.width / settings.height}
+          onMaskOpenChange={setCustomCardMaskOpen}
         />}
       />
       <ClosableDialog

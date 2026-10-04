@@ -92,3 +92,46 @@ export const percentToPixels = (
     height: Math.min(naturalHeight - y, Math.round((crop.height / 100) * naturalHeight)),
   };
 };
+
+/** Bildpixel in Prozent des Bildes umrechnen (für react-image-crop). */
+export const pixelsToPercent = (rect: PixelRect, naturalWidth: number, naturalHeight: number) => ({
+  unit: '%' as const,
+  x: (rect.x / naturalWidth) * 100,
+  y: (rect.y / naturalHeight) * 100,
+  width: (rect.width / naturalWidth) * 100,
+  height: (rect.height / naturalHeight) * 100,
+});
+
+/** Rechteck so verschieben und kürzen, dass es ganz im Bild liegt. */
+export const clampRect = (rect: PixelRect, naturalWidth: number, naturalHeight: number): PixelRect => {
+  const width = Math.max(1, Math.min(Math.round(rect.width), naturalWidth));
+  const height = Math.max(1, Math.min(Math.round(rect.height), naturalHeight));
+  return {
+    x: Math.max(0, Math.min(Math.round(rect.x), naturalWidth - width)),
+    y: Math.max(0, Math.min(Math.round(rect.y), naturalHeight - height)),
+    width,
+    height,
+  };
+};
+
+/** Größtes Rechteck mit Seitenverhältnis aspect, zentriert innerhalb von rect. */
+export const fitAspectInside = (rect: PixelRect, aspect: number): PixelRect => {
+  let width = rect.width;
+  let height = width / aspect;
+  if (height > rect.height) {
+    height = rect.height;
+    width = height * aspect;
+  }
+  return {
+    x: rect.x + (rect.width - width) / 2,
+    y: rect.y + (rect.height - height) / 2,
+    width,
+    height,
+  };
+};
+
+/** Anzeigegröße für ein Bild, das in maxWidth x maxHeight passen soll, ohne Verzerrung. */
+export const fitDisplaySize = (naturalWidth: number, naturalHeight: number, maxWidth: number, maxHeight: number) => {
+  const scale = Math.min(maxWidth / naturalWidth, maxHeight / naturalHeight, 1);
+  return { width: Math.max(1, Math.floor(naturalWidth * scale)), height: Math.max(1, Math.floor(naturalHeight * scale)) };
+};
