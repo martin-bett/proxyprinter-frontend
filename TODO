@@ -1,7 +1,6 @@
 config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
 
 config erweitern um artist/creator
-  config erweitern um auto english language setter
 
 custom picture imageurl über proxy als checkbox
 
