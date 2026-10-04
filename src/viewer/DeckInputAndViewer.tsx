@@ -17,7 +17,7 @@ import CardTitle from './grid/CardTitle';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
-import { fetchVisibleConfigs, refreshStoredSelection } from '../api/view/api/configSelection';
+import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
 import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
@@ -333,6 +333,7 @@ const DeckInputAndViewer: React.FC = () => {
 
     const apiResults: Record<string, Record<string, SearchResult[]>> = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
+    markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
 
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
@@ -859,6 +860,7 @@ const DeckInputAndViewer: React.FC = () => {
 
     const apiResults: Record<string, Record<string, SearchResult[]>> = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
+    markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
 
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
