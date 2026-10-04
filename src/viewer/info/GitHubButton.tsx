@@ -1,18 +1,11 @@
 import React from 'react';
 import { Github } from 'lucide-react';
+import ActionLink from '../../container/inputs/ActionLink';
 
-const GitHubButton: React.FC = () => {
-  return (
-    <a
-      href="https://github.com/martin-bett?tab=repositories"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="button inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
-    >
-      <Github size={20} />
-      <span className="font-semibold">Participate</span>
-    </a>
-  );
-};
+const GitHubButton: React.FC = () => (
+  <ActionLink href="https://github.com/martin-bett?tab=repositories" icon={<Github />}>
+    Participate
+  </ActionLink>
+);
 
 export default GitHubButton;
