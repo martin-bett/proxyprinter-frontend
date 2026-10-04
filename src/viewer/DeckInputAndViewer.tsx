@@ -323,22 +323,23 @@ const DeckInputAndViewer: React.FC = () => {
 
         const tasks = cardEntries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
+            const startedAt = performance.now();
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
                 const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: resultsArr.length, rawResponse: result?.rawResponse });
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
               } else {
                 result = await api({ cardname: entry.name, set: entry.set });
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, rawResponse: result.rawResponse });
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
               }
             } catch (error) {
-              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, error: error instanceof Error ? error.message : String(error) });
+              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -828,22 +829,23 @@ const DeckInputAndViewer: React.FC = () => {
         groupResults[apiKey] = {};
         const api = apiFactory!.createApi(apiKey);
 
+        const startedAt = performance.now();
         try {
           let result: SearchApiResult | undefined;
           if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
             result = await SearchCacheService.getSearchResult(apiKey, cardEntry.name);
             const resultsArr = result?.results || [];
-            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'cache', count: resultsArr.length, rawResponse: result?.rawResponse });
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
           } else {
             result = await api({ cardname: cardEntry.name });
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
             const resultsArr = result?.results || [];
-            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, rawResponse: result.rawResponse });
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
-          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, error: error instanceof Error ? error.message : String(error) });
+          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
           groupResults[apiKey][cardEntry.name] = [];
         }
 

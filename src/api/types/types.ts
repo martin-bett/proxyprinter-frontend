@@ -25,6 +25,10 @@ export interface LogEntry {
   cardName: string;
   source: 'cache' | 'network' | 'error';
   count: number;
+  /** Dauer der Suche in Millisekunden (auch Cache-Lesen) */
+  durationMs: number;
+  /** HTTP-Requests dieser Suche; 0 bei Cache-Treffern, undefined bei Fehlern */
+  requestCount?: number;
   rawResponse?: string;
   error?: string;
 }

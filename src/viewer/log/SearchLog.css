@@ -2,31 +2,58 @@
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .search-log-table .search-log-api {
-  width: 30%;
+  width: 22%;
 }
 
 .search-log-table .search-log-source {
-  width: 2rem;
+  width: 1.75rem;
 }
 
 .search-log-table .search-log-count {
-  width: 2.75rem;
+  width: 2rem;
 }
 
-.search-log-table td {
-  padding: 1px 4px;
+.search-log-table .search-log-duration {
+  width: 3.25rem;
+}
+
+.search-log-table .search-log-requests {
+  width: 1.5rem;
+}
+
+.log .search-log-table th {
+  padding: 1px 3px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  position: sticky;
+  top: -10px;
+  background: var(--input-bg);
+}
+
+.search-log-table th svg {
+  vertical-align: middle;
+}
+
+.log .search-log-table td {
+  padding: 1px 3px;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
+  text-align: left;
 }
 
-.search-log-cell-count {
+.log .search-log-table .search-log-cell-number {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -35,8 +62,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   padding: 0;
   font-size: 1rem;
   border: 1px solid transparent;

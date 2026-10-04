@@ -2,6 +2,8 @@ import React from 'react';
 import UploadIcon from '@mui/icons-material/Upload';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { LogEntry } from '../../api/types/types';
 import './SearchLog.css';
 
@@ -11,6 +13,13 @@ const sourceIcon: Record<LogEntry['source'], { icon: React.ReactNode; title: str
   network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Aus dem Netz geladen' },
   error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Fehler' },
 };
+
+// Kurz halten, die Spalte ist schmal: 85ms, 1.2s, 12s
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  if (ms < 10000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${Math.round(ms / 1000)}s`;
+}
 
 interface SearchLogProps {
   entries: LogEntry[];
@@ -25,8 +34,20 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
           <col className="search-log-api" />
           <col className="search-log-source" />
           <col className="search-log-count" />
+          <col className="search-log-duration" />
+          <col className="search-log-requests" />
           <col />
         </colgroup>
+        <thead>
+          <tr>
+            <th>API</th>
+            <th title="Quelle: Cache oder Netz">Q</th>
+            <th className="search-log-cell-number" title="Treffer">#</th>
+            <th className="search-log-cell-number" title="Dauer"><TimerOutlinedIcon fontSize="inherit" /></th>
+            <th className="search-log-cell-number" title="Anzahl Requests"><SwapVertIcon fontSize="inherit" /></th>
+            <th>Name</th>
+          </tr>
+        </thead>
         <tbody>
           {entries.map((entry, index) => {
             const { icon, title } = sourceIcon[entry.source];
@@ -46,7 +67,9 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
                     {icon}
                   </button>
                 </td>
-                <td className="search-log-cell-count">{entry.source === 'error' ? '' : entry.count}</td>
+                <td className="search-log-cell-number">{entry.source === 'error' ? '–' : entry.count}</td>
+                <td className="search-log-cell-number">{formatDuration(entry.durationMs)}</td>
+                <td className="search-log-cell-number">{entry.requestCount ?? '–'}</td>
                 <td className="search-log-cell-name" title={entry.error ? `${entry.cardName}: ${entry.error}` : entry.cardName}>
                   {entry.cardName}
                 </td>
