@@ -75,6 +75,7 @@ const GalleryConfigExecutor: React.FC<GalleryConfigExecutorProps> = ({ config, h
                                 <strong>{key}:</strong>
                                 <input
                                     type="text"
+                                    placeholder={key === "url" ? "Link einfügen" : undefined}
                                     value={parameterMap[type][key] || ""}
                                     onChange={(e) =>
                                         handleInputChange(type, key, e.target.value)
