@@ -83,7 +83,7 @@ jobs:
           {
             printf 'export DEPLOY_PATH=%q SERVICE=frontend TAG_VAR=FRONTEND_TAG NEW_TAG=%q\n' "$DEPLOY_PATH" "$NEW_TAG"
             printf 'export GHCR_USER=%q GHCR_TOKEN=%q\n' "$GITHUB_ACTOR" "$GHCR_TOKEN"
-            printf 'export HEALTH_URL=%q\n' "http://localhost/"
+            printf 'export HEALTH_URL=%q\n' "http://127.0.0.1/"
             cat .github/deploy/remote-deploy.sh
           } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
                 "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc'

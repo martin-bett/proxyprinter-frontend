@@ -20,6 +20,10 @@ get_var() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2- || true; }
 set_var() {
   if grep -qE "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi
 }
+# Alten Tag wiederherstellen; war vorher keiner gesetzt, die Zeile ganz entfernen
+restore_var() {
+  if [ -n "$2" ]; then set_var "$1" "$2"; else sed -i "/^$1=/d" .env; fi
+}
 
 OLD_TAG="$(get_var "$TAG_VAR")"
 PREV_TAG="$(get_var "${TAG_VAR}_PREVIOUS")"
@@ -36,7 +40,7 @@ trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
 
 set_var "$TAG_VAR" "$NEW_TAG"
 if ! docker compose pull "$SERVICE"; then
-  [ -n "$OLD_TAG" ] && set_var "$TAG_VAR" "$OLD_TAG"
+  restore_var "$TAG_VAR" "$OLD_TAG"
   echo "Image konnte nicht geladen werden, .env zurückgesetzt" >&2
   exit 1
 fi
@@ -64,8 +68,10 @@ done
 
 echo "$SERVICE ist nach 150 s nicht gesund, Rollback auf ${OLD_TAG:-<nichts>}" >&2
 docker compose logs --tail 80 "$SERVICE" >&2 || true
-if [ -n "$OLD_TAG" ]; then
-  set_var "$TAG_VAR" "$OLD_TAG"
-  docker compose up -d --no-deps "$SERVICE"
+if [ -n "${HEALTH_URL:-}" ]; then
+  echo "Letzter Health-Check ($HEALTH_URL):" >&2
+  docker compose exec -T frontend wget -O /dev/null -T 5 "$HEALTH_URL" >&2 || true
 fi
+restore_var "$TAG_VAR" "$OLD_TAG"
+docker compose up -d --no-deps "$SERVICE" || echo "Rollback-Start fehlgeschlagen, bitte auf dem VPS prüfen" >&2
 exit 1
