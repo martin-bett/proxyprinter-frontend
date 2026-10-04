@@ -1075,32 +1075,33 @@ const DeckInputAndViewer: React.FC = () => {
                             <div className="no-image">No image available</div>
                           )}
                           <CardTitle name={cardName} />
-                        </div>
-                        <div className="card-name card-count">
-                          <p>
-                            {!uniquePrints ? <span
-                              className="remove-card"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveCard(cardName, index);
-                              }}
-                            >
-                              ✕
-                            </span> : null}
+                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl */}
+                          <div className="card-count" onClick={(e) => e.stopPropagation()}>
+                            {!uniquePrints ? (
+                              <button
+                                className="count-button remove-card"
+                                title="Remove card"
+                                onClick={() => handleRemoveCard(cardName, index)}
+                              >
+                                ✕
+                              </button>
+                            ) : null}
                             <button
                               onClick={() => updateCardCount(cardName, -1)}
                               className="count-button"
+                              title="One less"
                             >
                               <Minus />
                             </button>
-                            {cardData.count}
+                            <span className="count-value">{cardData.count}</span>
                             <button
                               onClick={() => updateCardCount(cardName, 1)}
                               className="count-button"
+                              title="One more"
                             >
                               <Plus />
                             </button>
-                          </p>
+                          </div>
                         </div>
                       </div>
                     );

@@ -58,6 +58,10 @@
 .card-tiles {
   /* --tile-scale wird aus der Grid Size gesetzt (10rem = 1) */
   --tile-scale: 1;
+  --tile-pad: calc(3px * var(--tile-scale));
+  /* Echte Karten: 63 mm breit, Eckradius ca. 3,2 mm = 5 % der Breite.
+     Absolut gerechnet statt "5%", denn Prozent wäre bei 63:88 eine Ellipse. */
+  --card-radius: calc((10rem * var(--tile-scale) - 2 * var(--tile-pad) - 2px) * 0.05);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 10rem));
   gap: calc(10px * var(--tile-scale));
@@ -67,8 +71,8 @@
   container: card-tile / inline-size;
   text-align: center;
   border: solid 1px var(--card-border);
-  padding: calc(5px * var(--tile-scale));
-  border-radius: 5%;
+  padding: var(--tile-pad);
+  border-radius: calc(var(--card-radius) + var(--tile-pad));
   font-size: calc(1rem * var(--tile-scale));
 }
 .card-image-container {
@@ -93,7 +97,11 @@
 }
 .custom-card {
   border: 1px solid var(--success);
-  padding: calc(2px * var(--tile-scale));
+}
+
+/* Kartenbild mit runden Ecken wie eine Spielkarte, Titel und Anzahl werden mit abgeschnitten */
+.card-tile > .card-image-container {
+  border-radius: var(--card-radius);
 }
 
 .custom-card canvas {
@@ -159,21 +167,6 @@
 /* Optional: Hover-Effekt für den Scrollbalken */
 .card-grid::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-hover);
-}
-
-.card-name {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0.3em;
-  margin-bottom: 0px;
-  p {
-    white-space: nowrap;         /* Verhindert Umbrüche, sodass der Text immer in einer Zeile bleibt */
-    overflow: hidden;            /* Verhindert, dass der Text über das Element hinaus geht */
-    text-overflow: ellipsis;     /* Zeigt "..." an, wenn der Text abgeschnitten wird */
-    text-align: left;            /* Macht den Text linksbündig */
-  }
-  
 }
 
 /* Kartenname als Overlay oben auf dem Bild (siehe grid/CardTitle.tsx).
@@ -326,30 +319,71 @@
   margin-bottom: 5px;
 }
 
-.remove-card {
-  color: var(--danger);
-  cursor: pointer;
-  margin-right: 0.3em;
-  font-weight: bold;
-}
-
-.card-count p {
+/* Anzahl unten auf dem Bild, gleicher Verlauf wie der Titel (.card-title), nur von unten */
+.card-count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.1em;
+  padding: 1.1em 4px 3px;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(
+    to top,
+    var(--overlay-bg) 0%,
+    var(--overlay-bg) 55%,
+    transparent 100%
+  );
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.count-value {
+  min-width: 1.4em;
+  text-align: center;
 }
 
 .count-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25em 0.5em;
-  margin: 0 0.25em;
-  font-size: inherit;
-  border-radius: 0.25em;
+  padding: 0.25em 0.4em;
+  border: none;
+  border-radius: 0.3em;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
   svg {
-    width: 0.75em;
-    height: 0.75em;
+    width: 0.9em;
+    height: 0.9em;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
   }
+}
+
+.count-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.count-button.remove-card {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  color: var(--danger);
+}
+
+/* Bildinfos ("Show Image Info") über der Anzahl-Leiste statt darunter */
+.card-tile .image-info {
+  bottom: 2em;
 }
 
 
