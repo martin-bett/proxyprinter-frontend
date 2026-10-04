@@ -84,7 +84,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [selectedCards, setSelectedCards] = useState<SelectedCardsMap>({});
   const [currentCardName, setCurrentCardName] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
-  const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set([NO_LANGUAGE]));
+  const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set());
   const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set());
   const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
@@ -1112,8 +1112,8 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="right-toolbar">
       <div className="view-selection">
         <div className="filter-controls">
-          <h2 className='title is-5'>View Selection</h2>
-          <div className="language-filter checkbox-group">
+          <CollapsibleSection storageKey="view-selection" title="View Selection">
+          <div className="checkbox-group">
             {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
             {renderCheckbox('showImageSettings', 'Show Image Info', showImageSettings, (event) => handleShowImageSettingsChanged(event))}
             <div className="grid-size-control">
@@ -1134,14 +1134,16 @@ const DeckInputAndViewer: React.FC = () => {
               />
             </div>
           </div>
+          </CollapsibleSection>
+          <CollapsibleSection storageKey="language-filter" title="Language Filter" defaultOpen={false}>
           <div className="language-filter checkbox-group">
-            <h3 className='title is-5'>Language Filter</h3>
             {Array.from(availableLanguages).map(lang => (
               renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang))
             ))}
           </div>
+          </CollapsibleSection>
+          <CollapsibleSection storageKey="api-filter" title="API Filter" defaultOpen={false}>
           <div className="api-filter checkbox-group">
-            <h3 className='title is-5'>API Filter</h3>
             {Object.values(apiConfigs)
               .filter((c) => availableApis.has(c.name))
               .map((config) =>
@@ -1155,15 +1157,16 @@ const DeckInputAndViewer: React.FC = () => {
                 )
               )}
           </div>
+          </CollapsibleSection>
         </div>
       </div>
 
       <div className="pdf-controls">
-        <h3 className='title is-5'>PDF Generation</h3>
+        <CollapsibleSection storageKey="pdf-generation" title="PDF Generation">
 
         <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
         <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
-
+        </CollapsibleSection>
       </div>
 
       <div className="bottom">
