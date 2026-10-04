@@ -395,3 +395,13 @@
 .decklist-input form {
   margin-bottom: 12px;
 }
+
+/* In einklappbaren Abschnitten sorgt der Abschnitt selbst für den Abstand */
+.collapsible-body > .checkbox-group {
+  margin-bottom: 0;
+}
+
+/* Rechte Spalte ist schmal: Abschnittstitel etwas kleiner, damit sie nicht überlaufen */
+.right-toolbar .collapsible-header {
+  font-size: 0.9rem;
+}
