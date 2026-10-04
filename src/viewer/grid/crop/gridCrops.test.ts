@@ -1,4 +1,4 @@
-import { areaAspect, centeredAspectPercent, computeGridCrops, percentToPixels } from './gridCrops';
+import { centeredAspectPercent, computeGridCrops, percentToPixels } from './gridCrops';
 
 describe('computeGridCrops', () => {
   const area = { x: 0, y: 0, width: 1000, height: 600 };
@@ -36,12 +36,6 @@ describe('computeGridCrops', () => {
 });
 
 describe('Seitenverhältnis', () => {
-  it('rechnet das Verhältnis des Ausschnitts aus dem Kachelverhältnis', () => {
-    expect(areaAspect(63 / 88, 1, 1)).toBeCloseTo(63 / 88);
-    expect(areaAspect(63 / 88, 3, 3)).toBeCloseTo(63 / 88);
-    expect(areaAspect(63 / 88, 1, 2)).toBeCloseTo(126 / 88);
-  });
-
   it('zentriert den größten passenden Ausschnitt', () => {
     const wide = centeredAspectPercent(2000, 1000, 1);
     expect(wide).toMatchObject({ x: 25, y: 0, width: 50, height: 100 });

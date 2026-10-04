@@ -64,13 +64,6 @@ export const computeGridCrops = (area: PixelRect, options: GridOptions): CropSet
   return crops;
 };
 
-/**
- * Seitenverhältnis des ganzen Ausschnitts, damit jede Kachel das gewünschte Verhältnis hat.
- * Rand und Abstände werden dabei vernachlässigt, sie sind gegenüber der Kachelgröße klein.
- */
-export const areaAspect = (tileAspect: number, rows: number, cols: number) =>
-  (tileAspect * clampInt(cols, 1)) / clampInt(rows, 1);
-
 /** Größter zentrierter Ausschnitt mit dem Seitenverhältnis aspect, in Prozent des Bildes. */
 export const centeredAspectPercent = (naturalWidth: number, naturalHeight: number, aspect: number) => {
   const imageAspect = naturalWidth / naturalHeight;

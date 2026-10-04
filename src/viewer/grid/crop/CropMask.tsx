@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ReactCrop, { PercentCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { Button, Checkbox, CircularProgress, FormControlLabel, TextField } from '@mui/material';
+import { Button, Checkbox, CircularProgress, FormControlLabel, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import CropIcon from '@mui/icons-material/Crop';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import { CropSettings } from '../../../service/ApiFactory';
-import { areaAspect, centeredAspectPercent, computeGridCrops, GridOptions, percentToPixels, tileSize } from './gridCrops';
+import { centeredAspectPercent, computeGridCrops, GridOptions, percentToPixels, tileSize } from './gridCrops';
 import './CropMask.css';
 
 interface CropMaskProps {
@@ -19,7 +21,11 @@ interface CropMaskProps {
   onConfirm: (crops: CropSettings[]) => void;
 }
 
+/** crop: ein Ausschnitt per Maus. cut: ganzes Bild in ein Raster schneiden (Galerie in einem Bild). */
+type MaskMode = 'crop' | 'cut';
+
 const FULL_IMAGE: PercentCrop = { unit: '%', x: 0, y: 0, width: 100, height: 100 };
+const THUMB_HEIGHT = 110;
 
 const numberField = (value: number, min: number) => Math.max(min, parseInt(String(value), 10) || min);
 
@@ -28,6 +34,7 @@ const CropMask: React.FC<CropMaskProps> = ({ imageSrc, cardAspect, loadFallback,
   const [triedFallback, setTriedFallback] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [natural, setNatural] = useState<{ width: number; height: number } | null>(null);
+  const [mode, setMode] = useState<MaskMode>('crop');
   const [crop, setCrop] = useState<PercentCrop>(FULL_IMAGE);
   const [keepAspect, setKeepAspect] = useState(true);
   const [grid, setGrid] = useState<GridOptions>({ rows: 1, cols: 1, margin: 0, gap: 0 });
@@ -39,9 +46,9 @@ const CropMask: React.FC<CropMaskProps> = ({ imageSrc, cardAspect, loadFallback,
     setNatural(null);
   }, [imageSrc]);
 
-  const aspect = keepAspect ? areaAspect(cardAspect, grid.rows, grid.cols) : undefined;
+  const aspect = keepAspect ? cardAspect : undefined;
 
-  // Beim Einschalten von „Keep aspect ratio“ (oder geändertem Raster) den Ausschnitt passend zentrieren
+  // Beim Einschalten von „Keep aspect ratio“ den Ausschnitt im Kartenformat zentrieren
   useEffect(() => {
     if (natural && aspect) {
       setCrop(centeredAspectPercent(natural.width, natural.height, aspect));
@@ -66,12 +73,23 @@ const CropMask: React.FC<CropMaskProps> = ({ imageSrc, cardAspect, loadFallback,
     setLoadError(true);
   };
 
-  const area = useMemo(
+  const fullArea = useMemo(
+    () => (natural ? { x: 0, y: 0, width: natural.width, height: natural.height } : null),
+    [natural]
+  );
+  const cropArea = useMemo(
     () => (natural ? percentToPixels(crop, natural.width, natural.height) : null),
     [crop, natural]
   );
-  const crops = useMemo(() => (area ? computeGridCrops(area, grid) : []), [area, grid]);
-  const tile = area ? tileSize(area, grid) : null;
+  const cutCrops = useMemo(() => (fullArea ? computeGridCrops(fullArea, grid) : []), [fullArea, grid]);
+  const crops: CropSettings[] = mode === 'cut'
+    ? cutCrops
+    : cropArea && cropArea.width > 0 && cropArea.height > 0
+      ? [{ offSetX: cropArea.x, offSetY: cropArea.y, width: cropArea.width, height: cropArea.height, isStretch: true }]
+      : [];
+  const tile = mode === 'cut'
+    ? (fullArea ? tileSize(fullArea, grid) : null)
+    : (cropArea ? { width: cropArea.width, height: cropArea.height } : null);
   const tileAspectOff = tile && tile.width > 0 && tile.height > 0
     ? Math.abs(tile.width / tile.height / cardAspect - 1)
     : 0;
@@ -81,38 +99,100 @@ const CropMask: React.FC<CropMaskProps> = ({ imageSrc, cardAspect, loadFallback,
     setGrid((prev) => ({ ...prev, [field]: numberField(Number(value), min) }));
   };
 
-  // Kachel-Rahmen als Overlay im Ausschnitt, in Prozent des Ausschnitts
-  const renderTiles = () => {
-    if (!area || area.width <= 0 || area.height <= 0) return null;
-    if (grid.rows === 1 && grid.cols === 1 && grid.margin === 0) return null;
+  const image = <img src={src} alt="Zuschnitt" onLoad={handleImageLoad} onError={handleImageError} />;
+
+  // Cut-Vorschau: weggeschnittene Ränder abdunkeln, Kacheln nummerieren
+  const renderCutPreview = () => (
+    <div className="crop-mask-cut" style={{ display: natural ? undefined : 'none' }}>
+      {image}
+      {natural && (
+        <svg
+          className="crop-mask-cut-overlay"
+          viewBox={`0 0 ${natural.width} ${natural.height}`}
+          preserveAspectRatio="none"
+        >
+          <path
+            fillRule="evenodd"
+            className="crop-mask-cut-shade"
+            d={`M0 0H${natural.width}V${natural.height}H0Z ` + cutCrops
+              .map((c) => `M${c.offSetX} ${c.offSetY}h${c.width}v${c.height}h${-(c.width || 0)}Z`)
+              .join(' ')}
+          />
+          {cutCrops.map((c, i) => (
+            <rect
+              key={i}
+              className="crop-mask-cut-tile"
+              x={c.offSetX}
+              y={c.offSetY}
+              width={c.width}
+              height={c.height}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </svg>
+      )}
+      {natural && cutCrops.map((c, i) => (
+        <span
+          key={i}
+          className="crop-mask-cut-badge"
+          style={{
+            left: `${((c.offSetX || 0) / natural.width) * 100}%`,
+            top: `${((c.offSetY || 0) / natural.height) * 100}%`,
+          }}
+        >
+          {i + 1}
+        </span>
+      ))}
+    </div>
+  );
+
+  // Kleine Kartenvorschau je Kachel, im Kartenformat wie im Druck
+  const renderThumbs = () => {
+    if (!natural || crops.length === 0) return null;
     return (
-      <div className="crop-mask-tiles">
-        {crops.map((c, i) => (
-          <div
-            key={i}
-            className="crop-mask-tile"
-            style={{
-              left: `${(((c.offSetX || 0) - area.x) / area.width) * 100}%`,
-              top: `${(((c.offSetY || 0) - area.y) / area.height) * 100}%`,
-              width: `${((c.width || 0) / area.width) * 100}%`,
-              height: `${((c.height || 0) / area.height) * 100}%`,
-            }}
-          >
-            <span>{i + 1}</span>
-          </div>
-        ))}
+      <div className="crop-mask-thumbs">
+        {crops.map((c, i) => {
+          const thumbWidth = THUMB_HEIGHT * cardAspect;
+          const scaleX = thumbWidth / (c.width || 1);
+          const scaleY = THUMB_HEIGHT / (c.height || 1);
+          return (
+            <div
+              key={i}
+              className="crop-mask-thumb"
+              title={`Karte ${i + 1}`}
+              style={{
+                width: thumbWidth,
+                height: THUMB_HEIGHT,
+                backgroundImage: `url("${src}")`,
+                backgroundSize: `${natural.width * scaleX}px ${natural.height * scaleY}px`,
+                backgroundPosition: `${-(c.offSetX || 0) * scaleX}px ${-(c.offSetY || 0) * scaleY}px`,
+              }}
+            />
+          );
+        })}
       </div>
     );
   };
 
   return (
     <div className="crop-mask">
+      <ToggleButtonGroup
+        className="crop-mask-mode"
+        size="small"
+        exclusive
+        value={mode}
+        onChange={(_, value: MaskMode | null) => value && setMode(value)}
+      >
+        <ToggleButton value="crop"><CropIcon fontSize="small" />&nbsp;Crop</ToggleButton>
+        <ToggleButton value="cut"><GridOnIcon fontSize="small" />&nbsp;Cut gallery</ToggleButton>
+      </ToggleButtonGroup>
+
       <div className="crop-mask-image">
         {!natural && !loadError && <CircularProgress size={32} />}
         {loadError && (
           <p className="help is-danger">Das Bild konnte nicht geladen werden. Bitte die URL prüfen.</p>
         )}
-        {!loadError && (
+        {!loadError && mode === 'crop' && (
           <ReactCrop
             crop={crop}
             aspect={aspect}
@@ -120,44 +200,50 @@ const CropMask: React.FC<CropMaskProps> = ({ imageSrc, cardAspect, loadFallback,
             minWidth={10}
             minHeight={10}
             onChange={(_, percentCrop) => setCrop(percentCrop)}
-            renderSelectionAddon={renderTiles}
             style={{ display: natural ? undefined : 'none' }}
           >
-            <img src={src} alt="Zuschnitt" onLoad={handleImageLoad} onError={handleImageError} />
+            {image}
           </ReactCrop>
         )}
+        {!loadError && mode === 'cut' && renderCutPreview()}
       </div>
 
       <div className="crop-mask-controls">
-        <FormControlLabel
-          control={<Checkbox checked={keepAspect} onChange={(e) => setKeepAspect(e.target.checked)} />}
-          label="Keep aspect ratio"
-          title="Hält den Ausschnitt im Kartenformat aus den PDF-Einstellungen, damit das Bild beim Druck nicht verzerrt"
-        />
-        <Button size="small" variant="outlined" onClick={() => { setKeepAspect(false); setCrop(FULL_IMAGE); }}>
-          Whole image
-        </Button>
+        {mode === 'crop' ? (
+          <>
+            <FormControlLabel
+              control={<Checkbox checked={keepAspect} onChange={(e) => setKeepAspect(e.target.checked)} />}
+              label="Keep aspect ratio"
+              title="Hält den Ausschnitt im Kartenformat aus den PDF-Einstellungen, damit das Bild beim Druck nicht verzerrt"
+            />
+            <Button size="small" variant="outlined" onClick={() => { setKeepAspect(false); setCrop(FULL_IMAGE); }}>
+              Whole image
+            </Button>
+            <p className="crop-mask-hint">Rahmen mit der Maus verschieben oder an den Ecken ziehen.</p>
+          </>
+        ) : (
+          <div className="crop-mask-grid">
+            <TextField label="Rows" type="number" size="small" inputProps={{ min: 1 }}
+              value={grid.rows} onChange={(e) => updateGrid('rows', e.target.value)} />
+            <TextField label="Columns" type="number" size="small" inputProps={{ min: 1 }}
+              value={grid.cols} onChange={(e) => updateGrid('cols', e.target.value)} />
+            <TextField label="Outer border (px)" type="number" size="small" inputProps={{ min: 0 }}
+              value={grid.margin} onChange={(e) => updateGrid('margin', e.target.value)} />
+            <TextField label="Gap between cards (px)" type="number" size="small" inputProps={{ min: 0 }}
+              disabled={grid.rows === 1 && grid.cols === 1}
+              value={grid.gap} onChange={(e) => updateGrid('gap', e.target.value)} />
+          </div>
+        )}
 
-        <div className="crop-mask-grid">
-          <TextField label="Rows" type="number" size="small" inputProps={{ min: 1 }}
-            value={grid.rows} onChange={(e) => updateGrid('rows', e.target.value)} />
-          <TextField label="Columns" type="number" size="small" inputProps={{ min: 1 }}
-            value={grid.cols} onChange={(e) => updateGrid('cols', e.target.value)} />
-          <TextField label="Outer border (px)" type="number" size="small" inputProps={{ min: 0 }}
-            value={grid.margin} onChange={(e) => updateGrid('margin', e.target.value)} />
-          <TextField label="Gap between cards (px)" type="number" size="small" inputProps={{ min: 0 }}
-            disabled={grid.rows === 1 && grid.cols === 1}
-            value={grid.gap} onChange={(e) => updateGrid('gap', e.target.value)} />
-        </div>
-
-        {area && tile && (
+        {tile && (
           <p className="crop-mask-info">
             {crops.length === 0
-              ? 'Rand und Abstände sind größer als der Ausschnitt.'
+              ? 'Rand und Abstände sind größer als das Bild.'
               : `${crops.length} ${crops.length === 1 ? 'Karte' : 'Karten'} à ${tile.width} × ${tile.height} px`}
             {crops.length > 0 && tileAspectOff > 0.03 && ' (weicht vom Kartenformat ab, wird beim Druck gestreckt)'}
           </p>
         )}
+        {renderThumbs()}
         {error && <p className="help is-danger">{error}</p>}
 
         <div className="crop-mask-actions">

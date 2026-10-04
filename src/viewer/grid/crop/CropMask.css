@@ -44,25 +44,73 @@
   width: 100%;
 }
 
-.crop-mask-tiles {
+.crop-mask-mode {
+  align-self: center;
+}
+
+.crop-mask-hint {
+  width: 100%;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.crop-mask-cut {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.crop-mask-cut img {
+  max-height: 55vh;
+  max-width: 100%;
+  display: block;
+}
+
+.crop-mask-cut-overlay {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-.crop-mask-tile {
-  position: absolute;
-  box-sizing: border-box;
-  border: 1px dashed rgba(255, 255, 255, 0.95);
-  outline: 1px dashed rgba(0, 0, 0, 0.6);
-  background: rgba(255, 255, 255, 0.08);
+.crop-mask-cut-shade {
+  fill: rgba(0, 0, 0, 0.6);
 }
 
-.crop-mask-tile span {
+.crop-mask-cut-tile {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.crop-mask-cut-badge {
   position: absolute;
-  top: 2px;
-  left: 4px;
-  font-size: 11px;
+  transform: translate(4px, 4px);
+  min-width: 18px;
+  padding: 2px 5px;
+  border-radius: 9px;
+  background: var(--primary, #1976d2);
   color: #fff;
-  text-shadow: 0 0 2px #000;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.crop-mask-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.crop-mask-thumb {
+  flex: none;
+  border-radius: 5px;
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
