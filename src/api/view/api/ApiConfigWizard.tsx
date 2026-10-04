@@ -34,6 +34,7 @@ export interface ApiConfigFormState {
   nameField: string;
   imageUrlField: string;
   languageField: string;
+  assumeEnglish: boolean;
   setField: string;
   nameSplitCharacter: string;
   setNumberField: string;
@@ -80,6 +81,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     nameField: '',
     imageUrlField: '',
     languageField: '',
+    assumeEnglish: false,
     setField: '',
     nameSplitCharacter: '',
     setNumberField: '',
@@ -373,6 +375,14 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
                 type="text"
                 name="languageField"
                 value={config.languageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label title="Karten ohne Sprachangabe automatisch als Englisch markieren">Assume English:</label>
+              <input
+                type="checkbox"
+                name="assumeEnglish"
+                checked={!!config.assumeEnglish}
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />

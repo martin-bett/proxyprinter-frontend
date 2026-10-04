@@ -51,6 +51,8 @@ export interface ApiConfig extends BaseConfig {
   nameSplitCharacter?: string;
  
   languageField?: string;
+  // Karten ohne Sprachangabe als Englisch markieren (Quelle liefert keine Sprache)
+  assumeEnglish?: boolean;
   setField?: string;
   setNumberField?: string;
 
@@ -459,10 +461,15 @@ export default class ApiFactory {
         set: isApiConfig(config) && config.setField ? this.getValue(item, config, config.setField) : undefined,
         setNumber: isApiConfig(config) &&  config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
         imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField)),
-        languageCode: isApiConfig(config) && config.languageField ? 
-          this.normalizeLanguageName(this.getValue(item, config, config.languageField)) : 
-          undefined
+        languageCode: this.baseLanguage(item, config)
       } as SearchResult;
+  }
+
+  private baseLanguage(item: any, config: Config): string | undefined {
+    if (!isApiConfig(config)) return undefined;
+    const raw = config.languageField ? this.getValue(item, config, config.languageField) : undefined;
+    if (raw) return this.normalizeLanguageName(String(raw));
+    return config.assumeEnglish ? ISO6391.getName('en') : undefined;
   }
 
   private extractLastLink(srcset: string): string {
