@@ -19,6 +19,15 @@ try {
 }
 applyThemeToDocument(getThemeById(storedThemeId));
 
+// Lokale Instanz (npm start) im Browser-Tab kenntlich machen; im Produktions-Build entfällt dieser Block
+if (process.env.NODE_ENV === 'development') {
+  document.title = `[LOCAL] ${document.title}`;
+  const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+  if (icon) {
+    icon.href = `${process.env.PUBLIC_URL}/proxyprinter-favicon-local.svg`;
+  }
+}
+
 const root = ReactDOM.createRoot(container);
 root.render(
   <React.StrictMode>

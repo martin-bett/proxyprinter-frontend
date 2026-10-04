@@ -84,6 +84,13 @@
   min-height: 1.5em;
 }
 
+.pdf-progress-email {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
 .pdf-progress-message.is-error {
   color: var(--danger);
   background: var(--danger-soft);

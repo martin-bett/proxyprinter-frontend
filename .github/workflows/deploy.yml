@@ -1,0 +1,89 @@
+name: Deploy
+
+# Deploy auf den VPS: automatisch bei jedem Push auf master (= develop in master gemergt),
+# oder manuell über "Run workflow". Manuell kann ein älterer Tag oder "previous" (Rollback)
+# angegeben werden, dann wird nichts gebaut.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Leer = aktuellen Stand bauen. Sonst vorhandener Image-Tag (z. B. sha-abc123def456) oder "previous" für Rollback'
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/mtgprint-frontend
+
+jobs:
+  build:
+    if: github.event_name == 'push' || inputs.tag == ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: echo "tag=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker.dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  deploy:
+    needs: build
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auf VPS ausrollen
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/proxyprinter' }}
+          NEW_TAG: ${{ needs.build.outputs.tag || inputs.tag }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for v in VPS_HOST VPS_USER VPS_SSH_KEY VPS_KNOWN_HOSTS NEW_TAG; do
+            [ -n "${!v}" ] || { echo "::error::$v fehlt (GitHub Secret bzw. Tag)"; exit 1; }
+          done
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          {
+            printf 'export DEPLOY_PATH=%q SERVICE=frontend TAG_VAR=FRONTEND_TAG NEW_TAG=%q\n' "$DEPLOY_PATH" "$NEW_TAG"
+            printf 'export GHCR_USER=%q GHCR_TOKEN=%q\n' "$GITHUB_ACTOR" "$GHCR_TOKEN"
+            printf 'export HEALTH_URL=%q\n' "http://127.0.0.1/"
+            cat .github/deploy/remote-deploy.sh
+          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
+                "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc'
