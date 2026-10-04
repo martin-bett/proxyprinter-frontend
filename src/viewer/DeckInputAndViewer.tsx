@@ -33,6 +33,7 @@ import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
+import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
@@ -83,9 +84,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [categoryStates, setCategoryStates] = useState<Record<string, boolean>>({});
   const [apiConfigs, setApiConfigs] = useState<Record<string, Config>>({}); // New state for API configs
   const [apiFactory, setApiFactory] = useState<ApiFactory | null>(null); // State for API factory
-  const [enabledApis, setEnabledApis] = useState<Record<string, boolean>>(() =>
-    Object.keys(apiConfigs).reduce((acc, key) => ({ ...acc, [apiConfigs[key].name]: true }), {})
-  );
+  const [enabledApis, setEnabledApis] = useState<Record<string, boolean>>({});
   const [selectedCards, setSelectedCards] = useState<SelectedCardsMap>({});
   const [currentCardName, setCurrentCardName] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
@@ -115,10 +114,9 @@ const DeckInputAndViewer: React.FC = () => {
   }, [apiConfigs]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('setConfigs');
-    console.log('storage content', saved);
+    const saved = loadSavedConfigs();
     if (saved) {
-      handleSaveApiConfigs(JSON.parse(saved));
+      handleSaveApiConfigs(saved);
       // Gespeicherte Auswahl kann veraltet sein, aktuelle Fassung nachladen
       fetchVisibleConfigs()
         .then(fresh => {
@@ -126,9 +124,24 @@ const DeckInputAndViewer: React.FC = () => {
           if (updated) handleSaveApiConfigs(updated);
         })
         .catch(error => console.error('Error refreshing configs:', error));
+    } else {
+      fetchAndSelectAllConfigs()
+        .then(handleSaveApiConfigs)
+        .catch(error => console.error('Error loading initial API configs:', error));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Neu hinzugekommene APIs sind standardmäßig aktiv, bestehende An/Aus-Zustände bleiben
+  useEffect(() => {
+    setEnabledApis(prev => {
+      const missing = Object.keys(apiConfigs).filter(name => !(name in prev));
+      if (missing.length === 0) return prev;
+      const updated = { ...prev };
+      missing.forEach(name => { updated[name] = true; });
+      return updated;
+    });
+  }, [apiConfigs]);
 
   // Filter options always reflect the current search results only
   const { languages: availableLanguages, apis: availableApis } = useMemo(
@@ -979,6 +992,7 @@ const DeckInputAndViewer: React.FC = () => {
             <CollapsibleSection
               storageKey="api-selection"
               title="API Selection"
+              defaultOpen={false}
               action={{ icon: <SettingsIcon />, title: 'Manage APIs', onClick: handleOpenApiConfigDialog }}
             >
               {Object.entries(categoryStates).map(([category]) => (
