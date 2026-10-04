@@ -43,6 +43,7 @@ import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } 
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
+import { splitCardFaces } from './cardFaces';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -390,9 +391,9 @@ const DeckInputAndViewer: React.FC = () => {
     });
 
     // Combine results
-    const results: CardResultsMap = {};
+    const combinedResults: CardResultsMap = {};
     cardEntries.forEach(entry => {
-      results[entry.name] = {
+      combinedResults[entry.name] = {
         count: entry.count,
         results: enabledApiKeys.flatMap(apiKey => {
           const apiResultsForCard = apiResults[apiKey][entry.name] || [];
@@ -403,6 +404,8 @@ const DeckInputAndViewer: React.FC = () => {
         })
       };
     });
+    // Andere Seiten mehrseitiger Karten werden eigene Einträge
+    const results = splitCardFaces(combinedResults);
 
     const options = collectFilterOptions(results);
     setVisibleApis(options.apis);
@@ -911,7 +914,7 @@ const DeckInputAndViewer: React.FC = () => {
     });
 
     // Combine results for the single card and transform into CardEntry objects
-    const results: CardResultsMap = {
+    const combinedResults: CardResultsMap = {
       [cardEntry.name]: {
         count: cardEntry.count,
         results: enabledApiKeys.flatMap(apiKey => {
@@ -923,6 +926,8 @@ const DeckInputAndViewer: React.FC = () => {
         })
       }
     };
+    // Andere Seiten mehrseitiger Karten werden eigene Einträge, sofern sie nicht schon in der Liste stehen
+    const results = splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name));
 
     // Make filter values that this card brings in for the first time visible
     const newOptions = collectFilterOptions(results);
