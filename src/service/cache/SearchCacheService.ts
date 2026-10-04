@@ -8,6 +8,7 @@ const MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000; // 2 Tage
 export interface SearchApiResult {
   results: SearchResult[];
   rawResponse: string;
+  requestCount?: number;
 }
 
 interface SearchCacheDbEntry {

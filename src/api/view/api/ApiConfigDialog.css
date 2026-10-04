@@ -11,7 +11,7 @@
     box-shadow: 0 4px 6px var(--shadow);
     display: flex;
     width: 65%;
-    max-height: 90vh;
+    max-height: calc(90 * var(--vh));
     overflow: auto;
   }
   

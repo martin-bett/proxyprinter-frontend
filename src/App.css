@@ -45,9 +45,9 @@ html{
 body{
   background-color: var(--app-bg);
   background-image: linear-gradient(0deg, var(--app-bg-gradient-start) 0%, var(--app-bg-gradient-end) 100%);
-  height: 100vh;
-  min-height: 100vh;
-  max-height: 100vh;
+  height: calc(100 * var(--vh));
+  min-height: calc(100 * var(--vh));
+  max-height: calc(100 * var(--vh));
   width: 100%;
   overflow-y: hidden;
 }

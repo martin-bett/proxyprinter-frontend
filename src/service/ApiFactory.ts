@@ -163,7 +163,7 @@ export default class ApiFactory {
     });
   }
 
-  createApi(configKey: string): (params: ApiParams) => Promise<{ results: SearchResult[], rawResponse: string }> {
+  createApi(configKey: string): (params: ApiParams) => Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     const config = this.configs[configKey];
     if (!config) {
       throw new Error(`Config not found for key: ${configKey}`);
@@ -190,7 +190,7 @@ export default class ApiFactory {
   private async executeApiRequest(
     config: Config, 
     params: ApiParams
-): Promise<{ results: SearchResult[], rawResponse: string }> {
+): Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     let allResults: SearchResult[] = [];
     let allRawResponses: string[] = [];
     let currentUrl = this.processUrl(config.baseUrl, config?.parameterMap?.url);
@@ -235,7 +235,8 @@ export default class ApiFactory {
 
     return {
         results: this.filterAndDeduplicateResults(allResults, params, config),
-        rawResponse: allRawResponses.join('\n')
+        rawResponse: allRawResponses.join('\n'),
+        requestCount: allRawResponses.length
     };
 }
 

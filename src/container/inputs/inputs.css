@@ -139,6 +139,39 @@
   color: var(--text-muted);
 }
 
+/* Hervorgehobene Hauptaktionen (Analyze Deck, Create PDF): Akzent gefüllt, Icon-Feld dunkler */
+.action-button.is-primary {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-weight: 600;
+}
+
+.action-button.is-primary .input-tile-lead {
+  border-right-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--text-inverse);
+}
+
+.action-button.is-primary:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--text-inverse);
+}
+
+.action-button.is-primary:hover .input-tile-lead {
+  color: var(--text-inverse);
+}
+
+.action-button.is-primary:disabled:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+}
+
+.action-button.is-primary:disabled:hover .input-tile-lead {
+  color: var(--text-inverse);
+}
+
 /* Rundes Kategorie-Icon: ausgewählt = Rahmen in Akzentfarbe, teilweise = gestrichelt */
 .category-toggle {
   display: inline-flex;
