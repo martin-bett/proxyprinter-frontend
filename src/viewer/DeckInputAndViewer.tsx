@@ -6,6 +6,7 @@ import ProgressBar from '../components/progress/ProgressBar';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
+import { DEFAULT_MAX_PDF_SIZE_MB, PdfImageEntry, bytesToMb, estimatePdfBytes, fetchPdfSizeLimitMb, formatMb } from './pdf/pdfSizeLimit';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
@@ -562,34 +563,46 @@ const DeckInputAndViewer: React.FC = () => {
 
   useEffect(() => stopPdfPolling, [stopPdfPolling]);
 
+  // Alle Karten, die ins PDF kommen, mit Bildinfos für die Größenschätzung
+  const pdfImageEntries = useMemo<PdfImageEntry[]>(() => {
+    // Die Auswahl kann eine Kopie sein, die Bildinfos hängen am Ergebnis in cardResults
+    const withInfo = (cardName: string, card: CardResult): PdfImageEntry => ({
+      imageUrl: card.imageUrl,
+      cropSettings: card.cropSettings,
+      imageInfo: card.imageInfo
+        ?? cardResults[cardName]?.results.find(r => r.imageUrl === card.imageUrl && r.imageInfo)?.imageInfo,
+    });
+    return Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
+      if (uniquePrints) {
+        // Wenn uniquePrints true ist, nehmen wir alle URLs mit cropSettings wie sie sind
+        return cardSelections
+          .filter((selectedCard): selectedCard is CardResult => !!selectedCard?.imageUrl)
+          .map(selectedCard => withInfo(cardName, selectedCard));
+      }
+      // Wenn uniquePrints false ist, nehmen wir die erste gültige URL und duplizieren sie entsprechend dem count
+      const firstValidCard = cardSelections.find((selectedCard): selectedCard is CardResult => !!selectedCard?.imageUrl);
+      if (!firstValidCard) return [];
+      const count = cardResults[cardName]?.count || 1;
+      return Array(count).fill(withInfo(cardName, firstValidCard));
+    });
+  }, [selectedCards, cardResults, uniquePrints]);
+
+  const [pdfSizeLimitMb, setPdfSizeLimitMb] = useState(DEFAULT_MAX_PDF_SIZE_MB);
+  useEffect(() => {
+    fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
+  }, []);
+  const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
+  const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
+
   const createPDF = async () => {
+    if (pdfTooLarge) return;
     stopPdfPolling();
     setPdfProgressDtos([]);
     setPdfProgressError(null);
     setPdfProgressDialogOpen(true);
 
     const createPdfDto = {
-      images: Object.entries(selectedCards).flatMap(([cardName, cardSelections]) => {
-        if (uniquePrints) {
-          // Wenn uniquePrints true ist, nehmen wir alle URLs mit cropSettings wie sie sind
-          return cardSelections
-            .map(selectedCard =>
-              selectedCard?.imageUrl
-                ? { imageUrl: selectedCard.imageUrl, cropSettings: selectedCard.cropSettings }
-                : null
-            )
-            .filter((item): item is { imageUrl: string; cropSettings: CropSettings } => item !== null); // Entferne ungültige Einträge
-        } else {
-          // Wenn uniquePrints false ist, nehmen wir die erste gültige URL und duplizieren sie mit cropSettings entsprechend dem count
-          const firstValidCard = cardSelections.find(selectedCard => selectedCard?.imageUrl);
-          if (!firstValidCard) return [];
-          const count = cardResults[cardName]?.count || 1;
-          return Array(count).fill({
-            imageUrl: firstValidCard.imageUrl,
-            cropSettings: firstValidCard.cropSettings
-          });
-        }
-      }),
+      images: pdfImageEntries.map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
       settings: settings
     };
     try {
@@ -1156,7 +1169,14 @@ const DeckInputAndViewer: React.FC = () => {
         <CollapsibleSection storageKey="pdf-generation" title="PDF Generation">
 
         <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
-        <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
+        <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0 || pdfTooLarge} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
+        {pdfImageEntries.length > 0 && (
+          <p className={`pdf-size-estimate${pdfTooLarge ? ' is-error' : ''}`}>
+            {pdfTooLarge
+              ? `The PDF would be about ${formatMb(estimatedPdfBytes)}, the limit is ${pdfSizeLimitMb} MB. Split the deck into several PDFs or lower Max DPI in the settings.`
+              : `Estimated size: about ${formatMb(estimatedPdfBytes)}${Number.isFinite(pdfSizeLimitMb) ? ` of max. ${pdfSizeLimitMb} MB` : ''}`}
+          </p>
+        )}
         </CollapsibleSection>
       </div>
 

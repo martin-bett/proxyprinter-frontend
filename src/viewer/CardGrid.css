@@ -44,6 +44,17 @@
   margin-top: auto;
 }
 
+.pdf-size-estimate {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pdf-size-estimate.is-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .card-tiles {
   /* --tile-scale wird aus der Grid Size gesetzt (10rem = 1) */
   --tile-scale: 1;
