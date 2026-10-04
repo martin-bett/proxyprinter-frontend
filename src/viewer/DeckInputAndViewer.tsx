@@ -997,7 +997,7 @@ const DeckInputAndViewer: React.FC = () => {
                 cols={50}
               />
               <br />
-              <ActionButton type="submit" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+              <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
           <CollapsibleSection storageKey="add-single" title="Add Single">
@@ -1109,6 +1109,7 @@ const DeckInputAndViewer: React.FC = () => {
         </div>
       </div>
 
+      <div className="right-toolbar">
       <div className="view-selection">
         <div className="filter-controls">
           <h2 className='title is-5'>View Selection</h2>
@@ -1161,7 +1162,7 @@ const DeckInputAndViewer: React.FC = () => {
         <h3 className='title is-5'>PDF Generation</h3>
 
         <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
-        <ActionButton icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
+        <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
 
       </div>
 
@@ -1169,6 +1170,7 @@ const DeckInputAndViewer: React.FC = () => {
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
         <div><VersionInfo /></div>
+      </div>
       </div>
 
       <DisclaimerDialog open={disclaimerOpen} onClose={() => setDisclaimerOpen(false)} />

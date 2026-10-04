@@ -1,3 +1,14 @@
+:root {
+  /* Gesamte Seite verkleinert darstellen, wie ein Zoom-Schritt (Strg -) im Browser */
+  --page-zoom: 0.9;
+  /* 1vh des echten Fensters; normale vh-Werte würden durch den Zoom mitschrumpfen */
+  --vh: calc(1vh / var(--page-zoom));
+}
+
+html {
+  zoom: var(--page-zoom);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
