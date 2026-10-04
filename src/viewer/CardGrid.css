@@ -252,28 +252,6 @@
   min-height: 20vh;
 }
 
-.log-content {
-  font-family: monospace;
-}
-
-
-
-.log-entry {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.log-entry .config-name {
-  font-weight: bold;
-  margin-right: 10px;
-}
-
-.log-entry .raw-data-icon {
-  cursor: pointer;
-  margin-left: 10px;
-}
-
 .json-viewer-container {
   max-height: 400px;
   overflow-y: auto;

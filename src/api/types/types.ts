@@ -19,10 +19,14 @@ export type SelectedCardsMap = Record<string, (CardResult | null)[]>;
 
 export type GroupedResults = Record<string, CardResult[]>;
 
+/** One row of the search log: where a search result came from and how many hits it had. */
 export interface LogEntry {
-  message: string;
   configName: string;
+  cardName: string;
+  source: 'cache' | 'network' | 'error';
+  count: number;
   rawResponse?: string;
+  error?: string;
 }
 
 /** A single line parsed from the decklist textarea. */

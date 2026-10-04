@@ -1,0 +1,65 @@
+.search-log-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.search-log-table .search-log-api {
+  width: 30%;
+}
+
+.search-log-table .search-log-source {
+  width: 2rem;
+}
+
+.search-log-table .search-log-count {
+  width: 2.75rem;
+}
+
+.search-log-table td {
+  padding: 1px 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.search-log-cell-count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-log-source-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  font-size: 1rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.search-log-source-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.search-log-source-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.search-log-cache .search-log-source-button {
+  color: var(--text);
+}
+
+.search-log-error .search-log-source-button {
+  color: #d32f2f;
+}

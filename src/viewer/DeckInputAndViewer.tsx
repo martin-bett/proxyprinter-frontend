@@ -36,6 +36,7 @@ import MemoryButtons from './cache/MemoryButtons';
 import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
+import SearchLog from './log/SearchLog';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -132,8 +133,8 @@ const DeckInputAndViewer: React.FC = () => {
     setCategoryStates(initialCategoryStates);
   }, [apiConfigs]);
 
-  const addToLog = (message: string, configName: string, rawResponse?: string) => {
-    setLog((prevLog) => [...prevLog, { message, configName, rawResponse }]);
+  const addToLog = (entry: LogEntry) => {
+    setLog((prevLog) => [...prevLog, entry]);
   };
 
   const handleSettingsChange = (newSettings: PdfSettings) => {
@@ -327,17 +328,17 @@ const DeckInputAndViewer: React.FC = () => {
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
                 const resultsArr = result?.results || [];
-                addToLog(`Cached ${resultsArr.length} ${entry.name}`, apiKey);
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: resultsArr.length, rawResponse: result?.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
               } else {
                 result = await api({ cardname: entry.name, set: entry.set });
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 const resultsArr = result?.results || [];
-                addToLog(`Found ${resultsArr.length} ${entry.name}`, apiKey, result.rawResponse);
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, rawResponse: result.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
               }
             } catch (error) {
-              addToLog(`Error ${entry.name}: ${error instanceof Error ? error.message : String(error)}`, apiKey);
+              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, error: error instanceof Error ? error.message : String(error) });
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -832,17 +833,17 @@ const DeckInputAndViewer: React.FC = () => {
           if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
             result = await SearchCacheService.getSearchResult(apiKey, cardEntry.name);
             const resultsArr = result?.results || [];
-            addToLog(`Cached ${resultsArr.length} ${cardEntry.name}`, apiKey);
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'cache', count: resultsArr.length, rawResponse: result?.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
           } else {
             result = await api({ cardname: cardEntry.name });
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
             const resultsArr = result?.results || [];
-            addToLog(`Found ${resultsArr.length} ${cardEntry.name}`, apiKey, result.rawResponse);
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
-          addToLog(`Error ${cardEntry.name}: ${error instanceof Error ? error.message : String(error)}`, apiKey);
+          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, error: error instanceof Error ? error.message : String(error) });
           groupResults[apiKey][cardEntry.name] = [];
         }
 
@@ -1014,19 +1015,7 @@ const DeckInputAndViewer: React.FC = () => {
           </div>
         )}
         <CollapsibleSection storageKey="search-log" title="Search Log" defaultOpen={false}>
-          <div className="log">
-            <div className="log-content">
-              {log.map((entry, index) => (
-                <div key={index} className="log-entry">
-                  <span className="config-name">[{entry.configName}]</span>
-                  <span>{entry.message}</span>
-                  {entry.rawResponse && (
-                    <span className="raw-data-icon" onClick={() => setRawDataDialog(entry.rawResponse!)}>🔍</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <SearchLog entries={log} onShowRaw={setRawDataDialog} />
         </CollapsibleSection>
       </div>
 
