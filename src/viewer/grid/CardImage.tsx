@@ -5,6 +5,7 @@ import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
 import { CardResult } from "../../api/types/types";
 import { ImageQuality, qualityCacheKey, queueImageQuality } from "../../service/quality/ImageQuality";
+import LanguageFlag from "../../container/LanguageFlag";
 
 const RATING_LABEL: Record<ImageQuality["rating"], string> = {
   good: "gut lesbar",
@@ -132,12 +133,10 @@ const CardImage: React.FC<CardImageProps> = ({
     };
   }, [isPermanent]);
 
-  // Weit genug weggescrollt: wartenden Download abbrechen und Bild freigeben
+  // Weit genug weggescrollt: Bild freigeben (der wartende Download wird beim Aufräumen des Lade-Effekts abgebrochen)
   useEffect(() => {
     if (isVisible || isPermanent || !card) return;
-    imageLoaderService.cancelQueued(card, QUEUE_CATEGORY_SELECT);
     qualityRun.current++;
-    loadRun.current++;
     imageRef.current = null;
     const canvas = canvasRef.current;
     if (canvas) {
@@ -165,6 +164,9 @@ const CardImage: React.FC<CardImageProps> = ({
       // Ergebnisse eines inzwischen entladenen Ladevorgangs ignorieren
       const run = loadRun.current;
       const stale = () => run !== loadRun.current;
+      // Karte wechselt (Filter), wird entladen oder verschwindet: wartenden Queue-Eintrag zurückziehen,
+      // damit er frisch eingeblendete Bilder nicht blockiert. Ein laufender Download wird trotzdem fertig.
+      const abort = new AbortController();
 
       // Hilfsfunktion für Bild laden (direkt oder via Proxy)
       const loadImage = (url: string, tryProxy = false, prevError: string | null = null) => {
@@ -173,6 +175,7 @@ const CardImage: React.FC<CardImageProps> = ({
           priority,
           cardInput: card,
           category: isPermanent ? QUEUE_CATEGORY_DECK : QUEUE_CATEGORY_SELECT,
+          signal: abort.signal,
           onLoad: (img) => {
             if (stale()) return;
             imageRef.current = img;
@@ -230,6 +233,11 @@ const CardImage: React.FC<CardImageProps> = ({
 
       // Starte mit dem normalen Bild
       loadImage(card.imageUrl, false, null);
+
+      return () => {
+        abort.abort();
+        loadRun.current++;
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card, priority, isVisible]);
@@ -364,11 +372,16 @@ const CardImage: React.FC<CardImageProps> = ({
           ref={canvasRef}
           style={{ display: isLoading ? "none" : "block" }}
         />
-        {!isLoading && quality && (
-          <span
-            className={`quality-dot quality-${quality.rating}`}
-            title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
-          />
+        {!isLoading && (quality || card?.languageCode) && (
+          <div className="card-badges">
+            <LanguageFlag language={card?.languageCode} />
+            {quality && (
+              <span
+                className={`quality-dot quality-${quality.rating}`}
+                title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
+              />
+            )}
+          </div>
         )}
         <div className="image-info">
           {isLoading && <div className="info-row">{status}</div>}

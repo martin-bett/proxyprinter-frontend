@@ -15,7 +15,7 @@
     grid-template-columns: 3fr 4fr 1fr;
     grid-template-rows: auto 1fr auto;
     gap: 20px;
-    height: 85vh;
+    height: calc(85 * var(--vh));
 }
   
 .image-select-dialog .image-selection-container {

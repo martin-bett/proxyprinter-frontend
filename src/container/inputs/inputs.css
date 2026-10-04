@@ -14,6 +14,7 @@
   font: inherit;
   font-size: 0.875rem;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   overflow: hidden;
   user-select: none;
@@ -22,6 +23,7 @@
 
 .input-tile:hover {
   border-color: var(--accent);
+  color: var(--text);
 }
 
 .input-tile:has(.input-tile-native:focus-visible),
@@ -137,11 +139,46 @@
   color: var(--text-muted);
 }
 
+/* Hervorgehobene Hauptaktionen (Analyze Deck, Create PDF): Akzent gefüllt, Icon-Feld dunkler */
+.action-button.is-primary {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-weight: 600;
+}
+
+.action-button.is-primary .input-tile-lead {
+  border-right-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--text-inverse);
+}
+
+.action-button.is-primary:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--text-inverse);
+}
+
+.action-button.is-primary:hover .input-tile-lead {
+  color: var(--text-inverse);
+}
+
+.action-button.is-primary:disabled:hover {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+}
+
+.action-button.is-primary:disabled:hover .input-tile-lead {
+  color: var(--text-inverse);
+}
+
 /* Rundes Kategorie-Icon: ausgewählt = Rahmen in Akzentfarbe, teilweise = gestrichelt */
 .category-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: none;
+  box-sizing: border-box;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -170,7 +207,11 @@
   outline-offset: 2px;
 }
 
+/* margin: 0 überschreibt die globale .categoryIcon-Regel aus ApiConfigDialog.css,
+   deren margin-right das Icon sonst aus dem Ring schiebt */
 .category-toggle .categoryIcon {
+  flex: none;
+  margin: 0;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -186,4 +227,92 @@
   flex-direction: column;
   align-items: stretch;
   text-align: left;
+}
+
+/* Einklappbarer Abschnitt: Header wie ein input-tile, links ein Pfeil statt Haken,
+   rechts optional ein Zusatz-Button mit umgedrehten Farben (Akzent gefüllt). */
+.collapsible-section {
+  margin-bottom: 12px;
+}
+
+.collapsible-header {
+  min-height: 2.5rem;
+  cursor: default;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.collapsible-section.is-open .collapsible-header {
+  border-color: var(--accent);
+}
+
+.collapsible-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collapsible-toggle:focus-visible,
+.collapsible-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.collapsible-arrow {
+  transform: rotate(-90deg);
+  transition: transform 0.2s;
+}
+
+.collapsible-section.is-open .collapsible-arrow {
+  transform: rotate(0deg);
+}
+
+.collapsible-section.is-open .collapsible-header .input-tile-lead {
+  background: var(--accent-soft);
+  border-right-color: var(--accent);
+  color: var(--accent);
+}
+
+.collapsible-toggle:hover .input-tile-lead {
+  color: var(--accent);
+}
+
+.collapsible-action {
+  flex: 0 0 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--text-inverse);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.collapsible-action svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform 0.3s;
+}
+
+.collapsible-action:hover {
+  background: var(--accent-strong);
+}
+
+.collapsible-action:hover svg {
+  transform: rotate(45deg);
+}
+
+.collapsible-body {
+  padding-top: 4px;
 }

@@ -1,6 +1,8 @@
 // Vorgefertigte Farbsets. Jeder Schlüssel in `colors` wird als CSS-Variable
 // `--<schlüssel>` auf <html> gesetzt und von allen CSS-Dateien verwendet.
 
+import type { ManaColor } from './ManaSymbol';
+
 export type ThemeMode = 'light' | 'dark';
 
 export interface ThemeColors {
@@ -41,6 +43,7 @@ export interface AppTheme {
   id: string;
   name: string;
   mode: ThemeMode;
+  mana?: ManaColor;            // Mana-Symbol als Wasserzeichen und in der Theme-Auswahl
   colors: ThemeColors;
 }
 
@@ -94,85 +97,99 @@ const darkBase: typeof lightBase = {
   'info-soft': '#1f3a48',
 };
 
+// Fünf Themes in den Magic-Farben (WUBRG) plus Mitternacht.
 export const THEMES: AppTheme[] = [
   {
-    id: 'classic',
-    name: 'Klassisch',
+    id: 'plains',
+    name: 'Ebene',
     mode: 'light',
+    mana: 'W',
     colors: {
       ...lightBase,
-      'app-bg': '#D9AFD9',
-      'app-bg-gradient-start': '#D9AFD9',
-      'app-bg-gradient-end': '#97D9E1',
-      'accent': '#3b82f6',
-      'accent-soft': '#b5ceff',
-      'accent-strong': '#6685e8',
-      'card-border': 'hsl(283, 88%, 20%)',
-      'input-bg': 'rgb(214, 238, 248)',
-      'rating': '#3273a8',
+      'surface': '#fffdf6',
+      'surface-muted': '#f8f0da',
+      'surface-raised': '#f1e6c6',
+      'border': '#e0d3ad',
+      'app-bg': '#efdcaa',
+      'app-bg-gradient-start': '#e9cf8f',
+      'app-bg-gradient-end': '#faf1d6',
+      'accent': '#a8760c',
+      'accent-soft': '#f3dfa2',
+      'accent-strong': '#7a5508',
+      'card-border': '#8f6f2c',
+      'input-bg': '#fffaea',
+      'rating': '#a8760c',
+      'scrollbar': '#e6d7ab',
+      'scrollbar-hover': '#d4c08a',
     },
   },
   {
-    id: 'light',
-    name: 'Hell',
+    id: 'island',
+    name: 'Insel',
     mode: 'light',
+    mana: 'U',
     colors: {
       ...lightBase,
-      'app-bg': '#f4f5f7',
-      'app-bg-gradient-start': '#f4f5f7',
-      'app-bg-gradient-end': '#e4e7ec',
-      'accent': '#2563eb',
-      'accent-soft': '#cfdcfb',
-      'accent-strong': '#1d4ed8',
-      'card-border': '#c3c8d0',
-      'input-bg': '#ffffff',
-      'rating': '#2563eb',
-      'scrollbar': '#b8bec8',
-      'scrollbar-hover': '#9aa1ad',
+      'surface-muted': '#eef5fc',
+      'surface-raised': '#e2eef9',
+      'app-bg': '#a9cdee',
+      'app-bg-gradient-start': '#86b6e3',
+      'app-bg-gradient-end': '#d7ebfa',
+      'accent': '#1d6fc0',
+      'accent-soft': '#c4ddf5',
+      'accent-strong': '#0f4f8f',
+      'card-border': '#1e4f80',
+      'input-bg': '#eaf4fc',
+      'rating': '#1d6fc0',
     },
   },
   {
-    id: 'dark',
-    name: 'Dunkel',
+    id: 'swamp',
+    name: 'Sumpf',
     mode: 'dark',
+    mana: 'B',
     colors: {
       ...darkBase,
-      'app-bg': '#16191d',
-      'app-bg-gradient-start': '#16191d',
-      'app-bg-gradient-end': '#23272e',
-      'accent': '#60a5fa',
-      'accent-soft': '#1e3a5f',
-      'accent-strong': '#93c5fd',
-      'card-border': '#4a515c',
-      'input-bg': '#262b33',
-      'rating': '#60a5fa',
+      'surface': '#1e1b22',
+      'surface-muted': '#29242f',
+      'surface-raised': '#29242f',
+      'border': '#3d3645',
+      'app-bg': '#141117',
+      'app-bg-gradient-start': '#100e12',
+      'app-bg-gradient-end': '#2a2230',
+      'accent': '#a98bc2',
+      'accent-soft': '#3a2e47',
+      'accent-strong': '#cdb6e0',
+      'card-border': '#544760',
+      'input-bg': '#231f28',
+      'rating': '#a98bc2',
     },
   },
   {
-    id: 'midnight',
-    name: 'Mitternacht',
-    mode: 'dark',
+    id: 'mountain',
+    name: 'Gebirge',
+    mode: 'light',
+    mana: 'R',
     colors: {
-      ...darkBase,
-      'surface': '#141b2d',
-      'surface-muted': '#1c2540',
-      'surface-raised': '#1c2540',
-      'border': '#2d3a5c',
-      'app-bg': '#0b1020',
-      'app-bg-gradient-start': '#0b1020',
-      'app-bg-gradient-end': '#2a1b4a',
-      'accent': '#a78bfa',
-      'accent-soft': '#3b2d6b',
-      'accent-strong': '#c4b5fd',
-      'card-border': '#5b4a9a',
-      'input-bg': '#1a2238',
-      'rating': '#a78bfa',
+      ...lightBase,
+      'surface-muted': '#fbece3',
+      'surface-raised': '#f6dfd2',
+      'app-bg': '#e3946c',
+      'app-bg-gradient-start': '#d9745a',
+      'app-bg-gradient-end': '#efc17e',
+      'accent': '#b8360f',
+      'accent-soft': '#f8cbb5',
+      'accent-strong': '#86270a',
+      'card-border': '#6e240c',
+      'input-bg': '#fdeee2',
+      'rating': '#b8360f',
     },
   },
   {
     id: 'forest',
     name: 'Wald',
     mode: 'light',
+    mana: 'G',
     colors: {
       ...lightBase,
       'surface-muted': '#f1f6ef',
@@ -188,27 +205,39 @@ export const THEMES: AppTheme[] = [
     },
   },
   {
-    id: 'sunset',
-    name: 'Sonnenuntergang',
-    mode: 'light',
+    id: 'midnight',
+    name: 'Mitternacht',
+    mode: 'dark',
     colors: {
-      ...lightBase,
-      'surface-muted': '#fdf3ec',
-      'app-bg': '#f6c28b',
-      'app-bg-gradient-start': '#f6a28b',
-      'app-bg-gradient-end': '#fbe2a6',
-      'accent': '#d9480f',
-      'accent-soft': '#ffd8c2',
-      'accent-strong': '#a63a0c',
-      'card-border': '#8a3b12',
-      'input-bg': '#fff4e8',
-      'rating': '#d9480f',
+      ...darkBase,
+      'surface': '#141b2d',
+      'surface-muted': '#1c2540',
+      'surface-raised': '#1c2540',
+      'border': '#2d3a5c',
+      'app-bg': '#0b1020',
+      'app-bg-gradient-start': '#0b1020',
+      'app-bg-gradient-end': '#2a1b4a',
+      'accent': '#2dd4bf',
+      'accent-soft': '#134e4a',
+      'accent-strong': '#5eead4',
+      'card-border': '#1f7a72',
+      'input-bg': '#1a2238',
+      'rating': '#2dd4bf',
     },
   },
 ];
 
-export const DEFAULT_THEME_ID = 'classic';
+export const DEFAULT_THEME_ID = 'island';
+
+// Alte Theme-IDs aus localStorage auf die neuen abbilden
+const LEGACY_THEME_IDS: Record<string, string> = {
+  classic: 'island',
+  light: 'plains',
+  dark: 'swamp',
+  sunset: 'mountain',
+};
 
 export function getThemeById(id: string | null | undefined): AppTheme {
-  return THEMES.find(t => t.id === id) ?? THEMES.find(t => t.id === DEFAULT_THEME_ID)!;
+  const resolved = id ? (LEGACY_THEME_IDS[id] ?? id) : id;
+  return THEMES.find(t => t.id === resolved) ?? THEMES.find(t => t.id === DEFAULT_THEME_ID)!;
 }

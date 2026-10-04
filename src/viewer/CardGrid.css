@@ -2,13 +2,15 @@
   margin: 0 auto;
   padding: 20px;
   display: grid;
-  grid-template-columns: 2fr 10fr 1fr;
+  grid-template-columns: 1.7fr 10fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     "headline headline headline"
-    "input-controls decklist-viewer view-selection"
-    "input-controls decklist-viewer pdf-controls"
-    "input-controls decklist-viewer bottom";
+    "input-controls decklist-viewer right-toolbar";
   gap: 20px;
+  /* Feste Höhe, damit die rechte Toolbar bei zu viel Inhalt scrollt statt abgeschnitten zu werden */
+  box-sizing: border-box;
+  height: calc(100 * var(--vh));
 }
 
 .headline{
@@ -27,31 +29,50 @@
   grid-area: decklist-viewer;
 }
 
-.view-selection {
-  grid-area: view-selection;
+.right-toolbar {
+  grid-area: right-toolbar;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.bottom {
-  grid-area: bottom;
+/* Spenden/GitHub/Version bleiben unten, solange Platz ist */
+.right-toolbar .bottom {
+  margin-top: auto;
 }
 
-.pdf-controls {
-  grid-area: pdf-controls;
+.pdf-size-estimate {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pdf-size-estimate.is-error {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .card-tiles {
   /* --tile-scale wird aus der Grid Size gesetzt (10rem = 1) */
   --tile-scale: 1;
+  --tile-pad: calc(3px * var(--tile-scale));
+  /* Echte Karten: 63 mm breit, Eckradius ca. 3,2 mm = 5 % der Breite.
+     Absolut gerechnet statt "5%", denn Prozent wäre bei 63:88 eine Ellipse. */
+  --card-radius: calc((10rem * var(--tile-scale) - 2 * var(--tile-pad) - 2px) * 0.05);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 10rem));
   gap: calc(10px * var(--tile-scale));
 }
 
 .card-tile {
+  container: card-tile / inline-size;
   text-align: center;
   border: solid 1px var(--card-border);
-  padding: calc(5px * var(--tile-scale));
-  border-radius: 5%;
+  padding: var(--tile-pad);
+  border-radius: calc(var(--card-radius) + var(--tile-pad));
   font-size: calc(1rem * var(--tile-scale));
 }
 .card-image-container {
@@ -76,7 +97,11 @@
 }
 .custom-card {
   border: 1px solid var(--success);
-  padding: calc(2px * var(--tile-scale));
+}
+
+/* Kartenbild mit runden Ecken wie eine Spielkarte, Titel und Anzahl werden mit abgeschnitten */
+.card-tile > .card-image-container {
+  border-radius: var(--card-radius);
 }
 
 .custom-card canvas {
@@ -118,7 +143,7 @@
   flex: 3;
   overflow-y: auto;
   height: auto;
-  max-height: 82vh;
+  max-height: calc(82 * var(--vh));
   padding: 0.5rem;
 }
 
@@ -144,61 +169,108 @@
   background: var(--scrollbar-hover);
 }
 
-.card-name {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0.3em;
-  margin-bottom: 0px;
-  p {
-    white-space: nowrap;         /* Verhindert Umbrüche, sodass der Text immer in einer Zeile bleibt */
-    overflow: hidden;            /* Verhindert, dass der Text über das Element hinaus geht */
-    text-overflow: ellipsis;     /* Zeigt "..." an, wenn der Text abgeschnitten wird */
-    text-align: left;            /* Macht den Text linksbündig */
-  }
-  
+/* Kartenname als Overlay oben auf dem Bild (siehe grid/CardTitle.tsx).
+   Rechts bleibt Platz für Sprachflagge und Schärfepunkt (.card-badges). */
+.card-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 5px 42px 1.4em 7px;
+  font-size: 1em;
+  text-align: left;
+  color: #fff;
+  /* Verlauf läuft nach unten aus, damit keine harte Kante im Bild entsteht */
+  background: linear-gradient(
+    to bottom,
+    var(--overlay-bg) 0%,
+    var(--overlay-bg) 60%,
+    transparent 100%
+  );
 }
 
-.progress-bar {
-  width: 100%;
-  height: 20px;
-  background-color: var(--track);
-  border-radius: 10px;
-  margin-bottom: 20px;
+.card-title-text {
+  display: block;
+  font-size: calc(0.8em * var(--title-fit, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
   overflow: hidden;
-  position: relative;
+  text-overflow: ellipsis;
+  /* Kontur aus mehreren Schatten, hält auch auf hellen Stellen im Bild */
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Auch kleinste Schrift zu breit: zwei Zeilen, danach "…" */
+.card-title-text.card-title-wrap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Schmale Kacheln: Titel unter Flagge und Schärfepunkt, dafür volle Breite */
+@container card-tile (max-width: 120px) {
+  .card-title {
+    padding: 22px 5px 1.2em 5px;
+  }
+}
+
+.search-progress {
+  margin-bottom: 20px;
 }
 .settings-category {
   display: inline-block;
   margin: 5px 25px 5px 25px;
 }
 
-.progress {
-  height: 100%;
-  background-color: var(--success);
-  transition: width 0.5s ease-in-out;
+.settings-category.settings-email {
+  display: block;
+  max-width: 420px;
 }
 
+/* Filter- und Auswahlbeschriftung: Name links, alle Symbole rechtsbündig */
 .label-container {
   display: flex;
-  justify-content: flex-start; /* Icon alignment to the left */
   align-items: center;
-  gap: 2px; /* Optional: space between name and icons */
+  gap: 6px;
+  min-width: 0;
 }
 
-.label-container span {
+.label-container > span,
+.label-container > img {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
+}
+
+.label-container > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .subCategoryIcon {
   margin-left: 8px;
-  width: 1rem; 
-  height: 1rem; 
+  width: 1rem;
+  height: 1rem;
 }
 
-.label-container span:last-child {
-  margin-left: auto; /* Push icons to the right side */
+.label-container .subCategoryIcon {
+  margin-left: 0;
+}
+
+/* Gleiche Größe für alle Symbole in einer Zeile, MUI setzt sonst 1.5rem */
+.label-container svg {
+  font-size: 1.15rem;
 }
 
 .decklist-input textarea {
@@ -218,43 +290,13 @@
 }
 
 
-.progress-bar span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--text);
-}
-
 .log {
   border: 1px solid var(--border);
   padding: 10px;
   overflow-y: auto;
   background-color: var(--input-bg);
-  max-height: 20vh;
-  min-height: 20vh;
-}
-
-.log-content {
-  font-family: monospace;
-}
-
-
-
-.log-entry {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.log-entry .config-name {
-  font-weight: bold;
-  margin-right: 10px;
-}
-
-.log-entry .raw-data-icon {
-  cursor: pointer;
-  margin-left: 10px;
+  max-height: calc(20 * var(--vh));
+  min-height: calc(20 * var(--vh));
 }
 
 .json-viewer-container {
@@ -282,30 +324,71 @@
   margin-bottom: 5px;
 }
 
-.remove-card {
-  color: var(--danger);
-  cursor: pointer;
-  margin-right: 0.3em;
-  font-weight: bold;
-}
-
-.card-count p {
+/* Anzahl unten auf dem Bild, gleicher Verlauf wie der Titel (.card-title), nur von unten */
+.card-count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.1em;
+  padding: 1.1em 4px 3px;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(
+    to top,
+    var(--overlay-bg) 0%,
+    var(--overlay-bg) 55%,
+    transparent 100%
+  );
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.count-value {
+  min-width: 1.4em;
+  text-align: center;
 }
 
 .count-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25em 0.5em;
-  margin: 0 0.25em;
-  font-size: inherit;
-  border-radius: 0.25em;
+  padding: 0.25em 0.4em;
+  border: none;
+  border-radius: 0.3em;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
   svg {
-    width: 0.75em;
-    height: 0.75em;
+    width: 0.9em;
+    height: 0.9em;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
   }
+}
+
+.count-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.count-button.remove-card {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  color: var(--danger);
+}
+
+/* Bildinfos ("Show Image Info") über der Anzahl-Leiste statt darunter */
+.card-tile .image-info {
+  bottom: 2em;
 }
 
 
@@ -365,53 +448,28 @@
   flex-direction: column;
 }
 
-.checkbox-group .api-selection-header {
-  margin-bottom: 5px;
-}
-
-.api-manage-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 10px 2px 6px;
-  margin-left: -6px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
-}
-
-.api-manage-button .api-manage-icon {
-  color: var(--text-muted);
-  transition: color 0.15s, transform 0.3s;
-}
-
-.api-manage-button:hover,
-.api-manage-button:focus-visible {
-  background: var(--surface-muted);
-  border-color: var(--border);
-}
-
-.api-manage-button:hover .api-manage-icon,
-.api-manage-button:focus-visible .api-manage-icon {
-  color: var(--accent);
-  transform: rotate(45deg);
-}
-
 /* Druckschärfe des Textfeldes (siehe service/quality/ImageQuality.ts) */
-.quality-dot {
+/* Sprachflagge und Schärfepunkt oben rechts auf der Kartenvorschau */
+.card-badges {
   position: absolute;
   top: 6px;
   right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+  pointer-events: auto;
+}
+.card-badges .language-flag {
+  box-shadow: 0 0 0 1px var(--surface), 0 0 2px 1px var(--shadow);
+}
+.quality-dot {
+  flex: 0 0 auto;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   border: 1px solid var(--surface);
   box-shadow: 0 0 2px var(--shadow);
-  z-index: 2;
 }
 .quality-good { background-color: var(--success); }
 .quality-ok { background-color: var(--warning); }
@@ -421,11 +479,21 @@
   display: inline-block;
   width: 10px;
   height: 10px;
-  margin: 0 6px 0 2px;
+  margin: 0 3px;
   border-radius: 50%;
   vertical-align: middle;
 }
 
 .decklist-input form {
   margin-bottom: 12px;
+}
+
+/* In einklappbaren Abschnitten sorgt der Abschnitt selbst für den Abstand */
+.collapsible-body > .checkbox-group {
+  margin-bottom: 0;
+}
+
+/* Rechte Spalte ist schmal: Abschnittstitel etwas kleiner, damit sie nicht überlaufen */
+.right-toolbar .collapsible-header {
+  font-size: 0.9rem;
 }

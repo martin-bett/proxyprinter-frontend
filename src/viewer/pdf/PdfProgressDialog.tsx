@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import './PdfProgressDialog.css';
+import ProgressBar from '../../components/progress/ProgressBar';
 
 export type ProgressCategory = 'queued' | 'download' | 'build' | 'finishing';
 
@@ -22,6 +23,8 @@ interface PdfProgressDialogProps {
   errorMessage?: string | null;
   onFinish: (progressId: string) => void;
   onClose: () => void;
+  /** Adresse, an die das Backend zusätzlich den Download-Link schickt. */
+  email?: string;
 }
 
 const CATEGORY_ORDER: ProgressCategory[] = ['queued', 'download', 'build', 'finishing'];
@@ -45,7 +48,7 @@ export const formatFileSize = (bytes: number): string => {
 export const isFinished = (dto: ProgressDto | undefined): boolean =>
   !!dto && dto.category === 'finishing' && !dto.error && dto.fileSize > 0;
 
-const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDtos, errorMessage, onFinish, onClose }) => {
+const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDtos, errorMessage, onFinish, onClose, email }) => {
   // Letzter Eintrag je Kategorie
   const latestByCategory = useMemo(() => {
     const map: Partial<Record<ProgressCategory, ProgressDto>> = {};
@@ -109,7 +112,7 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
                 </span>
               </div>
               {category === 'queued' ? (
-                <div className="pdf-progress-queue">
+                <div className={`pdf-progress-queue${state === 'is-pending' ? ' app-progress-pending-stripes' : ''}`}>
                   <div
                     className="pdf-progress-queue-ball"
                     style={{
@@ -119,12 +122,11 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
                   />
                 </div>
               ) : (
-                <div className="pdf-progress-track">
-                  <div
-                    className={`pdf-progress-fill${indeterminate ? ' is-indeterminate' : ''}`}
-                    style={{ width: indeterminate || failed ? '100%' : `${ratio * 100}%` }}
-                  />
-                </div>
+                <ProgressBar
+                  value={ratio}
+                  indeterminate={indeterminate}
+                  state={failed ? 'error' : passed ? 'done' : active ? 'active' : 'pending'}
+                />
               )}
             </div>
           );
@@ -133,6 +135,9 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
       <div className={`pdf-progress-message${error ? ' is-error' : ''}`}>
         {error || lastDto?.message || 'Starting PDF generation...'}
       </div>
+      {email && !error && (
+        <div className="pdf-progress-email">The download link will also be sent to {email}.</div>
+      )}
       {error && (
         <div className="pdf-progress-actions">
           <button className="button" onClick={onClose}>Close</button>

@@ -5,6 +5,7 @@ import CardImage, { CardImageError } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
+import LanguageFlag from '../../container/LanguageFlag';
 import { imageLoaderService } from "../../service/cache/ImageLoaderService";
 import { CardResult, GroupedResults } from '../../api/types/types';
 
@@ -106,7 +107,6 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
       }
       return newSet;
     });
-    updateLoaderService();
   };
 
   const toggleApi = (apiName: string) => {
@@ -119,14 +119,6 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
       }
       return newSet;
     });
-    updateLoaderService();
-  };
-
-  const updateLoaderService = () => {
-    const activeLanguages = new Set(dialogVisibleLanguages);
-    const activeApis = new Set(dialogVisibleApis);
-
-    imageLoaderService.stopForFilters(activeLanguages, activeApis);
   };
 
   const handleImageLoadError = (card: CardImageError) => {
@@ -194,7 +186,12 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                 <ChoiceButton
                   key={lang}
                   id={`select-lang-${lang}`}
-                  label={lang === NO_LANGUAGE ? 'No Language' : lang}
+                  label={
+                    <div className="label-container">
+                      <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
+                      <LanguageFlag language={lang} />
+                    </div>
+                  }
                   checked={dialogVisibleLanguages.has(lang)}
                   onChange={() => toggleLanguage(lang)}
                 />
@@ -218,7 +215,12 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                 <ChoiceButton
                   key={key}
                   id={`select-quality-${key}`}
-                  label={<span><span className={`quality-dot-inline quality-${key === 'unrated' ? 'unknown' : key}`} />{label}</span>}
+                  label={
+                    <div className="label-container">
+                      <span>{label}</span>
+                      <span className={`quality-dot-inline quality-${key === 'unrated' ? 'unknown' : key}`} />
+                    </div>
+                  }
                   checked={visibleQualities.has(key)}
                   onChange={() => toggleQuality(key)}
                 />

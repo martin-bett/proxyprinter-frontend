@@ -1,0 +1,24 @@
+/* Dezentes Mana-Symbol unten in der Mitte im Hintergrund, hinter allen Inhalten */
+.mana-watermark {
+  position: fixed;
+  left: 50%;
+  bottom: 4vmin;
+  transform: translateX(-50%);
+  width: 40vmin;
+  height: 40vmin;
+  color: var(--accent);
+  opacity: 0.09;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+html[data-theme="dark"] .mana-watermark {
+  opacity: 0.08;
+}
+
+/* App über das Wasserzeichen legen (das Wasserzeichen hängt direkt an <body>) */
+#root {
+  position: relative;
+  z-index: 1;
+}

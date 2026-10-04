@@ -48,70 +48,8 @@
   margin-left: 0.75rem;
 }
 
-.pdf-progress-track {
-  height: 14px;
-  background: var(--track);
-  border-radius: 7px;
-  overflow: hidden;
-}
-
-.pdf-progress-fill {
-  height: 100%;
-  border-radius: 7px;
-  background: var(--accent);
-  transition: width 0.3s;
-}
-
-.pdf-progress-row.is-error .pdf-progress-fill {
-  background: var(--danger);
-}
-
-.pdf-progress-fill.is-indeterminate {
-  background: repeating-linear-gradient(
-    75deg,
-    var(--accent) 0px,
-    var(--accent) 4px,
-    var(--accent-soft) 4px,
-    var(--accent-soft) 12px
-  );
-  background-size: 24px 100%;
-  animation: pdf-progress-stripes 0.7s linear infinite;
-}
-
-/* Noch nicht erreichte Phasen: gedämpfte, endlos laufende Schrägstreifen auf der ganzen Spur */
-.pdf-progress-row.is-pending .pdf-progress-track,
-.pdf-progress-row.is-pending .pdf-progress-queue {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--track) 0px,
-    var(--track) 6px,
-    var(--accent-soft) 6px,
-    var(--accent-soft) 12px
-  );
-  background-size: 16.9706px 100%;
-  animation: pdf-progress-stripes-pending 1s linear infinite;
-}
-
 .pdf-progress-row.is-pending .pdf-progress-queue-ball {
   display: none;
-}
-
-@keyframes pdf-progress-stripes-pending {
-  from { background-position: 0 0; }
-  to { background-position: 16.9706px 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pdf-progress-fill.is-indeterminate,
-  .pdf-progress-row.is-pending .pdf-progress-track,
-  .pdf-progress-row.is-pending .pdf-progress-queue {
-    animation: none;
-  }
-}
-
-@keyframes pdf-progress-stripes {
-  from { background-position: 0 0; }
-  to { background-position: 24px 0; }
 }
 
 /* Warteschlange: Kugel wandert nach vorne, je weiter vorne der Job steht */
@@ -119,8 +57,11 @@
   position: relative;
   height: 6px;
   margin: 0.8rem 0.9rem;
-  background: var(--track);
   border-radius: 3px;
+}
+
+.pdf-progress-queue:not(.app-progress-pending-stripes) {
+  background: var(--track);
 }
 
 .pdf-progress-queue-ball {
@@ -141,6 +82,13 @@
   text-align: center;
   color: var(--text-muted);
   min-height: 1.5em;
+}
+
+.pdf-progress-email {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9em;
 }
 
 .pdf-progress-message.is-error {

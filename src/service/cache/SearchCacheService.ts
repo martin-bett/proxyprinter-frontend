@@ -1,13 +1,14 @@
 import { SearchResult } from '../ApiFactory';
+import { openCacheDb } from "./openCacheDb";
 
 const DB_NAME = "mtg_search_cache_db";
-const DB_VERSION = 1;
 const STORE_NAME = "searchResults";
 const MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000; // 2 Tage
 
 export interface SearchApiResult {
   results: SearchResult[];
   rawResponse: string;
+  requestCount?: number;
 }
 
 interface SearchCacheDbEntry {
@@ -26,17 +27,7 @@ export interface SearchCacheEntryInfo {
 }
 
 function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = function (event) {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "cacheKey" });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+  return openCacheDb(DB_NAME, STORE_NAME);
 }
 
 async function saveToIndexedDB(entry: SearchCacheDbEntry): Promise<void> {
