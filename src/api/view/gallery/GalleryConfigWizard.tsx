@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import TuneIcon from '@mui/icons-material/Tune';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import { Config } from '../../../service/ApiFactory';
-import DefaultLanguageSelect from '../DefaultLanguageSelect';
+import ConfigFieldTable, { CATEGORY_OPTIONS, ConfigField } from '../ConfigFieldTable';
+import { DEFAULT_LANGUAGE_OPTIONS } from '../defaultLanguages';
+import ActionButton from '../../../container/inputs/ActionButton';
 
 export interface GalleryConfigFormState {
   id?: number;
@@ -30,6 +29,21 @@ export interface GalleryConfigFormState {
   published?: boolean;
   [key: string]: unknown;
 }
+
+const GALLERY_CONFIG_FIELDS: ConfigField[] = [
+  { group: 'Base Info', name: 'name', label: 'Name', required: true },
+  { group: 'Base Info', name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS },
+  { group: 'Base Info', name: 'officialWebsite', label: 'Official Website' },
+  { group: 'Request', name: 'method', label: 'Method', type: 'select', options: [['GET', 'GET'], ['POST', 'POST']] },
+  { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['html', 'HTML']] },
+  { group: 'Request', name: 'baseUrl', label: 'Base URL' },
+  { group: 'Request', name: 'parameterMap', label: 'Parameter Map', type: 'json' },
+  { group: 'Locator', name: 'paginationField', label: 'Pagination Field' },
+  { group: 'Locator', name: 'dataListField', label: 'Data List Field' },
+  { group: 'Locator', name: 'nameField', label: 'Name Field' },
+  { group: 'Locator', name: 'imageUrlField', label: 'Image URL Field' },
+  { group: 'Locator', name: 'defaultLanguage', label: 'Default Language', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'Sprache für Karten, zu denen die Quelle keine Sprache liefert' },
+];
 
 interface GalleryConfigWizardProps {
   onClose: () => void;
@@ -57,12 +71,6 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     nameField: '',
     imageUrlField: '',
     defaultLanguage: ''
-  });
-
-  const [expandedSections, setExpandedSections] = useState({
-    baseInfo: true,
-    requestBasic: false,
-    locatorBasic: false,
   });
 
   // Fingerprint-Initialisierung
@@ -137,13 +145,6 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     }
   };
 
-  const handleToggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
   const handleSubmit = () => {
     onSave(config);
   };
@@ -151,148 +152,26 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
   return (
     <div className="wizard-container">
       <h1 className='title is-4'>Config Settings</h1>
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="wizard-form">
-
-        {/* Base Info */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('baseInfo')}>
-            <TuneIcon />Base Info {expandedSections.baseInfo ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.baseInfo && (
-            <div>
-              <label>Name:</label>
-              <input
-                type="text"
-                name="name"
-                value={config.name}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-                required
-              />
-              <label>Category:</label>
-              <select name="category" disabled={!isOwner} value={config.category} onChange={handleInputChange}>
-                <option value="MTG">MTG</option>
-                <option value="POKE">Poke</option>
-                <option value="YUGIOH">Yugi</option>
-                <option value="MISC">Misc</option>
-              </select>
-              <label>Official Website:</label>
-              <input
-                type="text"
-                name="officialWebsite"
-                value={config.officialWebsite}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Request Basic */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('requestBasic')}>
-            <TuneIcon />Request Basic {expandedSections.requestBasic ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.requestBasic && (
-            <div>
-              <label>Method:</label>
-              <select disabled={!isOwner} name="method" value={config.method} onChange={handleInputChange}>
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-              </select>
-              <label>Data Format:</label>
-              <select disabled={!isOwner} name="dataFormat" value={config.dataFormat} onChange={handleInputChange}>
-                <option value="json">JSON</option>
-                <option value="html">HTML</option>
-              </select>
-              <label>Base URL:</label>
-              <input
-                type="text"
-                name="baseUrl"
-                value={config.baseUrl}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Parameter Map:</label>
-              <textarea
-                name="parameterMap"
-                value={JSON.stringify(config.parameterMap, null, 2)}
-                onChange={handleParameterMapChange}
-                disabled={!isOwner}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Locator Basic */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('locatorBasic')}>
-            <TuneIcon />Locator Basic {expandedSections.locatorBasic ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.locatorBasic && (
-            <div>
-              <label>Pagination Field:</label>
-              <input
-                type="text"
-                name="paginationField"
-                value={config.paginationField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Data List Field:</label>
-              <input
-                type="text"
-                name="dataListField"
-                value={config.dataListField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Name Field:</label>
-              <input
-                type="text"
-                name="nameField"
-                value={config.nameField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Image URL Field:</label>
-              <input
-                type="text"
-                name="imageUrlField"
-                value={config.imageUrlField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <DefaultLanguageSelect value={config.defaultLanguage} onChange={handleInputChange} disabled={!isOwner} />
-            </div>
-          )}
-        </div>
-
-
-        {isOwner ? (
-          <>
-            <div className="wizard-category">
-              <button className="button is-secondary submit" type="submit" >
-                <SaveIcon />Save
-              </button>
-            </div>
-            <div className="wizard-category">
-              <button className="button is-secondary publish" type="button" onClick={handlePublish}>
-                {config.published ? <LockIcon /> : <PublicIcon />}
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <ConfigFieldTable
+          fields={GALLERY_CONFIG_FIELDS}
+          values={config}
+          savedValues={initialConfig as unknown as Record<string, unknown> | null}
+          editable={isOwner}
+          onChange={handleInputChange}
+          onJsonChange={handleParameterMapChange}
+        />
+        <div className="config-actions">
+          {isOwner ? (
+            <>
+              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>Save</ActionButton>
+              <ActionButton icon={config.published ? <LockIcon /> : <PublicIcon />} onClick={handlePublish}>
                 {config.published ? 'Unpublish' : 'Publish'}
-              </button>
-            </div>
-            <div className="wizard-category">
-              <button className="button is-secondary remove" type="button" onClick={handleDelete}>
-                <DeleteForeverIcon />Delete
-              </button>
-            </div>
-          </>
-        ) : null}
-        <div className="wizard-category">
-          <button className="button is-secondary copy" type="button" onClick={handleCopyConfig}>
-            <ContentCopyIcon />Copy Config
-          </button>
+              </ActionButton>
+              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>Delete</ActionButton>
+            </>
+          ) : null}
+          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>Copy Config</ActionButton>
         </div>
       </form>
     </div>

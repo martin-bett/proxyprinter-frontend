@@ -174,20 +174,18 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
 
   return (
     <>
-    <div className="rating-container wizard-category">
-    <button className="button is-secondary copy setting-category" type="button" >
-            Rating
-    </button>
+    <div className="rating-container">
+      <div className="rating-title">Rating</div>
       <div className="is-flex is-justify-content-center" style={{ gap: '4rem' }}>
         <div className="is-flex is-flex-direction-column is-align-items-center" style={{ gap: '0.75rem' }}>
-          <span className="is-size-5 has-text-grey">Availability</span>
+          <span className="rating-label">Availability</span>
           <RatingStars
             score={currentRating.scoreAvailability}
             onRatingClick={(score) => config.id !== undefined && handleRating(config.id, score, 'availability')}
           />
         </div>
         <div className="is-flex is-flex-direction-column is-align-items-center" style={{ gap: '0.75rem' }}>
-          <span className="is-size-5 has-text-grey">Quality</span>
+          <span className="rating-label">Quality</span>
           <RatingStars
             score={currentRating.scoreQuality}
             onRatingClick={(score) => config.id !== undefined && handleRating(config.id, score, 'quality')}
