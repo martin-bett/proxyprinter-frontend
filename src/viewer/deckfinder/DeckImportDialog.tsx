@@ -15,12 +15,16 @@ interface DeckImportDialogProps {
   configs: DeckFinderConfig[];
   /** Link aus dem Decklist-Feld, mit dem der Dialog geöffnet wurde */
   initialInput?: string;
+  /** Beim Öffnen gleich laden bzw. suchen (aus der Section "Import Deck") */
+  autoRun?: 'load' | 'search';
+  /** Mit der Quellen-Verwaltung öffnen */
+  startInManage?: boolean;
   onReloadConfigs: () => void;
   onLoaded: (deck: LoadedDeck, source: DeckFinderConfig) => void;
 }
 
 /** Deck per Link, ID oder Name von einer Deckbuilder-Seite laden. */
-const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInput, onReloadConfigs, onLoaded }) => {
+const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInput, autoRun, startInManage, onReloadConfigs, onLoaded }) => {
   const [input, setInput] = useState(initialInput || '');
   const [configId, setConfigId] = useState<number | null>(null);
   const [boards, setBoards] = useState<string[]>([]);
@@ -28,7 +32,7 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [manage, setManage] = useState(false);
+  const [manage, setManage] = useState(!!startInManage);
 
   const linkConfig = useMemo(() => matchDeckLink(configs, input), [configs, input]);
   const config = linkConfig || configs.find(c => c.id === configId) || configs[0] || null;
@@ -59,6 +63,16 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
     setHits(prev => nextPage === 1 ? found : [...prev, ...found]);
     setPage(nextPage);
   });
+
+  // Einmal beim Öffnen ausführen, sobald die Quellen da sind
+  const [autoRunDone, setAutoRunDone] = useState(false);
+  useEffect(() => {
+    if (!autoRun || autoRunDone || !config || !input.trim()) return;
+    setAutoRunDone(true);
+    if (autoRun === 'search' && config.searchUrl && !linkConfig) search(1);
+    else load(input);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun, autoRunDone, config?.id]);
 
   // Ein Link wird immer geladen; sonst sucht Enter, wenn die Quelle eine Suche hat und die Eingabe wie ein Name aussieht
   const looksLikeName = /\s/.test(input.trim()) || !/^[\w-]+$/.test(input.trim());

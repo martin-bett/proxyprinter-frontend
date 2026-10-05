@@ -18,9 +18,6 @@
 .deck-import-hit-name { font-weight: 600; overflow-wrap: anywhere; }
 .deck-import-hit-meta { font-size: 0.8rem; opacity: 0.8; }
 
-.deck-link-hint { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.4rem 0; font-size: 0.9rem; }
-.deck-link-hint .action-button { width: auto; }
-
 .deckfinder-config-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
 .deckfinder-config-item {
   display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.6rem; border-radius: 999px;
@@ -33,4 +30,13 @@
 .replace-deck-dialog p { margin: 0 0 16px; color: var(--text-muted); }
 .replace-deck-actions { display: flex; gap: 8px; }
 .replace-deck-actions .action-button { margin: 0; }
-.deck-import-hit-meta, .deck-link-hint { color: var(--text-muted); }
+.deck-import-hit-meta { color: var(--text-muted); }
+
+/* Section "Import Deck" in der linken Leiste */
+.import-deck-section { display: flex; flex-direction: column; gap: 6px; }
+.import-deck-input {
+  width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--input-bg); color: var(--text);
+}
+.import-deck-hint { font-size: 0.8rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.import-deck-hint.is-error { color: var(--danger); }
