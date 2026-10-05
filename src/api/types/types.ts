@@ -12,6 +12,8 @@ export interface CardGroup {
   results: CardResult[];
   /** Gewünschter Druck je Platz aus der Decklist, z. B. "(M10) 146"; wird vorausgewählt, wenn er dabei ist */
   wanted?: (Pick<DeckEntry, 'set' | 'number'> | null)[];
+  // Verbundene Karte (z.B. Token): Deckkarten, die sie brauchen
+  connectedFrom?: string[];
 }
 
 export type CardResultsMap = Record<string, CardGroup>;

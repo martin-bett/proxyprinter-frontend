@@ -514,6 +514,16 @@
   margin-bottom: 12px;
 }
 
+/* Checkbox „Tokens & Extras“ über Analyze; ausgegraut, wenn keine aktive API verbundene Karten liefert */
+.connected-cards-toggle {
+  margin-bottom: 8px;
+}
+
+.connected-cards-toggle .is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* In einklappbaren Abschnitten sorgt der Abschnitt selbst für den Abstand */
 .collapsible-body > .checkbox-group {
   margin-bottom: 0;
