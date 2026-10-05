@@ -19,6 +19,12 @@ import RecropDialog from './grid/crop/RecropDialog';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import LinkListDialog, { nameFromLink } from './grid/LinkListDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
+import DeckImportDialog from './deckfinder/DeckImportDialog';
+import { DeckFinderConfig, LoadedDeck, fetchDeckFinderConfigs, getFingerprint, loadDeck, matchDeckLink } from '../service/deckfinder/deckFinder';
+import { parseDecklist } from '../service/deck/deckParser';
+import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
+import TuneIcon from '@mui/icons-material/Tune';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
@@ -125,6 +131,12 @@ const DeckInputAndViewer: React.FC = () => {
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [linkListDialogOpen, setLinkListDialogOpen] = useState(false);
+  // Deckfinder: Decks per Link, ID oder Name von Deckbuilder-Seiten laden
+  const [deckFinderConfigs, setDeckFinderConfigs] = useState<DeckFinderConfig[]>([]);
+  const [deckImport, setDeckImport] = useState<{ open: boolean; input?: string; autoRun?: 'load' | 'search'; manage?: boolean }>({ open: false });
+  const [deckImportInput, setDeckImportInput] = useState('');
+  const [pendingDeck, setPendingDeck] = useState<LoadedDeck | null>(null);
+  const [deckLinkStatus, setDeckLinkStatus] = useState<{ loading: boolean; error?: string }>({ loading: false });
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
   const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
@@ -359,21 +371,7 @@ const DeckInputAndViewer: React.FC = () => {
     setLog([]);
     setProgress(0);
 
-    const cardEntries: DeckEntry[] = decklist.split('\n')
-      .map(line => line.trim())
-      .filter(line => line)
-      .map((line): DeckEntry | null => {
-        const match = line.match(/^(\d+)\s+(.+?)(?:\s+\(([^)]+)\))?\s*$/);
-        if (match) {
-          return {
-            count: parseInt(match[1], 10),
-            name: match[2].trim(),
-            set: match[3]?.trim() || undefined
-          };
-        }
-        return null;
-      })
-      .filter((entry): entry is DeckEntry => entry !== null);
+    const cardEntries: DeckEntry[] = parseDecklist(decklist);
 
     const totalCards = cardEntries.reduce((sum, entry) => sum + entry.count, 0);
     let completedCards = 0;
@@ -724,6 +722,50 @@ const DeckInputAndViewer: React.FC = () => {
     setProgress(0);
   }, [saveSnapshot]);
   const pdfDownloadNameRef = useRef('deck');
+
+  const reloadDeckFinderConfigs = useCallback(async () => {
+    try {
+      setDeckFinderConfigs(await fetchDeckFinderConfigs(await getFingerprint()));
+    } catch (e) {
+      console.error('Deckfinder-Configs nicht ladbar:', e);
+    }
+  }, []);
+  useEffect(() => { reloadDeckFinderConfigs(); }, [reloadDeckFinderConfigs]);
+
+  // Quelle zum Link im Feld der Section "Import Deck"
+  const detectedDeckSource = useMemo(() => matchDeckLink(deckFinderConfigs, deckImportInput), [deckFinderConfigs, deckImportInput]);
+
+  // Geladenes Deck ersetzt die Liste; steht schon eine Liste da, erst fragen und einen Snapshot anlegen
+  const applyLoadedDeck = useCallback(async (deck: LoadedDeck, confirmed = false) => {
+    const hasList = decklist.trim() !== '';
+    if (hasList && !confirmed) {
+      setPendingDeck(deck);
+      return;
+    }
+    if (hasList) await saveSnapshot();
+    setPendingDeck(null);
+    setDeckImport({ open: false });
+    setDeckLinkStatus({ loading: false });
+    setDeckImportInput('');
+    setDecklist(deck.text);
+  }, [decklist, saveSnapshot]);
+
+  // Erkannter Link lädt direkt (nur Hauptdeck); ID ohne Link oder Name öffnet den Dialog
+  const handleImportDeck = async () => {
+    const input = deckImportInput.trim();
+    if (!input) return;
+    if (!detectedDeckSource) {
+      setDeckImport({ open: true, input, autoRun: 'load' });
+      return;
+    }
+    setDeckLinkStatus({ loading: true });
+    try {
+      const deck = await loadDeck(detectedDeckSource, input, [], await getFingerprint());
+      await applyLoadedDeck(deck);
+    } catch (e) {
+      setDeckLinkStatus({ loading: false, error: e instanceof Error ? e.message : String(e) });
+    }
+  };
 
   const createPDF = async () => {
     if (pdfTooLarge) return;
@@ -1168,6 +1210,49 @@ const DeckInputAndViewer: React.FC = () => {
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
+          <CollapsibleSection
+            storageKey="import-deck"
+            title="Import Deck"
+            action={{ icon: <SettingsIcon />, title: 'Deckfinder sources', onClick: () => setDeckImport({ open: true, manage: true }) }}
+          >
+            <form
+              className="import-deck-section"
+              onSubmit={(e) => { e.preventDefault(); handleImportDeck(); }}
+            >
+              <input
+                type="text"
+                className="import-deck-input"
+                value={deckImportInput}
+                onChange={(e) => { setDeckImportInput(e.target.value); setDeckLinkStatus({ loading: false }); }}
+                placeholder="Deck link, ID or name"
+                aria-label="Deck link, ID or name"
+              />
+              {(detectedDeckSource || deckLinkStatus.error) && (
+                <span className={`import-deck-hint ${deckLinkStatus.error ? 'is-error' : ''}`}>
+                  {deckLinkStatus.error || `${detectedDeckSource!.name} link`}
+                </span>
+              )}
+              <div className="add-single-buttons">
+                <ActionButton type="submit" icon={<DownloadIcon />} disabled={isLoading || deckLinkStatus.loading || !deckImportInput.trim()}>
+                  {deckLinkStatus.loading ? 'Loading…' : 'Load Deck'}
+                </ActionButton>
+                <ActionButton
+                  icon={<SearchIcon />}
+                  disabled={isLoading || !deckImportInput.trim() || !!detectedDeckSource}
+                  onClick={() => setDeckImport({ open: true, input: deckImportInput.trim(), autoRun: 'search' })}
+                >
+                  Search by Name
+                </ActionButton>
+                <ActionButton
+                  icon={<TuneIcon />}
+                  disabled={isLoading}
+                  onClick={() => setDeckImport({ open: true, input: deckImportInput.trim() || undefined })}
+                >
+                  Options
+                </ActionButton>
+              </div>
+            </form>
+          </CollapsibleSection>
           <CollapsibleSection storageKey="add-single" title="Add Single">
             <div className="add-single-buttons">
               <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
@@ -1432,6 +1517,34 @@ const DeckInputAndViewer: React.FC = () => {
         maxWidth='sm'
         children={<LinkListDialog onSubmit={handleLinkList} />}
       />
+      <ClosableDialog
+        open={deckImport.open}
+        onClose={() => setDeckImport({ open: false })}
+        maxWidth='md'
+        children={<DeckImportDialog
+          key={`${deckImport.input || ''}|${deckImport.autoRun || ''}|${deckImport.manage ? 'm' : ''}`}
+          configs={deckFinderConfigs}
+          initialInput={deckImport.input}
+          autoRun={deckImport.autoRun}
+          startInManage={deckImport.manage}
+          onReloadConfigs={reloadDeckFinderConfigs}
+          onLoaded={(deck) => applyLoadedDeck(deck)}
+        />}
+      />
+      <ClosableDialog open={pendingDeck !== null} onClose={() => setPendingDeck(null)} maxWidth="xs">
+        <div className="replace-deck-dialog">
+          <h2>Decklist ersetzen?</h2>
+          <p>
+            {pendingDeck?.deckName ? `„${pendingDeck.deckName}“ ` : 'Das geladene Deck '}
+            ({pendingDeck?.entries.reduce((sum, e) => sum + e.count, 0)} Karten) ersetzt die aktuelle Liste.
+            Der aktuelle Stand wird vorher als Snapshot gespeichert.
+          </p>
+          <div className="replace-deck-actions">
+            <ActionButton icon={<CloseIcon />} onClick={() => setPendingDeck(null)}>Abbrechen</ActionButton>
+            <ActionButton icon={<DownloadIcon />} className="is-primary" onClick={() => pendingDeck && applyLoadedDeck(pendingDeck, true)}>Ersetzen</ActionButton>
+          </div>
+        </div>
+      </ClosableDialog>
       <ClosableDialog
         open={galleryDialogOpen}
         onClose={handleCloseGalleryDialog}
