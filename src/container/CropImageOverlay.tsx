@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { IconButton, Tab, Tabs } from "@mui/material";
+import { Tab, Tabs } from "@mui/material";
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CropIcon from '@mui/icons-material/Crop';
-import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { CropSettings } from "../service/ApiFactory";
 import { CardResult } from "../api/types/types";
 import CropMask from "../viewer/grid/crop/CropMask";
@@ -58,24 +56,10 @@ const useProxiedImage = (imageUrl: string | undefined) => {
 const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, cardAspect = 63 / 88 }) => {
   const [tab, setTab] = useState<OverlayTab>('info');
   const { imageSrc, loading } = useProxiedImage(selectedImage?.imageUrl);
-  const [isStretch, setIsStretch] = useState(selectedImage?.cropSettings?.isStretch ?? true);
-
-  useEffect(() => {
-    setIsStretch(selectedImage?.cropSettings?.isStretch ?? true);
-  }, [selectedImage]);
-
   // Zuschnitt direkt am gewählten Bild ablegen, der Dialog übernimmt es beim Schließen
   const handleCropChange = (crops: CropSettings[]) => {
     if (!selectedImage || crops.length === 0) return;
-    selectedImage.cropSettings = { ...crops[0], isStretch };
-  };
-
-  const toggleStretch = () => {
-    const next = !isStretch;
-    setIsStretch(next);
-    if (selectedImage) {
-      selectedImage.cropSettings = { ...(selectedImage.cropSettings || {}), isStretch: next };
-    }
+    selectedImage.cropSettings = { ...crops[0], isStretch: selectedImage.cropSettings?.isStretch ?? true };
   };
 
   const crop = selectedImage?.cropSettings;
@@ -131,7 +115,6 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
       )}
 
       {selectedImage && imageSrc && tab === 'crop' && (
-        <>
           <CropMask
             key={selectedImage.imageUrl}
             imageSrc={imageSrc}
@@ -142,13 +125,6 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
             maxImageHeight={maxImageHeight}
             onChange={handleCropChange}
           />
-          <div className="crop-image-stretch">
-            <IconButton onClick={toggleStretch} sx={{ color: "inherit" }} title="Beim Druck aufs Kartenformat strecken">
-              {isStretch ? <OpenInFullIcon /> : <CloseFullscreenIcon />}
-            </IconButton>
-            <span>{isStretch ? 'Stretch to card' : 'Keep image size'}</span>
-          </div>
-        </>
       )}
     </div>
   );

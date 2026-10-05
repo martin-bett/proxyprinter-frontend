@@ -1,11 +1,12 @@
 .crop-mask {
   display: flex;
-  gap: 16px;
+  gap: 24px;
 }
 
 .crop-mask--side {
   flex-direction: row;
   align-items: flex-start;
+  justify-content: center;
 }
 
 .crop-mask--stacked {
@@ -40,8 +41,15 @@
   min-width: 0;
 }
 
+.crop-mask--side .crop-mask-image {
+  /* So breit wie das Bild, damit Bild und Seitenleiste zusammen mittig stehen */
+  flex: 0 1 auto;
+}
+
 .crop-mask--side .crop-mask-side {
-  flex: 0 0 300px;
+  flex: 0 0 360px;
+  box-sizing: border-box;
+  padding-right: 12px;
 }
 
 .crop-mask-mode {
