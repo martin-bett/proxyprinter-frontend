@@ -15,6 +15,10 @@ const TitleDiv: React.FC = () => {
     if (!el) return;
     const update = () => setWidth(el.clientWidth);
     update();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
