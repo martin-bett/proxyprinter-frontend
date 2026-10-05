@@ -7,6 +7,8 @@ interface CollapsibleSectionProps {
   // Ohne Schlüssel startet der Abschnitt immer mit defaultOpen.
   storageKey?: string;
   title: React.ReactNode;
+  // Kurzinfo rechts im Header, nur im zugeklappten Zustand sichtbar (z. B. "4 / 9")
+  summary?: React.ReactNode;
   defaultOpen?: boolean;
   // Optionaler Zusatz-Button rechts im Header (z. B. Zahnrad), getrennt durch eine Kante
   action?: {
@@ -32,10 +34,11 @@ const readOpen = (key: string | undefined, fallback: boolean): boolean => {
 
 // Einklappbarer Abschnitt: Header im Button-Stil mit Pfeil links statt Haken
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  storageKey, title, defaultOpen = true, action, className, children,
+  storageKey, title, summary, defaultOpen = true, action, className, children,
 }) => {
   const [open, setOpen] = useState(() => readOpen(storageKey, defaultOpen));
   const bodyId = useId();
+  const showSummary = !open && summary !== undefined && summary !== null && summary !== '';
 
   useEffect(() => {
     if (!storageKey) return;
@@ -59,7 +62,14 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <span className="input-tile-lead" aria-hidden="true">
             <KeyboardArrowDownIcon className="collapsible-arrow" />
           </span>
-          <span className="input-tile-title">{title}</span>
+          {showSummary ? (
+            <span className="input-tile-title has-summary">
+              <span>{title}</span>
+              <span className="collapsible-summary">{summary}</span>
+            </span>
+          ) : (
+            <span className="input-tile-title">{title}</span>
+          )}
         </button>
         {action && (
           <button
