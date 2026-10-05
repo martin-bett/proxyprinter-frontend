@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { imageLoaderService } from '../service/cache/ImageLoaderService';
+import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import ProgressBar from '../components/progress/ProgressBar';
@@ -253,15 +253,14 @@ const DeckInputAndViewer: React.FC = () => {
       // Zuschnitte kommen fertig aus der Maske
       addCustomCrops(cardName, url, crops);
     } else {
-      // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln
-      const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
-      };
-      img.onerror = () => {
-        console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
-      };
+      // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln (Google Drive u.ä. nur über den Backend-Proxy)
+      loadImageElement(url)
+        .then(img => {
+          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+        })
+        .catch(error => {
+          console.error('Fehler beim Laden des Bildes. Überprüfen Sie die URL.', url, error);
+        });
     }
 
     handleCloseCustomCardDialog();
