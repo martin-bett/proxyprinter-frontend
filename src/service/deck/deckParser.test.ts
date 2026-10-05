@@ -23,6 +23,15 @@ describe('parseDeckLine', () => {
     expect(parseDeckLine('1 Arcane Signet [Ramp] ^Have^')).toEqual({ count: 1, name: 'Arcane Signet' });
   });
 
+  it('reads the Pokémon TCG Live form without brackets', () => {
+    expect(parseDeckLine('4 Pikachu ex SVI 57')).toEqual({ count: 4, name: 'Pikachu ex', set: 'SVI', number: '57' });
+    expect(parseDeckLine('2 Charizard VMAX DAA 20')).toEqual({ count: 2, name: 'Charizard VMAX', set: 'DAA', number: '20' });
+    expect(parseDeckLine('1 Mew PR-SW SWSH160')).toEqual({ count: 1, name: 'Mew', set: 'PR-SW', number: 'SWSH160' });
+    expect(parseDeckLine('* 4 Pikachu BRS 49')).toEqual({ count: 4, name: 'Pikachu', set: 'BRS', number: '49' });
+    expect(parseDeckLine('4 Pikachu ex')).toEqual({ count: 4, name: 'Pikachu ex' });
+    expect(parseDeckLine('1 Borrowing 100,000 Arrows')).toEqual({ count: 1, name: 'Borrowing 100,000 Arrows' });
+  });
+
   it('keeps names with brackets that are no set', () => {
     expect(parseDeckLine('1 Circle of Protection: Red')).toEqual({ count: 1, name: 'Circle of Protection: Red' });
     expect(parseDeckLine('1 Fire // Ice')).toEqual({ count: 1, name: 'Fire // Ice' });

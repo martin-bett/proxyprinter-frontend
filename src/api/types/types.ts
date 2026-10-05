@@ -10,6 +10,8 @@ export interface CardResult extends SearchResult {
 export interface CardGroup {
   count: number;
   results: CardResult[];
+  /** Gewünschter Druck je Platz aus der Decklist, z. B. "(M10) 146"; wird vorausgewählt, wenn er dabei ist */
+  wanted?: (Pick<DeckEntry, 'set' | 'number'> | null)[];
 }
 
 export type CardResultsMap = Record<string, CardGroup>;
