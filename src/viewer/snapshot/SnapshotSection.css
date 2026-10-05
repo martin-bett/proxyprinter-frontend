@@ -1,0 +1,119 @@
+/* Zeilen der Snapshot-Liste: Laden-Knopf im Input-Stil, rechts kleine Aktionen */
+.snapshot-row {
+  cursor: default;
+}
+
+.snapshot-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.snapshot-open:hover .input-tile-lead {
+  color: var(--accent);
+}
+
+.snapshot-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.snapshot-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.snapshot-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snapshot-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snapshot-meta.is-expired {
+  text-decoration: line-through;
+}
+
+.snapshot-tool {
+  flex: 0 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.snapshot-tool svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.snapshot-tool:hover {
+  color: var(--accent);
+}
+
+.snapshot-tool:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.snapshot-session {
+  border-color: var(--accent);
+}
+
+.snapshot-session .input-tile-lead {
+  background: var(--accent-soft);
+  border-right-color: var(--accent);
+  color: var(--accent);
+}
+
+.snapshot-notice {
+  margin: 0 0 6px 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.snapshot-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.snapshot-footer button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.snapshot-footer button:hover {
+  color: var(--accent);
+}

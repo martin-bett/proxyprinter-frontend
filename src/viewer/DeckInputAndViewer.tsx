@@ -35,6 +35,10 @@ import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
 import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
+import SnapshotSection from './snapshot/SnapshotSection';
+import { useSnapshots } from './snapshot/useSnapshots';
+import { RestoredState, WorkState } from '../service/snapshot/snapshot';
+import { pdfFileName } from '../service/snapshot/snapshotBackend';
 import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
@@ -604,6 +608,33 @@ const DeckInputAndViewer: React.FC = () => {
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
 
+  // Snapshots: Arbeitsstand lokal sichern und wiederherstellen (unabhängig von der Suche)
+  const workState = useMemo<WorkState>(() => ({
+    decklist, cardResults, selectedCards, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings,
+  }), [decklist, cardResults, selectedCards, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings]);
+
+  const applySnapshot = useCallback((restored: RestoredState) => {
+    // Alles in einem Schritt setzen, sonst setzt der Filter-Effekt die geladene Auswahl zurück
+    setDecklist(restored.decklist);
+    setVisibleLanguages(restored.visibleLanguages);
+    setVisibleApis(restored.visibleApis);
+    setUniquePrints(restored.uniquePrints);
+    setCardResults(restored.cardResults);
+    setSelectedCards(restored.selectedCards);
+    setSettings(prev => ({ ...restored.settings, email: prev.email }));
+    setEnabledApis(prev => {
+      const wanted = new Set(restored.enabledApis);
+      const updated: Record<string, boolean> = {};
+      Object.keys(prev).forEach(name => { updated[name] = wanted.has(name); });
+      wanted.forEach(name => { if (!(name in updated)) updated[name] = true; });
+      return updated;
+    });
+    setLog([]);
+  }, []);
+
+  const snapshots = useSnapshots({ state: workState, isBusy: isLoading, apply: applySnapshot });
+  const pdfDownloadNameRef = useRef('deck');
+
   const createPDF = async () => {
     if (pdfTooLarge) return;
     stopPdfPolling();
@@ -631,6 +662,10 @@ const DeckInputAndViewer: React.FC = () => {
       }
 
       const progressId = await response.text();
+      pdfDownloadNameRef.current = 'deck';
+      snapshots.saveGenerate(progressId).then(label => {
+        if (label) pdfDownloadNameRef.current = pdfFileName(label);
+      });
 
       // Das Backend liefert die komplette Fortschritts-Historie, wir pollen bis "finishing" fertig oder fehlgeschlagen ist
       const poll = async () => {
@@ -644,6 +679,7 @@ const DeckInputAndViewer: React.FC = () => {
           const last = dtos[dtos.length - 1];
           if (last && (last.error || isFinished(last))) {
             stopPdfPolling();
+            snapshots.refreshPdfInfos();
           }
         } catch (error) {
           console.error('Error fetching PDF progress:', error);
@@ -674,7 +710,7 @@ const DeckInputAndViewer: React.FC = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'deck.pdf');
+        link.setAttribute('download', `${pdfDownloadNameRef.current}.pdf`);
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -974,6 +1010,9 @@ const DeckInputAndViewer: React.FC = () => {
 
 
       <div className="input-controls">
+        <CollapsibleSection storageKey="snapshots" title="Snapshots">
+          <SnapshotSection {...snapshots.sectionProps} />
+        </CollapsibleSection>
         <div className="api-controls">
           <div className="api-toggles checkbox-group">
             <CollapsibleSection
