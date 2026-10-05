@@ -12,11 +12,11 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CropIcon from '@mui/icons-material/Crop';
 import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
-import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import RecropDialog from './grid/crop/RecropDialog';
-import CropIcon from '@mui/icons-material/Crop';
+import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
@@ -101,11 +101,11 @@ const DeckInputAndViewer: React.FC = () => {
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
+  // Eigene Karte, deren Zuschnitt gerade nachträglich geändert wird
+  const [recropTarget, setRecropTarget] = useState<{ cardKey: string; card: CardResult } | null>(null);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
-  // Eigene Karte, deren Zuschnitt gerade nachträglich geändert wird
-  const [recropTarget, setRecropTarget] = useState<{ cardKey: string; card: CardResult } | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
@@ -1284,6 +1284,13 @@ const DeckInputAndViewer: React.FC = () => {
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
       />
 
+      <RecropDialog
+        imageUrl={recropTarget?.card.imageUrl ?? null}
+        cropSettings={recropTarget?.card.cropSettings}
+        cardAspect={settings.width / settings.height}
+        onClose={() => setRecropTarget(null)}
+        onApply={(crops) => recropTarget && handleApplyRecrop(recropTarget.cardKey, recropTarget.card, crops)}
+      />
       <RawDataDialog rawData={rawDataDialog} onClose={handleCloseRawDataDialog} />
 
       <ClosableDialog
@@ -1298,13 +1305,6 @@ const DeckInputAndViewer: React.FC = () => {
           cardAspect={settings.width / settings.height}
           onMaskOpenChange={setCustomCardMaskOpen}
         />}
-      />
-      <RecropDialog
-        imageUrl={recropTarget?.card.imageUrl ?? null}
-        cropSettings={recropTarget?.card.cropSettings}
-        cardAspect={settings.width / settings.height}
-        onClose={() => setRecropTarget(null)}
-        onApply={(crops) => recropTarget && handleApplyRecrop(recropTarget.cardKey, recropTarget.card, crops)}
       />
       <ClosableDialog
         open={galleryDialogOpen}
