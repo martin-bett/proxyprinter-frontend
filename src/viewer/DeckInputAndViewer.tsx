@@ -373,7 +373,8 @@ const DeckInputAndViewer: React.FC = () => {
         const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
         return cached?.results || [];
       }
-      const result = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
+      const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
+      const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
       addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
       return result.results;
@@ -423,7 +424,9 @@ const DeckInputAndViewer: React.FC = () => {
     const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
 
     // Function to process a single API or proxy group
-    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[]) => {
+    // dropConnected: Treffer der zweiten Runde (z.B. Treasure) listen bei Scryfall alle Karten, die sie erzeugen.
+    // Die brauchen wir nicht, also nicht mit in den Cache schreiben.
+    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected = false) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
@@ -446,6 +449,9 @@ const DeckInputAndViewer: React.FC = () => {
                 groupResults[apiKey][entry.name] = cached;
               } else {
                 result = await api({ cardname: entry.name, set: entry.set });
+                if (dropConnected) {
+                  result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
+                }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 const resultsArr = result?.results || [];
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
@@ -464,10 +470,10 @@ const DeckInputAndViewer: React.FC = () => {
     };
 
     // Process all API groups concurrently
-    const searchAllGroups = async (entries: DeckEntry[]) => {
+    const searchAllGroups = async (entries: DeckEntry[], dropConnected = false) => {
       const groupResults = await Promise.all([
-        processApiGroup(proxyGroup, entries),
-        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries))
+        processApiGroup(proxyGroup, entries, dropConnected),
+        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected))
       ]);
       const merged: Record<string, Record<string, SearchResult[]>> = {};
       groupResults.forEach(groupResult => Object.assign(merged, groupResult));
@@ -501,7 +507,7 @@ const DeckInputAndViewer: React.FC = () => {
         const connectedEntries: DeckEntry[] = candidates.map(candidate => ({ count: 1, name: candidate.name }));
         totalWork += connectedEntries.length * (enabledApiKeys.length + 1);
         const [connectedApiResults, linkedResults] = await Promise.all([
-          searchAllGroups(connectedEntries),
+          searchAllGroups(connectedEntries, true),
           Promise.all(candidates.map(candidate => fetchLinkedConnectedCard(candidate.links[0]?.apiKey, candidate.links[0]?.link, candidate.name)
             .finally(() => updateProgress(1))))
         ]);
