@@ -38,4 +38,6 @@ export interface DeckEntry {
   count: number;
   name: string;
   set?: string;
+  /** Sammlernummer, z. B. aus "4 Lightning Bolt (M10) 146" */
+  number?: string;
 }
