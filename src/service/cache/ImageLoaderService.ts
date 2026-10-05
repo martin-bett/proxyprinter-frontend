@@ -63,6 +63,46 @@ export interface QueueSnapshotEntry {
 // Höchstens so viele Bilder gleichzeitig über das Backend laden
 const MAX_CONCURRENT_PROXY_LOADS = 4;
 
+// Hosts, die Bilder nicht an fremde Seiten ausliefern (Google Drive antwortet proxyprinter.eu mit 403).
+// Bilder von dort laden immer über das Backend, egal aus welcher API oder Galerie sie kommen.
+const PROXY_ONLY_HOSTS = ["drive.google.com", "drive.usercontent.google.com", "docs.google.com"];
+
+/** true, wenn die URL auf einen Host zeigt, der nur über /api/proxy/image erreichbar ist. */
+export function isProxyOnlyUrl(url?: string): boolean {
+  if (!url) return false;
+  try {
+    return PROXY_ONLY_HOSTS.includes(new URL(url).hostname);
+  } catch (e) {
+    return false;
+  }
+}
+
+/** Lädt ein Bild als HTMLImageElement: Proxy-only-Hosts direkt über das Backend, sonst erst direkt und bei Fehler über den Proxy. */
+export async function loadImageElement(url: string): Promise<HTMLImageElement> {
+  const viaProxy = async () => {
+    const objectUrl = URL.createObjectURL(await fetchImageViaProxy(url));
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Proxy-Bild konnte nicht dekodiert werden"));
+      img.src = objectUrl;
+    });
+  };
+  if (isProxyOnlyUrl(url)) return viaProxy();
+  try {
+    return await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Bild nicht ladbar"));
+      img.src = url;
+    });
+  } catch (e) {
+    // Nur fremde http(s)-Adressen kann der Proxy holen
+    if (!/^https?:\/\//i.test(url)) throw e;
+    return viaProxy();
+  }
+}
+
 // Über den Proxy gescheiterte Bilder (URL -> Grund). Werden in dieser Sitzung nicht erneut angefragt.
 const proxyFailures = new Map<string, string>();
 
@@ -215,7 +255,7 @@ class ImageLoaderService {
   }
 
   usesProxy(cardInput?: CacheCardInput): boolean {
-    return !!cardInput?.apiName && this.proxyImageApis.has(cardInput.apiName);
+    return (!!cardInput?.apiName && this.proxyImageApis.has(cardInput.apiName)) || isProxyOnlyUrl(cardInput?.imageUrl);
   }
 
   private _makeCacheKey(cardInput: CacheCardInput): string {
