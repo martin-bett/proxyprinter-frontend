@@ -16,6 +16,10 @@
 .headline{
   align-items: center;
   grid-area: headline;
+  /* Über das Padding des Grids hinaus bis an beide Bildschirmränder; die Kartenkette läuft dort raus */
+  margin: 0 -20px;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .input-controls {
