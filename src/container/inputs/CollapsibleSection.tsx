@@ -3,8 +3,9 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import './inputs.css';
 
 interface CollapsibleSectionProps {
-  // Schlüssel für localStorage, damit der Zustand ein Neuladen übersteht
-  storageKey: string;
+  // Schlüssel für localStorage, damit der Zustand ein Neuladen übersteht.
+  // Ohne Schlüssel startet der Abschnitt immer mit defaultOpen.
+  storageKey?: string;
   title: React.ReactNode;
   defaultOpen?: boolean;
   // Optionaler Zusatz-Button rechts im Header (z. B. Zahnrad), getrennt durch eine Kante
@@ -19,7 +20,8 @@ interface CollapsibleSectionProps {
 
 const STORAGE_PREFIX = 'section-open:';
 
-const readOpen = (key: string, fallback: boolean): boolean => {
+const readOpen = (key: string | undefined, fallback: boolean): boolean => {
+  if (!key) return fallback;
   try {
     const saved = localStorage.getItem(STORAGE_PREFIX + key);
     return saved === null ? fallback : saved === 'true';
@@ -36,6 +38,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   const bodyId = useId();
 
   useEffect(() => {
+    if (!storageKey) return;
     try {
       localStorage.setItem(STORAGE_PREFIX + storageKey, String(open));
     } catch {

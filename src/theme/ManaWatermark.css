@@ -1,11 +1,12 @@
 /* Dezentes Mana-Symbol unten in der Mitte im Hintergrund, hinter allen Inhalten */
-.mana-watermark {
+/* .ms.… schlägt die Grundregeln von mana-font (font-size, transform) */
+.ms.mana-watermark {
   position: fixed;
   left: 50%;
   bottom: 4vmin;
   transform: translateX(-50%);
-  width: 40vmin;
-  height: 40vmin;
+  font-size: 40vmin;
+  line-height: 1;
   color: var(--accent);
   opacity: 0.09;
   z-index: 0;
@@ -13,7 +14,7 @@
   user-select: none;
 }
 
-html[data-theme="dark"] .mana-watermark {
+html[data-theme="dark"] .ms.mana-watermark {
   opacity: 0.08;
 }
 

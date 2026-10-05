@@ -32,7 +32,7 @@ class FakeImage {
 (window as any).Image = FakeImage;
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { imageLoaderService } = require("./ImageLoaderService");
+const { imageLoaderService, isProxyOnlyUrl, loadImageElement } = require("./ImageLoaderService");
 
 describe("ImageLoaderService mit Proxy Images", () => {
   let pending: (() => void)[] = [];
@@ -104,6 +104,40 @@ describe("ImageLoaderService mit Proxy Images", () => {
     pending.splice(0).forEach(resolve => resolve());
     for (let i = 0; i < 5 && !done; i++) await flush();
     expect(done).toBe(true);
+  });
+
+  it("lädt Google-Drive-Bilder immer über den Proxy, auch ohne Proxy-API", async () => {
+    imageLoaderService.setProxyImageApis([]);
+    const url = "https://drive.google.com/uc?export=download&id=1dNP9Ye90DdXlWrvR18us7YTaXjmp7m-o";
+    let done = false;
+    await imageLoaderService.addToQueue({
+      url,
+      priority: 1,
+      cardInput: { apiName: "custom", name: "Drive", imageUrl: url },
+      onLoad: () => { done = true; },
+    });
+    for (let i = 0; i < 10 && pending.length < 1; i++) await new Promise(r => setTimeout(r, 50));
+    expect(calls[0]).toEqual({ input: "/api/proxy/image", target: url });
+    pending.splice(0).forEach(resolve => resolve());
+    for (let i = 0; i < 5 && !done; i++) await flush();
+    expect(done).toBe(true);
+  });
+
+  it("erkennt Proxy-only-Hosts", () => {
+    expect(isProxyOnlyUrl("https://drive.google.com/uc?export=download&id=abc")).toBe(true);
+    expect(isProxyOnlyUrl("https://drive.usercontent.google.com/download?id=abc")).toBe(true);
+    expect(isProxyOnlyUrl("https://cards.scryfall.io/large/front/a.jpg")).toBe(false);
+    expect(isProxyOnlyUrl("/api/files/download/x")).toBe(false);
+    expect(isProxyOnlyUrl(undefined)).toBe(false);
+  });
+
+  it("loadImageElement holt Drive-Bilder über den Proxy", async () => {
+    const url = "https://drive.google.com/uc?export=download&id=xyz";
+    const result = loadImageElement(url);
+    for (let i = 0; i < 10 && pending.length < 1; i++) await new Promise(r => setTimeout(r, 50));
+    expect(calls[0]).toEqual({ input: "/api/proxy/image", target: url });
+    pending.splice(0).forEach(resolve => resolve());
+    await expect(result).resolves.toBeTruthy();
   });
 
   it("meldet Proxy-Fehler und fragt dieselbe URL nicht erneut an", async () => {

@@ -1,51 +1,34 @@
-import React, { useRef, useEffect, useState } from "react";
+import React from "react";
 
 const CARD_SPACING = 45; // Abstand zwischen Karten
+const HEIGHT = 140;
+const LETTERS = ["P", "R", "O", "X", "Y", "P", "R", "I", "N", "T", "E", "R"];
+// Verschiebung der ganzen Kette nach links (in px), damit links eine angeschnittene Karte steht
+const LEFT_OFFSET = 30;
+// Leere Karten je Seite; reicht für Fenster bis ca. 8000px Breite
+const SIDE_CARDS = 90;
 
-function getCardLabels(total: number, centerLabels: string[]): string[] {
-  // Füllt links/rechts mit "" und zentriert die Buchstaben
-  const side = Math.floor((total - centerLabels.length) / 2);
-  return [
-    ...Array(side).fill(""),
-    ...centerLabels,
-    ...Array(total - side - centerLabels.length).fill("")
-  ];
+// Kette relativ zur Mitte: das innere SVG sitzt bei x=50%, alles darüber hinaus schneidet das äußere ab.
+// So hängt nichts an einer gemessenen Breite (die unter html { zoom } je nach Browser abweicht).
+const firstLetterX = -(LETTERS.length * CARD_SPACING) / 2 - LEFT_OFFSET;
+const cards: { x: number; label: string }[] = [];
+for (let j = -SIDE_CARDS; j < LETTERS.length + SIDE_CARDS; j++) {
+  cards.push({ x: firstLetterX + j * CARD_SPACING, label: LETTERS[j] ?? "" });
 }
 
-const TitleDiv: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [cardCount, setCardCount] = useState(25);
-
-  useEffect(() => {
-    function updateCardCount() {
-      if (!containerRef.current) return;
-      const width = containerRef.current.offsetWidth || window.innerWidth;
-      // Berechne wie viele Karten reinpassen
-      const count = Math.ceil(width / CARD_SPACING) + 2; // +2 für Rand
-      setCardCount(count);
-    }
-    updateCardCount();
-    window.addEventListener("resize", updateCardCount);
-    return () => window.removeEventListener("resize", updateCardCount);
-  }, []);
-
-  const labels = getCardLabels(cardCount, [
-    "P", "R", "O", "X", "Y", "P", "R", "I", "N", "T", "E", "R"
-  ]);
-
-  return (
-    <div className="headline" ref={containerRef} style={{ width: "100%" }}>
-      <svg
-        width="100%"
-        height="140"
-        viewBox={`0 0 ${cardCount * CARD_SPACING} 140`}
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ display: "block", color: "var(--text)" }}
-      >
-        {labels.map((label, i) => (
+const TitleDiv: React.FC = () => (
+  <div className="headline">
+    <svg
+      width="100%"
+      height={HEIGHT}
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ display: "block", width: "100%", overflow: "hidden", color: "var(--accent-strong)" }}
+    >
+      <svg x="50%" y="0" overflow="visible">
+        {cards.map(({ x, label }, i) => (
           <g
             key={i}
-            transform={`translate(${i * CARD_SPACING},10) scale(0.7) rotate(10 50 80)`}
+            transform={`translate(${x},10) scale(0.7) rotate(10 50 80)`}
           >
             <rect
               x="10"
@@ -71,8 +54,8 @@ const TitleDiv: React.FC = () => {
           </g>
         ))}
       </svg>
-    </div>
-  );
-};
+    </svg>
+  </div>
+);
 
 export default TitleDiv;

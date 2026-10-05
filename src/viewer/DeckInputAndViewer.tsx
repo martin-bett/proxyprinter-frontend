@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { imageLoaderService } from '../service/cache/ImageLoaderService';
+import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import ProgressBar from '../components/progress/ProgressBar';
@@ -12,15 +12,26 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CropIcon from '@mui/icons-material/Crop';
 import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
+import RecropDialog from './grid/crop/RecropDialog';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
+import LinkListDialog, { nameFromLink } from './grid/LinkListDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
+import DeckImportDialog from './deckfinder/DeckImportDialog';
+import { DeckFinderConfig, LoadedDeck, fetchDeckFinderConfigs, getFingerprint, loadDeck, matchDeckLink } from '../service/deckfinder/deckFinder';
+import { parseDecklist } from '../service/deck/deckParser';
+import { loadSetCatalog } from '../service/deck/setCatalog';
+import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
+import TuneIcon from '@mui/icons-material/Tune';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
 import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import LinkIcon from '@mui/icons-material/Link';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PaletteIcon from '@mui/icons-material/Palette';
 import PayPalDonateButton from './info/PayPalDonateButton';
@@ -33,20 +44,30 @@ import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
+import { ONLY_THIS_HINT } from '../container/inputs/useLongPress';
 import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
+import SortableList, { PriorityRank } from '../container/inputs/SortableList';
+import { ManualPicksMap, applyOrder, computeSelection, priorityRank } from './filterPriority';
+import useFilterOrder from './useFilterOrder';
+import SnapshotSection from './snapshot/SnapshotSection';
+import { useSnapshots } from './snapshot/useSnapshots';
+import { RestoredState, WorkState } from '../service/snapshot/snapshot';
+import { pdfFileName } from '../service/snapshot/snapshotBackend';
 import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
-import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
+import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
 import { splitCardFaces } from './cardFaces';
+import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
+const languageOfCard = (card: CardResult) => card.languageCode || NO_LANGUAGE;
 
 /** Languages and APIs that occur in the given results; custom cards are always shown and therefore ignored. */
 const collectFilterOptions = (results: CardResultsMap) => {
@@ -74,6 +95,8 @@ const defaultCropSettings: CropSettings = {
   isStretch: true
 };
 
+const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
+
 const DeckInputAndViewer: React.FC = () => {
   const [decklist, setDecklist] = useState('');
   const [cardResults, setCardResults] = useState<CardResultsMap>({});
@@ -91,18 +114,41 @@ const DeckInputAndViewer: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
   const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set());
   const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set());
+  // Manuell im Bildauswahl-Dialog gewählte Bilder: gehen vor der Filter-Priorität, solange sie passen
+  const [manualPicks, setManualPicks] = useState<ManualPicksMap>({});
+  // Gerade im Dialog gewählt (Kartenname#Platz): bleibt bis zur nächsten Filteränderung, auch wenn der Filter es nicht zeigt
+  const [freshPicks, setFreshPicks] = useState<Set<string>>(new Set());
+  const [storedLanguageOrder, reorderLanguages] = useFilterOrder('languages');
+  const [storedApiOrder, reorderApis] = useFilterOrder('apis');
   const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
   const pdfPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [uniquePrints, setUniquePrints] = useState(true);
+  // Verbundene Karten (Tokens usw.) beim Analysieren mitsuchen, gemerkt pro Browser
+  const [searchConnected, setSearchConnected] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(SEARCH_CONNECTED_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
+  // Eigene Karte, deren Zuschnitt gerade nachträglich geändert wird
+  const [recropTarget, setRecropTarget] = useState<{ cardKey: string; card: CardResult } | null>(null);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
+  const [linkListDialogOpen, setLinkListDialogOpen] = useState(false);
+  // Deckfinder: Decks per Link, ID oder Name von Deckbuilder-Seiten laden
+  const [deckFinderConfigs, setDeckFinderConfigs] = useState<DeckFinderConfig[]>([]);
+  const [deckImport, setDeckImport] = useState<{ open: boolean; input?: string; autoRun?: 'load' | 'search'; manage?: boolean }>({ open: false });
+  const [deckImportInput, setDeckImportInput] = useState('');
+  const [pendingDeck, setPendingDeck] = useState<LoadedDeck | null>(null);
+  const [deckLinkStatus, setDeckLinkStatus] = useState<{ loading: boolean; error?: string }>({ loading: false });
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
   const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
@@ -150,6 +196,15 @@ const DeckInputAndViewer: React.FC = () => {
     () => collectFilterOptions(cardResults),
     [cardResults]
   );
+  // Priorität = Reihenfolge in den Filtern, oben gewinnt
+  const languageOrder = useMemo(
+    () => applyOrder(storedLanguageOrder, availableLanguages),
+    [storedLanguageOrder, availableLanguages]
+  );
+  const apiOrder = useMemo(
+    () => applyOrder(storedApiOrder, Object.values(apiConfigs).map(config => config.name).filter(name => availableApis.has(name)).concat(Array.from(availableApis))),
+    [storedApiOrder, apiConfigs, availableApis]
+  );
 
   useEffect(() => {
     const initialCategoryStates: Record<string, boolean> = {};
@@ -191,6 +246,12 @@ const DeckInputAndViewer: React.FC = () => {
     handleCloseGalleryDialog();
   };
 
+  // Eingefügte Bildlinks wie Galerie-Treffer übernehmen: ganzes Bild, ohne Zuschnitt
+  const handleLinkList = (links: string[]) => {
+    links.forEach(link => handleSaveCustomCard(nameFromLink(link), link, null));
+    setLinkListDialogOpen(false);
+  };
+
   const handleCloseApiConfigDialog = () => {
     setApiConfigDialogOpen(false);
   };
@@ -212,9 +273,16 @@ const DeckInputAndViewer: React.FC = () => {
   };
 
   const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+    // Freie Schlüssel wählen, damit ein zweites Bild mit gleichem Namen keine Karte überschreibt
+    const usedKeys = new Set(Object.keys(cardResults));
+    const cropKeys: string[] = [];
+    for (let i = 0; cropKeys.length < crops.length; i++) {
+      const key = `${cardName}_crop${i}`;
+      if (!usedKeys.has(key)) cropKeys.push(key);
+    }
     crops.forEach((crop, cropIndex) => {
       // Eintrag in cardResults für jeden Zuschnitt
-      const cropKey = `${cardName}_crop${cropIndex}`;
+      const cropKey = cropKeys[cropIndex];
       const cropCard: CardResult = {
         name: cardName,
         imageUrl,
@@ -238,6 +306,28 @@ const DeckInputAndViewer: React.FC = () => {
     });
   };
 
+  /** Neuer Zuschnitt für eine eigene Karte: der erste ersetzt sie, weitere (Cut gallery) kommen als neue Karten dazu. */
+  const handleApplyRecrop = (cardKey: string, oldCard: CardResult, crops: CropSettings[]) => {
+    const [first, ...rest] = crops;
+    const newCard: CardResult = { ...oldCard, cropSettings: first, imageInfo: undefined };
+    setCardResults((prev) => {
+      const group = prev[cardKey];
+      if (!group) return prev;
+      return { ...prev, [cardKey]: { ...group, results: group.results.map((r) => (r === oldCard ? newCard : r)) } };
+    });
+    setSelectedCards((prev) => {
+      const slots = prev[cardKey];
+      if (!slots) return prev;
+      return { ...prev, [cardKey]: slots.map((c) => (c === oldCard ? newCard : c)) };
+    });
+    setManualPicks((prev) => {
+      const picks = prev[cardKey];
+      if (!picks || !picks.includes(oldCard)) return prev;
+      return { ...prev, [cardKey]: picks.map((c) => (c === oldCard ? newCard : c)) };
+    });
+    if (rest.length > 0) addCustomCrops(oldCard.name, oldCard.imageUrl, rest);
+  };
+
   const handleSaveCustomCard: SaveCustomCardFn = async (cardName, imageUrl, file, crops) => {
     let finalImageUrl: string | undefined;
     if (imageUrl) {
@@ -253,15 +343,14 @@ const DeckInputAndViewer: React.FC = () => {
       // Zuschnitte kommen fertig aus der Maske
       addCustomCrops(cardName, url, crops);
     } else {
-      // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln
-      const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
-      };
-      img.onerror = () => {
-        console.log('Fehler beim Laden des Bildes. Überprüfen Sie die URL.');
-      };
+      // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln (Google Drive u.ä. nur über den Backend-Proxy)
+      loadImageElement(url)
+        .then(img => {
+          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+        })
+        .catch(error => {
+          console.error('Fehler beim Laden des Bildes. Überprüfen Sie die URL.', url, error);
+        });
     }
 
     handleCloseCustomCardDialog();
@@ -287,6 +376,27 @@ const DeckInputAndViewer: React.FC = () => {
       visibleApis.has(card.apiName) || card.apiName === 'custom');
   }, [visibleLanguages, visibleApis]);
 
+  // Lädt das Objekt, auf das eine verbundene Karte zeigt (z.B. das Treasure-Token bei Scryfall). Fehler kosten nur dieses Bild.
+  const fetchLinkedConnectedCard = async (apiKey: string | undefined, link: string | undefined, cardName: string): Promise<SearchResult[]> => {
+    if (!apiKey || !link || !apiFactory) return [];
+    const cacheName = `link:${link}`;
+    const startedAt = performance.now();
+    try {
+      if (await SearchCacheService.hasSearchResult(apiKey, cacheName)) {
+        const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
+        return cached?.results || [];
+      }
+      const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
+      const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
+      await SearchCacheService.setSearchResult(apiKey, cacheName, result);
+      addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+      return result.results;
+    } catch (error) {
+      addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+      return [];
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -294,53 +404,67 @@ const DeckInputAndViewer: React.FC = () => {
     setLog([]);
     setProgress(0);
 
-    const cardEntries: DeckEntry[] = decklist.split('\n')
-      .map(line => line.trim())
-      .filter(line => line)
-      .map((line): DeckEntry | null => {
-        const match = line.match(/^(\d+)\s+(.+?)(?:\s+\(([^)]+)\))?\s*$/);
-        if (match) {
-          return {
-            count: parseInt(match[1], 10),
-            name: match[2].trim(),
-            set: match[3]?.trim() || undefined
-          };
-        }
-        return null;
-      })
-      .filter((entry): entry is DeckEntry => entry !== null);
+    // Gleiche Karte aus mehreren Sets wird eine Gruppe; der Set-Wunsch gilt je Platz
+    const cardEntries: DeckEntry[] = [];
+    const wantedByName: Record<string, CardGroup['wanted']> = {};
+    parseDecklist(decklist).forEach(entry => {
+      const existing = cardEntries.find(other => other.name === entry.name);
+      if (existing) existing.count += entry.count;
+      else cardEntries.push({ count: entry.count, name: entry.name });
+      const wanted = entry.set ? { set: entry.set, number: entry.number } : null;
+      wantedByName[entry.name] = [...(wantedByName[entry.name] || []), ...Array(entry.count).fill(wanted)];
+    });
+    const hasWanted = Object.values(wantedByName).some(slots => slots?.some(Boolean));
+    const mixedPrints = Object.values(wantedByName).some(slots =>
+      new Set(slots?.map(slot => slot ? `${slot.set}|${slot.number ?? ''}`.toLowerCase() : '')).size > 1);
+    if (mixedPrints) setUniquePrints(true);
+    const setCatalogReady = hasWanted ? loadSetCatalog() : Promise.resolve();
 
-    const totalCards = cardEntries.reduce((sum, entry) => sum + entry.count, 0);
-    let completedCards = 0;
-
-    const apiResults: Record<string, Record<string, SearchResult[]>> = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
     markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
+    const withConnected = searchConnected && enabledApiKeys.some(key => hasConnectedCards(apiConfigs[key]));
+
+    // Fortschritt über beide Runden; die zweite Runde (verbundene Karten) erhöht totalWork
+    let totalWork = cardEntries.reduce((sum, entry) => sum + entry.count, 0) * enabledApiKeys.length;
+    let completedWork = 0;
+    const updateProgress = (done: number) => {
+      completedWork += done;
+      setProgress(totalWork > 0 ? Math.min(100, Math.round((completedWork / totalWork) * 100)) : 100);
+    };
 
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
     const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
 
     // Function to process a single API or proxy group
-    const processApiGroup = async (apiKeys: string[]) => {
+    // dropConnected: Treffer der zweiten Runde (z.B. Treasure) listen bei Scryfall alle Karten, die sie erzeugen.
+    // Die brauchen wir nicht, also nicht mit in den Cache schreiben.
+    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected = false) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
         const limit = (apiConfigs[apiKey] as ApiConfig)?.concurrentLimit || Infinity;
         const api = apiFactory!.createApi(apiKey);
+        // Cache-Einträge von vor den verbundenen Karten kennen sie noch nicht und werden neu gesucht
+        const needsConnected = withConnected && hasConnectedCards(apiConfigs[apiKey]);
 
-        const tasks = cardEntries.map(entry => async () => {
+        const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
             const startedAt = performance.now();
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
-                const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
-                groupResults[apiKey][entry.name] = resultsArr;
+              }
+              const cached = result?.results || [];
+              if (result && !(needsConnected && cached.length > 0 && cached.every(card => card.connectedCards === undefined))) {
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: cached.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
+                groupResults[apiKey][entry.name] = cached;
               } else {
-                result = await api({ cardname: entry.name, set: entry.set });
+                result = await api({ cardname: entry.name });
+                if (dropConnected) {
+                  result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
+                }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 const resultsArr = result?.results || [];
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
@@ -351,8 +475,7 @@ const DeckInputAndViewer: React.FC = () => {
               groupResults[apiKey][entry.name] = [];
             }
           }
-          completedCards += entry.count;
-          setProgress(Math.round((completedCards / (totalCards * enabledApiKeys.length)) * 100));
+          updateProgress(entry.count);
         });
         await limitConcurrency(tasks, limit);
       }
@@ -360,56 +483,95 @@ const DeckInputAndViewer: React.FC = () => {
     };
 
     // Process all API groups concurrently
-    const apiGroupPromises = [
-      processApiGroup(proxyGroup),
-      ...nonProxyApis.map(apiKey => processApiGroup([apiKey]))
-    ];
+    const searchAllGroups = async (entries: DeckEntry[], dropConnected = false) => {
+      const groupResults = await Promise.all([
+        processApiGroup(proxyGroup, entries, dropConnected),
+        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected))
+      ]);
+      const merged: Record<string, Record<string, SearchResult[]>> = {};
+      groupResults.forEach(groupResult => Object.assign(merged, groupResult));
+      return merged;
+    };
 
-    const apiGroupResults = await Promise.all(apiGroupPromises);
+    const toCardResults = (apiResultsForCard: SearchResult[]): CardResult[] =>
+      apiResultsForCard.map((result): CardResult => ({
+        ...result,
+        cropSettings: { ...defaultCropSettings }
+      }));
 
-    // Combine results from all groups
-    apiGroupResults.forEach(groupResult => {
-      Object.assign(apiResults, groupResult);
-    });
+    const apiResults = await searchAllGroups(cardEntries);
 
     // Combine results
     const combinedResults: CardResultsMap = {};
     cardEntries.forEach(entry => {
+      const wanted = wantedByName[entry.name];
       combinedResults[entry.name] = {
         count: entry.count,
-        results: enabledApiKeys.flatMap(apiKey => {
-          const apiResultsForCard = apiResults[apiKey][entry.name] || [];
-          return apiResultsForCard.map((result): CardResult => ({
-            ...result,
-            cropSettings: { ...defaultCropSettings }
-          }));
-        })
+        ...(wanted?.some(Boolean) ? { wanted } : {}),
+        results: enabledApiKeys.flatMap(apiKey => toCardResults(apiResults[apiKey][entry.name] || []))
       };
     });
+    await setCatalogReady;
     // Andere Seiten mehrseitiger Karten werden eigene Einträge
-    const results = splitCardFaces(combinedResults);
+    const deckResults = splitCardFaces(combinedResults);
+    let results: CardResultsMap = deckResults;
+
+    // Verbundene Karten (Tokens, Emblems, ...): je Name ein Eintrag mit Anzahl 1, gesucht über alle aktiven APIs
+    if (withConnected) {
+      const candidates = collectConnectedCards(apiResults, [...Object.keys(deckResults), ...cardEntries.map(entry => entry.name)]);
+      if (candidates.length > 0) {
+        const connectedEntries: DeckEntry[] = candidates.map(candidate => ({ count: 1, name: candidate.name }));
+        totalWork += connectedEntries.length * (enabledApiKeys.length + 1);
+        const [connectedApiResults, linkedResults] = await Promise.all([
+          searchAllGroups(connectedEntries, true),
+          Promise.all(candidates.map(candidate => fetchLinkedConnectedCard(candidate.links[0]?.apiKey, candidate.links[0]?.link, candidate.name)
+            .finally(() => updateProgress(1))))
+        ]);
+        const connectedResults: CardResultsMap = {};
+        candidates.forEach((candidate, index) => {
+          connectedResults[candidate.name] = {
+            count: 1,
+            connectedFrom: candidate.parents,
+            // Das exakt verlinkte Objekt zuerst, danach alle Treffer der Namenssuche
+            results: dedupeResults([
+              ...toCardResults(linkedResults[index]),
+              ...enabledApiKeys.flatMap(apiKey => toCardResults(connectedApiResults[apiKey][candidate.name] || []))
+            ])
+          };
+        });
+        results = { ...deckResults, ...splitCardFaces(connectedResults, Object.keys(deckResults)) };
+      }
+    }
 
     const options = collectFilterOptions(results);
+    const keptLanguages = new Set(Array.from(visibleLanguages).filter(lang => options.languages.has(lang)));
+    const newVisibleLanguages = keptLanguages.size > 0 ? keptLanguages : options.languages;
     setVisibleApis(options.apis);
-    setVisibleLanguages(prev => {
-      const kept = new Set(Array.from(prev).filter(lang => options.languages.has(lang)));
-      return kept.size > 0 ? kept : options.languages;
-    });
+    setVisibleLanguages(newVisibleLanguages);
     setCardResults(results);
     setIsLoading(false);
 
-    // Set initial selected cards based on cache or select first image
-    const initialSelectedCards: SelectedCardsMap = {};
+    // Früher manuell gewählte Bilder (aus dem Such-Cache) gelten wieder als manuelle Wahl,
+    // der Rest kommt aus der Filter-Priorität
+    const initialManualPicks: ManualPicksMap = {};
     Object.entries(results).forEach(([cardName, cardData]) => {
-      initialSelectedCards[cardName] = Array.from({ length: cardData.count }).map((_, index) => {
-        if (SearchCacheService.hasSelectedImage(cardName, index + 1)) {
-          const cachedImageUrl = SearchCacheService.getSelectedImage(cardName, index + 1);
-          return cardData.results.find(card => card.imageUrl === cachedImageUrl) || cardData.results[0] || null;
-        }
-        return cardData.results[0] || null;
+      const picks = Array.from({ length: cardData.count }).map((_, index) => {
+        const cachedImageUrl = SearchCacheService.getSelectedImage(cardName, index + 1);
+        return cachedImageUrl ? cardData.results.find(card => card.imageUrl === cachedImageUrl) ?? null : null;
       });
+      if (picks.some(pick => pick)) initialManualPicks[cardName] = picks;
     });
-    setSelectedCards(initialSelectedCards);
+    setManualPicks(initialManualPicks);
+    setFreshPicks(new Set());
+    setSelectedCards(computeSelection({}, {
+      cardResults: results,
+      manualPicks: initialManualPicks,
+      isVisible: card => card.apiName === 'custom' ||
+        (newVisibleLanguages.has(card.languageCode || NO_LANGUAGE) && options.apis.has(card.apiName)),
+      languageOrder: applyOrder(storedLanguageOrder, options.languages),
+      apiOrder: applyOrder(storedApiOrder, Object.values(apiConfigs).map(config => config.name).filter(name => options.apis.has(name)).concat(Array.from(options.apis))),
+      languageOf: languageOfCard,
+    }));
   };
 
   const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
@@ -427,6 +589,16 @@ const DeckInputAndViewer: React.FC = () => {
         SearchCacheService.setSelectedImage(currentCardName, currentCardIndex + 1, selectedImage.imageUrl);
         return newSelectedCards;
       });
+      const count = cardResults[currentCardName]?.count ?? currentCardIndex + 1;
+      setManualPicks(prev => {
+        const picks = Array.from({ length: count }, (_, index) => prev[currentCardName]?.[index] ?? null);
+        picks[currentCardIndex] = selectedImage;
+        return { ...prev, [currentCardName]: picks };
+      });
+      setFreshPicks(prev => new Set(prev).add(`${currentCardName}#${currentCardIndex}`));
+    } else {
+      // Ohne neue Wahl kann sich trotzdem der Zuschnitt des gewählten Bildes geändert haben
+      setSelectedCards(prev => ({ ...prev }));
     }
     setImageSelectDialogOpen(false);
     setCurrentCardName(null);
@@ -437,9 +609,11 @@ const DeckInputAndViewer: React.FC = () => {
     setCardResults(prevResults => {
       const newResults = { ...prevResults };
       if (uniquePrints && newResults[cardName].count > 1) {
+        const wanted = newResults[cardName].wanted?.filter((_, i) => i !== index);
         newResults[cardName] = {
           ...newResults[cardName],
-          count: newResults[cardName].count - 1
+          count: newResults[cardName].count - 1,
+          ...(wanted ? { wanted } : {})
         };
       } else {
         delete newResults[cardName];
@@ -455,6 +629,13 @@ const DeckInputAndViewer: React.FC = () => {
         delete newSelected[cardName];
       }
       return newSelected;
+    });
+    setFreshPicks(new Set());
+    setManualPicks(prev => {
+      if (!prev[cardName]) return prev;
+      const next = { ...prev, [cardName]: prev[cardName].filter((_, i) => i !== index) };
+      if (next[cardName].length === 0) delete next[cardName];
+      return next;
     });
   };
 
@@ -497,36 +678,21 @@ const DeckInputAndViewer: React.FC = () => {
     });
   };
 
+  // Jede Änderung an Filtern oder Priorität beendet die Ausnahme für frisch gewählte Bilder
+  const filterSignature = [
+    Array.from(visibleLanguages).sort(), Array.from(visibleApis).sort(), languageOrder, apiOrder,
+  ].map(values => values.join('\u0001')).join('\u0002');
   useEffect(() => {
-    setSelectedCards(prev => {
-      const newSelectedCards = { ...prev };
-      let hasChanges = false;
+    setFreshPicks(prev => (prev.size === 0 ? prev : new Set()));
+  }, [filterSignature]);
 
-      Object.entries(cardResults).forEach(([cardName, cardData]) => {
-        const visibleResults = cardData.results.filter(filterCard);
-
-        newSelectedCards[cardName] = Array.from({ length: cardData.count }).map((_, index) => {
-          const currentSelection = prev[cardName]?.[index];
-          if (visibleResults.length > 0) {
-            if (currentSelection && visibleResults.some(card => card.imageUrl === currentSelection.imageUrl)) {
-              return currentSelection;
-            } else {
-              hasChanges = true;
-              return visibleResults[0];
-            }
-          } else {
-            return null; // If no visible results, set to null instead of keeping old selection
-          }
-        });
-
-        if (newSelectedCards[cardName].every(card => card === null)) {
-          delete newSelectedCards[cardName]; // Remove the card if all selections are null
-          hasChanges = true;
-        }
-      });
-      return hasChanges ? newSelectedCards : prev;
-    });
-  }, [visibleLanguages, visibleApis, cardResults, filterCard]);
+  // Filter, Priorität oder Ergebnisse geändert: Auswahl neu berechnen, manuelle Wahl geht vor
+  useEffect(() => {
+    setSelectedCards(prev => computeSelection(prev, {
+      cardResults, manualPicks, isVisible: filterCard, languageOrder, apiOrder, languageOf: languageOfCard,
+      isFreshPick: (cardName, index) => freshPicks.has(`${cardName}#${index}`),
+    }));
+  }, [cardResults, manualPicks, freshPicks, filterCard, languageOrder, apiOrder]);
 
   const handleApiToggle = (apiKey: string) => {
     setEnabledApis(prev => {
@@ -605,6 +771,96 @@ const DeckInputAndViewer: React.FC = () => {
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
 
+  // Snapshots: Arbeitsstand lokal sichern und wiederherstellen (unabhängig von der Suche)
+  const workState = useMemo<WorkState>(() => ({
+    decklist, cardResults, selectedCards, manualPicks, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings,
+  }), [decklist, cardResults, selectedCards, manualPicks, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings]);
+
+  const applySnapshot = useCallback((restored: RestoredState) => {
+    // Alles in einem Schritt setzen, sonst setzt der Filter-Effekt die geladene Auswahl zurück
+    setDecklist(restored.decklist);
+    setVisibleLanguages(restored.visibleLanguages);
+    setVisibleApis(restored.visibleApis);
+    setUniquePrints(restored.uniquePrints);
+    setCardResults(restored.cardResults);
+    if (Object.values(restored.cardResults).some(group => group.wanted)) loadSetCatalog();
+    setSelectedCards(restored.selectedCards);
+    setManualPicks(restored.manualPicks);
+    setFreshPicks(new Set());
+    setSettings(prev => ({ ...restored.settings, email: prev.email }));
+    setEnabledApis(prev => {
+      const wanted = new Set(restored.enabledApis);
+      const updated: Record<string, boolean> = {};
+      Object.keys(prev).forEach(name => { updated[name] = wanted.has(name); });
+      wanted.forEach(name => { if (!(name in updated)) updated[name] = true; });
+      return updated;
+    });
+    setLog([]);
+  }, []);
+
+  const snapshots = useSnapshots({ state: workState, isBusy: isLoading, apply: applySnapshot });
+
+  // Deck zurücksetzen: vorher ein Snapshot, damit man den Stand zurückholen kann.
+  // APIs, Filter und PDF-Einstellungen bleiben, die nächste Analyse setzt die Filter neu.
+  const saveSnapshot = snapshots.save;
+  const resetDeck = useCallback(async () => {
+    await saveSnapshot();
+    setDecklist('');
+    setCardResults({});
+    setSelectedCards({});
+    setManualPicks({});
+    setFreshPicks(new Set());
+    setCurrentCardName(null);
+    setCurrentCardIndex(null);
+    setLog([]);
+    setProgress(0);
+  }, [saveSnapshot]);
+  const pdfDownloadNameRef = useRef('deck');
+
+  const reloadDeckFinderConfigs = useCallback(async () => {
+    try {
+      setDeckFinderConfigs(await fetchDeckFinderConfigs(await getFingerprint()));
+    } catch (e) {
+      console.error('Deckfinder-Configs nicht ladbar:', e);
+    }
+  }, []);
+  useEffect(() => { reloadDeckFinderConfigs(); }, [reloadDeckFinderConfigs]);
+
+  // Quelle zum Link im Feld der Section "Import Deck"
+  const detectedDeckSource = useMemo(() => matchDeckLink(deckFinderConfigs, deckImportInput), [deckFinderConfigs, deckImportInput]);
+
+  // Geladenes Deck ersetzt die Liste; steht schon eine Liste da, erst fragen und einen Snapshot anlegen
+  const applyLoadedDeck = useCallback(async (deck: LoadedDeck, confirmed = false) => {
+    const hasList = decklist.trim() !== '';
+    if (hasList && !confirmed) {
+      setPendingDeck(deck);
+      return;
+    }
+    if (hasList) await saveSnapshot();
+    setPendingDeck(null);
+    setDeckImport({ open: false });
+    setDeckLinkStatus({ loading: false });
+    setDeckImportInput('');
+    setDecklist(deck.text);
+  }, [decklist, saveSnapshot]);
+
+  // Erkannter Link lädt direkt (nur Hauptdeck); ID ohne Link oder Name öffnet den Dialog
+  const handleImportDeck = async () => {
+    const input = deckImportInput.trim();
+    if (!input) return;
+    if (!detectedDeckSource) {
+      setDeckImport({ open: true, input, autoRun: 'load' });
+      return;
+    }
+    setDeckLinkStatus({ loading: true });
+    try {
+      const deck = await loadDeck(detectedDeckSource, input, [], await getFingerprint());
+      await applyLoadedDeck(deck);
+    } catch (e) {
+      setDeckLinkStatus({ loading: false, error: e instanceof Error ? e.message : String(e) });
+    }
+  };
+
   const createPDF = async () => {
     if (pdfTooLarge) return;
     stopPdfPolling();
@@ -632,6 +888,10 @@ const DeckInputAndViewer: React.FC = () => {
       }
 
       const progressId = await response.text();
+      pdfDownloadNameRef.current = 'deck';
+      snapshots.saveGenerate(progressId).then(label => {
+        if (label) pdfDownloadNameRef.current = pdfFileName(label);
+      });
 
       // Das Backend liefert die komplette Fortschritts-Historie, wir pollen bis "finishing" fertig oder fehlgeschlagen ist
       const poll = async () => {
@@ -645,6 +905,7 @@ const DeckInputAndViewer: React.FC = () => {
           const last = dtos[dtos.length - 1];
           if (last && (last.error || isFinished(last))) {
             stopPdfPolling();
+            snapshots.refreshPdfInfos();
           }
         } catch (error) {
           console.error('Error fetching PDF progress:', error);
@@ -675,7 +936,7 @@ const DeckInputAndViewer: React.FC = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'deck.pdf');
+        link.setAttribute('download', `${pdfDownloadNameRef.current}.pdf`);
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -734,7 +995,10 @@ const DeckInputAndViewer: React.FC = () => {
     checked: boolean,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
     isIndeterminate = false,
-    labelClass?: string
+    labelClass?: string,
+    onLongPress?: () => void,
+    trailing?: React.ReactNode,
+    badge?: React.ReactNode
   ) => (
     <ChoiceButton
       key={id}
@@ -744,6 +1008,10 @@ const DeckInputAndViewer: React.FC = () => {
       onChange={onChange}
       indeterminate={isIndeterminate}
       className={labelClass}
+      onLongPress={onLongPress}
+      longPressHint={ONLY_THIS_HINT}
+      trailing={trailing}
+      badge={badge}
     />
   );
 
@@ -970,11 +1238,14 @@ const DeckInputAndViewer: React.FC = () => {
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
       <ThemeChooser />
-      <MemoryButtons />
+      <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
       <TitleDiv />
 
 
       <div className="input-controls">
+        <CollapsibleSection storageKey="snapshots" title="Snapshots">
+          <SnapshotSection {...snapshots.sectionProps} />
+        </CollapsibleSection>
         <div className="api-controls">
           <div className="api-toggles checkbox-group">
             <CollapsibleSection
@@ -1030,13 +1301,78 @@ const DeckInputAndViewer: React.FC = () => {
                 cols={50}
               />
               <br />
+              {(() => {
+                const connectedApis = Object.keys(enabledApis).filter(key => enabledApis[key] && hasConnectedCards(apiConfigs[key]));
+                return (
+                  <div
+                    className="connected-cards-toggle"
+                    title={connectedApis.length > 0 ?
+                      `Add tokens, emblems etc. as separate cards. Provided by: ${connectedApis.join(', ')}` :
+                      'No active API provides tokens or extras'}
+                  >
+                    {renderCheckbox('searchConnected', 'Tokens & Extras', searchConnected && connectedApis.length > 0, (event) => {
+                      if (connectedApis.length === 0) return;
+                      setSearchConnected(event.target.checked);
+                      try {
+                        localStorage.setItem(SEARCH_CONNECTED_KEY, String(event.target.checked));
+                      } catch {
+                        // Ohne localStorage gilt die Wahl nur bis zum Neuladen
+                      }
+                    }, false, connectedApis.length === 0 ? 'is-disabled' : undefined)}
+                  </div>
+                );
+              })()}
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+            </form>
+          </CollapsibleSection>
+          <CollapsibleSection
+            storageKey="import-deck"
+            title="Import Deck"
+            action={{ icon: <SettingsIcon />, title: 'Deckfinder sources', onClick: () => setDeckImport({ open: true, manage: true }) }}
+          >
+            <form
+              className="import-deck-section"
+              onSubmit={(e) => { e.preventDefault(); handleImportDeck(); }}
+            >
+              <input
+                type="text"
+                className="import-deck-input"
+                value={deckImportInput}
+                onChange={(e) => { setDeckImportInput(e.target.value); setDeckLinkStatus({ loading: false }); }}
+                placeholder="Deck link, ID or name"
+                aria-label="Deck link, ID or name"
+              />
+              {(detectedDeckSource || deckLinkStatus.error) && (
+                <span className={`import-deck-hint ${deckLinkStatus.error ? 'is-error' : ''}`}>
+                  {deckLinkStatus.error || `${detectedDeckSource!.name} link`}
+                </span>
+              )}
+              <div className="add-single-buttons">
+                <ActionButton type="submit" icon={<DownloadIcon />} disabled={isLoading || deckLinkStatus.loading || !deckImportInput.trim()}>
+                  {deckLinkStatus.loading ? 'Loading…' : 'Load Deck'}
+                </ActionButton>
+                <ActionButton
+                  icon={<SearchIcon />}
+                  disabled={isLoading || !deckImportInput.trim() || !!detectedDeckSource}
+                  onClick={() => setDeckImport({ open: true, input: deckImportInput.trim(), autoRun: 'search' })}
+                >
+                  Search by Name
+                </ActionButton>
+                <ActionButton
+                  icon={<TuneIcon />}
+                  disabled={isLoading}
+                  onClick={() => setDeckImport({ open: true, input: deckImportInput.trim() || undefined })}
+                >
+                  Options
+                </ActionButton>
+              </div>
             </form>
           </CollapsibleSection>
           <CollapsibleSection storageKey="add-single" title="Add Single">
             <div className="add-single-buttons">
               <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
               <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
+              <ActionButton icon={<LinkIcon />} onClick={() => setLinkListDialogOpen(true)}>Add Links</ActionButton>
             </div>
           </CollapsibleSection>
 
@@ -1078,7 +1414,15 @@ const DeckInputAndViewer: React.FC = () => {
                         key={`${cardName}-${index}`}
                         className={`card-tile ${noMatchingCard ? 'no-matching-card' : ''} ${selectedCard?.apiName === 'custom' ? 'custom-card' : ''}`}
                       >
-                        <div className="card-image-container" onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
+                        <div
+                          className="card-image-container"
+                          title={selectedCard?.apiName === 'custom' ? 'Crop image' :
+                            cardData.connectedFrom?.length ? `Needed by: ${cardData.connectedFrom.join(', ')}` : undefined}
+                          onClick={() => {
+                            if (selectedCard?.apiName === 'custom') setRecropTarget({ cardKey: cardName, card: selectedCard });
+                            else handleCardClick(cardName, index);
+                          }}
+                        >
                           {selectedCard ? (
                             <CardImage
                               cardInput={selectedCard}
@@ -1117,6 +1461,15 @@ const DeckInputAndViewer: React.FC = () => {
                             >
                               <Plus />
                             </button>
+                            {selectedCard?.apiName === 'custom' && (
+                              <button
+                                className="count-button recrop-card"
+                                title="Crop image"
+                                onClick={() => setRecropTarget({ cardKey: cardName, card: selectedCard as CardResult })}
+                              >
+                                <CropIcon fontSize="inherit" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1156,27 +1509,35 @@ const DeckInputAndViewer: React.FC = () => {
           </div>
           </CollapsibleSection>
           <CollapsibleSection storageKey="language-filter" title="Language Filter" defaultOpen={false}>
-          <div className="language-filter checkbox-group">
-            {Array.from(availableLanguages).map(lang => (
-              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang))
-            ))}
-          </div>
+          <SortableList
+            className="language-filter checkbox-group"
+            items={languageOrder}
+            onReorder={reorderLanguages}
+            renderItem={(lang, handle) =>
+              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang), false, undefined, () => setVisibleLanguages(new Set([lang])), handle,
+                <PriorityRank rank={priorityRank(languageOrder, visibleLanguages, lang)} />)
+            }
+          />
           </CollapsibleSection>
           <CollapsibleSection storageKey="api-filter" title="API Filter" defaultOpen={false}>
-          <div className="api-filter checkbox-group">
-            {Object.values(apiConfigs)
-              .filter((c) => availableApis.has(c.name))
-              .map((config) =>
-                renderCheckbox(
-                  config.name,
-                  getApiConfigLabelForCheckbox(config),
-                  visibleApis.has(config.name),
-                  () => toggleApi(config.name),
-                  false,
-                  'api-config-label'
-                )
-              )}
-          </div>
+          <SortableList
+            className="api-filter checkbox-group"
+            items={apiOrder.filter(name => apiConfigs[name])}
+            onReorder={reorderApis}
+            renderItem={(name, handle) =>
+              renderCheckbox(
+                name,
+                getApiConfigLabelForCheckbox(apiConfigs[name]),
+                visibleApis.has(name),
+                () => toggleApi(name),
+                false,
+                'api-config-label',
+                () => setVisibleApis(new Set([name])),
+                handle,
+                <PriorityRank rank={priorityRank(apiOrder, visibleApis, name)} />
+              )
+            }
+          />
           </CollapsibleSection>
         </div>
       </div>
@@ -1231,6 +1592,10 @@ const DeckInputAndViewer: React.FC = () => {
         }
         initialVisibleApis={visibleApis}
         initialVisibleLanguages={visibleLanguages}
+        languageOrder={languageOrder}
+        apiOrder={apiOrder}
+        onReorderLanguages={reorderLanguages}
+        onReorderApis={reorderApis}
         cardAspect={settings.width / settings.height}
         groupedResults={
           currentCardName && cardResults[currentCardName]
@@ -1240,6 +1605,13 @@ const DeckInputAndViewer: React.FC = () => {
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
       />
 
+      <RecropDialog
+        imageUrl={recropTarget?.card.imageUrl ?? null}
+        cropSettings={recropTarget?.card.cropSettings}
+        cardAspect={settings.width / settings.height}
+        onClose={() => setRecropTarget(null)}
+        onApply={(crops) => recropTarget && handleApplyRecrop(recropTarget.cardKey, recropTarget.card, crops)}
+      />
       <RawDataDialog rawData={rawDataDialog} onClose={handleCloseRawDataDialog} />
 
       <ClosableDialog
@@ -1255,6 +1627,40 @@ const DeckInputAndViewer: React.FC = () => {
           onMaskOpenChange={setCustomCardMaskOpen}
         />}
       />
+      <ClosableDialog
+        open={linkListDialogOpen}
+        onClose={() => setLinkListDialogOpen(false)}
+        maxWidth='sm'
+        children={<LinkListDialog onSubmit={handleLinkList} />}
+      />
+      <ClosableDialog
+        open={deckImport.open}
+        onClose={() => setDeckImport({ open: false })}
+        maxWidth='md'
+        children={<DeckImportDialog
+          key={`${deckImport.input || ''}|${deckImport.autoRun || ''}|${deckImport.manage ? 'm' : ''}`}
+          configs={deckFinderConfigs}
+          initialInput={deckImport.input}
+          autoRun={deckImport.autoRun}
+          startInManage={deckImport.manage}
+          onReloadConfigs={reloadDeckFinderConfigs}
+          onLoaded={(deck) => applyLoadedDeck(deck)}
+        />}
+      />
+      <ClosableDialog open={pendingDeck !== null} onClose={() => setPendingDeck(null)} maxWidth="xs">
+        <div className="replace-deck-dialog">
+          <h2>Decklist ersetzen?</h2>
+          <p>
+            {pendingDeck?.deckName ? `„${pendingDeck.deckName}“ ` : 'Das geladene Deck '}
+            ({pendingDeck?.entries.reduce((sum, e) => sum + e.count, 0)} Karten) ersetzt die aktuelle Liste.
+            Der aktuelle Stand wird vorher als Snapshot gespeichert.
+          </p>
+          <div className="replace-deck-actions">
+            <ActionButton icon={<CloseIcon />} onClick={() => setPendingDeck(null)}>Abbrechen</ActionButton>
+            <ActionButton icon={<DownloadIcon />} className="is-primary" onClick={() => pendingDeck && applyLoadedDeck(pendingDeck, true)}>Ersetzen</ActionButton>
+          </div>
+        </div>
+      </ClosableDialog>
       <ClosableDialog
         open={galleryDialogOpen}
         onClose={handleCloseGalleryDialog}

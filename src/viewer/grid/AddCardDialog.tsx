@@ -3,6 +3,7 @@ import { Button, Divider, TextField } from '@mui/material';
 import { Box } from '@mui/material';
 import { CropSettings } from '../../service/ApiFactory';
 import CropMask from './crop/CropMask';
+import { loadViaProxy } from './crop/loadViaProxy';
 
 /** crops: fertige Zuschnitte aus der Maske, je Zuschnitt eine Karte. Ohne crops wird das ganze Bild genommen. */
 export type SaveCustomCardFn = (
@@ -15,17 +16,6 @@ export type SaveCustomCardFn = (
 type MaskSource =
   | { kind: 'url'; src: string; url: string }
   | { kind: 'file'; src: string; file: File };
-
-/** Lädt ein Bild über den Backend-Proxy, falls die Seite das direkte Einbinden blockiert. */
-const loadViaProxy = async (url: string): Promise<string | null> => {
-  try {
-    const response = await fetch('/api/proxy/image', { headers: { 'X-Target-URL': url } });
-    if (!response.ok) return null;
-    return URL.createObjectURL(await response.blob());
-  } catch {
-    return null;
-  }
-};
 
 interface AddCardDialogProps {
   open: boolean;

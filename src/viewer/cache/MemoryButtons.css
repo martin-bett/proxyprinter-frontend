@@ -27,8 +27,13 @@
   font-size: 0.9rem;
 }
 
-.memory-button:hover {
+.memory-button:hover:not(:disabled) {
   background: var(--hover);
+}
+
+.memory-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .memory-button svg {
@@ -40,4 +45,30 @@
   min-width: 1.5em;
   text-align: center;
   display: inline-block;
+}
+
+/* Rückfrage vor dem Zurücksetzen des Decks */
+.reset-deck-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.reset-deck-dialog p {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+}
+
+.reset-deck-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.reset-deck-actions .action-button {
+  margin: 0;
+}
+
+.reset-deck-actions .is-danger .input-tile-lead {
+  color: var(--danger);
 }

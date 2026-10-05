@@ -16,10 +16,18 @@
 .headline{
   align-items: center;
   grid-area: headline;
+  /* Über das Padding des Grids hinaus bis an beide Bildschirmränder; die Kartenkette läuft dort raus */
+  margin: 0 -20px;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .input-controls {
   grid-area: input-controls;
+  /* Scrollt wie die rechte Toolbar selbst, wenn der Inhalt höher als das Fenster ist */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 
@@ -37,6 +45,17 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Beide Toolbars scrollen per Mausrad/Touch, ohne sichtbaren Balken */
+.input-controls,
+.right-toolbar {
+  scrollbar-width: none;
+}
+
+.input-controls::-webkit-scrollbar,
+.right-toolbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Spenden/GitHub/Version bleiben unten, solange Platz ist */
@@ -105,7 +124,7 @@
 }
 
 .custom-card canvas {
-  cursor: default;
+  cursor: pointer;
 }
 .image-info {
   position: absolute;
@@ -386,6 +405,13 @@
   color: var(--danger);
 }
 
+/* Zuschnitt ändern, nur bei eigenen Karten (Upload, Bild-URL, Galerie) */
+.count-button.recrop-card {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+}
+
 /* Bildinfos ("Show Image Info") über der Anzahl-Leiste statt darunter */
 .card-tile .image-info {
   bottom: 2em;
@@ -486,6 +512,16 @@
 
 .decklist-input form {
   margin-bottom: 12px;
+}
+
+/* Checkbox „Tokens & Extras“ über Analyze; ausgegraut, wenn keine aktive API verbundene Karten liefert */
+.connected-cards-toggle {
+  margin-bottom: 8px;
+}
+
+.connected-cards-toggle .is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* In einklappbaren Abschnitten sorgt der Abschnitt selbst für den Abstand */

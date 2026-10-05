@@ -1,0 +1,377 @@
+/* API-Wizard: nutzt nur Theme-Variablen, damit er in allen Farbschemata passt */
+.api-create-wizard {
+  --wiz-list: var(--accent);
+  --wiz-name: #e67e22;
+  --wiz-image: #3498db;
+  --wiz-language: #9b59b6;
+  --wiz-set: #16a085;
+  --wiz-setnumber: #c0392b;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
+.api-create-wizard code {
+  background: var(--surface-muted);
+  color: var(--text);
+  padding: 0 0.25em;
+  border-radius: 3px;
+}
+
+.api-create-wizard .title {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.wiz-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wiz-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.wiz-steps li.is-done {
+  cursor: pointer;
+  color: var(--text);
+}
+
+.wiz-steps li.is-current {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.wiz-step-nr {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.wiz-steps li.is-current .wiz-step-nr,
+.wiz-steps li.is-done .wiz-step-nr {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+.wiz-panel,
+.wiz-fields-side,
+.wiz-fields-raw {
+  background: var(--dialog-panel-bg, var(--surface-muted));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.wiz-help {
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.wiz-grid {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) 3fr;
+  gap: 0.6rem 1rem;
+  align-items: center;
+}
+
+.wiz-grid > label {
+  font-weight: 600;
+  text-align: right;
+}
+
+.wiz-grid .input,
+.wiz-grid .textarea,
+.wiz-select,
+.wiz-grid > select,
+.wiz-role .input {
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.wiz-select,
+.wiz-grid > select {
+  padding: 0.4rem;
+  border-radius: 4px;
+}
+
+.wiz-segment {
+  display: flex;
+  gap: 0;
+}
+
+.wiz-segment.is-inline {
+  display: inline-flex;
+}
+
+.wiz-segment .button {
+  margin-bottom: 0;
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.wiz-segment .button:first-child { border-radius: 4px 0 0 4px; }
+.wiz-segment .button:last-child { border-radius: 0 4px 4px 0; }
+
+.wiz-segment .button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-inverse);
+  font-weight: 700;
+}
+
+.wiz-summary {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.wiz-param-hit code:last-child {
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+.wiz-muted { color: var(--text-muted); }
+.wiz-ok { color: var(--success); font-weight: 700; }
+.wiz-error-text { color: var(--danger); font-weight: 700; }
+
+.wiz-error,
+.wiz-warning {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  color: var(--text);
+}
+
+.wiz-error { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+.wiz-warning { background: var(--warning-soft); border-left: 4px solid var(--warning); }
+
+.wiz-tag {
+  display: inline-block;
+  padding: 0 0.5em;
+  border-radius: 999px;
+  background: var(--info-soft);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.wiz-raw {
+  background: var(--input-bg);
+  color: var(--text);
+  max-height: 20rem;
+  overflow: auto;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Felder-Schritt: links Rollen + Vorschau, rechts Rohdaten */
+.wiz-fields {
+  display: grid;
+  grid-template-columns: minmax(20rem, 2fr) 3fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .wiz-fields { grid-template-columns: 1fr; }
+}
+
+.wiz-fields-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wiz-fields-raw {
+  max-height: calc(75 * var(--vh, 1vh));
+  overflow: auto;
+}
+
+.wiz-role {
+  display: grid;
+  grid-template-columns: 0.9rem 6.5rem 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.wiz-role.is-active {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.wiz-role-label { font-weight: 700; }
+
+.wiz-swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 3px;
+}
+
+.wiz-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wiz-subtitle {
+  font-weight: 700;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.wiz-table {
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.wiz-table th {
+  color: var(--text);
+  background: var(--surface-muted);
+  font-weight: 700;
+}
+
+.wiz-table td,
+.wiz-table th {
+  border-color: var(--border);
+}
+
+.wiz-table tr.wiz-match td:first-child {
+  box-shadow: inset 3px 0 0 var(--success);
+  font-weight: 700;
+}
+
+.wiz-url {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiz-url a { color: var(--accent-strong); }
+
+/* Rohdaten-Baum */
+.wiz-tree {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.wiz-children {
+  margin-left: 1.1rem;
+  border-left: 1px dashed var(--border);
+  padding-left: 0.3rem;
+}
+
+.wiz-toggle {
+  display: inline-block;
+  width: 1rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.wiz-node {
+  cursor: pointer;
+  padding: 0 0.2rem;
+  border-radius: 3px;
+  word-break: break-all;
+}
+
+.wiz-node:hover { background: var(--hover); }
+.wiz-key { font-weight: 700; }
+.wiz-punct { color: var(--text-muted); }
+.wiz-string { color: var(--success); }
+.wiz-number, .wiz-boolean { color: var(--wiz-image); }
+.wiz-null { color: var(--text-muted); }
+.wiz-more { color: var(--text-muted); font-style: italic; }
+
+.wiz-marked { font-weight: 700; }
+
+.wiz-badge {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  margin-left: 0.3rem;
+}
+
+/* Farben je Rolle: Fläche im Baum, Punkt als Badge, Swatch in der Liste */
+.wiz-marked.wiz-role-dataListField { background: color-mix(in srgb, var(--wiz-list) 22%, transparent); outline: 1px solid var(--wiz-list); }
+.wiz-marked.wiz-role-nameField { background: color-mix(in srgb, var(--wiz-name) 28%, transparent); }
+.wiz-marked.wiz-role-imageUrlField { background: color-mix(in srgb, var(--wiz-image) 28%, transparent); }
+.wiz-marked.wiz-role-languageField { background: color-mix(in srgb, var(--wiz-language) 28%, transparent); }
+.wiz-marked.wiz-role-setField { background: color-mix(in srgb, var(--wiz-set) 28%, transparent); }
+.wiz-marked.wiz-role-setNumberField { background: color-mix(in srgb, var(--wiz-setnumber) 28%, transparent); }
+
+.wiz-badge.wiz-role-dataListField, .wiz-swatch.wiz-role-dataListField { background: var(--wiz-list); }
+.wiz-badge.wiz-role-nameField, .wiz-swatch.wiz-role-nameField { background: var(--wiz-name); }
+.wiz-badge.wiz-role-imageUrlField, .wiz-swatch.wiz-role-imageUrlField { background: var(--wiz-image); }
+.wiz-badge.wiz-role-languageField, .wiz-swatch.wiz-role-languageField { background: var(--wiz-language); }
+.wiz-badge.wiz-role-setField, .wiz-swatch.wiz-role-setField { background: var(--wiz-set); }
+.wiz-badge.wiz-role-setNumberField, .wiz-swatch.wiz-role-setNumberField { background: var(--wiz-setnumber); }
+
+.wiz-details summary {
+  cursor: pointer;
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+}
+
+.wiz-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.wiz-actions .button { margin-bottom: 0; }
+.wiz-spacer { flex: 1; }
+
+.wiz-expert { margin: 1rem 0 0; font-size: 0.85rem; }
+
+.wiz-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent-strong);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.wiz-grid > label.wiz-check {
+  font-weight: normal;
+  text-align: left;
+}

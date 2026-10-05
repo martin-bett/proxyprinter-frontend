@@ -1,50 +1,27 @@
-config erweitern custom parts -> anders als language neue karte +  am ende doppelte removen
+custom parts -> anders als language neue karte +  am ende doppelte removen
+  (nur scryfall liefert das, suche in anderen apis schwierig -> erst konzept)
 
-config erweitern um artist/creator
+config feld lastused wird gesetzt bei suche mit api oder edit -> älter als x tage automatisch löschen (scheduled task im backend)
 
 custom picture imageurl über proxy als checkbox
 
-set support mit () für pokemon pfilcht
-
-save + load decksearch (selectedCards + deckinput + selectedapis) auto deactivate bei customcards
-
-
-
-
-
-url + upload crop image viewport / für gallery komplett oder single einstellbar
+crop als zwischenmaske für upload und url image add (single), mit keep aspect ratio beim croppen
 
 imageurl +gallery gridimport mit margins / only outermargin
-  
-config feld lastused wird gesetzt bei suche mit api oder edit -> älter als x monate automatisch löschen
 
+filter anzahl der jeweiligen einstellung in imageselectdialog
 
+cache manager  darf nicht selected löschen (browser cache hält das bild, daher niedrige prio)
 
-filter anzahl der jeweiligen einstellung in iamageselectdialog
-in deckviewer min-max zahl (je karte) der jeweiligen einstellung 
-
-keep aspect ratio checkbox und funktionalität für printsettings
-
-reset crop settings + keep aspect ratio
-
-mehrfach select zulassen für datalistfield + imgurlfield
-
-search log in tabellenform + dauer in 0,0 s und vielleicht progress symbol ?
-
-cache manager  darf nicht selected löschen
+papierflieger editor: pdf mit druckkanten vordruck und mustern auf den flügeln (spinnerei)
 
 
 Adminkram
-# deploy auf netcup
-# https://medium.com/@thearaseng/building-a-full-stack-product-app-with-react-spring-boot-and-docker-compose-64a47f4a1080
+
+  backend logging in postgres statt logfile (zugriff über db viewer)
 
 
-  auf https und auf richtige domain
-
-  umstellen auf docker mit umzug auf domain?
-
-  postgres für log info 
-
+Notizen lokale Entwicklung
 
   docker run --name local-postgres-dev -p 5432:5432 -e POSTGRES_DB=proxymaster -e POSTGRES_USER=mtguser -e POSTGRES_PASSWORD=mtgpassword -d postgres
 
@@ -52,9 +29,4 @@ docker stop $(docker ps -q) && docker rm $(docker ps -aq)
 
 docker build -f docker.dockerfile -t mtgprint-front .
 
-
  git clone https://martin-bett@github.com/martin-bett/mtgprint-front.git
-
-FAQf8nO9nHnhRFK
-
-papierflieger editor

@@ -10,6 +10,10 @@ export interface CardResult extends SearchResult {
 export interface CardGroup {
   count: number;
   results: CardResult[];
+  /** Gewünschter Druck je Platz aus der Decklist, z. B. "(M10) 146"; wird vorausgewählt, wenn er dabei ist */
+  wanted?: (Pick<DeckEntry, 'set' | 'number'> | null)[];
+  // Verbundene Karte (z.B. Token): Deckkarten, die sie brauchen
+  connectedFrom?: string[];
 }
 
 export type CardResultsMap = Record<string, CardGroup>;
@@ -38,4 +42,6 @@ export interface DeckEntry {
   count: number;
   name: string;
   set?: string;
+  /** Sammlernummer, z. B. aus "4 Lightning Bolt (M10) 146" */
+  number?: string;
 }

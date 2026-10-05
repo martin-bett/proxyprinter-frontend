@@ -121,6 +121,30 @@
   background: var(--text-inverse);
 }
 
+/* Langer Klick: Balken am unteren Rand füllt sich, solange gedrückt wird */
+.choice-button.has-long-press {
+  position: relative;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.choice-button.is-pressing::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--accent);
+  animation: long-press-fill var(--long-press-ms, 2000ms) linear forwards;
+  pointer-events: none;
+}
+
+@keyframes long-press-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
 /* Buttons */
 .action-button:hover .input-tile-lead {
   color: var(--accent);
@@ -137,6 +161,16 @@
 
 .action-button:disabled:hover .input-tile-lead {
   color: var(--text-muted);
+}
+
+/* Gefährliche Aktionen (Löschen, Zurücksetzen): rot statt Akzentfarbe */
+.action-button.is-danger:hover {
+  border-color: var(--danger);
+}
+
+.action-button.is-danger:hover .input-tile-lead {
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 /* Hervorgehobene Hauptaktionen (Analyze Deck, Create PDF): Akzent gefüllt, Icon-Feld dunkler */
@@ -315,4 +349,63 @@
 
 .collapsible-body {
   padding-top: 4px;
+}
+
+/* Griff zum Umsortieren (Filter-Priorität), rechts im Feld, durch eine Kante getrennt */
+.sort-handle {
+  flex: 0 0 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.sort-handle:hover,
+.sort-handle:focus-visible {
+  color: var(--accent);
+  background: var(--surface-muted);
+  outline: none;
+}
+
+/* !important gegen die Symbolgröße in .label-container und MUI */
+.sort-handle svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.sortable-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sortable-list.is-sorting,
+.sortable-list.is-sorting .sort-handle {
+  cursor: grabbing;
+}
+
+.sortable-item.is-dragging .input-tile {
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Rangnummer der angehakten Einträge (1 = bevorzugt), unten rechts im Hakenfeld */
+.input-tile-lead {
+  position: relative;
+}
+
+.priority-rank::before {
+  content: attr(data-rank);
+}
+
+.priority-rank {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
 }

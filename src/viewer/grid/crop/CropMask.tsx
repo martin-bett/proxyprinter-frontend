@@ -30,6 +30,9 @@ interface CropMaskProps {
   /** Mit onConfirm zeigt die Maske die Buttons Back und Add. */
   onConfirm?: (crops: CropSettings[]) => void;
   onBack?: () => void;
+  /** Beschriftung der Buttons, Standard: Back und Add card / Add N cards. */
+  backLabel?: string;
+  confirmLabel?: (count: number) => string;
   busy?: boolean;
   error?: string;
 }
@@ -39,6 +42,8 @@ type MaskMode = 'crop' | 'cut';
 type RectField = keyof PixelRect;
 
 const THUMB_HEIGHT = 110;
+/** Breite der Seitenleiste plus Abstand im side-Layout, muss zu CropMask.css passen. */
+const SIDE_PANEL_SPACE = 360 + 24;
 const ASPECT_TOLERANCE = 0.015;
 
 const numberField = (value: number, min: number) => Math.max(min, parseInt(String(value), 10) || min);
@@ -47,7 +52,7 @@ const hasArea = (crop?: CropSettings) => !!crop && (crop.width || 0) > 0 && (cro
 
 const CropMask: React.FC<CropMaskProps> = ({
   imageSrc, cardAspect, loadFallback, initialCrop, allowCut = true, layout = 'side', maxImageHeight,
-  onChange, onConfirm, onBack, busy, error,
+  onChange, onConfirm, onBack, backLabel = 'Back', confirmLabel, busy, error,
 }) => {
   const [src, setSrc] = useState(imageSrc);
   const [triedFallback, setTriedFallback] = useState(false);
@@ -77,15 +82,16 @@ const CropMask: React.FC<CropMaskProps> = ({
   useLayoutEffect(() => {
     const box = boxRef.current;
     if (!box) return;
-    const measure = () => setBoxWidth(box.clientWidth);
+    // side: Bild und Seitenleiste stehen zusammen mittig, das Bild bekommt den Rest der Breite
+    const measure = () => setBoxWidth(Math.max(120, box.clientWidth - (layout === 'side' ? SIDE_PANEL_SPACE : 0)));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(measure);
     observer.observe(box);
     return () => observer.disconnect();
-  }, []);
+  }, [layout]);
 
-  const maxHeight = maxImageHeight ?? Math.round(window.innerHeight * (layout === 'side' ? 0.62 : 0.5));
+  const maxHeight = maxImageHeight ?? Math.round(window.innerHeight * (layout === 'side' ? 0.58 : 0.5));
   const display = natural && boxWidth > 0 ? fitDisplaySize(natural.width, natural.height, boxWidth, maxHeight) : null;
 
   const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -273,8 +279,8 @@ const CropMask: React.FC<CropMaskProps> = ({
   );
 
   return (
-    <div className={`crop-mask crop-mask--${layout}`}>
-      <div className="crop-mask-image" ref={boxRef}>
+    <div className={`crop-mask crop-mask--${layout}`} ref={boxRef}>
+      <div className="crop-mask-image">
         {!natural && !loadError && <CircularProgress size={32} />}
         {loadError && (
           <p className="help is-danger">Das Bild konnte nicht geladen werden. Bitte die URL prüfen.</p>
@@ -359,13 +365,17 @@ const CropMask: React.FC<CropMaskProps> = ({
 
         {onConfirm && (
           <div className="crop-mask-actions">
-            {onBack && <Button variant="outlined" onClick={onBack} disabled={busy}>Back</Button>}
+            {onBack && <Button variant="outlined" onClick={onBack} disabled={busy}>{backLabel}</Button>}
             <Button
               variant="contained"
               onClick={() => onConfirm(crops)}
               disabled={busy || !natural || crops.length === 0}
             >
-              {busy ? <CircularProgress size={24} /> : crops.length > 1 ? `Add ${crops.length} cards` : 'Add card'}
+              {busy
+                ? <CircularProgress size={24} />
+                : confirmLabel
+                  ? confirmLabel(crops.length)
+                  : crops.length > 1 ? `Add ${crops.length} cards` : 'Add card'}
             </Button>
           </div>
         )}

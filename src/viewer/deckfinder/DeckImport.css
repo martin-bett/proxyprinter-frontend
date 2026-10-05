@@ -1,0 +1,42 @@
+.deck-import { display: flex; flex-direction: column; gap: 0.75rem; }
+.deck-import-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.deck-import-header .title { margin-bottom: 0 !important; }
+.deck-import-header .action-button { width: auto; }
+.deck-import-source { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.deck-import-source select { min-width: 12rem; padding: 0.3rem; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; }
+.deck-import-site { font-size: 0.85rem; }
+.deck-import-boards { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.deck-import-boards label { display: inline-flex; gap: 0.3rem; align-items: center; cursor: pointer; }
+.deck-import-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.5rem; }
+.deck-import-hits { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; }
+.deck-import-hits button {
+  width: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 0.25rem; text-align: left;
+  padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: inherit; cursor: pointer;
+}
+.deck-import-hits button:hover:not(:disabled) { background: var(--hover); }
+.deck-import-hits img, .deck-import-noimage { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; background: var(--surface-muted); }
+.deck-import-hit-name { font-weight: 600; overflow-wrap: anywhere; }
+.deck-import-hit-meta { font-size: 0.8rem; opacity: 0.8; }
+
+.deckfinder-config-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+.deckfinder-config-item {
+  display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.6rem; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer;
+}
+.deckfinder-config-item.is-selected { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+
+/* Rückfrage vor dem Ersetzen der Decklist, wie beim Zurücksetzen */
+.replace-deck-dialog h2 { margin: 0 0 8px; font-size: 1.25rem; font-weight: 600; color: var(--text); }
+.replace-deck-dialog p { margin: 0 0 16px; color: var(--text-muted); }
+.replace-deck-actions { display: flex; gap: 8px; }
+.replace-deck-actions .action-button { margin: 0; }
+.deck-import-hit-meta { color: var(--text-muted); }
+
+/* Section "Import Deck" in der linken Leiste */
+.import-deck-section { display: flex; flex-direction: column; gap: 6px; }
+.import-deck-input {
+  width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--input-bg); color: var(--text);
+}
+.import-deck-hint { font-size: 0.8rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.import-deck-hint.is-error { color: var(--danger); }

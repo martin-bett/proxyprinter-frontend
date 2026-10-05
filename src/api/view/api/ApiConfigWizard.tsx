@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import TuneIcon from '@mui/icons-material/Tune';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
-import { Config } from '../../../service/ApiFactory';
-import DefaultLanguageSelect from '../DefaultLanguageSelect';
+import { Config, ConnectedCardLocator } from '../../../service/ApiFactory';
+import ConfigFieldTable, { CATEGORY_OPTIONS, ConfigField } from '../ConfigFieldTable';
+import { DEFAULT_LANGUAGE_OPTIONS } from '../defaultLanguages';
+import ActionButton from '../../../container/inputs/ActionButton';
+import ConnectedCardsTable from './ConnectedCardsTable';
 
 /** Draft state of the config-editing form. Loosely typed on purpose: it mirrors
  * whatever the (untyped) backend config-object looks like, and every input
@@ -49,9 +49,46 @@ export interface ApiConfigFormState {
   cardFacesDataListField: string;
   cardFacesImageUrlField: string;
   cardFacesNameField: string;
+  connectedCards: ConnectedCardLocator[];
   published?: boolean;
   [key: string]: unknown;
 }
+
+const API_CONFIG_FIELDS: ConfigField[] = [
+  { group: 'Base Info', name: 'name', label: 'Name', required: true },
+  { group: 'Base Info', name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS },
+  { group: 'Base Info', name: 'officialWebsite', label: 'Official Website' },
+  { group: 'Base Info', name: 'customArts', label: 'Custom Arts', type: 'checkbox' },
+  { group: 'Request', name: 'method', label: 'Method', type: 'select', options: [['GET', 'GET'], ['POST', 'POST']] },
+  { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['html', 'HTML']] },
+  { group: 'Request', name: 'baseUrl', label: 'Base URL' },
+  { group: 'Request', name: 'parameterMap', label: 'Parameter Map', type: 'json' },
+  { group: 'Request', name: 'concurrentLimit', label: 'Concurrent Limit', type: 'number' },
+  { group: 'Request', name: 'requestFormat', label: 'Request Format', type: 'select', options: [['urlencoded', 'URL Encoded'], ['multipart', 'Multipart'], ['json', 'JSON']] },
+  { group: 'Request', name: 'csrfTokenVariableName', label: 'CSRF Token Variable Name' },
+  { group: 'Request', name: 'requiresCsrfToken', label: 'Requires CSRF Token', type: 'checkbox' },
+  { group: 'Request', name: 'useBackendProxy', label: 'Use Backend Proxy', type: 'checkbox' },
+  { group: 'Request', name: 'proxyImages', label: 'Proxy Images', type: 'checkbox', title: 'Bilder dieser API über das Backend laden (für Hosts ohne CORS-Header)' },
+  { group: 'Locator', name: 'paginationField', label: 'Pagination Field' },
+  { group: 'Locator', name: 'dataListField', label: 'Data List Field' },
+  { group: 'Locator', name: 'nameField', label: 'Name Field' },
+  { group: 'Locator', name: 'imageUrlField', label: 'Image URL Field' },
+  { group: 'Locator', name: 'languageField', label: 'Language Field' },
+  { group: 'Locator', name: 'defaultLanguage', label: 'Default Language', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'Sprache für Karten, zu denen die Quelle keine Sprache liefert' },
+  { group: 'Locator', name: 'setField', label: 'Set Field' },
+  { group: 'Locator', name: 'nameSplitCharacter', label: 'Name Split Character' },
+  { group: 'Locator', name: 'setNumberField', label: 'Set Number Field' },
+  { group: 'Follow Link', name: 'followLinkField', label: 'Follow Link Field' },
+  { group: 'Follow Link', name: 'followLinkDataListField', label: 'Data List Field' },
+  { group: 'Follow Link', name: 'followLinkImageField', label: 'Image Field' },
+  { group: 'Follow Link', name: 'followLinkLanguageField', label: 'Language Field' },
+  { group: 'Nested Language', name: 'nestedLanguageDataListField', label: 'Data List Field' },
+  { group: 'Nested Language', name: 'nestedLanguageImageUrlField', label: 'Image URL Field' },
+  { group: 'Nested Language', name: 'nestedLanguageLanguageField', label: 'Language Field' },
+  { group: 'Card Faces', name: 'cardFacesDataListField', label: 'Data List Field', title: 'Liste der Kartenseiten, z.B. card_faces bei Scryfall. Jede Seite mit Bild wird ein eigener Treffer.' },
+  { group: 'Card Faces', name: 'cardFacesImageUrlField', label: 'Image URL Field' },
+  { group: 'Card Faces', name: 'cardFacesNameField', label: 'Name Field' },
+];
 
 interface ApiConfigWizardProps {
   onClose: () => void;
@@ -98,15 +135,8 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     nestedLanguageLanguageField: '',
     cardFacesDataListField: '',
     cardFacesImageUrlField: '',
-    cardFacesNameField: ''
-  });
-
-  const [expandedSections, setExpandedSections] = useState({
-    baseInfo: true,
-    requestBasic: false,
-    requestAdvanced: false,
-    locatorBasic: false,
-    locatorAdvanced: false,
+    cardFacesNameField: '',
+    connectedCards: []
   });
 
   // Fingerprint-Initialisierung
@@ -129,6 +159,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
             value !== undefined && value !== null ? value : ''
           ])
         ),
+        connectedCards: (initialConfig as { connectedCards?: ConnectedCardLocator[] }).connectedCards ?? [],
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,13 +212,6 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     }
   };
 
-  const handleToggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
   const handleSubmit = () => {
     onSave(config);
   };
@@ -195,340 +219,31 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
   return (
     <div className="wizard-container">
       <h1 className='title is-4'>Config Settings</h1>
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="wizard-form">
-
-        {/* Base Info */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('baseInfo')}>
-            <TuneIcon />Base Info {expandedSections.baseInfo ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.baseInfo && (
-            <div>
-              <label>Name:</label>
-              <input
-                type="text"
-                name="name"
-                value={config.name}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-                required
-              />
-              <label>Category:</label>
-              <select name="category" disabled={!isOwner} value={config.category} onChange={handleInputChange}>
-                <option value="MTG">MTG</option>
-                <option value="POKE">Poke</option>
-                <option value="YUGIOH">Yugi</option>
-                <option value="MISC">Misc</option>
-              </select>
-              <label>Official Website:</label>
-              <input
-                type="text"
-                name="officialWebsite"
-                value={config.officialWebsite}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Custom Arts:</label>
-              <input
-                type="checkbox"
-                name="customArts"
-                checked={config.customArts}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Request Basic */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('requestBasic')}>
-            <TuneIcon />Request Basic {expandedSections.requestBasic ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.requestBasic && (
-            <div>
-              <label>Method:</label>
-              <select disabled={!isOwner} name="method" value={config.method} onChange={handleInputChange}>
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-              </select>
-              <label>Data Format:</label>
-              <select disabled={!isOwner} name="dataFormat" value={config.dataFormat} onChange={handleInputChange}>
-                <option value="json">JSON</option>
-                <option value="html">HTML</option>
-              </select>
-              <label>Base URL:</label>
-              <input
-                type="text"
-                name="baseUrl"
-                value={config.baseUrl}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Parameter Map:</label>
-              <textarea
-                name="parameterMap"
-                value={JSON.stringify(config.parameterMap, null, 2)}
-                onChange={handleParameterMapChange}
-                disabled={!isOwner}
-              />
-              <label>Concurrent Limit:</label>
-              <input
-                type="number"
-                name="concurrentLimit"
-                value={config.concurrentLimit}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Request Format:</label>
-              <select
-                name="requestFormat"
-                value={config.requestFormat}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              >
-                <option value="urlencoded">URL Encoded</option>
-                <option value="multipart">Multipart</option>
-                <option value="json">JSON</option>
-              </select>
-            </div>
-          )}
-        </div>
-
-        {/* Request Advanced */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('requestAdvanced')}>
-            <TuneIcon />Request Advanced {expandedSections.requestAdvanced ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.requestAdvanced && (
-            <div>
-              <label>CSRF Token Variable Name:</label>
-              <input
-                type="text"
-                name="csrfTokenVariableName"
-                value={config.csrfTokenVariableName}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Requires CSRF Token:</label>
-              <input
-                type="checkbox"
-                name="requiresCsrfToken"
-                checked={config.requiresCsrfToken}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Use Backend Proxy:</label>
-              <input
-                type="checkbox"
-                name="useBackendProxy"
-                checked={config.useBackendProxy}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label title="Bilder dieser API über das Backend laden (für Hosts ohne CORS-Header)">Proxy Images:</label>
-              <input
-                type="checkbox"
-                name="proxyImages"
-                checked={!!config.proxyImages}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Locator Basic */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('locatorBasic')}>
-            <TuneIcon />Locator Basic {expandedSections.locatorBasic ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.locatorBasic && (
-            <div>
-              <label>Pagination Field:</label>
-              <input
-                type="text"
-                name="paginationField"
-                value={config.paginationField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Data List Field:</label>
-              <input
-                type="text"
-                name="dataListField"
-                value={config.dataListField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Name Field:</label>
-              <input
-                type="text"
-                name="nameField"
-                value={config.nameField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Image URL Field:</label>
-              <input
-                type="text"
-                name="imageUrlField"
-                value={config.imageUrlField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Language Field:</label>
-              <input
-                type="text"
-                name="languageField"
-                value={config.languageField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <DefaultLanguageSelect value={config.defaultLanguage} onChange={handleInputChange} disabled={!isOwner} />
-              <label>Set Field:</label>
-              <input
-                type="text"
-                name="setField"
-                value={config.setField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Locator Advanced */}
-        <div className='wizard-category'>
-          <button className="button setting-category" type="button" onClick={() => handleToggleSection('locatorAdvanced')}>
-            <TuneIcon />Locator Advanced {expandedSections.locatorAdvanced ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </button>
-          {expandedSections.locatorAdvanced && (
-            <div>
-              <label>Name Split Character:</label>
-              <input
-                type="text"
-                name="nameSplitCharacter"
-                value={config.nameSplitCharacter}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Set Number Field:</label>
-              <input
-                type="text"
-                name="setNumberField"
-                value={config.setNumberField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Follow Link Field:</label>
-              <input
-                type="text"
-                name="followLinkField"
-                value={config.followLinkField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Follow Link Data List Field:</label>
-              <input
-                type="text"
-                name="followLinkDataListField"
-                value={config.followLinkDataListField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Follow Link Image Field:</label>
-              <input
-                type="text"
-                name="followLinkImageField"
-                value={config.followLinkImageField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Follow Link Language Field:</label>
-              <input
-                type="text"
-                name="followLinkLanguageField"
-                value={config.followLinkLanguageField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Nested Language Data List Field:</label>
-              <input
-                type="text"
-                name="nestedLanguageDataListField"
-                value={config.nestedLanguageDataListField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Nested Language Image URL Field:</label>
-              <input
-                type="text"
-                name="nestedLanguageImageUrlField"
-                value={config.nestedLanguageImageUrlField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Nested Language Field:</label>
-              <input
-                type="text"
-                name="nestedLanguageLanguageField"
-                value={config.nestedLanguageLanguageField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Card Faces Data List Field:</label>
-              <input
-                type="text"
-                name="cardFacesDataListField"
-                value={config.cardFacesDataListField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-                title="Liste der Kartenseiten, z.B. card_faces bei Scryfall. Jede Seite mit Bild wird ein eigener Treffer."
-              />
-              <label>Card Faces Image URL Field:</label>
-              <input
-                type="text"
-                name="cardFacesImageUrlField"
-                value={config.cardFacesImageUrlField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-              <label>Card Faces Name Field:</label>
-              <input
-                type="text"
-                name="cardFacesNameField"
-                value={config.cardFacesNameField}
-                onChange={handleInputChange}
-                disabled={!isOwner}
-              />
-            </div>
-          )}
-        </div>
-        {isOwner ? (
-          <>
-            <div className="wizard-category">
-              <button className="button is-secondary submit" type="submit" >
-                <SaveIcon />Save
-              </button>
-            </div>
-            <div className="wizard-category">
-              <button className="button is-secondary publish" type="button" onClick={handlePublish}>
-                {config.published ? <LockIcon /> : <PublicIcon />}
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <ConfigFieldTable
+          fields={API_CONFIG_FIELDS}
+          values={config}
+          savedValues={initialConfig as unknown as Record<string, unknown> | null}
+          editable={isOwner}
+          onChange={handleInputChange}
+          onJsonChange={handleParameterMapChange}
+        />
+        <ConnectedCardsTable
+          value={config.connectedCards}
+          editable={isOwner}
+          onChange={(connectedCards) => setConfig((prev) => ({ ...prev, connectedCards }))}
+        />
+        <div className="config-actions">
+          {isOwner ? (
+            <>
+              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>Save</ActionButton>
+              <ActionButton icon={config.published ? <LockIcon /> : <PublicIcon />} onClick={handlePublish}>
                 {config.published ? 'Unpublish' : 'Publish'}
-              </button>
-            </div>
-            <div className="wizard-category">
-              <button className="button is-secondary remove" type="button" onClick={handleDelete}>
-                <DeleteForeverIcon />Delete
-              </button>
-            </div>
-          </>
-        ) : null}
-        <div className="wizard-category">
-          <button className="button is-secondary copy" type="button" onClick={handleCopyConfig}>
-            <ContentCopyIcon />Copy Config
-          </button>
+              </ActionButton>
+              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>Delete</ActionButton>
+            </>
+          ) : null}
+          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>Copy Config</ActionButton>
         </div>
       </form>
     </div>

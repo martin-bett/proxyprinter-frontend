@@ -72,6 +72,29 @@ export interface ApiConfig extends BaseConfig {
   cardFacesDataListField?: string;
   cardFacesImageUrlField?: string;
   cardFacesNameField?: string;
+
+  //Verbundene Karten (z.B. Scryfall all_parts): jeder Eintrag einer Liste wird eine eigene Karte
+  connectedCards?: ConnectedCardLocator[];
+}
+
+/** Eine Liste verbundener Karten im Treffer, z.B. Scryfall all_parts (Tokens, Emblems, Dungeons). */
+export interface ConnectedCardLocator {
+  dataListField: string;
+  nameField: string;
+  // Link auf das exakte Objekt im Format eines Treffers dieser API (Scryfall: uri)
+  linkField?: string;
+  typeField?: string;
+}
+
+/** Eine verbundene Karte, die in einem Treffer gefunden wurde. */
+export interface ConnectedCard {
+  name: string;
+  typeLine?: string;
+  link?: string;
+}
+
+export function hasConnectedCards(config: Config | undefined): boolean {
+  return Boolean(config && isApiConfig(config) && config.connectedCards?.some(locator => locator.dataListField && locator.nameField));
 }
 
 export interface GalleryConfig extends BaseConfig{
@@ -121,6 +144,8 @@ export interface SearchResult{
   languageCode?: string;
   // Name der Kartenseite, wenn der Treffer aus einer mehrseitigen Karte stammt
   faceName?: string;
+  // Verbundene Karten (Tokens usw.); undefined = Config hat keine Listen oder Treffer stammt aus altem Cache
+  connectedCards?: ConnectedCard[];
 }
 
 export interface CropSettings {
@@ -252,6 +277,16 @@ export default class ApiFactory {
 
 
   
+
+  /**
+   * Wertet eine schon geladene Antwort aus, ohne Netzwerk (API-Wizard-Vorschau).
+   * all = alle gelesenen Treffer, matching = die, die eine Suche nach cardname behalten würde.
+   */
+  async previewResponse(config: Config, text: string, cardname: string): Promise<{ all: SearchResult[]; matching: SearchResult[] }> {
+    const { dataList } = await this.parseResponse(config, text, config.baseUrl, 1);
+    const all = await this.processDataList(dataList, config);
+    return { all, matching: this.filterAndDeduplicateResults(all, { cardname }, config) };
+  }
 
   private async makeRequest(
     config: Config, 
@@ -419,7 +454,10 @@ export default class ApiFactory {
     // Unterscheidung nur bei der Initialisierung
     if (config.dataFormat === 'json') {
         root = JSON.parse(text);
-        dataList = this.getValue(root, config, config.dataListField) || [];
+        // Ohne dataListField: Antwort ist selbst die Liste (z.B. [{...}, {...}])
+        dataList = config.dataListField
+            ? this.getValue(root, config, config.dataListField) || []
+            : (Array.isArray(root) ? root : []);
     } else if (config.dataFormat === 'html') {
         root = parse(text);
         dataList = Array.from(root.querySelectorAll(config.dataListField));
@@ -469,9 +507,71 @@ export default class ApiFactory {
         name: this.getValue(item, config, config.nameField),
         set: isApiConfig(config) && config.setField ? this.getValue(item, config, config.setField) : undefined,
         setNumber: isApiConfig(config) &&  config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
-        imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField)),
-        languageCode: this.baseLanguage(item, config)
+        imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField), config.baseUrl),
+        languageCode: this.baseLanguage(item, config),
+        connectedCards: this.extractConnectedCards(item, config)
       } as SearchResult;
+  }
+
+  // Liest alle Listen verbundener Karten aus. Die Karte selbst (Scryfall listet sie als combo_piece mit) fällt weg.
+  private extractConnectedCards(item: any, config: Config): ConnectedCard[] | undefined {
+    if (!isApiConfig(config) || !hasConnectedCards(config)) {
+      return undefined;
+    }
+    const ownName = String(this.getValue(item, config, config.nameField) || '');
+    const ownNames = [ownName, ...(config.nameSplitCharacter ? ownName.split(config.nameSplitCharacter) : [])]
+      .map(name => name.trim().toLowerCase())
+      .filter(Boolean);
+
+    const found: ConnectedCard[] = [];
+    config.connectedCards!.forEach(locator => {
+      if (!locator.dataListField || !locator.nameField) return;
+      const list = config.dataFormat === 'json' ?
+        this.getNestedValue(item, locator.dataListField) :
+        Array.from(item.querySelectorAll(locator.dataListField));
+      if (!Array.isArray(list)) return;
+
+      list.forEach((entry: any) => {
+        const name = String(this.getValue(entry, config, locator.nameField) || '').trim();
+        if (!name || ownNames.includes(name.toLowerCase())) return;
+        if (found.some(card => card.name.toLowerCase() === name.toLowerCase())) return;
+        found.push({
+          name,
+          typeLine: locator.typeField ? String(this.getValue(entry, config, locator.typeField) || '') || undefined : undefined,
+          link: locator.linkField ? String(this.getValue(entry, config, locator.linkField) || '') || undefined : undefined,
+        });
+      });
+    });
+    return found;
+  }
+
+  /**
+   * Lädt das exakt verlinkte Objekt einer verbundenen Karte (z.B. das Treasure-Token, auf das Scryfall zeigt).
+   * Die Antwort hat das Format eines einzelnen Treffers dieser API.
+   */
+  async fetchConnectedCard(configKey: string, link: string, cardName: string): Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
+    const config = this.configs[configKey];
+    if (!config) {
+      throw new Error(`Config not found for key: ${configKey}`);
+    }
+    let requestUrl = toRequestUrl(link);
+    let fetchOptions: RequestInit = { method: 'GET' };
+    if (config.useBackendProxy) {
+      ({ requestUrl, fetchOptions } = this.applyProxyConfig(requestUrl, fetchOptions, { ...config, method: 'GET' }));
+    }
+    const targetUrl = (fetchOptions.headers as Record<string, string> | undefined)?.['X-Target-URL'];
+    const response = await throttledFetch(requestUrl.toString(), fetchOptions, targetUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const text = await response.text();
+    const item = config.dataFormat === 'json' ? JSON.parse(text) : parse(text);
+    const all = await this.processDataList([item], config);
+    return {
+      results: this.filterAndDeduplicateResults(all, { cardname: cardName }, config),
+      rawResponse: text,
+      requestCount: 1
+    };
   }
 
   private baseLanguage(item: any, config: Config): string | undefined {
@@ -480,13 +580,22 @@ export default class ApiFactory {
     return config.defaultLanguage ? this.normalizeLanguageName(config.defaultLanguage) : undefined;
   }
 
-  private extractLastLink(srcset: string): string {
+  private extractLastLink(srcset: string, baseUrl?: string): string {
     if(!srcset) return '';
     // Match the last URL in the string (starting with http(s):// until the first whitespace)
     const match = srcset.match(/https?:\/\/[^\s]+/g);
     
     // Return the last match if found
-    return match ? match[match.length - 1] : '';
+    if (match) return match[match.length - 1];
+    // Relative Bildpfade (z.B. src="/img/card.png" in HTML-Seiten) gegen die API-URL auflösen
+    if (/^[a-z][a-z0-9+.-]*:/i.test(String(srcset).trim())) return '';
+    const last = String(srcset).trim().split(/\s*,\s*/).pop()?.split(/\s+/)[0];
+    if (!last || !baseUrl || !/^https?:/i.test(baseUrl) || /^[a-z][a-z0-9+.-]*:/i.test(last)) return '';
+    try {
+      return new URL(last, baseUrl).toString();
+    } catch {
+      return '';
+    }
   }
 
   private async processFollowLinks(
