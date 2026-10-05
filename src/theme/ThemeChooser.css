@@ -40,8 +40,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1;
+}
+
+.MuiListItemIcon-root .theme-chooser-mana {
+  margin-right: 8px;
 }
 
 .theme-chooser-mana-empty {
