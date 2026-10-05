@@ -1236,7 +1236,7 @@ const DeckInputAndViewer: React.FC = () => {
   };
 
   // Kurzinfos für zugeklappte Abschnitte
-  const ratio = (selected: number, total: number) => (total > 0 ? `${selected} / ${total}` : undefined);
+  const ratio = (selected: number, total: number, label: string) => (total > 0 ? `${selected} / ${total} ${label}` : undefined);
   const allApiNames = Object.keys(apiConfigs);
   const apiSelectionSummary = allApiNames.length > 0 ? (
     <span
@@ -1247,7 +1247,7 @@ const DeckInputAndViewer: React.FC = () => {
         })
         .join('\n')}
     >
-      {ratio(allApiNames.filter(name => enabledApis[name]).length, allApiNames.length)}
+      {ratio(allApiNames.filter(name => enabledApis[name]).length, allApiNames.length, 'active')}
     </span>
   ) : undefined;
   const decklistCardCount = parseDecklist(decklist).reduce((sum, entry) => sum + entry.count, 0);
@@ -1264,7 +1264,7 @@ const DeckInputAndViewer: React.FC = () => {
         <CollapsibleSection
           storageKey="snapshots"
           title="Snapshots"
-          summary={snapshots.sectionProps.snapshots.length > 0 ? String(snapshots.sectionProps.snapshots.length) : 'none'}
+          summary={`${snapshots.sectionProps.snapshots.length || 'none'} saved`}
         >
           <SnapshotSection {...snapshots.sectionProps} />
         </CollapsibleSection>
@@ -1543,7 +1543,7 @@ const DeckInputAndViewer: React.FC = () => {
           <CollapsibleSection
             storageKey="language-filter"
             title="Language Filter"
-            summary={ratio(languageOrder.filter(lang => visibleLanguages.has(lang)).length, languageOrder.length)}
+            summary={ratio(languageOrder.filter(lang => visibleLanguages.has(lang)).length, languageOrder.length, 'shown')}
             defaultOpen={false}
           >
           <SortableList
@@ -1559,7 +1559,7 @@ const DeckInputAndViewer: React.FC = () => {
           <CollapsibleSection
             storageKey="api-filter"
             title="API Filter"
-            summary={ratio(apiFilterItems.filter(name => visibleApis.has(name)).length, apiFilterItems.length)}
+            summary={ratio(apiFilterItems.filter(name => visibleApis.has(name)).length, apiFilterItems.length, 'shown')}
             defaultOpen={false}
           >
           <SortableList

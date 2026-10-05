@@ -38,6 +38,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   const [open, setOpen] = useState(() => readOpen(storageKey, defaultOpen));
   const bodyId = useId();
+  const showSummary = !open && summary !== undefined && summary !== null && summary !== '';
 
   useEffect(() => {
     if (!storageKey) return;
@@ -61,9 +62,13 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <span className="input-tile-lead" aria-hidden="true">
             <KeyboardArrowDownIcon className="collapsible-arrow" />
           </span>
-          <span className="input-tile-title">{title}</span>
-          {!open && summary !== undefined && summary !== null && summary !== '' && (
-            <span className="collapsible-summary">{summary}</span>
+          {showSummary ? (
+            <span className="input-tile-title has-summary">
+              <span>{title}</span>
+              <span className="collapsible-summary">{summary}</span>
+            </span>
+          ) : (
+            <span className="input-tile-title">{title}</span>
           )}
         </button>
         {action && (

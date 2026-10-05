@@ -300,18 +300,24 @@
   outline-offset: -2px;
 }
 
-/* Kurzinfo im zugeklappten Header: blasser, kleiner, nicht fett */
+/* Kurzinfo im zugeklappten Header: zweite Zeile unter dem Titel, blasser, kleiner, nicht fett */
+.input-tile-title.has-summary {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+}
+
 .collapsible-summary {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  padding: 4px 10px 4px 0;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 400;
   font-style: italic;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collapsible-arrow {
