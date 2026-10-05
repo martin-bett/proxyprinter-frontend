@@ -300,6 +300,20 @@
   outline-offset: -2px;
 }
 
+/* Kurzinfo im zugeklappten Header: blasser, kleiner, nicht fett */
+.collapsible-summary {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px 4px 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .collapsible-arrow {
   transform: rotate(-90deg);
   transition: transform 0.2s;
