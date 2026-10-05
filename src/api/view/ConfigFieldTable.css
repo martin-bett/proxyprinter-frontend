@@ -155,10 +155,3 @@
   margin: 0;
 }
 
-.config-actions .action-button.is-danger:hover {
-  border-color: var(--danger);
-}
-
-.config-actions .action-button.is-danger:hover .input-tile-lead {
-  color: var(--danger);
-}

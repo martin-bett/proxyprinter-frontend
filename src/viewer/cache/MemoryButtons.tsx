@@ -4,8 +4,10 @@ import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ActionButton from '../../container/inputs/ActionButton';
 import ClosableDialog from '../../container/ClosableDialog';
-import { imageLoaderService } from '../../service/cache/ImageLoaderService';
 import SearchCacheService from '../../service/cache/SearchCacheService';
 import { useImageLoaderNumbers } from '../../service/cache/hooks/useImageLoaderNumbers';
 import CacheManagerDialog from './CacheManagerDialog';
@@ -14,13 +16,21 @@ import QueueManagerDialog from './QueueManagerDialog';
 import SearchCacheManagerDialog from './SearchCacheManagerDialog';
 import './MemoryButtons.css';
 
-// Icon-Bubbles oben rechts: Download-Queue, Such-Cache und Bild-Cache mit ihren Dialogen
-export default function MemoryButtons() {
+interface MemoryButtonsProps {
+  /** Leert Decklist, Suchergebnisse und Auswahl */
+  onResetDeck: () => Promise<void> | void;
+  resetDisabled?: boolean;
+}
+
+// Icon-Bubbles oben rechts: Download-Queue, Such-Cache und Bild-Cache mit ihren Dialogen,
+// ganz rechts der Papierkorb zum Zurücksetzen des Decks (mit Rückfrage)
+export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButtonsProps) {
   const { queued, active, cacheLoading } = useImageLoaderNumbers();
   const [searchCount, setSearchCount] = useState(0);
   const [queueDialogOpen, setQueueDialogOpen] = useState(false);
   const [searchCacheDialogOpen, setSearchCacheDialogOpen] = useState(false);
   const [imageCacheDialogOpen, setImageCacheDialogOpen] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const updateSearchCount = useCallback(async () => {
     setSearchCount(await SearchCacheService.getSearchCount());
@@ -58,7 +68,12 @@ export default function MemoryButtons() {
         <button className="memory-button" title="Cache anzeigen" onClick={openImageCacheDialog}>
           <CacheProgressBar width={120} />
         </button>
-        <button className="memory-button" title="Cache leeren" onClick={() => imageLoaderService.clearCache()}>
+        <button
+          className="memory-button"
+          title="Deck zurücksetzen"
+          onClick={() => setResetDialogOpen(true)}
+          disabled={resetDisabled}
+        >
           <DeleteIcon />
         </button>
       </div>
@@ -84,6 +99,28 @@ export default function MemoryButtons() {
 
       <ClosableDialog open={imageCacheDialogOpen} onClose={() => setImageCacheDialogOpen(false)} maxWidth="md">
         <CacheManagerDialog open={imageCacheDialogOpen} onClose={() => setImageCacheDialogOpen(false)} />
+      </ClosableDialog>
+
+      <ClosableDialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)} maxWidth="xs">
+        <div className="reset-deck-dialog">
+          <h2>Deck zurücksetzen?</h2>
+          <p>Decklist, Suchergebnisse und Bildauswahl werden geleert. Der aktuelle Stand wird vorher als Snapshot gespeichert.</p>
+          <div className="reset-deck-actions">
+            <ActionButton icon={<CloseIcon />} onClick={() => setResetDialogOpen(false)}>
+              Abbrechen
+            </ActionButton>
+            <ActionButton
+              icon={<RestartAltIcon />}
+              className="is-danger"
+              onClick={async () => {
+                setResetDialogOpen(false);
+                await onResetDeck();
+              }}
+            >
+              Zurücksetzen
+            </ActionButton>
+          </div>
+        </div>
       </ClosableDialog>
     </>
   );

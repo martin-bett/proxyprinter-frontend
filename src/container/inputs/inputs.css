@@ -139,6 +139,16 @@
   color: var(--text-muted);
 }
 
+/* Gefährliche Aktionen (Löschen, Zurücksetzen): rot statt Akzentfarbe */
+.action-button.is-danger:hover {
+  border-color: var(--danger);
+}
+
+.action-button.is-danger:hover .input-tile-lead {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
 /* Hervorgehobene Hauptaktionen (Analyze Deck, Create PDF): Akzent gefüllt, Icon-Feld dunkler */
 .action-button.is-primary {
   border-color: var(--accent-strong);

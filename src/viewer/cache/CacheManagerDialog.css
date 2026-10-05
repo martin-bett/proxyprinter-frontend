@@ -1,0 +1,136 @@
+/* Bild-Cache- und Such-Cache-Manager: Kopfbereich als Panel, darunter die Löschtabelle */
+.cache-manager-dialog h2 {
+  margin: 0 0 12px;
+  padding-right: 32px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cache-manager-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--dialog-panel-bg);
+  color: var(--text);
+}
+
+.cache-manager-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.cache-manager-limit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.cache-manager-limit label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.cache-manager-limit input {
+  width: 6em;
+  height: 2.25rem;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.cache-manager-limit input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cache-manager-head .action-button,
+.cache-manager-footer .action-button {
+  width: auto;
+  margin: 0;
+}
+
+/* "Cache leeren" sitzt rechts außen */
+.cache-manager-head .cache-manager-clear {
+  margin-left: auto;
+}
+
+.cache-manager-hint {
+  margin: 10px 0 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cache-manager-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* Tabelle: Zahlen mit fester Ziffernbreite, damit nichts springt */
+.cache-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.875rem;
+}
+
+.cache-table th,
+.cache-table td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  color: var(--text);
+}
+
+.cache-table thead th {
+  background: var(--surface-muted);
+  text-align: center;
+  font-weight: 600;
+}
+
+.cache-table .cache-row-label {
+  text-align: left;
+  font-weight: 600;
+  background: var(--surface);
+}
+
+.cache-table .cache-sum-row .cache-row-label {
+  background: var(--surface-muted);
+}
+
+.cache-cell {
+  text-align: center;
+  background: var(--surface);
+}
+
+.cache-cell.is-empty {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.cache-cell.is-deletable {
+  cursor: pointer;
+  background: var(--surface-muted);
+  transition: background-color 0.1s, color 0.1s;
+}
+
+/* Rot = wird beim Klick gelöscht */
+.cache-cell.is-deletable.is-hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px var(--danger);
+}

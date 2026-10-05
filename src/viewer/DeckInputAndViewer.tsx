@@ -670,6 +670,20 @@ const DeckInputAndViewer: React.FC = () => {
   }, []);
 
   const snapshots = useSnapshots({ state: workState, isBusy: isLoading, apply: applySnapshot });
+
+  // Deck zurücksetzen: vorher ein Snapshot, damit man den Stand zurückholen kann.
+  // APIs, Filter und PDF-Einstellungen bleiben, die nächste Analyse setzt die Filter neu.
+  const saveSnapshot = snapshots.save;
+  const resetDeck = useCallback(async () => {
+    await saveSnapshot();
+    setDecklist('');
+    setCardResults({});
+    setSelectedCards({});
+    setCurrentCardName(null);
+    setCurrentCardIndex(null);
+    setLog([]);
+    setProgress(0);
+  }, [saveSnapshot]);
   const pdfDownloadNameRef = useRef('deck');
 
   const createPDF = async () => {
@@ -1042,7 +1056,7 @@ const DeckInputAndViewer: React.FC = () => {
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
       <ThemeChooser />
-      <MemoryButtons />
+      <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
       <TitleDiv />
 
 
