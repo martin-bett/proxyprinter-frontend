@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  RestoredState, Snapshot, WorkState, createSnapshot, customUploadIds, isEmptySnapshot, isEmptyState, restoreSnapshot, snapshotLabel,
+  RestoredState, Snapshot, WorkState, createSnapshot, customUploadIds, isEmptySnapshot, isEmptyState, overwriteSnapshot, restoreSnapshot, snapshotLabel,
 } from '../../service/snapshot/snapshot';
 import {
   deleteAllSnapshots, deleteSnapshot, getSnapshot, listSnapshots, putGenerateSnapshot, putSnapshot, snapshotsSize,
@@ -162,6 +162,25 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
     refreshPdfInfos(all);
   }, [apply, saveSession, refreshList, refreshPdfInfos]);
 
+  /** Ersetzt den Inhalt eines Snapshots durch den aktuellen Stand, Name bleibt */
+  const overwrite = useCallback(async (snapshot: Snapshot) => {
+    if (isEmptyState(stateRef.current)) return;
+    const pdfNote = snapshot.pdf.generated ? '\nThe link to its PDF will be removed.' : '';
+    if (!window.confirm(`Overwrite "${snapshotLabel(snapshot)}" with the current state?${pdfNote}`)) return;
+    const updated = overwriteSnapshot(snapshot, stateRef.current);
+    try {
+      await putSnapshot(updated);
+      const ids = customUploadIds(updated);
+      if (ids.length > 0) touchUploads(ids);
+      setNotice(null);
+      const all = await refreshList();
+      refreshPdfInfos(all);
+    } catch (error) {
+      console.error('Could not overwrite snapshot', error);
+      setNotice('The snapshot could not be saved.');
+    }
+  }, [refreshList, refreshPdfInfos]);
+
   const rename = useCallback(async (snapshot: Snapshot) => {
     const name = window.prompt('Snapshot name', snapshotLabel(snapshot));
     if (name === null) return;
@@ -193,6 +212,7 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
     totalBytes,
     onSave: save,
     onLoad: load,
+    onOverwrite: overwrite,
     onRename: rename,
     onDelete: remove,
     onDeleteAll: removeAll,
