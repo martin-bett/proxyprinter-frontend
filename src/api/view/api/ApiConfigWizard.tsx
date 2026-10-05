@@ -5,10 +5,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
-import { Config } from '../../../service/ApiFactory';
+import { Config, ConnectedCardLocator } from '../../../service/ApiFactory';
 import ConfigFieldTable, { CATEGORY_OPTIONS, ConfigField } from '../ConfigFieldTable';
 import { DEFAULT_LANGUAGE_OPTIONS } from '../defaultLanguages';
 import ActionButton from '../../../container/inputs/ActionButton';
+import ConnectedCardsTable from './ConnectedCardsTable';
 
 /** Draft state of the config-editing form. Loosely typed on purpose: it mirrors
  * whatever the (untyped) backend config-object looks like, and every input
@@ -48,6 +49,7 @@ export interface ApiConfigFormState {
   cardFacesDataListField: string;
   cardFacesImageUrlField: string;
   cardFacesNameField: string;
+  connectedCards: ConnectedCardLocator[];
   published?: boolean;
   [key: string]: unknown;
 }
@@ -133,7 +135,8 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     nestedLanguageLanguageField: '',
     cardFacesDataListField: '',
     cardFacesImageUrlField: '',
-    cardFacesNameField: ''
+    cardFacesNameField: '',
+    connectedCards: []
   });
 
   // Fingerprint-Initialisierung
@@ -156,6 +159,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
             value !== undefined && value !== null ? value : ''
           ])
         ),
+        connectedCards: (initialConfig as { connectedCards?: ConnectedCardLocator[] }).connectedCards ?? [],
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,6 +227,11 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
           editable={isOwner}
           onChange={handleInputChange}
           onJsonChange={handleParameterMapChange}
+        />
+        <ConnectedCardsTable
+          value={config.connectedCards}
+          editable={isOwner}
+          onChange={(connectedCards) => setConfig((prev) => ({ ...prev, connectedCards }))}
         />
         <div className="config-actions">
           {isOwner ? (
