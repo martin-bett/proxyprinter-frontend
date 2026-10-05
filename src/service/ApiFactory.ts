@@ -34,6 +34,9 @@ interface BaseConfig {
 
   paginationLinkField?:string;
   paginationMaxPageField?:string;
+
+  // Sprache (ISO-639-1) für Karten ohne Sprachangabe, z. B. "en"
+  defaultLanguage?: string;
 }
 
 export interface ApiConfig extends BaseConfig {
@@ -64,6 +67,11 @@ export interface ApiConfig extends BaseConfig {
   nestedLanguageDataListField?: string;
   nestedLanguageImageUrlField?: string;
   nestedLanguageLanguageField?: string;
+
+  //Mehrseitige Karten (z.B. Scryfall card_faces): jede Seite mit Bild wird ein eigener Treffer
+  cardFacesDataListField?: string;
+  cardFacesImageUrlField?: string;
+  cardFacesNameField?: string;
 }
 
 export interface GalleryConfig extends BaseConfig{
@@ -111,6 +119,8 @@ export interface SearchResult{
   set?: string;
   setNumber?: string;
   languageCode?: string;
+  // Name der Kartenseite, wenn der Treffer aus einer mehrseitigen Karte stammt
+  faceName?: string;
 }
 
 export interface CropSettings {
@@ -445,8 +455,9 @@ export default class ApiFactory {
       const baseResult = this.createBaseResult(item, config);
       const followLinkResults = await this.processFollowLinks(baseResult as SearchResult, item, config);
       const nestedLanguageResults = await this.processNestedLanguages(baseResult as SearchResult, item, config);
+      const faceResults = this.processCardFaces(baseResult as SearchResult, item, config);
 
-      return [baseResult, ...followLinkResults, ...nestedLanguageResults];
+      return [baseResult, ...followLinkResults, ...nestedLanguageResults, ...faceResults];
     }));
 
     return results.flat();
@@ -459,10 +470,14 @@ export default class ApiFactory {
         set: isApiConfig(config) && config.setField ? this.getValue(item, config, config.setField) : undefined,
         setNumber: isApiConfig(config) &&  config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
         imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField)),
-        languageCode: isApiConfig(config) && config.languageField ? 
-          this.normalizeLanguageName(this.getValue(item, config, config.languageField)) : 
-          undefined
+        languageCode: this.baseLanguage(item, config)
       } as SearchResult;
+  }
+
+  private baseLanguage(item: any, config: Config): string | undefined {
+    const raw = isApiConfig(config) && config.languageField ? this.getValue(item, config, config.languageField) : undefined;
+    if (raw) return this.normalizeLanguageName(String(raw));
+    return config.defaultLanguage ? this.normalizeLanguageName(config.defaultLanguage) : undefined;
   }
 
   private extractLastLink(srcset: string): string {
@@ -544,6 +559,37 @@ export default class ApiFactory {
             baseResult.languageCode
         )
       }));
+  }
+
+  // Seiten ohne eigenes Bild (z.B. Split- oder Adventure-Karten bei Scryfall) liefern keinen Treffer,
+  // dort reicht das Bild der ganzen Karte. Der Name bleibt der volle Kartenname, damit die
+  // Namensprüfung über nameSplitCharacter weiter greift; die Seite steht in faceName.
+  private processCardFaces(
+    baseResult: SearchResult,
+    item: any,
+    config: Config
+  ): SearchResult[] {
+    if (!isApiConfig(config) || !config.cardFacesDataListField || !config.cardFacesImageUrlField) {
+      return [];
+    }
+
+    const faces = config.dataFormat === 'json' ?
+      this.getNestedValue(item, config.cardFacesDataListField) :
+      Array.from(item.querySelectorAll(config.cardFacesDataListField));
+
+    if (!faces || !Array.isArray(faces)) {
+      return [];
+    }
+
+    return faces
+      .map((face: any) => ({
+        ...baseResult,
+        imageUrl: this.extractLastLink(this.getValue(face, config, config.cardFacesImageUrlField)),
+        faceName: config.cardFacesNameField ?
+          (this.getValue(face, config, config.cardFacesNameField) || '').trim() || undefined :
+          undefined
+      }))
+      .filter((face: SearchResult) => Boolean(face.imageUrl));
   }
 
   private filterAndDeduplicateResults(

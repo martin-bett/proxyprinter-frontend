@@ -9,6 +9,7 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import { Config } from '../../../service/ApiFactory';
+import DefaultLanguageSelect from '../DefaultLanguageSelect';
 
 /** Draft state of the config-editing form. Loosely typed on purpose: it mirrors
  * whatever the (untyped) backend config-object looks like, and every input
@@ -34,6 +35,7 @@ export interface ApiConfigFormState {
   nameField: string;
   imageUrlField: string;
   languageField: string;
+  defaultLanguage: string;
   setField: string;
   nameSplitCharacter: string;
   setNumberField: string;
@@ -44,6 +46,9 @@ export interface ApiConfigFormState {
   nestedLanguageDataListField: string;
   nestedLanguageImageUrlField: string;
   nestedLanguageLanguageField: string;
+  cardFacesDataListField: string;
+  cardFacesImageUrlField: string;
+  cardFacesNameField: string;
   published?: boolean;
   [key: string]: unknown;
 }
@@ -80,6 +85,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     nameField: '',
     imageUrlField: '',
     languageField: '',
+    defaultLanguage: '',
     setField: '',
     nameSplitCharacter: '',
     setNumberField: '',
@@ -89,7 +95,10 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
     followLinkLanguageField: '',
     nestedLanguageDataListField: '',
     nestedLanguageImageUrlField: '',
-    nestedLanguageLanguageField: ''
+    nestedLanguageLanguageField: '',
+    cardFacesDataListField: '',
+    cardFacesImageUrlField: '',
+    cardFacesNameField: ''
   });
 
   const [expandedSections, setExpandedSections] = useState({
@@ -376,6 +385,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />
+              <DefaultLanguageSelect value={config.defaultLanguage} onChange={handleInputChange} disabled={!isOwner} />
               <label>Set Field:</label>
               <input
                 type="text"
@@ -464,6 +474,31 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
                 type="text"
                 name="nestedLanguageLanguageField"
                 value={config.nestedLanguageLanguageField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Card Faces Data List Field:</label>
+              <input
+                type="text"
+                name="cardFacesDataListField"
+                value={config.cardFacesDataListField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+                title="Liste der Kartenseiten, z.B. card_faces bei Scryfall. Jede Seite mit Bild wird ein eigener Treffer."
+              />
+              <label>Card Faces Image URL Field:</label>
+              <input
+                type="text"
+                name="cardFacesImageUrlField"
+                value={config.cardFacesImageUrlField}
+                onChange={handleInputChange}
+                disabled={!isOwner}
+              />
+              <label>Card Faces Name Field:</label>
+              <input
+                type="text"
+                name="cardFacesNameField"
+                value={config.cardFacesNameField}
                 onChange={handleInputChange}
                 disabled={!isOwner}
               />
