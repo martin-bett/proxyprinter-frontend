@@ -24,6 +24,10 @@
 
 .input-controls {
   grid-area: input-controls;
+  /* Scrollt wie die rechte Toolbar selbst, wenn der Inhalt höher als das Fenster ist */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 
@@ -41,6 +45,17 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Beide Toolbars scrollen per Mausrad/Touch, ohne sichtbaren Balken */
+.input-controls,
+.right-toolbar {
+  scrollbar-width: none;
+}
+
+.input-controls::-webkit-scrollbar,
+.right-toolbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Spenden/GitHub/Version bleiben unten, solange Platz ist */
