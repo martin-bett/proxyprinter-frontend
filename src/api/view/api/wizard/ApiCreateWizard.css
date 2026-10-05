@@ -370,3 +370,8 @@
   cursor: pointer;
   font: inherit;
 }
+
+.wiz-grid > label.wiz-check {
+  font-weight: normal;
+  text-align: left;
+}

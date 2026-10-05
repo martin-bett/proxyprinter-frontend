@@ -344,7 +344,7 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
       )}
       {preview && preview.all.length > PREVIEW_ROWS && <p className="wiz-muted">… and {preview.all.length - PREVIEW_ROWS} more</p>}
       {preview && preview.all.length > 0 && preview.matching.length === 0 && (
-        <p className="wiz-warning">No result has exactly the name "{searchName.trim()}". Searches only keep exact name matches, so check the name field or set a split character (e.g. <code>//</code> for double-faced names).</p>
+        <p className="wiz-warning">No result has exactly the name "{searchName.trim()}". Searches only keep exact name matches, so check the name field or set a split character (e.g. <code>{'//'}</code> for double-faced names).</p>
       )}
     </div>
   );
