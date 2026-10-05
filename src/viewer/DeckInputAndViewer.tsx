@@ -12,8 +12,10 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CropIcon from '@mui/icons-material/Crop';
 import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
+import RecropDialog from './grid/crop/RecropDialog';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
@@ -103,6 +105,8 @@ const DeckInputAndViewer: React.FC = () => {
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [imageSelectDialogOpen, setImageSelectDialogOpen] = useState(false);
+  // Eigene Karte, deren Zuschnitt gerade nachträglich geändert wird
+  const [recropTarget, setRecropTarget] = useState<{ cardKey: string; card: CardResult } | null>(null);
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
@@ -216,9 +220,16 @@ const DeckInputAndViewer: React.FC = () => {
   };
 
   const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+    // Freie Schlüssel wählen, damit ein zweites Bild mit gleichem Namen keine Karte überschreibt
+    const usedKeys = new Set(Object.keys(cardResults));
+    const cropKeys: string[] = [];
+    for (let i = 0; cropKeys.length < crops.length; i++) {
+      const key = `${cardName}_crop${i}`;
+      if (!usedKeys.has(key)) cropKeys.push(key);
+    }
     crops.forEach((crop, cropIndex) => {
       // Eintrag in cardResults für jeden Zuschnitt
-      const cropKey = `${cardName}_crop${cropIndex}`;
+      const cropKey = cropKeys[cropIndex];
       const cropCard: CardResult = {
         name: cardName,
         imageUrl,
@@ -240,6 +251,23 @@ const DeckInputAndViewer: React.FC = () => {
         [cropKey]: [cropCard],
       }));
     });
+  };
+
+  /** Neuer Zuschnitt für eine eigene Karte: der erste ersetzt sie, weitere (Cut gallery) kommen als neue Karten dazu. */
+  const handleApplyRecrop = (cardKey: string, oldCard: CardResult, crops: CropSettings[]) => {
+    const [first, ...rest] = crops;
+    const newCard: CardResult = { ...oldCard, cropSettings: first, imageInfo: undefined };
+    setCardResults((prev) => {
+      const group = prev[cardKey];
+      if (!group) return prev;
+      return { ...prev, [cardKey]: { ...group, results: group.results.map((r) => (r === oldCard ? newCard : r)) } };
+    });
+    setSelectedCards((prev) => {
+      const slots = prev[cardKey];
+      if (!slots) return prev;
+      return { ...prev, [cardKey]: slots.map((c) => (c === oldCard ? newCard : c)) };
+    });
+    if (rest.length > 0) addCustomCrops(oldCard.name, oldCard.imageUrl, rest);
   };
 
   const handleSaveCustomCard: SaveCustomCardFn = async (cardName, imageUrl, file, crops) => {
@@ -1116,7 +1144,14 @@ const DeckInputAndViewer: React.FC = () => {
                         key={`${cardName}-${index}`}
                         className={`card-tile ${noMatchingCard ? 'no-matching-card' : ''} ${selectedCard?.apiName === 'custom' ? 'custom-card' : ''}`}
                       >
-                        <div className="card-image-container" onClick={() => selectedCard?.apiName !== 'custom' && handleCardClick(cardName, index)}>
+                        <div
+                          className="card-image-container"
+                          title={selectedCard?.apiName === 'custom' ? 'Crop image' : undefined}
+                          onClick={() => {
+                            if (selectedCard?.apiName === 'custom') setRecropTarget({ cardKey: cardName, card: selectedCard });
+                            else handleCardClick(cardName, index);
+                          }}
+                        >
                           {selectedCard ? (
                             <CardImage
                               cardInput={selectedCard}
@@ -1155,6 +1190,15 @@ const DeckInputAndViewer: React.FC = () => {
                             >
                               <Plus />
                             </button>
+                            {selectedCard?.apiName === 'custom' && (
+                              <button
+                                className="count-button recrop-card"
+                                title="Crop image"
+                                onClick={() => setRecropTarget({ cardKey: cardName, card: selectedCard as CardResult })}
+                              >
+                                <CropIcon fontSize="inherit" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1278,6 +1322,13 @@ const DeckInputAndViewer: React.FC = () => {
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
       />
 
+      <RecropDialog
+        imageUrl={recropTarget?.card.imageUrl ?? null}
+        cropSettings={recropTarget?.card.cropSettings}
+        cardAspect={settings.width / settings.height}
+        onClose={() => setRecropTarget(null)}
+        onApply={(crops) => recropTarget && handleApplyRecrop(recropTarget.cardKey, recropTarget.card, crops)}
+      />
       <RawDataDialog rawData={rawDataDialog} onClose={handleCloseRawDataDialog} />
 
       <ClosableDialog

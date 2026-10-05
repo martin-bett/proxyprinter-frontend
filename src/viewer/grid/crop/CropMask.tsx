@@ -30,6 +30,9 @@ interface CropMaskProps {
   /** Mit onConfirm zeigt die Maske die Buttons Back und Add. */
   onConfirm?: (crops: CropSettings[]) => void;
   onBack?: () => void;
+  /** Beschriftung der Buttons, Standard: Back und Add card / Add N cards. */
+  backLabel?: string;
+  confirmLabel?: (count: number) => string;
   busy?: boolean;
   error?: string;
 }
@@ -49,7 +52,7 @@ const hasArea = (crop?: CropSettings) => !!crop && (crop.width || 0) > 0 && (cro
 
 const CropMask: React.FC<CropMaskProps> = ({
   imageSrc, cardAspect, loadFallback, initialCrop, allowCut = true, layout = 'side', maxImageHeight,
-  onChange, onConfirm, onBack, busy, error,
+  onChange, onConfirm, onBack, backLabel = 'Back', confirmLabel, busy, error,
 }) => {
   const [src, setSrc] = useState(imageSrc);
   const [triedFallback, setTriedFallback] = useState(false);
@@ -362,13 +365,17 @@ const CropMask: React.FC<CropMaskProps> = ({
 
         {onConfirm && (
           <div className="crop-mask-actions">
-            {onBack && <Button variant="outlined" onClick={onBack} disabled={busy}>Back</Button>}
+            {onBack && <Button variant="outlined" onClick={onBack} disabled={busy}>{backLabel}</Button>}
             <Button
               variant="contained"
               onClick={() => onConfirm(crops)}
               disabled={busy || !natural || crops.length === 0}
             >
-              {busy ? <CircularProgress size={24} /> : crops.length > 1 ? `Add ${crops.length} cards` : 'Add card'}
+              {busy
+                ? <CircularProgress size={24} />
+                : confirmLabel
+                  ? confirmLabel(crops.length)
+                  : crops.length > 1 ? `Add ${crops.length} cards` : 'Add card'}
             </Button>
           </div>
         )}
