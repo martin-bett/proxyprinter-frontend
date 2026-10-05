@@ -10,6 +10,8 @@ export interface CardResult extends SearchResult {
 export interface CardGroup {
   count: number;
   results: CardResult[];
+  // Verbundene Karte (z.B. Token): Deckkarten, die sie brauchen
+  connectedFrom?: string[];
 }
 
 export type CardResultsMap = Record<string, CardGroup>;

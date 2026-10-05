@@ -155,3 +155,18 @@
   margin: 0;
 }
 
+
+/* Listen verbundener Karten unter den Feldern: eigene Tabelle mit Spaltenköpfen */
+.connected-cards-table {
+  margin: 6px 0 10px;
+}
+
+.connected-cards-table .config-table {
+  margin-bottom: 6px;
+}
+
+.connected-cards-table .config-table th:not([colspan]) {
+  background: var(--surface-muted);
+  font-size: 0.8rem;
+  text-align: left;
+}

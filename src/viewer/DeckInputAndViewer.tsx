@@ -57,11 +57,12 @@ import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
-import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult } from '../service/ApiFactory';
+import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
 import { splitCardFaces } from './cardFaces';
+import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
@@ -93,6 +94,8 @@ const defaultCropSettings: CropSettings = {
   isStretch: true
 };
 
+const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
+
 const DeckInputAndViewer: React.FC = () => {
   const [decklist, setDecklist] = useState('');
   const [cardResults, setCardResults] = useState<CardResultsMap>({});
@@ -120,6 +123,14 @@ const DeckInputAndViewer: React.FC = () => {
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
   const pdfPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [uniquePrints, setUniquePrints] = useState(true);
+  // Verbundene Karten (Tokens usw.) beim Analysieren mitsuchen, gemerkt pro Browser
+  const [searchConnected, setSearchConnected] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(SEARCH_CONNECTED_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -364,6 +375,27 @@ const DeckInputAndViewer: React.FC = () => {
       visibleApis.has(card.apiName) || card.apiName === 'custom');
   }, [visibleLanguages, visibleApis]);
 
+  // Lädt das Objekt, auf das eine verbundene Karte zeigt (z.B. das Treasure-Token bei Scryfall). Fehler kosten nur dieses Bild.
+  const fetchLinkedConnectedCard = async (apiKey: string | undefined, link: string | undefined, cardName: string): Promise<SearchResult[]> => {
+    if (!apiKey || !link || !apiFactory) return [];
+    const cacheName = `link:${link}`;
+    const startedAt = performance.now();
+    try {
+      if (await SearchCacheService.hasSearchResult(apiKey, cacheName)) {
+        const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
+        return cached?.results || [];
+      }
+      const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
+      const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
+      await SearchCacheService.setSearchResult(apiKey, cacheName, result);
+      addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+      return result.results;
+    } catch (error) {
+      addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+      return [];
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -373,37 +405,51 @@ const DeckInputAndViewer: React.FC = () => {
 
     const cardEntries: DeckEntry[] = parseDecklist(decklist);
 
-    const totalCards = cardEntries.reduce((sum, entry) => sum + entry.count, 0);
-    let completedCards = 0;
-
-    const apiResults: Record<string, Record<string, SearchResult[]>> = {};
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
     markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
+    const withConnected = searchConnected && enabledApiKeys.some(key => hasConnectedCards(apiConfigs[key]));
+
+    // Fortschritt über beide Runden; die zweite Runde (verbundene Karten) erhöht totalWork
+    let totalWork = cardEntries.reduce((sum, entry) => sum + entry.count, 0) * enabledApiKeys.length;
+    let completedWork = 0;
+    const updateProgress = (done: number) => {
+      completedWork += done;
+      setProgress(totalWork > 0 ? Math.min(100, Math.round((completedWork / totalWork) * 100)) : 100);
+    };
 
     // Group APIs
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
     const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
 
     // Function to process a single API or proxy group
-    const processApiGroup = async (apiKeys: string[]) => {
+    // dropConnected: Treffer der zweiten Runde (z.B. Treasure) listen bei Scryfall alle Karten, die sie erzeugen.
+    // Die brauchen wir nicht, also nicht mit in den Cache schreiben.
+    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected = false) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
         const limit = (apiConfigs[apiKey] as ApiConfig)?.concurrentLimit || Infinity;
         const api = apiFactory!.createApi(apiKey);
+        // Cache-Einträge von vor den verbundenen Karten kennen sie noch nicht und werden neu gesucht
+        const needsConnected = withConnected && hasConnectedCards(apiConfigs[apiKey]);
 
-        const tasks = cardEntries.map(entry => async () => {
+        const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
             const startedAt = performance.now();
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
-                const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
-                groupResults[apiKey][entry.name] = resultsArr;
+              }
+              const cached = result?.results || [];
+              if (result && !(needsConnected && cached.length > 0 && cached.every(card => card.connectedCards === undefined))) {
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: cached.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
+                groupResults[apiKey][entry.name] = cached;
               } else {
                 result = await api({ cardname: entry.name, set: entry.set });
+                if (dropConnected) {
+                  result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
+                }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 const resultsArr = result?.results || [];
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
@@ -414,8 +460,7 @@ const DeckInputAndViewer: React.FC = () => {
               groupResults[apiKey][entry.name] = [];
             }
           }
-          completedCards += entry.count;
-          setProgress(Math.round((completedCards / (totalCards * enabledApiKeys.length)) * 100));
+          updateProgress(entry.count);
         });
         await limitConcurrency(tasks, limit);
       }
@@ -423,34 +468,62 @@ const DeckInputAndViewer: React.FC = () => {
     };
 
     // Process all API groups concurrently
-    const apiGroupPromises = [
-      processApiGroup(proxyGroup),
-      ...nonProxyApis.map(apiKey => processApiGroup([apiKey]))
-    ];
+    const searchAllGroups = async (entries: DeckEntry[], dropConnected = false) => {
+      const groupResults = await Promise.all([
+        processApiGroup(proxyGroup, entries, dropConnected),
+        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected))
+      ]);
+      const merged: Record<string, Record<string, SearchResult[]>> = {};
+      groupResults.forEach(groupResult => Object.assign(merged, groupResult));
+      return merged;
+    };
 
-    const apiGroupResults = await Promise.all(apiGroupPromises);
+    const toCardResults = (apiResultsForCard: SearchResult[]): CardResult[] =>
+      apiResultsForCard.map((result): CardResult => ({
+        ...result,
+        cropSettings: { ...defaultCropSettings }
+      }));
 
-    // Combine results from all groups
-    apiGroupResults.forEach(groupResult => {
-      Object.assign(apiResults, groupResult);
-    });
+    const apiResults = await searchAllGroups(cardEntries);
 
     // Combine results
     const combinedResults: CardResultsMap = {};
     cardEntries.forEach(entry => {
       combinedResults[entry.name] = {
         count: entry.count,
-        results: enabledApiKeys.flatMap(apiKey => {
-          const apiResultsForCard = apiResults[apiKey][entry.name] || [];
-          return apiResultsForCard.map((result): CardResult => ({
-            ...result,
-            cropSettings: { ...defaultCropSettings }
-          }));
-        })
+        results: enabledApiKeys.flatMap(apiKey => toCardResults(apiResults[apiKey][entry.name] || []))
       };
     });
     // Andere Seiten mehrseitiger Karten werden eigene Einträge
-    const results = splitCardFaces(combinedResults);
+    const deckResults = splitCardFaces(combinedResults);
+    let results: CardResultsMap = deckResults;
+
+    // Verbundene Karten (Tokens, Emblems, ...): je Name ein Eintrag mit Anzahl 1, gesucht über alle aktiven APIs
+    if (withConnected) {
+      const candidates = collectConnectedCards(apiResults, [...Object.keys(deckResults), ...cardEntries.map(entry => entry.name)]);
+      if (candidates.length > 0) {
+        const connectedEntries: DeckEntry[] = candidates.map(candidate => ({ count: 1, name: candidate.name }));
+        totalWork += connectedEntries.length * (enabledApiKeys.length + 1);
+        const [connectedApiResults, linkedResults] = await Promise.all([
+          searchAllGroups(connectedEntries, true),
+          Promise.all(candidates.map(candidate => fetchLinkedConnectedCard(candidate.links[0]?.apiKey, candidate.links[0]?.link, candidate.name)
+            .finally(() => updateProgress(1))))
+        ]);
+        const connectedResults: CardResultsMap = {};
+        candidates.forEach((candidate, index) => {
+          connectedResults[candidate.name] = {
+            count: 1,
+            connectedFrom: candidate.parents,
+            // Das exakt verlinkte Objekt zuerst, danach alle Treffer der Namenssuche
+            results: dedupeResults([
+              ...toCardResults(linkedResults[index]),
+              ...enabledApiKeys.flatMap(apiKey => toCardResults(connectedApiResults[apiKey][candidate.name] || []))
+            ])
+          };
+        });
+        results = { ...deckResults, ...splitCardFaces(connectedResults, Object.keys(deckResults)) };
+      }
+    }
 
     const options = collectFilterOptions(results);
     const keptLanguages = new Set(Array.from(visibleLanguages).filter(lang => options.languages.has(lang)));
@@ -1207,6 +1280,27 @@ const DeckInputAndViewer: React.FC = () => {
                 cols={50}
               />
               <br />
+              {(() => {
+                const connectedApis = Object.keys(enabledApis).filter(key => enabledApis[key] && hasConnectedCards(apiConfigs[key]));
+                return (
+                  <div
+                    className="connected-cards-toggle"
+                    title={connectedApis.length > 0 ?
+                      `Add tokens, emblems etc. as separate cards. Provided by: ${connectedApis.join(', ')}` :
+                      'No active API provides tokens or extras'}
+                  >
+                    {renderCheckbox('searchConnected', 'Tokens & Extras', searchConnected && connectedApis.length > 0, (event) => {
+                      if (connectedApis.length === 0) return;
+                      setSearchConnected(event.target.checked);
+                      try {
+                        localStorage.setItem(SEARCH_CONNECTED_KEY, String(event.target.checked));
+                      } catch {
+                        // Ohne localStorage gilt die Wahl nur bis zum Neuladen
+                      }
+                    }, false, connectedApis.length === 0 ? 'is-disabled' : undefined)}
+                  </div>
+                );
+              })()}
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
@@ -1301,7 +1395,8 @@ const DeckInputAndViewer: React.FC = () => {
                       >
                         <div
                           className="card-image-container"
-                          title={selectedCard?.apiName === 'custom' ? 'Crop image' : undefined}
+                          title={selectedCard?.apiName === 'custom' ? 'Crop image' :
+                            cardData.connectedFrom?.length ? `Needed by: ${cardData.connectedFrom.join(', ')}` : undefined}
                           onClick={() => {
                             if (selectedCard?.apiName === 'custom') setRecropTarget({ cardKey: cardName, card: selectedCard });
                             else handleCardClick(cardName, index);

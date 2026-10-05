@@ -44,6 +44,8 @@ export interface SnapshotEntry {
   selected: (SnapshotSelection | null)[];
   /** Plätze, deren Auswahl manuell getroffen wurde (gehen vor der Filter-Priorität). Fehlt in älteren Snapshots. */
   manual?: number[];
+  /** Verbundene Karte (z.B. Token): Deckkarten, die sie brauchen. Fehlt bei normalen Einträgen. */
+  connectedFrom?: string[];
 }
 
 export interface GeneratedPdf {
@@ -158,6 +160,7 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
       results,
       selected,
       manual,
+      ...(group.connectedFrom?.length ? { connectedFrom: [...group.connectedFrom] } : {}),
     };
   });
 
@@ -290,7 +293,7 @@ export function restoreSnapshot(snapshot: Snapshot, missingUploadIds: string[] =
       return;
     }
     const results: CardResult[] = entry.results.map(result => ({ ...result, cropSettings: { ...result.cropSettings } }));
-    cardResults[entry.key] = { count: entry.count, results };
+    cardResults[entry.key] = { count: entry.count, results, ...(entry.connectedFrom?.length ? { connectedFrom: [...entry.connectedFrom] } : {}) };
     selectedCards[entry.key] = entry.selected.map(selection => {
       if (!selection) return null;
       let card: CardResult | undefined = results[selection.i];
