@@ -17,12 +17,14 @@ import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
 import RecropDialog from './grid/crop/RecropDialog';
 import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
+import LinkListDialog, { nameFromLink } from './grid/LinkListDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
 import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
 import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import LinkIcon from '@mui/icons-material/Link';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PaletteIcon from '@mui/icons-material/Palette';
 import PayPalDonateButton from './info/PayPalDonateButton';
@@ -111,6 +113,7 @@ const DeckInputAndViewer: React.FC = () => {
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
+  const [linkListDialogOpen, setLinkListDialogOpen] = useState(false);
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
   const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
@@ -197,6 +200,12 @@ const DeckInputAndViewer: React.FC = () => {
       results.forEach(r => handleSaveCustomCard(r.name, r.imageUrl, null));
     }
     handleCloseGalleryDialog();
+  };
+
+  // Eingefügte Bildlinks wie Galerie-Treffer übernehmen: ganzes Bild, ohne Zuschnitt
+  const handleLinkList = (links: string[]) => {
+    links.forEach(link => handleSaveCustomCard(nameFromLink(link), link, null));
+    setLinkListDialogOpen(false);
   };
 
   const handleCloseApiConfigDialog = () => {
@@ -1103,6 +1112,7 @@ const DeckInputAndViewer: React.FC = () => {
             <div className="add-single-buttons">
               <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
               <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
+              <ActionButton icon={<LinkIcon />} onClick={() => setLinkListDialogOpen(true)}>Add Links</ActionButton>
             </div>
           </CollapsibleSection>
 
@@ -1343,6 +1353,12 @@ const DeckInputAndViewer: React.FC = () => {
           cardAspect={settings.width / settings.height}
           onMaskOpenChange={setCustomCardMaskOpen}
         />}
+      />
+      <ClosableDialog
+        open={linkListDialogOpen}
+        onClose={() => setLinkListDialogOpen(false)}
+        maxWidth='sm'
+        children={<LinkListDialog onSubmit={handleLinkList} />}
       />
       <ClosableDialog
         open={galleryDialogOpen}
