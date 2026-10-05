@@ -253,6 +253,16 @@ export default class ApiFactory {
 
   
 
+  /**
+   * Wertet eine schon geladene Antwort aus, ohne Netzwerk (API-Wizard-Vorschau).
+   * all = alle gelesenen Treffer, matching = die, die eine Suche nach cardname behalten würde.
+   */
+  async previewResponse(config: Config, text: string, cardname: string): Promise<{ all: SearchResult[]; matching: SearchResult[] }> {
+    const { dataList } = await this.parseResponse(config, text, config.baseUrl, 1);
+    const all = await this.processDataList(dataList, config);
+    return { all, matching: this.filterAndDeduplicateResults(all, { cardname }, config) };
+  }
+
   private async makeRequest(
     config: Config, 
     params: ApiParams, 
@@ -419,7 +429,10 @@ export default class ApiFactory {
     // Unterscheidung nur bei der Initialisierung
     if (config.dataFormat === 'json') {
         root = JSON.parse(text);
-        dataList = this.getValue(root, config, config.dataListField) || [];
+        // Ohne dataListField: Antwort ist selbst die Liste (z.B. [{...}, {...}])
+        dataList = config.dataListField
+            ? this.getValue(root, config, config.dataListField) || []
+            : (Array.isArray(root) ? root : []);
     } else if (config.dataFormat === 'html') {
         root = parse(text);
         dataList = Array.from(root.querySelectorAll(config.dataListField));
@@ -469,7 +482,7 @@ export default class ApiFactory {
         name: this.getValue(item, config, config.nameField),
         set: isApiConfig(config) && config.setField ? this.getValue(item, config, config.setField) : undefined,
         setNumber: isApiConfig(config) &&  config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
-        imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField)),
+        imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField), config.baseUrl),
         languageCode: this.baseLanguage(item, config)
       } as SearchResult;
   }
@@ -480,13 +493,22 @@ export default class ApiFactory {
     return config.defaultLanguage ? this.normalizeLanguageName(config.defaultLanguage) : undefined;
   }
 
-  private extractLastLink(srcset: string): string {
+  private extractLastLink(srcset: string, baseUrl?: string): string {
     if(!srcset) return '';
     // Match the last URL in the string (starting with http(s):// until the first whitespace)
     const match = srcset.match(/https?:\/\/[^\s]+/g);
     
     // Return the last match if found
-    return match ? match[match.length - 1] : '';
+    if (match) return match[match.length - 1];
+    // Relative Bildpfade (z.B. src="/img/card.png" in HTML-Seiten) gegen die API-URL auflösen
+    if (/^[a-z][a-z0-9+.-]*:/i.test(String(srcset).trim())) return '';
+    const last = String(srcset).trim().split(/\s*,\s*/).pop()?.split(/\s+/)[0];
+    if (!last || !baseUrl || !/^https?:/i.test(baseUrl) || /^[a-z][a-z0-9+.-]*:/i.test(last)) return '';
+    try {
+      return new URL(last, baseUrl).toString();
+    } catch {
+      return '';
+    }
   }
 
   private async processFollowLinks(
