@@ -22,6 +22,7 @@ import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import DeckImportDialog from './deckfinder/DeckImportDialog';
 import { DeckFinderConfig, LoadedDeck, fetchDeckFinderConfigs, getFingerprint, loadDeck, matchDeckLink } from '../service/deckfinder/deckFinder';
 import { parseDecklist } from '../service/deck/deckParser';
+import { loadSetCatalog } from '../service/deck/setCatalog';
 import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -403,7 +404,21 @@ const DeckInputAndViewer: React.FC = () => {
     setLog([]);
     setProgress(0);
 
-    const cardEntries: DeckEntry[] = parseDecklist(decklist);
+    // Gleiche Karte aus mehreren Sets wird eine Gruppe; der Set-Wunsch gilt je Platz
+    const cardEntries: DeckEntry[] = [];
+    const wantedByName: Record<string, CardGroup['wanted']> = {};
+    parseDecklist(decklist).forEach(entry => {
+      const existing = cardEntries.find(other => other.name === entry.name);
+      if (existing) existing.count += entry.count;
+      else cardEntries.push({ count: entry.count, name: entry.name });
+      const wanted = entry.set ? { set: entry.set, number: entry.number } : null;
+      wantedByName[entry.name] = [...(wantedByName[entry.name] || []), ...Array(entry.count).fill(wanted)];
+    });
+    const hasWanted = Object.values(wantedByName).some(slots => slots?.some(Boolean));
+    const mixedPrints = Object.values(wantedByName).some(slots =>
+      new Set(slots?.map(slot => slot ? `${slot.set}|${slot.number ?? ''}`.toLowerCase() : '')).size > 1);
+    if (mixedPrints) setUniquePrints(true);
+    const setCatalogReady = hasWanted ? loadSetCatalog() : Promise.resolve();
 
     const enabledApiKeys = Object.keys(enabledApis).filter(key => enabledApis[key]);
     markConfigsUsed(enabledApiKeys.map(key => apiConfigs[key]));
@@ -446,7 +461,7 @@ const DeckInputAndViewer: React.FC = () => {
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: cached.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
                 groupResults[apiKey][entry.name] = cached;
               } else {
-                result = await api({ cardname: entry.name, set: entry.set });
+                result = await api({ cardname: entry.name });
                 if (dropConnected) {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
@@ -489,11 +504,14 @@ const DeckInputAndViewer: React.FC = () => {
     // Combine results
     const combinedResults: CardResultsMap = {};
     cardEntries.forEach(entry => {
+      const wanted = wantedByName[entry.name];
       combinedResults[entry.name] = {
         count: entry.count,
+        ...(wanted?.some(Boolean) ? { wanted } : {}),
         results: enabledApiKeys.flatMap(apiKey => toCardResults(apiResults[apiKey][entry.name] || []))
       };
     });
+    await setCatalogReady;
     // Andere Seiten mehrseitiger Karten werden eigene Einträge
     const deckResults = splitCardFaces(combinedResults);
     let results: CardResultsMap = deckResults;
@@ -591,9 +609,11 @@ const DeckInputAndViewer: React.FC = () => {
     setCardResults(prevResults => {
       const newResults = { ...prevResults };
       if (uniquePrints && newResults[cardName].count > 1) {
+        const wanted = newResults[cardName].wanted?.filter((_, i) => i !== index);
         newResults[cardName] = {
           ...newResults[cardName],
-          count: newResults[cardName].count - 1
+          count: newResults[cardName].count - 1,
+          ...(wanted ? { wanted } : {})
         };
       } else {
         delete newResults[cardName];
@@ -763,6 +783,7 @@ const DeckInputAndViewer: React.FC = () => {
     setVisibleApis(restored.visibleApis);
     setUniquePrints(restored.uniquePrints);
     setCardResults(restored.cardResults);
+    if (Object.values(restored.cardResults).some(group => group.wanted)) loadSetCatalog();
     setSelectedCards(restored.selectedCards);
     setManualPicks(restored.manualPicks);
     setFreshPicks(new Set());

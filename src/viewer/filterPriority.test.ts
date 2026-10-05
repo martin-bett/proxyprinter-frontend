@@ -1,4 +1,5 @@
 import { CardResult, CardResultsMap } from '../api/types/types';
+import { setCatalogEntries } from '../service/deck/setCatalog';
 import { applyOrder, computeSelection, mergeOrder, priorityRank, sortByPriority } from './filterPriority';
 
 const card = (imageUrl: string, languageCode: string, apiName = 'scryfall'): CardResult =>
@@ -57,6 +58,20 @@ describe('filterPriority', () => {
   it('a fresh pick stays even if the filter hides it', () => {
     expect(select({}, ['en'], ['en'], zh, true).Bolt[0]).toBe(zh);
     expect(select({}, ['en'], ['en'], zh, false).Bolt[0]).toBe(en);
+  });
+
+  it('pre-selects the wanted print per slot, ahead of the language order', () => {
+    const m10 = { ...card('m10.png', 'en'), set: 'Magic 2010', setNumber: '146' } as CardResult;
+    const m11 = { ...card('m11.png', 'de'), set: 'm11', setNumber: '149' } as CardResult;
+    const twoSets = {
+      Bolt: { count: 3, results: [zh, m11, m10], wanted: [{ set: 'M10', number: '146' }, null, { set: 'M11' }] },
+    } as unknown as CardResultsMap;
+    setCatalogEntries([{ code: 'm10', name: 'Magic 2010' }, { code: 'm11', name: 'Magic 2011' }]);
+    const selection = computeSelection({}, {
+      cardResults: twoSets, manualPicks: {}, isVisible: () => true,
+      languageOrder: ['zh', 'de', 'en'], apiOrder: [], languageOf,
+    });
+    expect(selection.Bolt).toEqual([m10, zh, m11]);
   });
 
   it('returns the same object when nothing changes', () => {

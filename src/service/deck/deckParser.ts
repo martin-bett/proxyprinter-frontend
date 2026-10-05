@@ -1,5 +1,5 @@
 // Decklist-Zeilen lesen, Stufe 0 aus concepts/set-suche.md:
-// Anzahl optional (auch "4x"), Arena-Form "Name (SET) 123", Marker wie *F* oder [Ramp]
+// Anzahl optional (auch "4x"), Arena-Form "Name (SET) 123", Pokémon-Form "Name SET 123", Marker wie *F* oder [Ramp]
 // abschneiden, Kopfzeilen und Kommentare überspringen.
 import { DeckEntry } from '../../api/types/types';
 
@@ -59,6 +59,12 @@ export function parseDeckLine(rawLine: string): DeckEntry | null {
       set: setMatch[2].toUpperCase(),
       ...(number ? { number } : {}),
     };
+  }
+
+  // Pokémon TCG Live / Limitless: "Pikachu ex SVI 57", Set ohne Klammern in Großbuchstaben
+  const bareMatch = line.match(/^(.+?)\s+([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)?)\s+([A-Z]{0,4}\d+[a-z]?)$/);
+  if (bareMatch && bareMatch[2].length >= 2 && bareMatch[2].length <= 6) {
+    return { count, name: bareMatch[1].trim(), set: bareMatch[2], number: bareMatch[3] };
   }
 
   const name = line.trim();

@@ -4,6 +4,7 @@
 // passt sie wieder, kommt sie zurück.
 
 import { CardResult, CardResultsMap, SelectedCardsMap } from '../api/types/types';
+import { printMatchScore, WantedPrint } from '../service/deck/setCatalog';
 
 /** Manuell gewählte Bilder je Karte und Platz, parallel zu SelectedCardsMap. */
 export type ManualPicksMap = Record<string, (CardResult | null)[]>;
@@ -85,6 +86,13 @@ export const pickForSlot = (
   return current?.imageUrl === best.imageUrl ? current : best;
 };
 
+/** Der Druck aus der Decklist (Set und Nummer, dann nur Set) kommt vor die Filter-Priorität. */
+const preferWanted = (prioritized: CardResult[], wanted: WantedPrint): CardResult[] =>
+  prioritized
+    .map((card, index) => ({ card, index, score: printMatchScore(card, wanted) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(entry => entry.card);
+
 export interface PriorityInput {
   cardResults: CardResultsMap;
   manualPicks: ManualPicksMap;
@@ -108,11 +116,13 @@ export const computeSelection = (prev: SelectedCardsMap, input: PriorityInput): 
   Object.entries(cardResults).forEach(([cardName, cardData]) => {
     const prioritized = sortByPriority(cardData.results.filter(isVisible), languageOrder, apiOrder, languageOf);
     const slots = Array.from({ length: cardData.count }).map((_, index) => {
+      const wanted = cardData.wanted?.[index];
+      const forSlot = wanted ? preferWanted(prioritized, wanted) : prioritized;
       const manual = manualPicks[cardName]?.[index];
       const manualFits = !!manual && (isFreshPick?.(cardName, index)
         ? cardData.results.some(card => card.imageUrl === manual.imageUrl)
         : prioritized.some(card => card.imageUrl === manual.imageUrl));
-      return pickForSlot(prioritized, prev[cardName]?.[index], manual, manualFits);
+      return pickForSlot(forSlot, prev[cardName]?.[index], manual, manualFits);
     });
     if (slots.every(card => card === null)) {
       if (cardName in prev) {

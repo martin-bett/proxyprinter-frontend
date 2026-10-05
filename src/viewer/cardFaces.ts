@@ -32,7 +32,7 @@ export function splitCardFaces(results: CardResultsMap, reservedNames: string[] 
         const existing = split[faceName];
         split[faceName] = existing ?
           { ...existing, results: [...existing.results, result] } :
-          { count: group.count, results: [result] };
+          { count: group.count, results: [result], ...(group.wanted ? { wanted: group.wanted } : {}) };
       });
   });
 
