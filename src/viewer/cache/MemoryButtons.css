@@ -68,3 +68,7 @@
 .reset-deck-actions .action-button {
   margin: 0;
 }
+
+.reset-deck-actions .is-danger .input-tile-lead {
+  color: var(--danger);
+}

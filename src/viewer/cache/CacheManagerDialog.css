@@ -69,6 +69,10 @@
   margin-left: auto;
 }
 
+.cache-manager-clear .input-tile-lead {
+  color: var(--danger);
+}
+
 .cache-manager-hint {
   margin: 10px 0 8px;
   font-size: 0.85rem;
@@ -112,7 +116,7 @@
   background: var(--surface-muted);
 }
 
-.cache-cell {
+.cache-table .cache-cell {
   text-align: center;
   background: var(--surface);
 }
