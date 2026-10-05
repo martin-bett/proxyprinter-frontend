@@ -12,10 +12,12 @@ interface ChoiceButtonProps {
   /** Langer Klick (2 s), bei Filtern: nur diesen Eintrag auswählen. */
   onLongPress?: () => void;
   longPressHint?: string;
+  /** Rechts im Feld, z. B. der Griff zum Umsortieren */
+  trailing?: React.ReactNode;
 }
 
 // Auswahlfeld im Button-Stil: volle Breite, Haken links, durch eine Kante vom Titel getrennt
-const ChoiceButton: React.FC<ChoiceButtonProps> = ({ id, label, checked, onChange, indeterminate = false, className, onLongPress, longPressHint }) => {
+const ChoiceButton: React.FC<ChoiceButtonProps> = ({ id, label, checked, onChange, indeterminate = false, className, onLongPress, longPressHint, trailing }) => {
   const { pressing, handlers } = useLongPress(onLongPress);
   const state = indeterminate ? 'is-indeterminate' : checked ? 'is-checked' : '';
   const longPressClass = onLongPress ? 'has-long-press' : '';
@@ -31,6 +33,7 @@ const ChoiceButton: React.FC<ChoiceButtonProps> = ({ id, label, checked, onChang
         <span className="choice-mark" />
       </span>
       <span className="input-tile-title">{label}</span>
+      {trailing}
     </label>
   );
 };

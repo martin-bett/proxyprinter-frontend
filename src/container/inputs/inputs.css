@@ -350,3 +350,51 @@
 .collapsible-body {
   padding-top: 4px;
 }
+
+/* Griff zum Umsortieren (Filter-Priorität), rechts im Feld, durch eine Kante getrennt */
+.sort-handle {
+  flex: 0 0 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.sort-handle:hover,
+.sort-handle:focus-visible {
+  color: var(--accent);
+  background: var(--surface-muted);
+  outline: none;
+}
+
+.sort-handle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.sortable-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sortable-list.is-sorting,
+.sortable-list.is-sorting .sort-handle {
+  cursor: grabbing;
+}
+
+.sortable-item.is-dragging .input-tile {
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Rangnummer der angehakten Einträge: 1 = bevorzugt */
+.priority-rank {
+  min-width: 1.1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  justify-content: center;
+}

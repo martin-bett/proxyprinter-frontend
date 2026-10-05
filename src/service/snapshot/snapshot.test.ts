@@ -53,6 +53,25 @@ describe('snapshot', () => {
     expect(second?.cropSettings).toEqual({ offSetX: 5, offSetY: 6, width: 100, height: 140, isStretch: false });
   });
 
+  it('keeps which selections were picked by hand', () => {
+    const state = workState();
+    state.manualPicks = { 'Lightning Bolt': [null, state.selectedCards['Lightning Bolt'][1]] };
+    const snapshot = createSnapshot(state, 'manual');
+    expect(snapshot.search.entries[0].manual).toEqual([1]);
+    const restored = restoreSnapshot(migrateSnapshot(JSON.parse(JSON.stringify(snapshot)))).state;
+    const [first, second] = restored.manualPicks['Lightning Bolt'];
+    expect(first).toBeNull();
+    expect(second).toBe(restored.selectedCards['Lightning Bolt'][1]);
+    expect(restored.manualPicks['Token_crop0']).toBeUndefined();
+  });
+
+  it('treats every selection of an older snapshot as picked by hand', () => {
+    const snapshot = createSnapshot(workState(), 'manual');
+    snapshot.search.entries.forEach(entry => { delete entry.manual; });
+    const restored = restoreSnapshot(snapshot).state;
+    expect(restored.manualPicks['Lightning Bolt']).toEqual(restored.selectedCards['Lightning Bolt']);
+  });
+
   it('labels with card count and first card', () => {
     const snapshot = createSnapshot(workState(), 'manual');
     expect(snapshot.label).toEqual({ cardCount: 3, firstCard: 'Lightning Bolt' });
