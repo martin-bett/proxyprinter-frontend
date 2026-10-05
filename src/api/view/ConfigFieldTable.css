@@ -1,0 +1,164 @@
+/* Config-Felder als Tabelle in zwei einklappbaren Bereichen (SET / UNSET).
+   Farben nur über Theme-Variablen, damit alle Mana-Themes passen. */
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.config-count {
+  min-width: 1.6rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.4rem;
+  text-align: center;
+}
+
+.collapsible-section.is-open .config-count {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+.config-field-table .collapsible-body {
+  padding-top: 0;
+  margin-bottom: 6px;
+}
+
+.config-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.config-table th,
+.config-table td {
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.config-table tr:last-child th,
+.config-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Feldname: kräftig, linke Spalte leicht abgesetzt */
+.config-table th[scope='row'] {
+  width: 38%;
+  background: var(--surface-muted);
+  border-right: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.config-table tr:hover td,
+.config-table tr:hover th[scope='row'] {
+  background: var(--accent-soft);
+}
+
+/* Gruppenzeile (Base Info, Request, Locator ...) in Akzentfarbe */
+.config-table .config-table-group th {
+  padding: 0.3rem 0.75rem;
+  background: var(--surface-raised);
+  border-left: 4px solid var(--accent);
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.config-table tr.config-table-group:hover th {
+  background: var(--surface-raised);
+}
+
+.config-table input[type='text'],
+.config-table input[type='number'],
+.config-table select,
+.config-table textarea {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+}
+
+.config-table input:focus,
+.config-table select:focus,
+.config-table textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.config-table textarea {
+  min-height: 8em;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+.config-table input[type='checkbox'] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+
+/* Nur-Lesen-Ansicht: Wert als Text */
+.config-value {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.config-value.is-json {
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.config-table-empty {
+  padding: 0.5rem 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Aktionen unter der Tabelle (Save, Publish, Delete, Copy) */
+.config-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.config-actions .action-button {
+  margin: 0;
+}
+
+.config-actions .action-button.is-danger:hover {
+  border-color: var(--danger);
+}
+
+.config-actions .action-button.is-danger:hover .input-tile-lead {
+  color: var(--danger);
+}
