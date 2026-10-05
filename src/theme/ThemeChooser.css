@@ -65,3 +65,7 @@
 .ms.ms-cost.ms-b.mana-style-vivid { background-color: #2b2530; color: #d8c8e8; }
 .ms.ms-cost.ms-r.mana-style-vivid { background-color: #e0441f; color: #fff; }
 .ms.ms-cost.ms-g.mana-style-vivid { background-color: #23944a; color: #fff; }
+/* Auf dunklen Themes heller Saum, damit Sumpf und Phyrexia nicht im Hintergrund verschwinden */
+html[data-theme="dark"] .ms.ms-cost.theme-chooser-mana.mana-style-vivid {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 2px 4px var(--shadow);
+}
