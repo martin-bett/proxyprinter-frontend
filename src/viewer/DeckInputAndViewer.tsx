@@ -1158,7 +1158,7 @@ const DeckInputAndViewer: React.FC = () => {
                                 title="Crop image"
                                 onClick={() => setRecropTarget({ cardKey: cardName, card: selectedCard as CardResult })}
                               >
-                                <CropIcon />
+                                <CropIcon fontSize="inherit" />
                               </button>
                             )}
                           </div>
