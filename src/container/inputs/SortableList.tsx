@@ -97,4 +97,5 @@ export default SortableList;
 
 /** Kleine Rangnummer im Filtereintrag: 1 = bevorzugt, die weiteren sind Fallback. */
 export const PriorityRank: React.FC<{ rank?: number }> = ({ rank }) =>
-  rank ? <span className="priority-rank" title={rank === 1 ? 'Preferred' : `Fallback ${rank - 1}`}>{rank}</span> : null;
+  // Zahl per CSS, damit sie nicht zum Text des Eintrags gehört
+  rank ? <span className="priority-rank" data-rank={rank} title={rank === 1 ? 'Preferred' : `Fallback ${rank - 1}`} /> : null;

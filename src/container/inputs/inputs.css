@@ -396,6 +396,10 @@
   position: relative;
 }
 
+.priority-rank::before {
+  content: attr(data-rank);
+}
+
 .priority-rank {
   position: absolute;
   right: 2px;
