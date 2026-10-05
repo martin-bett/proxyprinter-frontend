@@ -200,6 +200,8 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
 
   return {
     sectionProps,
+    /** Manueller Snapshot, z.B. vor dem Zurücksetzen des Decks */
+    save,
     saveGenerate,
     /** Nach einem fertigen PDF die Ablaufdaten neu holen */
     refreshPdfInfos: useCallback(() => { refreshPdfInfos(snapshotsRef.current); }, [refreshPdfInfos]),

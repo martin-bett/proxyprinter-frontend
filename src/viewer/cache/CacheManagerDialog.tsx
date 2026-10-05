@@ -1,43 +1,17 @@
 import React, { useState } from "react";
 import { imageLoaderService, CacheCardInput } from "../../service/cache/ImageLoaderService";
 import { useImageLoaderCache } from "../../service/cache/hooks/useImageLoaderCache";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import SaveIcon from "@mui/icons-material/Save";
+import ActionButton from "../../container/inputs/ActionButton";
 import { CacheProgressBar } from "./CacheProgressBar";
+import "./CacheManagerDialog.css";
 
 interface CacheEntryLike {
   sizeBytes: number;
   cardInput?: CacheCardInput;
 }
-
-// Wiederverwendbares Papierkorb-Icon
-function TrashIcon({ style = {} }: { style?: React.CSSProperties }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ ...style }}>
-      <path d="M3 6h18M9 6v12m6-12v12M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6" style={{ stroke: "var(--text-muted)" }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-// CSS für das Overlay
-const cellStyle: React.CSSProperties = {
-  border: "1px solid var(--border)",
-  padding: 4,
-  position: "relative",
-  textAlign: "center",
-  background: "var(--surface-muted)",
-  cursor: "pointer"
-};
-const trashOverlayStyle: React.CSSProperties = {
-  position: "absolute",
-  top: 2,
-  right: 2,
-  opacity: 0.7,
-  display: "none",
-  pointerEvents: "none"
-};
-const cellHoverStyle: React.CSSProperties = {
-  ...cellStyle,
-  background: "var(--danger-soft)"
-};
 
 interface DeletableCellProps {
   value?: number;
@@ -49,34 +23,19 @@ interface DeletableCellProps {
   onMouseLeave: () => void;
 }
 
+// Zelle, die beim Klick ihren Cache löscht. Beim Überfahren färbt sie sich (mit ihrer Partnerzelle) rot;
+// kein zusätzliches Icon, damit sich die Spaltenbreiten nicht verschieben.
 export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMouseEnter, onMouseLeave }: DeletableCellProps) {
+  const className = showTrash ? `cache-cell is-deletable${hover ? " is-hover" : ""}` : "cache-cell is-empty";
   return (
     <td
-      style={showTrash ? (hover ? cellHoverStyle : cellStyle) : { ...cellStyle, cursor: "default", background: "var(--surface)" }}
+      className={className}
       onClick={showTrash ? onDelete : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      title={showTrash ? "Cache löschen" : ""}
+      title={showTrash ? "Klicken zum Löschen" : ""}
     >
-      {mbValue !== undefined ? (
-        <>
-          {mbValue}
-          {showTrash && hover && (
-            <span style={{ marginLeft: 6, verticalAlign: "middle" }}>
-              <TrashIcon />
-            </span>
-          )}
-        </>
-      ) : (
-        <>
-          {value}
-          {showTrash && hover && (
-            <span style={{ marginLeft: 6, verticalAlign: "middle" }}>
-              <TrashIcon />
-            </span>
-          )}
-        </>
-      )}
+      {mbValue !== undefined ? mbValue : value}
     </td>
   );
 }
@@ -84,14 +43,39 @@ export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMo
 // Zeilen-Komponente für API-Gesamtsummen
 function ApiSumRow({ allApis, byApi, toMB }: { allApis: string[]; byApi: Record<string, CacheEntryLike[]>; toMB: (bytes: number) => string }) {
   return (
-    <tr>
-      <td style={{ border: "1px solid var(--border)", padding: 4, fontWeight: "bold", background: "var(--surface-muted)" }}>API gesamt</td>
+    <tr className="cache-sum-row">
+      <th className="cache-row-label">API gesamt</th>
       {allApis.map(api => (
         <DeletableApiSumCells key={api} api={api} entries={byApi[api] || []} toMB={toMB} />
       ))}
-      <td style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}></td>
-      <td style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}></td>
+      <DeletableTotalCells entries={allApis.flatMap(api => byApi[api] || [])} toMB={toMB} />
     </tr>
+  );
+}
+
+// Ganz rechts in der Summenzeile: der komplette Cache
+function DeletableTotalCells({ entries, toMB }: { entries: CacheEntryLike[]; toMB: (bytes: number) => string }) {
+  const [hover, setHover] = useState(false);
+  const size = entries.reduce((sum, e) => sum + (e.sizeBytes || 0), 0);
+  return (
+    <>
+      <DeletableCell
+        value={entries.length}
+        onDelete={() => imageLoaderService.clearCache()}
+        showTrash={entries.length > 0}
+        hover={hover}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      />
+      <DeletableCell
+        mbValue={toMB(size)}
+        onDelete={() => imageLoaderService.clearCache()}
+        showTrash={entries.length > 0}
+        hover={hover}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      />
+    </>
   );
 }
 
@@ -125,7 +109,7 @@ function CardRow({ cardName, allApis, byCard, toMB }: { cardName: string; allApi
   const entries = byCard[cardName] || [];
   return (
     <tr>
-      <td style={{ border: "1px solid var(--border)", padding: 4, fontWeight: "bold" }}>{cardName}</td>
+      <th className="cache-row-label">{cardName}</th>
       {allApis.map(api => (
         <DeletableCardCells
           key={api}
@@ -216,49 +200,70 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
 
   return (
     <div className="cache-manager-dialog">
-      <h2>Cache Manager</h2>
-      <div>Gesamtspeicher: {toMB(totalSize)} MB</div>
-      <CacheProgressBar />
-      <div>
-        <label>
-          Cache-Limit (MB):{" "}
-          <input
-            type="number"
-            min={1}
-            value={limitMB}
-            onChange={handleLimitChange}
-          />
-        </label>
-        <button onClick={handleLimitSubmit}>Limit setzen</button>
+      <h2>Bild-Cache</h2>
+      <div className="cache-manager-head">
+        <div className="cache-manager-usage">
+          <span>{toMB(totalSize)} MB von {Math.round(imageLoaderService.cacheLimit / (1024 * 1024))} MB belegt</span>
+          <CacheProgressBar width={240} />
+        </div>
+        <form
+          className="cache-manager-limit"
+          onSubmit={e => {
+            e.preventDefault();
+            handleLimitSubmit();
+          }}
+        >
+          <label>
+            Limit (MB)
+            <input type="number" min={1} value={limitMB} onChange={handleLimitChange} />
+          </label>
+          <ActionButton icon={<SaveIcon />} type="submit">Limit setzen</ActionButton>
+        </form>
+        <ActionButton
+          icon={<DeleteSweepIcon />}
+          className="is-danger cache-manager-clear"
+          onClick={() => imageLoaderService.clearCache()}
+          disabled={allCards.length === 0}
+        >
+          Cache leeren
+        </ActionButton>
       </div>
-      <table style={{ borderCollapse: "collapse", width: "100%", marginTop: 16 }}>
+      <p className="cache-manager-hint">Klick auf eine Zelle löscht die Bilder dahinter, die rote Markierung zeigt was gelöscht wird.</p>
+      <table className="cache-table">
         <thead>
           <tr>
-            <th rowSpan={2} style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}></th>
+            <th rowSpan={2}></th>
             {allApis.map(api => (
-              <th key={api} colSpan={2} style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)", textAlign: "center" }}>{api}</th>
+              <th key={api} colSpan={2}>{api}</th>
             ))}
-            <th colSpan={2} style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)", textAlign: "center" }}>Alle der Karte</th>
+            <th colSpan={2}>Alle der Karte</th>
           </tr>
           <tr>
             {allApis.map(api => (
               <React.Fragment key={api + "_sub"}>
-                <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>Anzahl</th>
-                <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>MB</th>
+                <th>Anzahl</th>
+                <th>MB</th>
               </React.Fragment>
             ))}
-            <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>Anzahl</th>
-            <th style={{ border: "1px solid var(--border)", padding: 4, background: "var(--surface-muted)" }}>MB</th>
+            <th>Anzahl</th>
+            <th>MB</th>
           </tr>
         </thead>
         <tbody>
           <ApiSumRow allApis={allApis} byApi={byApi} toMB={toMB} />
+          {allCards.length === 0 && (
+            <tr>
+              <td colSpan={allApis.length * 2 + 3} className="cache-cell is-empty">Der Cache ist leer</td>
+            </tr>
+          )}
           {allCards.map(cardName => (
             <CardRow key={cardName} cardName={cardName} allApis={allApis} byCard={byCard} toMB={toMB} />
           ))}
         </tbody>
       </table>
-      <button style={{ marginTop: 16 }} onClick={onClose}>Schließen</button>
+      <div className="cache-manager-footer">
+        <ActionButton icon={<CloseIcon />} onClick={onClose}>Schließen</ActionButton>
+      </div>
     </div>
   );
 }

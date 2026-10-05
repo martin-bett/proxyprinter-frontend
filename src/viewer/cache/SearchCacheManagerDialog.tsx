@@ -1,24 +1,14 @@
-import React, { CSSProperties, useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import ActionButton from "../../container/inputs/ActionButton";
 import SearchCacheService, { SearchCacheEntryInfo } from "../../service/cache/SearchCacheService";
 import { DeletableCell } from "./CacheManagerDialog";
+import "./CacheManagerDialog.css";
 
 type SearchesByApi = Record<string, Record<string, SearchCacheEntryInfo>>;
 
-// Gleiche Optik wie im Bild-Cache-Manager
-const headerStyle: CSSProperties = {
-  border: "1px solid var(--border)",
-  padding: 4,
-  background: "var(--surface-muted)",
-  textAlign: "center",
-};
-
-const rowLabelStyle: CSSProperties = {
-  border: "1px solid var(--border)",
-  padding: 4,
-  fontWeight: "bold",
-};
-
-// Zelle mit Trefferzahl; gibt es dort Suchen, zeigt sie beim Überfahren den Papierkorb und löscht beim Klick
+// Zelle mit Trefferzahl; gibt es dort Suchen, färbt sie sich beim Überfahren rot und löscht beim Klick
 function SearchCell({ entries, onDelete }: { entries: SearchCacheEntryInfo[]; onDelete: () => void }) {
   const [hover, setHover] = useState(false);
   return (
@@ -68,22 +58,34 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
 
   return (
     <div className="cache-manager-dialog search-cache-manager-dialog">
-      <h2>Search Cache Manager</h2>
-      <div>Gespeicherte Suchen: {allEntries.length}</div>
-      <div>Die Zahlen sind gefundene Treffer; Klick auf eine Zelle löscht die Suchen dahinter.</div>
-      <table style={{ borderCollapse: "collapse", width: "100%", marginTop: 16 }}>
+      <h2>Such-Cache</h2>
+      <div className="cache-manager-head">
+        <div className="cache-manager-usage">
+          <span>{allEntries.length} gespeicherte Suchen</span>
+        </div>
+        <ActionButton
+          icon={<DeleteSweepIcon />}
+          className="is-danger cache-manager-clear"
+          onClick={remove(() => SearchCacheService.removeAllSearches())}
+          disabled={allEntries.length === 0}
+        >
+          Alle Suchen löschen
+        </ActionButton>
+      </div>
+      <p className="cache-manager-hint">Die Zahlen sind gefundene Treffer. Klick auf eine Zelle löscht die Suchen dahinter, die rote Markierung zeigt was gelöscht wird.</p>
+      <table className="cache-table">
         <thead>
           <tr>
-            <th style={headerStyle}></th>
+            <th></th>
             {apiKeys.map(apiKey => (
-              <th key={apiKey} style={headerStyle}>{apiKey}</th>
+              <th key={apiKey}>{apiKey}</th>
             ))}
-            <th style={headerStyle}>Alle der Karte</th>
+            <th>Alle der Karte</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td style={{ ...rowLabelStyle, background: "var(--surface-muted)" }}>API gesamt</td>
+          <tr className="cache-sum-row">
+            <th className="cache-row-label">API gesamt</th>
             {apiKeys.map(apiKey => (
               <SearchCell
                 key={apiKey}
@@ -95,14 +97,14 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
           </tr>
           {cardNames.length === 0 && (
             <tr>
-              <td colSpan={apiKeys.length + 2} style={{ textAlign: "center", padding: 8 }}>
+              <td colSpan={apiKeys.length + 2} className="cache-cell is-empty">
                 Keine gespeicherten Suchen
               </td>
             </tr>
           )}
           {cardNames.map(cardName => (
             <tr key={cardName}>
-              <td style={rowLabelStyle}>{cardName}</td>
+              <th className="cache-row-label">{cardName}</th>
               {apiKeys.map(apiKey => (
                 <SearchCell
                   key={apiKey}
@@ -118,7 +120,9 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
           ))}
         </tbody>
       </table>
-      <button style={{ marginTop: 16 }} onClick={onClose}>Schließen</button>
+      <div className="cache-manager-footer">
+        <ActionButton icon={<CloseIcon />} onClick={onClose}>Schließen</ActionButton>
+      </div>
     </div>
   );
 }
