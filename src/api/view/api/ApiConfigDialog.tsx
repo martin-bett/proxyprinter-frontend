@@ -15,6 +15,7 @@ import IconBar, { IconBarElement } from '../../../container/IconBar';
 import ConfigContainer from '../ConfigContainer';
 import { ApiConfig, Config } from '../../../service/ApiFactory';
 import { refreshStoredSelection } from './configSelection';
+import ApiCreateWizard from './wizard/ApiCreateWizard';
 
 interface ApiConfigDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [showControls, setShowControls] = useState(false);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
 
   // Fingerprint-Initialisierung
   useEffect(() => {
@@ -72,7 +74,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
 
 
   // Funktion zum Abrufen bestehender Konfigurationen
-  const fetchConfigs = async (clickConfig?: number) => {
+  const fetchConfigs = async (clickConfig?: number): Promise<Config[]> => {
     try {
       const response = await fetch('/api/configs', {
         method: 'GET',
@@ -92,8 +94,10 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
       // Aktive Auswahl auf den neuen Stand bringen (z.B. nach dem Speichern einer Config)
       const updated = refreshStoredSelection(data);
       if (updated) onSave(updated);
+      return data;
     } catch (error) {
       console.error('Error fetching configs:', error);
+      return [];
     }
   };
 
@@ -136,8 +140,30 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
     }
   }
 
-  const handleCreateConfig = async () => {
+  const handleCreateConfig = () => {
+    setCreating(true);
+  };
+
+  // Leere Config wie früher, für Quellen, die der Wizard nicht abdeckt
+  const handleCreateEmptyConfig = async () => {
+    setCreating(false);
+    setShowControls(true);
     handleConfigOperation('GET', 'create');
+  };
+
+  const handleWizardCreated = async (configId: number) => {
+    setCreating(false);
+    setShowControls(true);
+    const data = await fetchConfigs(configId);
+    if (!selectedConfigs.includes(configId) && data.some(c => c.id === configId)) {
+      // Neue Config gleich für die Suche aktivieren
+      const newSelection = [...selectedConfigs, configId];
+      const active = data.filter(c => newSelection.includes(c.id));
+      setSelectedConfigs(newSelection);
+      onSave(active);
+      localStorage.setItem('selectedConfigs', JSON.stringify(newSelection));
+      localStorage.setItem('setConfigs', JSON.stringify(active));
+    }
   };
 
   const handleApiEdit = async (config: ApiConfigFormState) => {
@@ -220,6 +246,17 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   }
 
   if (!open) return null;
+  if (creating) {
+    return (
+      <ApiCreateWizard
+        fingerprint={fingerprint}
+        existingNames={configs.map(c => c.name)}
+        onCancel={() => setCreating(false)}
+        onCreateEmpty={handleCreateEmptyConfig}
+        onCreated={handleWizardCreated}
+      />
+    );
+  }
   return (
       <div className="grid grid-cols-2 config-dialog">
         <div>
