@@ -5,6 +5,7 @@ import CardImage, { CardImageError } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
+import { ONLY_THIS_HINT } from '../../container/inputs/useLongPress';
 import LanguageFlag from '../../container/LanguageFlag';
 import { imageLoaderService } from "../../service/cache/ImageLoaderService";
 import { CardResult, GroupedResults } from '../../api/types/types';
@@ -221,6 +222,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   }
                   checked={dialogVisibleLanguages.has(lang)}
                   onChange={() => toggleLanguage(lang)}
+                  onLongPress={() => setDialogVisibleLanguages(new Set([lang]))}
+                  longPressHint={ONLY_THIS_HINT}
                 />
               ))}
             </div>
@@ -238,6 +241,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   }
                   checked={dialogVisibleApis.has(apiName)}
                   onChange={() => toggleApi(apiName)}
+                  onLongPress={() => setDialogVisibleApis(new Set([apiName]))}
+                  longPressHint={ONLY_THIS_HINT}
                 />
               ))}
             </div>
@@ -256,6 +261,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   }
                   checked={visibleQualities.has(key)}
                   onChange={() => toggleQuality(key)}
+                  onLongPress={() => setVisibleQualities(new Set([key]))}
+                  longPressHint={ONLY_THIS_HINT}
                 />
               ))}
             </div>

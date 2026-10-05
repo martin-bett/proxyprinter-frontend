@@ -121,6 +121,30 @@
   background: var(--text-inverse);
 }
 
+/* Langer Klick: Balken am unteren Rand füllt sich, solange gedrückt wird */
+.choice-button.has-long-press {
+  position: relative;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.choice-button.is-pressing::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--accent);
+  animation: long-press-fill var(--long-press-ms, 2000ms) linear forwards;
+  pointer-events: none;
+}
+
+@keyframes long-press-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
 /* Buttons */
 .action-button:hover .input-tile-lead {
   color: var(--accent);

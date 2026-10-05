@@ -37,6 +37,7 @@ import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
+import { ONLY_THIS_HINT } from '../container/inputs/useLongPress';
 import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import SnapshotSection from './snapshot/SnapshotSection';
@@ -820,7 +821,8 @@ const DeckInputAndViewer: React.FC = () => {
     checked: boolean,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
     isIndeterminate = false,
-    labelClass?: string
+    labelClass?: string,
+    onLongPress?: () => void
   ) => (
     <ChoiceButton
       key={id}
@@ -830,6 +832,8 @@ const DeckInputAndViewer: React.FC = () => {
       onChange={onChange}
       indeterminate={isIndeterminate}
       className={labelClass}
+      onLongPress={onLongPress}
+      longPressHint={ONLY_THIS_HINT}
     />
   );
 
@@ -1264,7 +1268,7 @@ const DeckInputAndViewer: React.FC = () => {
           <CollapsibleSection storageKey="language-filter" title="Language Filter" defaultOpen={false}>
           <div className="language-filter checkbox-group">
             {Array.from(availableLanguages).map(lang => (
-              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang))
+              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang), false, undefined, () => setVisibleLanguages(new Set([lang])))
             ))}
           </div>
           </CollapsibleSection>
@@ -1279,7 +1283,8 @@ const DeckInputAndViewer: React.FC = () => {
                   visibleApis.has(config.name),
                   () => toggleApi(config.name),
                   false,
-                  'api-config-label'
+                  'api-config-label',
+                  () => setVisibleApis(new Set([config.name]))
                 )
               )}
           </div>
