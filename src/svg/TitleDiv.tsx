@@ -40,8 +40,9 @@ const Card: React.FC<{ x: number; label: string; filled?: boolean }> = ({ x, lab
       height="120"
       rx="10"
       fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="2"
+      // Gefüllte Karten überlappen; ein Rand in Hintergrundfarbe hält sie auseinander
+      style={{ stroke: filled ? "var(--app-bg)" : "currentColor" }}
+      strokeWidth={filled ? 3 : 2}
     />
     {label && (
       <text
