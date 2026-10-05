@@ -7,6 +7,8 @@ import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
 import { ONLY_THIS_HINT } from '../../container/inputs/useLongPress';
 import LanguageFlag from '../../container/LanguageFlag';
+import SortableList, { PriorityRank } from '../../container/inputs/SortableList';
+import { applyOrder, priorityRank, sortByPriority } from '../filterPriority';
 import { imageLoaderService } from "../../service/cache/ImageLoaderService";
 import { CardResult, GroupedResults } from '../../api/types/types';
 
@@ -31,8 +33,11 @@ const FilterCount: React.FC<{ count: number }> = ({ count }) => (
   <span className={`filter-count ${count === 0 ? 'is-empty' : ''}`} title={`${count} Bilder`}>{count}</span>
 );
 
+const languageOf = (result: CardResult) => result.languageCode || NO_LANGUAGE;
+
 interface ImageSelectDialogProps {
   open: boolean;
+  /** Bekommt das gewählte Bild nur, wenn im Dialog eins angeklickt wurde, sonst null */
   onClose: (selectedImage: CardResult | null) => void;
   groupedResults: GroupedResults;
   initialSelectedImage: CardResult | null | undefined;
@@ -41,7 +46,14 @@ interface ImageSelectDialogProps {
   initialVisibleApis: Set<string>;
   /** Seitenverhältnis einer Karte (Breite / Höhe) aus den PDF-Einstellungen. */
   cardAspect?: number;
+  /** Filter-Priorität der Hauptseite (oben gewinnt), im Dialog sortierbar */
+  languageOrder?: string[];
+  apiOrder?: string[];
+  onReorderLanguages?: (order: string[]) => void;
+  onReorderApis?: (order: string[]) => void;
 }
+
+const noReorder = () => undefined;
 
 const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   open,
@@ -51,8 +63,14 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   onImageLoadError,
   initialVisibleLanguages,
   initialVisibleApis,
-  cardAspect }) => {
+  cardAspect,
+  languageOrder = [],
+  apiOrder = [],
+  onReorderLanguages = noReorder,
+  onReorderApis = noReorder }) => {
   const [selectedImage, setSelectedImage] = useState<CardResult | null>(initialSelectedImage || null);
+  // Nur ein Klick auf ein Bild ist eine manuelle Wahl, bloßes Öffnen und Schließen nicht
+  const [picked, setPicked] = useState(false);
 
   const [dialogVisibleLanguages, setDialogVisibleLanguages] = useState(initialVisibleLanguages);
   const [dialogVisibleApis, setDialogVisibleApis] = useState(initialVisibleApis);
@@ -74,6 +92,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     });
     return languages;
   }, [groupedResults]);
+  const orderedLanguages = applyOrder(languageOrder, availableLanguages);
+  const orderedApis = applyOrder(apiOrder, Object.keys(groupedResults));
 
   // Zähler je Filterwert: wie viele Bilder zu sehen wären, wenn der Wert an ist.
   // Die jeweils anderen Filtergruppen gelten mit, die eigene Gruppe nicht.
@@ -115,6 +135,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     if (open) {
       setDialogVisibleLanguages(new Set(initialVisibleLanguages));
       setDialogVisibleApis(new Set(initialVisibleApis));
+      setPicked(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -155,11 +176,12 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
 
   const handleImageSelect = (image: CardResult) => {
     setSelectedImage(image);
+    setPicked(true);
   };
 
   const handleClose = () => {
     imageLoaderService.stopByCategory('selectgrid');
-    onClose(selectedImage);
+    onClose(picked ? selectedImage : null);
   };
 
   if (!open) return null;
@@ -175,13 +197,14 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
             />
           </div>
           <div className="image-grid-container">
-            {Object.entries(groupedResults)
-              .filter(([apiName]) => dialogVisibleApis.has(apiName))
-              .map(([apiName, results]) => {
-                const visibleResults = results.filter(result =>
-                  dialogVisibleLanguages.has(result.languageCode || NO_LANGUAGE) &&
+            {orderedApis
+              .filter(apiName => dialogVisibleApis.has(apiName))
+              .map(apiName => {
+                // Innerhalb einer API nach Sprach-Priorität, sonst in der Reihenfolge der Suche
+                const visibleResults = sortByPriority(groupedResults[apiName].filter(result =>
+                  dialogVisibleLanguages.has(languageOf(result)) &&
                   visibleQualities.has(qualityFilterOf(result))
-                );
+                ), languageOrder, [], languageOf);
                 return (
                   <div key={apiName} className={visibleResults.length === 0 ? 'no-matching-card' : ''}>
                     <h3>{apiName}</h3>
@@ -209,42 +232,52 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
           <div className="filter-controls">
             <div className="language-filter input-tile-group">
               <h3 className="title is-4">Filter by Language</h3>
-              {Array.from(availableLanguages).map(lang => (
-                <ChoiceButton
-                  key={lang}
-                  id={`select-lang-${lang}`}
-                  label={
-                    <div className="label-container">
-                      <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
-                      <FilterCount count={languageCounts.get(lang) ?? 0} />
-                      <LanguageFlag language={lang} />
-                    </div>
-                  }
-                  checked={dialogVisibleLanguages.has(lang)}
-                  onChange={() => toggleLanguage(lang)}
-                  onLongPress={() => setDialogVisibleLanguages(new Set([lang]))}
-                  longPressHint={ONLY_THIS_HINT}
-                />
-              ))}
+              <SortableList
+                items={orderedLanguages}
+                onReorder={onReorderLanguages}
+                renderItem={(lang, handle) => (
+                  <ChoiceButton
+                    id={`select-lang-${lang}`}
+                    label={
+                      <div className="label-container">
+                        <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
+                        <FilterCount count={languageCounts.get(lang) ?? 0} />
+                        <LanguageFlag language={lang} />
+                      </div>
+                    }
+                    checked={dialogVisibleLanguages.has(lang)}
+                    onChange={() => toggleLanguage(lang)}
+                    onLongPress={() => setDialogVisibleLanguages(new Set([lang]))}
+                    longPressHint={ONLY_THIS_HINT}
+                    trailing={handle}
+                    badge={<PriorityRank rank={priorityRank(orderedLanguages, dialogVisibleLanguages, lang)} />}
+                  />
+                )}
+              />
             </div>
             <div className="language-filter input-tile-group">
               <h3 className="title is-4">Filter by API</h3>
-              {Object.keys(groupedResults).map(apiName => (
-                <ChoiceButton
-                  key={apiName}
-                  id={`select-api-${apiName}`}
-                  label={
-                    <div className="label-container">
-                      <span>{apiName}</span>
-                      <FilterCount count={apiCounts.get(apiName) ?? 0} />
-                    </div>
-                  }
-                  checked={dialogVisibleApis.has(apiName)}
-                  onChange={() => toggleApi(apiName)}
-                  onLongPress={() => setDialogVisibleApis(new Set([apiName]))}
-                  longPressHint={ONLY_THIS_HINT}
-                />
-              ))}
+              <SortableList
+                items={orderedApis}
+                onReorder={onReorderApis}
+                renderItem={(apiName, handle) => (
+                  <ChoiceButton
+                    id={`select-api-${apiName}`}
+                    label={
+                      <div className="label-container">
+                        <span>{apiName}</span>
+                        <FilterCount count={apiCounts.get(apiName) ?? 0} />
+                      </div>
+                    }
+                    checked={dialogVisibleApis.has(apiName)}
+                    onChange={() => toggleApi(apiName)}
+                    onLongPress={() => setDialogVisibleApis(new Set([apiName]))}
+                    longPressHint={ONLY_THIS_HINT}
+                    trailing={handle}
+                    badge={<PriorityRank rank={priorityRank(orderedApis, dialogVisibleApis, apiName)} />}
+                  />
+                )}
+              />
             </div>
             <div className="language-filter input-tile-group">
               <h3 className="title is-4">Filter by Sharpness</h3>

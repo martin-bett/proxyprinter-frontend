@@ -40,6 +40,9 @@ import ChoiceButton from '../container/inputs/ChoiceButton';
 import { ONLY_THIS_HINT } from '../container/inputs/useLongPress';
 import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
+import SortableList, { PriorityRank } from '../container/inputs/SortableList';
+import { ManualPicksMap, applyOrder, computeSelection, priorityRank } from './filterPriority';
+import useFilterOrder from './useFilterOrder';
 import SnapshotSection from './snapshot/SnapshotSection';
 import { useSnapshots } from './snapshot/useSnapshots';
 import { RestoredState, WorkState } from '../service/snapshot/snapshot';
@@ -56,6 +59,7 @@ import { splitCardFaces } from './cardFaces';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
 
 const NO_LANGUAGE = 'No Language';
+const languageOfCard = (card: CardResult) => card.languageCode || NO_LANGUAGE;
 
 /** Languages and APIs that occur in the given results; custom cards are always shown and therefore ignored. */
 const collectFilterOptions = (results: CardResultsMap) => {
@@ -100,6 +104,12 @@ const DeckInputAndViewer: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
   const [visibleLanguages, setVisibleLanguages] = useState<Set<string>>(new Set());
   const [visibleApis, setVisibleApis] = useState<Set<string>>(new Set());
+  // Manuell im Bildauswahl-Dialog gewählte Bilder: gehen vor der Filter-Priorität, solange sie passen
+  const [manualPicks, setManualPicks] = useState<ManualPicksMap>({});
+  // Gerade im Dialog gewählt (Kartenname#Platz): bleibt bis zur nächsten Filteränderung, auch wenn der Filter es nicht zeigt
+  const [freshPicks, setFreshPicks] = useState<Set<string>>(new Set());
+  const [storedLanguageOrder, reorderLanguages] = useFilterOrder('languages');
+  const [storedApiOrder, reorderApis] = useFilterOrder('apis');
   const [pdfProgressDtos, setPdfProgressDtos] = useState<ProgressDto[]>([]);
   const [pdfProgressError, setPdfProgressError] = useState<string | null>(null);
   const pdfPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -161,6 +171,15 @@ const DeckInputAndViewer: React.FC = () => {
   const { languages: availableLanguages, apis: availableApis } = useMemo(
     () => collectFilterOptions(cardResults),
     [cardResults]
+  );
+  // Priorität = Reihenfolge in den Filtern, oben gewinnt
+  const languageOrder = useMemo(
+    () => applyOrder(storedLanguageOrder, availableLanguages),
+    [storedLanguageOrder, availableLanguages]
+  );
+  const apiOrder = useMemo(
+    () => applyOrder(storedApiOrder, Object.values(apiConfigs).map(config => config.name).filter(name => availableApis.has(name)).concat(Array.from(availableApis))),
+    [storedApiOrder, apiConfigs, availableApis]
   );
 
   useEffect(() => {
@@ -276,6 +295,11 @@ const DeckInputAndViewer: React.FC = () => {
       const slots = prev[cardKey];
       if (!slots) return prev;
       return { ...prev, [cardKey]: slots.map((c) => (c === oldCard ? newCard : c)) };
+    });
+    setManualPicks((prev) => {
+      const picks = prev[cardKey];
+      if (!picks || !picks.includes(oldCard)) return prev;
+      return { ...prev, [cardKey]: picks.map((c) => (c === oldCard ? newCard : c)) };
     });
     if (rest.length > 0) addCustomCrops(oldCard.name, oldCard.imageUrl, rest);
   };
@@ -431,26 +455,34 @@ const DeckInputAndViewer: React.FC = () => {
     const results = splitCardFaces(combinedResults);
 
     const options = collectFilterOptions(results);
+    const keptLanguages = new Set(Array.from(visibleLanguages).filter(lang => options.languages.has(lang)));
+    const newVisibleLanguages = keptLanguages.size > 0 ? keptLanguages : options.languages;
     setVisibleApis(options.apis);
-    setVisibleLanguages(prev => {
-      const kept = new Set(Array.from(prev).filter(lang => options.languages.has(lang)));
-      return kept.size > 0 ? kept : options.languages;
-    });
+    setVisibleLanguages(newVisibleLanguages);
     setCardResults(results);
     setIsLoading(false);
 
-    // Set initial selected cards based on cache or select first image
-    const initialSelectedCards: SelectedCardsMap = {};
+    // Früher manuell gewählte Bilder (aus dem Such-Cache) gelten wieder als manuelle Wahl,
+    // der Rest kommt aus der Filter-Priorität
+    const initialManualPicks: ManualPicksMap = {};
     Object.entries(results).forEach(([cardName, cardData]) => {
-      initialSelectedCards[cardName] = Array.from({ length: cardData.count }).map((_, index) => {
-        if (SearchCacheService.hasSelectedImage(cardName, index + 1)) {
-          const cachedImageUrl = SearchCacheService.getSelectedImage(cardName, index + 1);
-          return cardData.results.find(card => card.imageUrl === cachedImageUrl) || cardData.results[0] || null;
-        }
-        return cardData.results[0] || null;
+      const picks = Array.from({ length: cardData.count }).map((_, index) => {
+        const cachedImageUrl = SearchCacheService.getSelectedImage(cardName, index + 1);
+        return cachedImageUrl ? cardData.results.find(card => card.imageUrl === cachedImageUrl) ?? null : null;
       });
+      if (picks.some(pick => pick)) initialManualPicks[cardName] = picks;
     });
-    setSelectedCards(initialSelectedCards);
+    setManualPicks(initialManualPicks);
+    setFreshPicks(new Set());
+    setSelectedCards(computeSelection({}, {
+      cardResults: results,
+      manualPicks: initialManualPicks,
+      isVisible: card => card.apiName === 'custom' ||
+        (newVisibleLanguages.has(card.languageCode || NO_LANGUAGE) && options.apis.has(card.apiName)),
+      languageOrder: applyOrder(storedLanguageOrder, options.languages),
+      apiOrder: applyOrder(storedApiOrder, Object.values(apiConfigs).map(config => config.name).filter(name => options.apis.has(name)).concat(Array.from(options.apis))),
+      languageOf: languageOfCard,
+    }));
   };
 
   const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
@@ -468,6 +500,16 @@ const DeckInputAndViewer: React.FC = () => {
         SearchCacheService.setSelectedImage(currentCardName, currentCardIndex + 1, selectedImage.imageUrl);
         return newSelectedCards;
       });
+      const count = cardResults[currentCardName]?.count ?? currentCardIndex + 1;
+      setManualPicks(prev => {
+        const picks = Array.from({ length: count }, (_, index) => prev[currentCardName]?.[index] ?? null);
+        picks[currentCardIndex] = selectedImage;
+        return { ...prev, [currentCardName]: picks };
+      });
+      setFreshPicks(prev => new Set(prev).add(`${currentCardName}#${currentCardIndex}`));
+    } else {
+      // Ohne neue Wahl kann sich trotzdem der Zuschnitt des gewählten Bildes geändert haben
+      setSelectedCards(prev => ({ ...prev }));
     }
     setImageSelectDialogOpen(false);
     setCurrentCardName(null);
@@ -496,6 +538,13 @@ const DeckInputAndViewer: React.FC = () => {
         delete newSelected[cardName];
       }
       return newSelected;
+    });
+    setFreshPicks(new Set());
+    setManualPicks(prev => {
+      if (!prev[cardName]) return prev;
+      const next = { ...prev, [cardName]: prev[cardName].filter((_, i) => i !== index) };
+      if (next[cardName].length === 0) delete next[cardName];
+      return next;
     });
   };
 
@@ -538,36 +587,21 @@ const DeckInputAndViewer: React.FC = () => {
     });
   };
 
+  // Jede Änderung an Filtern oder Priorität beendet die Ausnahme für frisch gewählte Bilder
+  const filterSignature = [
+    Array.from(visibleLanguages).sort(), Array.from(visibleApis).sort(), languageOrder, apiOrder,
+  ].map(values => values.join('\u0001')).join('\u0002');
   useEffect(() => {
-    setSelectedCards(prev => {
-      const newSelectedCards = { ...prev };
-      let hasChanges = false;
+    setFreshPicks(prev => (prev.size === 0 ? prev : new Set()));
+  }, [filterSignature]);
 
-      Object.entries(cardResults).forEach(([cardName, cardData]) => {
-        const visibleResults = cardData.results.filter(filterCard);
-
-        newSelectedCards[cardName] = Array.from({ length: cardData.count }).map((_, index) => {
-          const currentSelection = prev[cardName]?.[index];
-          if (visibleResults.length > 0) {
-            if (currentSelection && visibleResults.some(card => card.imageUrl === currentSelection.imageUrl)) {
-              return currentSelection;
-            } else {
-              hasChanges = true;
-              return visibleResults[0];
-            }
-          } else {
-            return null; // If no visible results, set to null instead of keeping old selection
-          }
-        });
-
-        if (newSelectedCards[cardName].every(card => card === null)) {
-          delete newSelectedCards[cardName]; // Remove the card if all selections are null
-          hasChanges = true;
-        }
-      });
-      return hasChanges ? newSelectedCards : prev;
-    });
-  }, [visibleLanguages, visibleApis, cardResults, filterCard]);
+  // Filter, Priorität oder Ergebnisse geändert: Auswahl neu berechnen, manuelle Wahl geht vor
+  useEffect(() => {
+    setSelectedCards(prev => computeSelection(prev, {
+      cardResults, manualPicks, isVisible: filterCard, languageOrder, apiOrder, languageOf: languageOfCard,
+      isFreshPick: (cardName, index) => freshPicks.has(`${cardName}#${index}`),
+    }));
+  }, [cardResults, manualPicks, freshPicks, filterCard, languageOrder, apiOrder]);
 
   const handleApiToggle = (apiKey: string) => {
     setEnabledApis(prev => {
@@ -648,8 +682,8 @@ const DeckInputAndViewer: React.FC = () => {
 
   // Snapshots: Arbeitsstand lokal sichern und wiederherstellen (unabhängig von der Suche)
   const workState = useMemo<WorkState>(() => ({
-    decklist, cardResults, selectedCards, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings,
-  }), [decklist, cardResults, selectedCards, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings]);
+    decklist, cardResults, selectedCards, manualPicks, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings,
+  }), [decklist, cardResults, selectedCards, manualPicks, enabledApis, visibleLanguages, visibleApis, uniquePrints, settings]);
 
   const applySnapshot = useCallback((restored: RestoredState) => {
     // Alles in einem Schritt setzen, sonst setzt der Filter-Effekt die geladene Auswahl zurück
@@ -659,6 +693,8 @@ const DeckInputAndViewer: React.FC = () => {
     setUniquePrints(restored.uniquePrints);
     setCardResults(restored.cardResults);
     setSelectedCards(restored.selectedCards);
+    setManualPicks(restored.manualPicks);
+    setFreshPicks(new Set());
     setSettings(prev => ({ ...restored.settings, email: prev.email }));
     setEnabledApis(prev => {
       const wanted = new Set(restored.enabledApis);
@@ -680,6 +716,8 @@ const DeckInputAndViewer: React.FC = () => {
     setDecklist('');
     setCardResults({});
     setSelectedCards({});
+    setManualPicks({});
+    setFreshPicks(new Set());
     setCurrentCardName(null);
     setCurrentCardIndex(null);
     setLog([]);
@@ -822,7 +860,9 @@ const DeckInputAndViewer: React.FC = () => {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
     isIndeterminate = false,
     labelClass?: string,
-    onLongPress?: () => void
+    onLongPress?: () => void,
+    trailing?: React.ReactNode,
+    badge?: React.ReactNode
   ) => (
     <ChoiceButton
       key={id}
@@ -834,6 +874,8 @@ const DeckInputAndViewer: React.FC = () => {
       className={labelClass}
       onLongPress={onLongPress}
       longPressHint={ONLY_THIS_HINT}
+      trailing={trailing}
+      badge={badge}
     />
   );
 
@@ -1266,28 +1308,35 @@ const DeckInputAndViewer: React.FC = () => {
           </div>
           </CollapsibleSection>
           <CollapsibleSection storageKey="language-filter" title="Language Filter" defaultOpen={false}>
-          <div className="language-filter checkbox-group">
-            {Array.from(availableLanguages).map(lang => (
-              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang), false, undefined, () => setVisibleLanguages(new Set([lang])))
-            ))}
-          </div>
+          <SortableList
+            className="language-filter checkbox-group"
+            items={languageOrder}
+            onReorder={reorderLanguages}
+            renderItem={(lang, handle) =>
+              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang), false, undefined, () => setVisibleLanguages(new Set([lang])), handle,
+                <PriorityRank rank={priorityRank(languageOrder, visibleLanguages, lang)} />)
+            }
+          />
           </CollapsibleSection>
           <CollapsibleSection storageKey="api-filter" title="API Filter" defaultOpen={false}>
-          <div className="api-filter checkbox-group">
-            {Object.values(apiConfigs)
-              .filter((c) => availableApis.has(c.name))
-              .map((config) =>
-                renderCheckbox(
-                  config.name,
-                  getApiConfigLabelForCheckbox(config),
-                  visibleApis.has(config.name),
-                  () => toggleApi(config.name),
-                  false,
-                  'api-config-label',
-                  () => setVisibleApis(new Set([config.name]))
-                )
-              )}
-          </div>
+          <SortableList
+            className="api-filter checkbox-group"
+            items={apiOrder.filter(name => apiConfigs[name])}
+            onReorder={reorderApis}
+            renderItem={(name, handle) =>
+              renderCheckbox(
+                name,
+                getApiConfigLabelForCheckbox(apiConfigs[name]),
+                visibleApis.has(name),
+                () => toggleApi(name),
+                false,
+                'api-config-label',
+                () => setVisibleApis(new Set([name])),
+                handle,
+                <PriorityRank rank={priorityRank(apiOrder, visibleApis, name)} />
+              )
+            }
+          />
           </CollapsibleSection>
         </div>
       </div>
@@ -1342,6 +1391,10 @@ const DeckInputAndViewer: React.FC = () => {
         }
         initialVisibleApis={visibleApis}
         initialVisibleLanguages={visibleLanguages}
+        languageOrder={languageOrder}
+        apiOrder={apiOrder}
+        onReorderLanguages={reorderLanguages}
+        onReorderApis={reorderApis}
         cardAspect={settings.width / settings.height}
         groupedResults={
           currentCardName && cardResults[currentCardName]

@@ -5,6 +5,7 @@
 
 import { CardResult, CardResultsMap, SelectedCardsMap } from '../../api/types/types';
 import { CropSettings } from '../ApiFactory';
+import { ManualPicksMap } from '../../viewer/filterPriority';
 import { PdfSettings, defaultSettings } from '../../viewer/pdf/SettingsDialog';
 
 export const SNAPSHOT_FORMAT = 'proxyprinter-snapshot';
@@ -41,6 +42,8 @@ export interface SnapshotEntry {
   count: number;
   results: SnapshotResult[];
   selected: (SnapshotSelection | null)[];
+  /** Plätze, deren Auswahl manuell getroffen wurde (gehen vor der Filter-Priorität). Fehlt in älteren Snapshots. */
+  manual?: number[];
 }
 
 export interface GeneratedPdf {
@@ -74,6 +77,8 @@ export interface WorkState {
   decklist: string;
   cardResults: CardResultsMap;
   selectedCards: SelectedCardsMap;
+  /** Manuell gewählte Bilder je Platz, siehe viewer/filterPriority */
+  manualPicks?: ManualPicksMap;
   enabledApis: Record<string, boolean>;
   visibleLanguages: Set<string>;
   visibleApis: Set<string>;
@@ -86,6 +91,7 @@ export interface RestoredState {
   decklist: string;
   cardResults: CardResultsMap;
   selectedCards: SelectedCardsMap;
+  manualPicks: ManualPicksMap;
   enabledApis: string[];
   visibleLanguages: Set<string>;
   visibleApis: Set<string>;
@@ -140,6 +146,10 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
       if (i < 0) return null;
       return { i, url: card.imageUrl, crop: { ...card.cropSettings } };
     });
+    const picks = state.manualPicks?.[key] ?? [];
+    const manual = selected
+      .map((selection, slot) => (selection && picks[slot]?.imageUrl === selection.url ? slot : -1))
+      .filter(slot => slot >= 0);
     return {
       key,
       // Eigene Karten heißen Name_cropN, ihr Name steht im Ergebnis
@@ -147,6 +157,7 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
       count: group.count,
       results,
       selected,
+      manual,
     };
   });
 
@@ -270,6 +281,7 @@ export function restoreSnapshot(snapshot: Snapshot, missingUploadIds: string[] =
 
   const cardResults: CardResultsMap = {};
   const selectedCards: SelectedCardsMap = {};
+  const manualPicks: ManualPicksMap = {};
   let droppedCustomCards = 0;
 
   snapshot.search.entries.forEach(entry => {
@@ -288,6 +300,10 @@ export function restoreSnapshot(snapshot: Snapshot, missingUploadIds: string[] =
       if (!card) return results[0] ?? null;
       return sameCrop(card.cropSettings, selection.crop) ? card : { ...card, cropSettings: { ...selection.crop } };
     });
+    // Ältere Snapshots kennen keine manuelle Wahl: dann bleibt jede gespeicherte Auswahl wie sie war
+    const manual = new Set(entry.manual ?? entry.selected.map((_, slot) => slot));
+    const picks = selectedCards[entry.key].map((card, slot) => (manual.has(slot) ? card : null));
+    if (picks.some(card => card)) manualPicks[entry.key] = picks;
   });
 
   return {
@@ -295,6 +311,7 @@ export function restoreSnapshot(snapshot: Snapshot, missingUploadIds: string[] =
       decklist: snapshot.search.decklist,
       cardResults,
       selectedCards,
+      manualPicks,
       enabledApis: snapshot.search.enabledApis,
       visibleLanguages: new Set(snapshot.search.filters.languages),
       visibleApis: new Set(snapshot.search.filters.apis),
