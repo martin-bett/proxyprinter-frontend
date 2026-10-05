@@ -5,55 +5,67 @@
   z-index: 10;
 }
 
-.theme-chooser-button {
-  gap: 0.4rem;
+/* Runde Bubble nur mit Symbol */
+.memory-button.theme-chooser-button {
+  padding: 0;
+  width: 44px;
 }
 
-.theme-swatch {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-right: 0.5rem;
+/* Symbole nebeneinander statt Liste mit Namen */
+.theme-chooser-menu.MuiList-root {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
 }
 
-.theme-swatch span {
-  display: inline-block;
-  width: 12px;
-  height: 20px;
-}
-
-.theme-chooser-check {
-  margin-left: 1rem;
-}
-
-.theme-chooser-mana {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
+.MuiMenuItem-root.theme-chooser-item {
+  padding: 5px;
+  min-height: 0;
   border-radius: 50%;
-  box-shadow: 0 1px 2px var(--shadow);
 }
 
-/* Kreis aus mana-font (.ms-cost) auf 20px festlegen und Symbol mittig setzen */
+/* Aktives Theme: Ring in Akzentfarbe statt Haken */
+.MuiMenuItem-root.theme-chooser-item.Mui-selected {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Kreis aus mana-font (.ms-cost) auf feste Größe bringen und Symbol mittig setzen */
 .ms.ms-cost.theme-chooser-mana {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
   line-height: 1;
 }
 
-.MuiListItemIcon-root .theme-chooser-mana {
-  margin-right: 8px;
+.ms.ms-cost.theme-chooser-mana-button {
+  width: 28px;
+  height: 28px;
+  font-size: 17px;
 }
 
-.theme-chooser-mana-empty {
-  display: inline-block;
-  box-shadow: none;
+.ms.ms-cost.theme-chooser-mana-menu {
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
 }
 
-.theme-chooser-bar .MuiListItemIcon-root,
-.MuiMenuItem-root .MuiListItemIcon-root {
-  align-items: center;
+/* Variante "ring": blasse Originalfarben von mana-font, dunkler Rand hebt sie ab */
+.ms.ms-cost.theme-chooser-mana.mana-style-ring {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.65), 0 0 0 3px rgba(255, 255, 255, 0.35), 0 2px 4px var(--shadow);
+}
+
+/* Variante "vivid": sattere Kreisfarben, Symbol hell auf dunklen Farben */
+.ms.ms-cost.theme-chooser-mana.mana-style-vivid {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 2px 4px var(--shadow);
+}
+.ms.ms-cost.ms-w.mana-style-vivid { background-color: #f6dc6e; color: #3a2e05; }
+.ms.ms-cost.ms-u.mana-style-vivid { background-color: #1e7fd8; color: #fff; }
+.ms.ms-cost.ms-b.mana-style-vivid { background-color: #2b2530; color: #d8c8e8; }
+.ms.ms-cost.ms-r.mana-style-vivid { background-color: #e0441f; color: #fff; }
+.ms.ms-cost.ms-g.mana-style-vivid { background-color: #23944a; color: #fff; }
+/* Auf dunklen Themes heller Saum, damit Sumpf und Phyrexia nicht im Hintergrund verschwinden */
+html[data-theme="dark"] .ms.ms-cost.theme-chooser-mana.mana-style-vivid {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 2px 4px var(--shadow);
 }
