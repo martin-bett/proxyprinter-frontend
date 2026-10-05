@@ -861,7 +861,8 @@ const DeckInputAndViewer: React.FC = () => {
     isIndeterminate = false,
     labelClass?: string,
     onLongPress?: () => void,
-    trailing?: React.ReactNode
+    trailing?: React.ReactNode,
+    badge?: React.ReactNode
   ) => (
     <ChoiceButton
       key={id}
@@ -874,6 +875,7 @@ const DeckInputAndViewer: React.FC = () => {
       onLongPress={onLongPress}
       longPressHint={ONLY_THIS_HINT}
       trailing={trailing}
+      badge={badge}
     />
   );
 
@@ -926,19 +928,17 @@ const DeckInputAndViewer: React.FC = () => {
     }));
   };
 
-  const getLanguageLabel = (lang: string, rank?: number) => (
+  const getLanguageLabel = (lang: string) => (
     <div className="label-container">
       <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
-      <PriorityRank rank={rank} />
       <LanguageFlag language={lang} />
     </div>
   );
 
-  const getApiConfigLabelForCheckbox = (config: Config, rank?: number) => {
+  const getApiConfigLabelForCheckbox = (config: Config) => {
     return (
       <div className="label-container">
         <span>{config.name}</span>
-        <PriorityRank rank={rank} />
         {(config as ApiConfig).languageField || (config as ApiConfig).nestedLanguageLanguageField ? (
           <span>
             <TranslateIcon className="subCategoryIcon" />
@@ -1313,7 +1313,8 @@ const DeckInputAndViewer: React.FC = () => {
             items={languageOrder}
             onReorder={reorderLanguages}
             renderItem={(lang, handle) =>
-              renderCheckbox(lang, getLanguageLabel(lang, priorityRank(languageOrder, visibleLanguages, lang)), visibleLanguages.has(lang), () => toggleLanguage(lang), false, undefined, () => setVisibleLanguages(new Set([lang])), handle)
+              renderCheckbox(lang, getLanguageLabel(lang), visibleLanguages.has(lang), () => toggleLanguage(lang), false, undefined, () => setVisibleLanguages(new Set([lang])), handle,
+                <PriorityRank rank={priorityRank(languageOrder, visibleLanguages, lang)} />)
             }
           />
           </CollapsibleSection>
@@ -1325,13 +1326,14 @@ const DeckInputAndViewer: React.FC = () => {
             renderItem={(name, handle) =>
               renderCheckbox(
                 name,
-                getApiConfigLabelForCheckbox(apiConfigs[name], priorityRank(apiOrder, visibleApis, name)),
+                getApiConfigLabelForCheckbox(apiConfigs[name]),
                 visibleApis.has(name),
                 () => toggleApi(name),
                 false,
                 'api-config-label',
                 () => setVisibleApis(new Set([name])),
-                handle
+                handle,
+                <PriorityRank rank={priorityRank(apiOrder, visibleApis, name)} />
               )
             }
           />

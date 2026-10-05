@@ -241,7 +241,6 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     label={
                       <div className="label-container">
                         <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
-                        <PriorityRank rank={priorityRank(orderedLanguages, dialogVisibleLanguages, lang)} />
                         <FilterCount count={languageCounts.get(lang) ?? 0} />
                         <LanguageFlag language={lang} />
                       </div>
@@ -251,6 +250,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     onLongPress={() => setDialogVisibleLanguages(new Set([lang]))}
                     longPressHint={ONLY_THIS_HINT}
                     trailing={handle}
+                    badge={<PriorityRank rank={priorityRank(orderedLanguages, dialogVisibleLanguages, lang)} />}
                   />
                 )}
               />
@@ -266,7 +266,6 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     label={
                       <div className="label-container">
                         <span>{apiName}</span>
-                        <PriorityRank rank={priorityRank(orderedApis, dialogVisibleApis, apiName)} />
                         <FilterCount count={apiCounts.get(apiName) ?? 0} />
                       </div>
                     }
@@ -275,6 +274,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     onLongPress={() => setDialogVisibleApis(new Set([apiName]))}
                     longPressHint={ONLY_THIS_HINT}
                     trailing={handle}
+                    badge={<PriorityRank rank={priorityRank(orderedApis, dialogVisibleApis, apiName)} />}
                   />
                 )}
               />
