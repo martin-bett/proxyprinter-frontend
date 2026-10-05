@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { HTMLElement } from 'node-html-parser';
 import ApiFactory, { ApiConfig, SearchResult } from '../../../../service/ApiFactory';
-import DefaultLanguageSelect from '../../DefaultLanguageSelect';
+import { DEFAULT_LANGUAGE_OPTIONS } from '../../defaultLanguages';
 import { buildTemplate, isTemplateError, validateRequest, WizardRequest } from './requestTemplate';
 import { DataFormat, detectFormat, imageNeedsProxy, runTestRequest, TestResult } from './testRequest';
 import { FieldAssignment, FieldRole, guessJsonFields, guessPaginationLink, JsonPath, pathForRole } from './jsonFields';
@@ -400,7 +400,10 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
         </select>
         <label>Official Website</label>
         <input className="input" type="text" value={meta.officialWebsite} onChange={e => setMeta({ ...meta, officialWebsite: e.target.value })} />
-        <DefaultLanguageSelect value={meta.defaultLanguage} onChange={e => setMeta({ ...meta, defaultLanguage: e.target.value })} />
+        <label title="Language for cards the source does not tag with a language">Default Language</label>
+        <select className="wiz-select" value={meta.defaultLanguage} onChange={e => setMeta({ ...meta, defaultLanguage: e.target.value })}>
+          {DEFAULT_LANGUAGE_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        </select>
         <label>Proxy Images</label>
         <label className="wiz-check">
           <input type="checkbox" checked={meta.proxyImages} onChange={e => setMeta({ ...meta, proxyImages: e.target.checked })} />
