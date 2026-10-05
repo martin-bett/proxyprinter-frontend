@@ -35,6 +35,19 @@
   box-shadow: 0 1px 2px var(--shadow);
 }
 
+/* Kreis aus mana-font (.ms-cost) auf 20px festlegen und Symbol mittig setzen */
+.ms.ms-cost.theme-chooser-mana {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.MuiListItemIcon-root .theme-chooser-mana {
+  margin-right: 8px;
+}
+
 .theme-chooser-mana-empty {
   display: inline-block;
   box-shadow: none;

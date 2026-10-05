@@ -208,6 +208,7 @@ export const THEMES: AppTheme[] = [
     id: 'midnight',
     name: 'Mitternacht',
     mode: 'dark',
+    mana: 'P',
     colors: {
       ...darkBase,
       'surface': '#141b2d',
