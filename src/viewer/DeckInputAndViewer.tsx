@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
-import serverSearchCache, { ServerLookup, lookupKey } from '../service/cache/ServerSearchCache';
+import serverSearchCache, { ServerLookup, fetchServerCacheEnabled, lookupKey } from '../service/cache/ServerSearchCache';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
@@ -141,6 +141,12 @@ const DeckInputAndViewer: React.FC = () => {
       return true;
     }
   });
+  // Backend kann den Such-Cache abschalten (searchcache.enabled=false, z. B. in PR-Testumgebungen)
+  const [serverCacheAvailable, setServerCacheAvailable] = useState(true);
+  const serverCacheActive = useServerCache && serverCacheAvailable;
+  useEffect(() => {
+    fetchServerCacheEnabled().then(setServerCacheAvailable);
+  }, []);
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -396,7 +402,7 @@ const DeckInputAndViewer: React.FC = () => {
         return cached?.results || [];
       }
       const config = apiConfigs[apiKey];
-      if (useServerCache && config) {
+      if (serverCacheActive && config) {
         const fromServer = (await serverSearchCache.lookup([{ apiKey, config, term: cacheName }])).get(lookupKey(apiKey, cacheName));
         if (fromServer) {
           await SearchCacheService.setSearchResult(apiKey, cacheName, fromServer);
@@ -407,7 +413,7 @@ const DeckInputAndViewer: React.FC = () => {
       const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
       const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
-      if (useServerCache && config) serverSearchCache.put(config, cacheName, result);
+      if (serverCacheActive && config) serverSearchCache.put(config, cacheName, result);
       addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
       return result.results;
     } catch (error) {
@@ -418,7 +424,7 @@ const DeckInputAndViewer: React.FC = () => {
 
   // Fragt den Server-Cache gesammelt nach allen Suchen, die der lokale Cache nicht hat
   const lookupServerCache = async (apiKeys: string[], terms: string[]): Promise<Map<string, SearchApiResult>> => {
-    if (!useServerCache) return new Map();
+    if (!serverCacheActive) return new Map();
     const pairs = apiKeys.flatMap(apiKey => terms.map(term => ({ apiKey, term })));
     const locallyCached = await Promise.all(pairs.map(({ apiKey, term }) => SearchCacheService.hasSearchResult(apiKey, term).catch(() => false)));
     const requests: ServerLookup[] = pairs
@@ -503,7 +509,7 @@ const DeckInputAndViewer: React.FC = () => {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
-                if (useServerCache) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
+                if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
                 const resultsArr = result?.results || [];
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
@@ -1182,7 +1188,7 @@ const DeckInputAndViewer: React.FC = () => {
           } else {
             result = await api({ cardname: cardEntry.name });
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
-            if (useServerCache) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
+            if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
             const resultsArr = result?.results || [];
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
@@ -1398,16 +1404,19 @@ const DeckInputAndViewer: React.FC = () => {
               })()}
               <div
                 className="connected-cards-toggle"
-                title="Use search results other users already found (shared server cache). Uncheck to always search the sources yourself."
+                title={serverCacheAvailable ?
+                  'Use search results other users already found (shared server cache). Uncheck to always search the sources yourself.' :
+                  'The shared search cache is turned off on this server'}
               >
-                {renderCheckbox('useServerCache', 'Shared Search Cache', useServerCache, (event) => {
+                {renderCheckbox('useServerCache', 'Shared Search Cache', serverCacheActive, (event) => {
+                  if (!serverCacheAvailable) return;
                   setUseServerCache(event.target.checked);
                   try {
                     localStorage.setItem(USE_SERVER_CACHE_KEY, String(event.target.checked));
                   } catch {
                     // Ohne localStorage gilt die Wahl nur bis zum Neuladen
                   }
-                })}
+                }, false, serverCacheAvailable ? undefined : 'is-disabled')}
               </div>
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
