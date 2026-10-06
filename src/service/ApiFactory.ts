@@ -99,6 +99,26 @@ export function hasConnectedCards(config: Config | undefined): boolean {
 
 export interface GalleryConfig extends BaseConfig{
   type: 'gallery';
+
+  // Serverseitiger Abruf (/api/gallery/{id}/fetch), wenn link_pattern oder credential gesetzt ist:
+  // link_pattern zerlegt den Link des Nutzers in {id} usw. für die base_url
+  linkPattern?: string;
+  // Passt der Link nicht, zuerst seinen Weiterleitungen folgen (Kurz-/Teilen-Links)
+  followInputRedirects?: boolean;
+  // Name eines serverseitig hinterlegten Zugangs, nie ein Geheimnis in der Config selbst
+  credential?: string;
+
+  // Nachbearbeitung gelesener Werte per Regex (Ersetzung mit $1). Passt imageUrlPattern nicht, fällt der Treffer weg.
+  imageUrlPattern?: string;
+  imageUrlReplacement?: string;
+  namePattern?: string;
+  nameReplacement?: string;
+}
+
+/** Läuft die Config über das Backend, weil sie Link-Pattern oder Zugang braucht? */
+export function usesBackendFetch(config: Config): config is GalleryConfig {
+  const gallery = config as GalleryConfig;
+  return !isApiConfig(config) && Boolean(gallery.linkPattern || gallery.credential);
 }
 
 export type Config = GalleryConfig | ApiConfig;
@@ -294,7 +314,9 @@ export default class ApiFactory {
     currentUrl: string
   ): Promise<{ response: Response, requestUrl: URL }> {
     const processedParams = await this.processRequestParameters(config, params);
-    const { requestUrl, fetchOptions } = this.buildRequest(config, processedParams, currentUrl);
+    const { requestUrl, fetchOptions } = usesBackendFetch(config)
+      ? this.buildBackendFetch(config, processedParams)
+      : this.buildRequest(config, processedParams, currentUrl);
 
     const targetUrl = (fetchOptions.headers as Record<string, string> | undefined)?.['X-Target-URL'];
     const response = await throttledFetch(requestUrl.toString(), fetchOptions, targetUrl);
@@ -385,6 +407,18 @@ export default class ApiFactory {
     return { requestUrl, fetchOptions };
   }
 
+  // Das Backend löst den Link per Link-Pattern auf, ruft die Quelle (ggf. mit Zugang) ab und gibt die Rohantwort zurück
+  private buildBackendFetch(config: GalleryConfig, processedParams: Record<string, string>): { requestUrl: URL, fetchOptions: RequestInit } {
+    const input = [...Object.values(processedParams), ...Object.values(config.parameterMap?.url ?? {})]
+      .map(value => String(value ?? '').trim())
+      .find(value => value && value !== '$GALLERY_INPUT$') ?? '';
+    const requestUrl = new URL(`/api/gallery/${config.id}/fetch`, window.location.origin);
+    if (input) {
+      requestUrl.searchParams.set('input', input);
+    }
+    return { requestUrl, fetchOptions: { method: 'GET' } };
+  }
+
   private buildPostRequest(
     config: Config, 
     params: Record<string, string>, 
@@ -455,9 +489,11 @@ export default class ApiFactory {
     if (config.dataFormat === 'json') {
         root = JSON.parse(text);
         // Ohne dataListField: Antwort ist selbst die Liste (z.B. [{...}, {...}])
-        dataList = config.dataListField
+        const found = config.dataListField
             ? this.getValue(root, config, config.dataListField) || []
             : (Array.isArray(root) ? root : []);
+        // Objekt statt Liste (z.B. Reddit media_metadata, Schlüssel = Bild-ID): die Einträge sind die Liste
+        dataList = Array.isArray(found) ? found : (found && typeof found === 'object' ? Object.values(found) : []);
     } else if (config.dataFormat === 'html') {
         root = parse(text);
         dataList = Array.from(root.querySelectorAll(config.dataListField));
@@ -504,13 +540,31 @@ export default class ApiFactory {
   private createBaseResult(item: any, config: Config): SearchResult {
       return {
         apiName: config.name,
-        name: this.getValue(item, config, config.nameField),
+        name: this.postProcess(this.getValue(item, config, config.nameField), config, 'name'),
         set: isApiConfig(config) && config.setField ? this.getValue(item, config, config.setField) : undefined,
         setNumber: isApiConfig(config) &&  config.setNumberField ? this.getValue(item, config, config.setNumberField) : undefined,
-        imageUrl: this.extractLastLink(this.getValue(item, config, config.imageUrlField), config.baseUrl),
+        imageUrl: this.extractLastLink(this.postProcess(this.getValue(item, config, config.imageUrlField), config, 'imageUrl'), config.baseUrl),
         languageCode: this.baseLanguage(item, config),
         connectedCards: this.extractConnectedCards(item, config)
       } as SearchResult;
+  }
+
+  // Gallery-Configs: Regex-Nachbearbeitung von Name und Bild-URL. Beim Bild entscheidet ein nicht passendes Muster über "kein Treffer".
+  private postProcess(value: any, config: Config, kind: 'name' | 'imageUrl'): any {
+    if (isApiConfig(config)) return value;
+    const gallery = config as GalleryConfig;
+    const pattern = kind === 'name' ? gallery.namePattern : gallery.imageUrlPattern;
+    if (!pattern) return value;
+    const replacement = (kind === 'name' ? gallery.nameReplacement : gallery.imageUrlReplacement) ?? '';
+    const text = value == null ? '' : String(value);
+    try {
+      const regex = new RegExp(pattern);
+      if (kind === 'imageUrl' && !regex.test(text)) return '';
+      return text.replace(regex, replacement);
+    } catch {
+      console.warn(`Ungültiges Regex-Muster in Config ${config.name}: ${pattern}`);
+      return value;
+    }
   }
 
   // Liest alle Listen verbundener Karten aus. Die Karte selbst (Scryfall listet sie als combo_piece mit) fällt weg.
