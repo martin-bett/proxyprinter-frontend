@@ -29,8 +29,11 @@ DEVELOP_PORT=8100
 [[ "$SLUG" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || { echo "Ungültiger SLUG: $SLUG" >&2; exit 1; }
 [ "$SIDE" = backend ] || [ "$SIDE" = frontend ] || { echo "Ungültige SIDE: $SIDE" >&2; exit 1; }
 
-if [ ! -f "$PREVIEW_ROOT/.env" ] && [ "$ACTION" = close ]; then echo "Keine Testumgebungen eingerichtet, nichts zu tun"; exit 0; fi
-[ -f "$PREVIEW_ROOT/.env" ] || { echo "Testumgebungen sind auf dem Server noch nicht eingerichtet ($PREVIEW_ROOT/.env fehlt, siehe deploy/PREVIEW.md)" >&2; exit 1; }
+# Noch nicht eingerichtet: überspringen, damit CI nicht rot wird
+if [ ! -f "$PREVIEW_ROOT/.env" ]; then
+  echo "::warning::Testumgebungen sind auf dem Server noch nicht eingerichtet ($PREVIEW_ROOT/.env fehlt, siehe deploy/PREVIEW.md), übersprungen"
+  exit 0
+fi
 cd "$PREVIEW_ROOT"
 exec 9>.lock
 flock -w 600 9
@@ -145,8 +148,8 @@ EOF
       # Nur das develop-Backend hängt im api-Netz: dort finden reine Frontend-PRs es unter "backend"
       [ "$SLUG" = develop ] && echo "      api:"
     fi
-    if [ -n "$ftag" ] || [ "$SLUG" != develop ]; then
-      cat <<EOF
+    # Jede Umgebung hat ein Frontend, ohne eigenes Image das von develop
+    cat <<EOF
   frontend:
     image: ${OWNER_IMAGE}-frontend:${ftag:-develop}
     restart: unless-stopped
@@ -154,9 +157,8 @@ EOF
       - "127.0.0.1:$port:80"
     networks:
 EOF
-      # Ohne eigenes Backend leitet das Frontend /api an das develop-Backend weiter (api-Netz)
-      if [ -z "$btag" ] && [ "$SLUG" != develop ]; then echo "      api:"; else echo "      default:"; fi
-    fi
+    # Ohne eigenes Backend leitet das Frontend /api an das develop-Backend weiter (api-Netz)
+    if [ -z "$btag" ] && [ "$SLUG" != develop ]; then echo "      api:"; else echo "      default:"; fi
     cat <<EOF
 networks:
   db:
@@ -240,8 +242,10 @@ healthy() {
 
 # ---------- Aktionen ----------
 deploy() {
-  [ "$SLUG" = develop ] || [ -n "$(cat "$PREVIEW_ROOT/develop/backend_tag" 2>/dev/null)" ] || {
-    echo "Die develop-Testumgebung läuft noch nicht. Zuerst CI auf develop im Backend-Repo laufen lassen (siehe deploy/PREVIEW.md)." >&2; exit 1; }
+  if [ "$SLUG" != develop ] && [ -z "$(cat "$PREVIEW_ROOT/develop/backend_tag" 2>/dev/null)" ]; then
+    echo "::warning::test.proxyprinter.eu läuft noch nicht (CI auf develop starten, siehe deploy/PREVIEW.md), PR-Umgebung übersprungen"
+    return 0
+  fi
   mkdir -p "$ENV_DIR"
   [ -f "$ENV_DIR/port" ] || { if [ "$SLUG" = develop ]; then echo "$DEVELOP_PORT"; else free_port; fi > "$ENV_DIR/port"; }
 
