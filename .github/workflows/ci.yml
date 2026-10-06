@@ -5,6 +5,7 @@ on:
     branches: [develop, master]
   push:
     branches: [develop]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -34,16 +35,101 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      preview: ${{ steps.meta.outputs.preview }}
+      slug: ${{ steps.meta.outputs.slug }}
+      tag: ${{ steps.meta.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
+      # Testumgebung (deploy/PREVIEW.md): develop -> test.proxyprinter.eu, PR nach develop -> <slug>.test.proxyprinter.eu.
+      # Der Slug kommt aus dem Branch-Namen und ist in beiden Repos gleich, so landen Backend- und Frontend-PR zusammen.
+      - id: meta
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          slug=$(printf '%s' "$BRANCH" | sed 's#^claude/##' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-40 | sed -E 's/-+$//')
+          preview=false
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            [ "$slug" = develop ] && slug=pr-develop
+            [ "$BASE" = develop ] && preview=true
+            tag="br-$slug"
+          elif [ "$BRANCH" = develop ]; then
+            slug=develop; tag=develop; preview=true
+          fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "preview=$preview" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-      - name: Docker-Image bauen (ohne Push)
+      - uses: docker/login-action@v3
+        if: steps.meta.outputs.preview == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker-Image bauen (für Testumgebungen auch pushen)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker.dockerfile
           platforms: linux/amd64,linux/arm64
-          push: false
+          push: ${{ steps.meta.outputs.preview == 'true' }}
+          tags: ghcr.io/${{ github.repository_owner }}/mtgprint-frontend:${{ steps.meta.outputs.tag || 'ci' }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+
+  preview:
+    needs: [test, docker]
+    if: needs.docker.outputs.preview == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: preview-${{ needs.docker.outputs.slug }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auf Testumgebung ausrollen
+        id: deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          PROD_PATH: ${{ vars.DEPLOY_PATH || '/opt/proxyprinter' }}
+          SLUG: ${{ needs.docker.outputs.slug }}
+          NEW_TAG: ${{ needs.docker.outputs.tag }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          {
+            printf 'export ACTION=deploy SIDE=frontend SLUG=%q NEW_TAG=%q PROD_PATH=%q\n' "$SLUG" "$NEW_TAG" "$PROD_PATH"
+            printf 'export GHCR_USER=%q GHCR_TOKEN=%q\n' "$GITHUB_ACTOR" "$GHCR_TOKEN"
+            cat .github/deploy/preview.sh
+          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
+                "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc' | tee preview.log
+          grep -m1 '^PREVIEW_URL=' preview.log | cut -d= -f2- > preview-url.txt
+      - name: Link im PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = require('fs').readFileSync('preview-url.txt', 'utf8').trim();
+            const marker = '<!-- preview-url -->';
+            const body = `${marker}\n**Testumgebung:** ${url}\n\nFrontend aus diesem PR (\`${{ needs.docker.outputs.tag }}\`), Backend aus dem Backend-PR mit gleichem Branch-Namen oder von develop. Wird nach Merge bzw. Schließen entfernt.`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const old = comments.find(c => c.body.includes(marker));
+            if (old) await github.rest.issues.updateComment({ owner, repo, comment_id: old.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
