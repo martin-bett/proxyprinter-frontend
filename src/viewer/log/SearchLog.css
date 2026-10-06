@@ -83,7 +83,8 @@
   opacity: 0.5;
 }
 
-.search-log-cache .search-log-source-button {
+.search-log-cache .search-log-source-button,
+.search-log-server .search-log-source-button {
   color: var(--text);
 }
 
