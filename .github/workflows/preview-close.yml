@@ -28,13 +28,14 @@ jobs:
           BRANCH: ${{ github.head_ref }}
         run: |
           set -euo pipefail
-          slug=$(printf '%s' "$BRANCH" | sed 's#^claude/##' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-40 | sed -E 's/-+$//')
-          [ "$slug" = develop ] && slug=pr-develop
+          slug=$(printf '%s' "$BRANCH" | sha256sum | cut -c1-6)
+          legacy=$(printf '%s' "$BRANCH" | sed 's#^claude/##' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-40 | sed -E 's/-+$//')
           install -m 700 -d ~/.ssh
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           {
             printf 'export ACTION=close SIDE=frontend SLUG=%q\n' "$slug"
+            printf 'export LEGACY_SLUG=%q\n' "$legacy"
             cat .github/deploy/preview.sh
           } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
                 "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc'

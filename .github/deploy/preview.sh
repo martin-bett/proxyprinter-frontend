@@ -3,13 +3,14 @@
 # (die Datei ist in mtgprint und mtgprint-front identisch).
 #
 #   test.proxyprinter.eu          Stand von develop: eigene Datenbank (Kopie der Produktion), Backend, Frontend
-#   <slug>.test.proxyprinter.eu   ein PR bzw. ein Thread (gleicher Branch-Name in beiden Repos);
+#   <slug>.test.proxyprinter.eu   ein PR bzw. ein Thread (gleicher Branch-Name in beiden Repos, slug = Hash davon);
 #                                 startet nur, was der PR ändert, der Rest kommt von develop
 #
 # Erwartet als Umgebungsvariablen:
-#   ACTION        deploy | close
+#   ACTION        deploy | close | purge
 #   SIDE          backend | frontend (das Repo, aus dem der Aufruf kommt)
-#   SLUG          "develop" oder der Kurzname des Branches (nur a-z, 0-9, -)
+#   SLUG          "develop" oder die ersten 6 Zeichen von sha256(Branch-Name), in beiden Repos gleich
+#   LEGACY_SLUG   Optional: alter, langer Name derselben Umgebung, wird einmalig entfernt
 #   NEW_TAG       Image-Tag (nur bei deploy)
 #   GHCR_USER, GHCR_TOKEN   Kurzlebiger Login für ghcr.io (nur bei deploy)
 #   PROD_PATH     Ordner der Produktion (für die erste Datenbank-Kopie), z. B. /root/mnt/proxyprinter
@@ -34,6 +35,12 @@ if [ ! -f "$PREVIEW_ROOT/.env" ]; then
   echo "::warning::Testumgebungen sind auf dem Server noch nicht eingerichtet ($PREVIEW_ROOT/.env fehlt, siehe deploy/PREVIEW.md), übersprungen"
   exit 0
 fi
+# Umgebung des gleichen Branches unter dem alten, langen Namen (vor den kurzen Namen) einmalig entfernen
+if [ -n "${LEGACY_SLUG:-}" ] && [ "$LEGACY_SLUG" != "$SLUG" ] && [[ "$LEGACY_SLUG" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] \
+   && [ "$LEGACY_SLUG" != develop ] && [ -d "$PREVIEW_ROOT/envs/$LEGACY_SLUG" ]; then
+  ACTION=purge SLUG="$LEGACY_SLUG" LEGACY_SLUG= bash "$0" || true
+fi
+
 cd "$PREVIEW_ROOT"
 exec 9>.lock
 flock -w 600 9
@@ -242,10 +249,10 @@ remove_nginx() {
 
 healthy() {
   local port; port="$(cat "$ENV_DIR/port")"
-  curl -fsS -o /dev/null -m 5 "http://127.0.0.1:$port/" || return 1
+  curl -fs -o /dev/null -m 5 "http://127.0.0.1:$port/" || return 1
   # Backend über das Frontend: das eigene oder das von develop
   if [ -n "$(tag_of backend)" ] || [ "$SLUG" != develop ]; then
-    curl -fsS -o /dev/null -m 5 "http://127.0.0.1:$port/api/pdf/limits" || return 1
+    curl -fs -o /dev/null -m 5 "http://127.0.0.1:$port/api/pdf/limits" || return 1
   fi
 }
 
@@ -299,25 +306,43 @@ deploy() {
   exit 1
 }
 
+teardown() {
+  log "räume Testumgebung ab"
+  local side tag
+  (cd "$ENV_DIR" && docker compose down -v --remove-orphans) || true
+  if [ -n "$(db_container)" ] && db_exists "$DB_NAME"; then db_exec postgres -c "DROP DATABASE $DB_NAME WITH (FORCE)"; fi
+  remove_nginx
+  for side in backend frontend; do
+    tag="$(tag_of "$side")"
+    [ -n "$tag" ] && docker image rm "${OWNER_IMAGE}-$side:$tag" >/dev/null 2>&1 || true
+  done
+  rm -rf "$ENV_DIR"
+}
+
 close() {
   [ "$SLUG" != develop ] || { echo "Die develop-Testumgebung wird nicht geschlossen" >&2; exit 1; }
   [ -d "$ENV_DIR" ] || { log "keine Testumgebung vorhanden"; return 0; }
   local old_tag; old_tag="$(tag_of "$SIDE")"
-  rm -f "$ENV_DIR/${SIDE}_tag"
-  if [ -n "$(tag_of backend)$(tag_of frontend)" ]; then
+  local other=backend; [ "$SIDE" = backend ] && other=frontend
+  if [ -n "$(tag_of "$other")" ]; then
     # Der PR im anderen Repo ist noch offen: dieser Teil läuft ab jetzt wieder vom develop-Stand
+    rm -f "$ENV_DIR/${SIDE}_tag"
     log "$SIDE geschlossen, Testumgebung bleibt für den anderen PR"
     write_compose
     (cd "$ENV_DIR" && docker compose up -d --remove-orphans)
     if [ "$SIDE" = backend ] && db_exists "$DB_NAME"; then db_exec postgres -c "DROP DATABASE $DB_NAME WITH (FORCE)"; fi
+    [ -n "$old_tag" ] && docker image rm "${OWNER_IMAGE}-$SIDE:$old_tag" >/dev/null 2>&1 || true
   else
-    log "räume Testumgebung ab"
-    (cd "$ENV_DIR" && docker compose down -v --remove-orphans) || true
-    if [ -n "$(db_container)" ] && db_exists "$DB_NAME"; then db_exec postgres -c "DROP DATABASE $DB_NAME WITH (FORCE)"; fi
-    remove_nginx
-    rm -rf "$ENV_DIR"
+    teardown
   fi
-  [ -n "$old_tag" ] && docker image rm "${OWNER_IMAGE}-$SIDE:$old_tag" >/dev/null 2>&1 || true
+  docker image prune -f >/dev/null || true
+}
+
+# Komplett entfernen, egal welche PRs noch offen sind (Umgebungen mit altem, langem Namen)
+purge() {
+  [ "$SLUG" != develop ] || { echo "Die develop-Testumgebung wird nicht entfernt" >&2; exit 1; }
+  [ -d "$ENV_DIR" ] || return 0
+  teardown
   docker image prune -f >/dev/null || true
 }
 
@@ -328,5 +353,6 @@ declare -F apply_migrations >/dev/null || apply_migrations() { :; }
 case "$ACTION" in
   deploy) deploy ;;
   close) close ;;
+  purge) purge ;;
   *) echo "Unbekannte ACTION: $ACTION" >&2; exit 1 ;;
 esac
