@@ -41,26 +41,41 @@ jobs:
     outputs:
       preview: ${{ steps.meta.outputs.preview }}
       slug: ${{ steps.meta.outputs.slug }}
+      legacy: ${{ steps.meta.outputs.legacy }}
       tag: ${{ steps.meta.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       # Testumgebung (deploy/PREVIEW.md): develop -> test.proxyprinter.eu, PR nach develop -> <slug>.test.proxyprinter.eu.
-      # Der Slug kommt aus dem Branch-Namen und ist in beiden Repos gleich, so landen Backend- und Frontend-PR zusammen.
+      # Slug = erste 6 Zeichen von sha256(Branch-Name), in beiden Repos gleich, so landen Backend- und Frontend-PR zusammen.
+      # Ändert der PR (bzw. der Push auf develop) nur Doku, wird nichts gepusht und nichts ausgerollt.
       - id: meta
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
         run: |
-          slug=$(printf '%s' "$BRANCH" | sed 's#^claude/##' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-40 | sed -E 's/-+$//')
-          preview=false
+          slug=$(printf '%s' "$BRANCH" | sha256sum | cut -c1-6)
+          # alter, langer Name aus der ersten Version, damit die Umgebung dort einmalig entfernt wird
+          legacy=$(printf '%s' "$BRANCH" | sed 's#^claude/##' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-40 | sed -E 's/-+$//')
+          preview=false; tag=""; range=""
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            [ "$slug" = develop ] && slug=pr-develop
             [ "$BASE" = develop ] && preview=true
-            tag="br-$slug"
+            tag="br-$slug"; range="origin/$BASE...HEAD"
           elif [ "$BRANCH" = develop ]; then
-            slug=develop; tag=develop; preview=true
+            slug=develop; legacy=""; tag=develop; preview=true
+            [ -n "$BEFORE" ] && git cat-file -e "$BEFORE" 2>/dev/null && range="$BEFORE..HEAD"
+          fi
+          if [ "$preview" = true ] && [ -n "$range" ]; then
+            changed=$(git diff --name-only "$range")
+            if [ -n "$changed" ] && ! grep -qvE '(^|/)[^/]*\.md$|^docs/|^\.claude/|^archive/|^(LICENSE|TODO|\.gitignore)$' <<< "$changed"; then
+              echo "::notice::Nur Doku geändert, keine Testumgebung"
+              preview=false
+            fi
           fi
           echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          echo "legacy=$legacy" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
@@ -105,6 +120,7 @@ jobs:
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
           PROD_PATH: ${{ vars.DEPLOY_PATH || '/opt/proxyprinter' }}
           SLUG: ${{ needs.docker.outputs.slug }}
+          LEGACY_SLUG: ${{ needs.docker.outputs.legacy }}
           NEW_TAG: ${{ needs.docker.outputs.tag }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -114,6 +130,7 @@ jobs:
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           {
             printf 'export ACTION=deploy SIDE=frontend SLUG=%q NEW_TAG=%q PROD_PATH=%q\n' "$SLUG" "$NEW_TAG" "$PROD_PATH"
+            printf 'export LEGACY_SLUG=%q\n' "$LEGACY_SLUG"
             printf 'export GHCR_USER=%q GHCR_TOKEN=%q\n' "$GITHUB_ACTOR" "$GHCR_TOKEN"
             cat .github/deploy/preview.sh
           } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
