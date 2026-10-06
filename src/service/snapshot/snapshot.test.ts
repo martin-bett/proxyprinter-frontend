@@ -44,9 +44,9 @@ describe('snapshot', () => {
     expect(updated.contentHash).toBe(createSnapshot(workState(), 'manual').contentHash);
   });
 
-  it('uses the new automatic name when the snapshot had no custom name', () => {
+  it('keeps the automatic name of a snapshot without custom name', () => {
     const old = createSnapshot({ ...workState(), decklist: '1 Island', cardResults: {}, selectedCards: {} }, 'manual', 1000);
-    expect(snapshotLabel(overwriteSnapshot(old, workState(), 2000))).toBe('3 cards · Lightning Bolt');
+    expect(snapshotLabel(overwriteSnapshot(old, workState(), 2000))).toBe('1 card · Island');
   });
 
 

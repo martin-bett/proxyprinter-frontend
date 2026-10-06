@@ -195,8 +195,8 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
 }
 
 /**
- * Überschreibt einen gespeicherten Snapshot mit dem aktuellen Stand. ID und eigener
- * Name bleiben, alles andere ist neu. Ein altes PDF passt dann nicht mehr zum Inhalt,
+ * Überschreibt einen gespeicherten Snapshot mit dem aktuellen Stand. ID und angezeigter
+ * Name bleiben (auch ein automatischer wird als fester Name übernommen), alles andere ist neu. Ein altes PDF passt dann nicht mehr zum Inhalt,
  * deshalb wird daraus ein manueller Snapshot ohne PDF (fällt so auch nicht unter das
  * Limit der Generate-Snapshots).
  */
@@ -205,7 +205,7 @@ export function overwriteSnapshot(target: Snapshot, state: WorkState, now: numbe
   return {
     ...fresh,
     id: target.id,
-    label: target.label.custom ? { ...fresh.label, custom: target.label.custom } : fresh.label,
+    label: { ...fresh.label, custom: snapshotLabel(target) },
   };
 }
 
