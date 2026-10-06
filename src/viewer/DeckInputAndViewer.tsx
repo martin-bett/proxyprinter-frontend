@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
-import ProgressBar from '../components/progress/ProgressBar';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
@@ -1257,7 +1256,7 @@ const DeckInputAndViewer: React.FC = () => {
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
       <ThemeChooser />
       <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
-      <TitleDiv />
+      <TitleDiv progress={isLoading ? progress : null} />
 
 
       <div className="input-controls">
@@ -1404,9 +1403,6 @@ const DeckInputAndViewer: React.FC = () => {
           </CollapsibleSection>
 
         </div>
-        {isLoading && (
-          <ProgressBar className="search-progress" value={progress / 100} height={20} label={`${progress}%`} />
-        )}
         <CollapsibleSection
           storageKey="search-log"
           title="Search Log"

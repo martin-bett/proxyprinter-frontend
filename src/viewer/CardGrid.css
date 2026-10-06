@@ -22,6 +22,11 @@
   min-width: 0;
 }
 
+/* Header als Fortschrittsbalken: Füllung wächst weich mit */
+.headline-progress-clip {
+  transition: width 0.3s ease-out;
+}
+
 .input-controls {
   grid-area: input-controls;
   /* Scrollt wie die rechte Toolbar selbst, wenn der Inhalt höher als das Fenster ist */
@@ -240,9 +245,6 @@
   }
 }
 
-.search-progress {
-  margin-bottom: 20px;
-}
 .settings-category {
   display: inline-block;
   margin: 5px 25px 5px 25px;
