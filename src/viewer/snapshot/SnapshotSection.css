@@ -70,8 +70,14 @@
   height: 1.1rem;
 }
 
-.snapshot-tool:hover {
+.snapshot-tool:hover:not(:disabled) {
   color: var(--accent);
+}
+
+.snapshot-tool:disabled {
+  color: var(--text-muted);
+  opacity: 0.4;
+  cursor: default;
 }
 
 .snapshot-tool:focus-visible {

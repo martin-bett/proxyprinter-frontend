@@ -4,6 +4,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import DownloadIcon from '@mui/icons-material/Download';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ActionButton from '../../container/inputs/ActionButton';
@@ -22,6 +23,8 @@ export interface SnapshotSectionProps {
   totalBytes: number;
   onSave: () => void;
   onLoad: (snapshot: Snapshot) => void;
+  /** Inhalt durch den aktuellen Stand ersetzen */
+  onOverwrite: (snapshot: Snapshot) => void;
   onRename: (snapshot: Snapshot) => void;
   onDelete: (snapshot: Snapshot) => void;
   onDeleteAll: () => void;
@@ -45,7 +48,7 @@ const kindIcon = (snapshot: Snapshot) => {
 };
 
 const SnapshotSection: React.FC<SnapshotSectionProps> = ({
-  snapshots, session, pdfInfos, notice, canSave, totalBytes, onSave, onLoad, onRename, onDelete, onDeleteAll,
+  snapshots, session, pdfInfos, notice, canSave, totalBytes, onSave, onLoad, onOverwrite, onRename, onDelete, onDeleteAll,
 }) => {
   const listed = snapshots.filter(s => s.kind !== 'session');
 
@@ -103,6 +106,16 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
                 <DownloadIcon />
               </a>
             )}
+            <button
+              type="button"
+              className="snapshot-tool"
+              onClick={() => onOverwrite(snapshot)}
+              disabled={!canSave}
+              title="Overwrite with current state"
+              aria-label={`Overwrite ${label} with current state`}
+            >
+              <SaveAsIcon />
+            </button>
             <button type="button" className="snapshot-tool" onClick={() => onRename(snapshot)} title="Rename" aria-label={`Rename ${label}`}>
               <EditIcon />
             </button>

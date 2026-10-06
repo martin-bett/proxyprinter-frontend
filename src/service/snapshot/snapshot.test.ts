@@ -1,7 +1,7 @@
 import { CardResult, CardResultsMap } from '../../api/types/types';
 import { defaultSettings } from '../../viewer/pdf/SettingsDialog';
 import {
-  WorkState, createSnapshot, customUploadIds, isEmptyState, migrateSnapshot, restoreSnapshot, snapshotLabel, SNAPSHOT_VERSION,
+  WorkState, createSnapshot, customUploadIds, isEmptyState, migrateSnapshot, overwriteSnapshot, restoreSnapshot, snapshotLabel, SNAPSHOT_VERSION,
 } from './snapshot';
 
 const card = (name: string, apiName: string, imageUrl: string, languageCode = 'en'): CardResult => ({
@@ -30,6 +30,26 @@ function workState(): WorkState {
 }
 
 describe('snapshot', () => {
+  it('overwrites a snapshot with the current state, keeping id and custom name', () => {
+    const old = createSnapshot({ ...workState(), decklist: '1 Island', cardResults: {}, selectedCards: {} }, 'generate', 1000);
+    old.label.custom = 'My Deck';
+    old.pdf.generated = { progressId: 'p1', createdAt: 1000 };
+    const updated = overwriteSnapshot(old, workState(), 2000);
+    expect(updated.id).toBe(old.id);
+    expect(snapshotLabel(updated)).toBe('My Deck');
+    expect(updated.label.cardCount).toBe(3);
+    expect(updated.kind).toBe('manual');
+    expect(updated.createdAt).toBe(2000);
+    expect(updated.pdf.generated).toBeUndefined();
+    expect(updated.contentHash).toBe(createSnapshot(workState(), 'manual').contentHash);
+  });
+
+  it('keeps the automatic name of a snapshot without custom name', () => {
+    const old = createSnapshot({ ...workState(), decklist: '1 Island', cardResults: {}, selectedCards: {} }, 'manual', 1000);
+    expect(snapshotLabel(overwriteSnapshot(old, workState(), 2000))).toBe('1 card · Island');
+  });
+
+
   it('round-trips results, selection, crops, filters and pdf settings', () => {
     const snapshot = createSnapshot(workState(), 'manual', 1000);
     const { state, droppedCustomCards } = restoreSnapshot(migrateSnapshot(JSON.parse(JSON.stringify(snapshot))));

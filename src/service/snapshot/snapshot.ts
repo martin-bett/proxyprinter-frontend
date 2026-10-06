@@ -194,6 +194,21 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
   };
 }
 
+/**
+ * Überschreibt einen gespeicherten Snapshot mit dem aktuellen Stand. ID und angezeigter
+ * Name bleiben (auch ein automatischer wird als fester Name übernommen), alles andere ist neu. Ein altes PDF passt dann nicht mehr zum Inhalt,
+ * deshalb wird daraus ein manueller Snapshot ohne PDF (fällt so auch nicht unter das
+ * Limit der Generate-Snapshots).
+ */
+export function overwriteSnapshot(target: Snapshot, state: WorkState, now: number = Date.now()): Snapshot {
+  const fresh = createSnapshot(state, 'manual', now);
+  return {
+    ...fresh,
+    id: target.id,
+    label: { ...fresh.label, custom: snapshotLabel(target) },
+  };
+}
+
 // Vor der ersten Suche: Anzahlen aus der Decklist
 function decklistCount(decklist: string): number {
   return decklist.split('\n').reduce((sum, line) => {
