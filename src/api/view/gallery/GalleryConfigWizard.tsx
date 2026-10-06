@@ -26,6 +26,13 @@ export interface GalleryConfigFormState {
   nameField: string;
   imageUrlField: string;
   defaultLanguage: string;
+  linkPattern: string;
+  followInputRedirects: boolean;
+  credential: string;
+  imageUrlPattern: string;
+  imageUrlReplacement: string;
+  namePattern: string;
+  nameReplacement: string;
   published?: boolean;
   [key: string]: unknown;
 }
@@ -37,11 +44,18 @@ const GALLERY_CONFIG_FIELDS: ConfigField[] = [
   { group: 'Request', name: 'method', label: 'Method', type: 'select', options: [['GET', 'GET'], ['POST', 'POST']] },
   { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['html', 'HTML']] },
   { group: 'Request', name: 'baseUrl', label: 'Base URL' },
-  { group: 'Request', name: 'parameterMap', label: 'Parameter Map', type: 'json' },
+  { group: 'Request', name: 'parameterMap', label: 'Parameter Map', type: 'json', title: 'Jeder Eintrag wird zu einem Eingabefeld. Leer lassen, wenn die Quelle keine Eingabe braucht' },
+  { group: 'Request', name: 'linkPattern', label: 'Link Pattern', title: 'Regex mit benannten Gruppen, z. B. (?<id>\\d+). Die Gruppen füllen {id} usw. in der Base URL; mit Link Pattern oder Credential ruft das Backend die Quelle ab' },
+  { group: 'Request', name: 'followInputRedirects', label: 'Follow Link Redirects', type: 'checkbox', title: 'Passt der Link nicht zum Pattern, zuerst seinen Weiterleitungen folgen (Kurz- und Teilen-Links)' },
+  { group: 'Request', name: 'credential', label: 'Credential', title: 'Name eines Zugangs, den der Server-Betreiber hinterlegt hat (z. B. reddit). Cookie bzw. Token bleiben auf dem Server und gehen nur an den dazugehörigen Host' },
   { group: 'Locator', name: 'paginationField', label: 'Pagination Field' },
   { group: 'Locator', name: 'dataListField', label: 'Data List Field' },
   { group: 'Locator', name: 'nameField', label: 'Name Field' },
   { group: 'Locator', name: 'imageUrlField', label: 'Image URL Field' },
+  { group: 'Locator', name: 'imageUrlPattern', label: 'Image URL Pattern', title: 'Regex auf die gelesene Bild-URL. Passt sie nicht, fällt der Eintrag weg (z. B. Videos, Unterordner)' },
+  { group: 'Locator', name: 'imageUrlReplacement', label: 'Image URL Replacement', title: 'Ersetzung zum Pattern, Gruppen als $1, z. B. https://i.redd.it/$1' },
+  { group: 'Locator', name: 'namePattern', label: 'Name Pattern', title: 'Regex auf den gelesenen Namen, z. B. \\.\\w+$ für die Dateiendung' },
+  { group: 'Locator', name: 'nameReplacement', label: 'Name Replacement', title: 'Ersetzung zum Pattern, leer = entfernen' },
   { group: 'Locator', name: 'defaultLanguage', label: 'Default Language', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'Sprache für Karten, zu denen die Quelle keine Sprache liefert' },
 ];
 
@@ -70,7 +84,14 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     dataListField: '',
     nameField: '',
     imageUrlField: '',
-    defaultLanguage: ''
+    defaultLanguage: '',
+    linkPattern: '',
+    followInputRedirects: false,
+    credential: '',
+    imageUrlPattern: '',
+    imageUrlReplacement: '',
+    namePattern: '',
+    nameReplacement: ''
   });
 
   // Fingerprint-Initialisierung
