@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
 import ImageSelectDialog from './grid/ImageSelectDialog';
-import ProgressBar from '../components/progress/ProgressBar';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
@@ -1235,15 +1234,37 @@ const DeckInputAndViewer: React.FC = () => {
     });
   };
 
+  // Kurzinfos für zugeklappte Abschnitte
+  const ratio = (selected: number, total: number, label: string) => (total > 0 ? `${selected} / ${total} ${label}` : undefined);
+  const allApiNames = Object.keys(apiConfigs);
+  const apiSelectionSummary = allApiNames.length > 0 ? (
+    <span
+      title={[...new Set(Object.values(apiConfigs).map(config => config.category))]
+        .map(category => {
+          const names = Object.values(apiConfigs).filter(config => config.category === category).map(config => config.name);
+          return `${category}: ${names.filter(name => enabledApis[name]).length} / ${names.length}`;
+        })
+        .join('\n')}
+    >
+      {ratio(allApiNames.filter(name => enabledApis[name]).length, allApiNames.length, 'active')}
+    </span>
+  ) : undefined;
+  const decklistCardCount = parseDecklist(decklist).reduce((sum, entry) => sum + entry.count, 0);
+  const apiFilterItems = apiOrder.filter(name => apiConfigs[name]);
+
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
       <ThemeChooser />
       <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
-      <TitleDiv />
+      <TitleDiv progress={isLoading ? progress : null} />
 
 
       <div className="input-controls">
-        <CollapsibleSection storageKey="snapshots" title="Snapshots">
+        <CollapsibleSection
+          storageKey="snapshots"
+          title="Snapshots"
+          summary={`${snapshots.sectionProps.snapshots.length || 'none'} saved`}
+        >
           <SnapshotSection {...snapshots.sectionProps} />
         </CollapsibleSection>
         <div className="api-controls">
@@ -1251,6 +1272,7 @@ const DeckInputAndViewer: React.FC = () => {
             <CollapsibleSection
               storageKey="api-selection"
               title="API Selection"
+              summary={apiSelectionSummary}
               defaultOpen={false}
               action={{ icon: <SettingsIcon />, title: 'Manage APIs', onClick: handleOpenApiConfigDialog }}
             >
@@ -1291,7 +1313,11 @@ const DeckInputAndViewer: React.FC = () => {
         </div>
 
         <div className="decklist-input">
-          <CollapsibleSection storageKey="decklist" title="Enter Decklist">
+          <CollapsibleSection
+            storageKey="decklist"
+            title="Enter Decklist"
+            summary={decklistCardCount > 0 ? `${decklistCardCount} ${decklistCardCount === 1 ? 'card' : 'cards'}` : 'empty'}
+          >
             <form onSubmit={handleSubmit}>
               <textarea
                 value={decklist}
@@ -1377,10 +1403,12 @@ const DeckInputAndViewer: React.FC = () => {
           </CollapsibleSection>
 
         </div>
-        {isLoading && (
-          <ProgressBar className="search-progress" value={progress / 100} height={20} label={`${progress}%`} />
-        )}
-        <CollapsibleSection storageKey="search-log" title="Search Log" defaultOpen={false}>
+        <CollapsibleSection
+          storageKey="search-log"
+          title="Search Log"
+          summary={`${log.length} ${log.length === 1 ? 'entry' : 'entries'}`}
+          defaultOpen={false}
+        >
           <SearchLog entries={log} onShowRaw={setRawDataDialog} />
         </CollapsibleSection>
       </div>
@@ -1508,7 +1536,12 @@ const DeckInputAndViewer: React.FC = () => {
             </div>
           </div>
           </CollapsibleSection>
-          <CollapsibleSection storageKey="language-filter" title="Language Filter" defaultOpen={false}>
+          <CollapsibleSection
+            storageKey="language-filter"
+            title="Language Filter"
+            summary={ratio(languageOrder.filter(lang => visibleLanguages.has(lang)).length, languageOrder.length, 'shown')}
+            defaultOpen={false}
+          >
           <SortableList
             className="language-filter checkbox-group"
             items={languageOrder}
@@ -1519,10 +1552,15 @@ const DeckInputAndViewer: React.FC = () => {
             }
           />
           </CollapsibleSection>
-          <CollapsibleSection storageKey="api-filter" title="API Filter" defaultOpen={false}>
+          <CollapsibleSection
+            storageKey="api-filter"
+            title="API Filter"
+            summary={ratio(apiFilterItems.filter(name => visibleApis.has(name)).length, apiFilterItems.length, 'shown')}
+            defaultOpen={false}
+          >
           <SortableList
             className="api-filter checkbox-group"
-            items={apiOrder.filter(name => apiConfigs[name])}
+            items={apiFilterItems}
             onReorder={reorderApis}
             renderItem={(name, handle) =>
               renderCheckbox(
