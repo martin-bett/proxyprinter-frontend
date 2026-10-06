@@ -141,6 +141,15 @@ EOF
       APP_PUBLIC_URL: $URL
       PDF_MAX_SIZE_MB: "100"
       JAVA_TOOL_OPTIONS: -Xmx512m
+EOF
+      # PR-Backends: speicherintensive Funktionen aus bzw. kurz halten (develop bleibt wie die Produktion)
+      [ "$SLUG" != develop ] && cat <<EOF
+      SEARCHCACHE_ENABLED: "false"
+      PDF_RETENTION_DAYS: "1"
+      UPLOAD_RETENTION_DAYS: "1"
+      LOG_DB_RETENTION_DAYS: "3"
+EOF
+      cat <<EOF
     networks:
       default:
       db:
