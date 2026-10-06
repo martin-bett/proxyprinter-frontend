@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
+import serverSearchCache, { ServerLookup, lookupKey } from '../service/cache/ServerSearchCache';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
@@ -95,6 +96,7 @@ const defaultCropSettings: CropSettings = {
 };
 
 const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
+const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
 const DeckInputAndViewer: React.FC = () => {
   const [decklist, setDecklist] = useState('');
@@ -127,6 +129,14 @@ const DeckInputAndViewer: React.FC = () => {
   const [searchConnected, setSearchConnected] = useState<boolean>(() => {
     try {
       return localStorage.getItem(SEARCH_CONNECTED_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  // Gemeinsamen Such-Cache im Backend nutzen (lesen und füllen), gemerkt pro Browser
+  const [useServerCache, setUseServerCache] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(USE_SERVER_CACHE_KEY) !== 'false';
     } catch {
       return true;
     }
@@ -385,15 +395,36 @@ const DeckInputAndViewer: React.FC = () => {
         const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
         return cached?.results || [];
       }
+      const config = apiConfigs[apiKey];
+      if (useServerCache && config) {
+        const fromServer = (await serverSearchCache.lookup([{ apiKey, config, term: cacheName }])).get(lookupKey(apiKey, cacheName));
+        if (fromServer) {
+          await SearchCacheService.setSearchResult(apiKey, cacheName, fromServer);
+          addToLog({ configName: apiKey, cardName, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
+          return fromServer.results;
+        }
+      }
       const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
       const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
+      if (useServerCache && config) serverSearchCache.put(config, cacheName, result);
       addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
       return result.results;
     } catch (error) {
       addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
       return [];
     }
+  };
+
+  // Fragt den Server-Cache gesammelt nach allen Suchen, die der lokale Cache nicht hat
+  const lookupServerCache = async (apiKeys: string[], terms: string[]): Promise<Map<string, SearchApiResult>> => {
+    if (!useServerCache) return new Map();
+    const pairs = apiKeys.flatMap(apiKey => terms.map(term => ({ apiKey, term })));
+    const locallyCached = await Promise.all(pairs.map(({ apiKey, term }) => SearchCacheService.hasSearchResult(apiKey, term).catch(() => false)));
+    const requests: ServerLookup[] = pairs
+      .filter((pair, index) => !locallyCached[index] && apiConfigs[pair.apiKey])
+      .map(pair => ({ ...pair, config: apiConfigs[pair.apiKey] }));
+    return serverSearchCache.lookup(requests);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -438,7 +469,7 @@ const DeckInputAndViewer: React.FC = () => {
     // Function to process a single API or proxy group
     // dropConnected: Treffer der zweiten Runde (z.B. Treasure) listen bei Scryfall alle Karten, die sie erzeugen.
     // Die brauchen wir nicht, also nicht mit in den Cache schreiben.
-    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected = false) => {
+    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected: boolean, serverHits: Map<string, SearchApiResult>) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
@@ -446,6 +477,8 @@ const DeckInputAndViewer: React.FC = () => {
         const api = apiFactory!.createApi(apiKey);
         // Cache-Einträge von vor den verbundenen Karten kennen sie noch nicht und werden neu gesucht
         const needsConnected = withConnected && hasConnectedCards(apiConfigs[apiKey]);
+        const lacksConnected = (candidate: SearchApiResult) =>
+          needsConnected && (candidate.results || []).length > 0 && (candidate.results || []).every(card => card.connectedCards === undefined);
 
         const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
@@ -456,15 +489,21 @@ const DeckInputAndViewer: React.FC = () => {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
               }
               const cached = result?.results || [];
-              if (result && !(needsConnected && cached.length > 0 && cached.every(card => card.connectedCards === undefined))) {
+              const fromServer = serverHits.get(lookupKey(apiKey, entry.name));
+              if (result && !lacksConnected(result)) {
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: cached.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
                 groupResults[apiKey][entry.name] = cached;
+              } else if (fromServer && !lacksConnected(fromServer)) {
+                await SearchCacheService.setSearchResult(apiKey, entry.name, fromServer);
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
+                groupResults[apiKey][entry.name] = fromServer.results;
               } else {
                 result = await api({ cardname: entry.name });
                 if (dropConnected) {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
+                if (useServerCache) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
                 const resultsArr = result?.results || [];
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
@@ -483,9 +522,10 @@ const DeckInputAndViewer: React.FC = () => {
 
     // Process all API groups concurrently
     const searchAllGroups = async (entries: DeckEntry[], dropConnected = false) => {
+      const serverHits = await lookupServerCache(enabledApiKeys, entries.map(entry => entry.name));
       const groupResults = await Promise.all([
-        processApiGroup(proxyGroup, entries, dropConnected),
-        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected))
+        processApiGroup(proxyGroup, entries, dropConnected, serverHits),
+        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected, serverHits))
       ]);
       const merged: Record<string, Record<string, SearchResult[]>> = {};
       groupResults.forEach(groupResult => Object.assign(merged, groupResult));
@@ -1117,6 +1157,8 @@ const DeckInputAndViewer: React.FC = () => {
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
     const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
 
+    const serverHits = await lookupServerCache(enabledApiKeys, [cardEntry.name]);
+
     // Function to process a single API or proxy group
     const processApiGroup = async (apiKeys: string[]) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
@@ -1132,9 +1174,15 @@ const DeckInputAndViewer: React.FC = () => {
             const resultsArr = result?.results || [];
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
+          } else if (serverHits.has(lookupKey(apiKey, cardEntry.name))) {
+            result = serverHits.get(lookupKey(apiKey, cardEntry.name))!;
+            await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'server', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result.rawResponse });
+            groupResults[apiKey][cardEntry.name] = result.results;
           } else {
             result = await api({ cardname: cardEntry.name });
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
+            if (useServerCache) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
             const resultsArr = result?.results || [];
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
@@ -1348,6 +1396,19 @@ const DeckInputAndViewer: React.FC = () => {
                   </div>
                 );
               })()}
+              <div
+                className="connected-cards-toggle"
+                title="Use search results other users already found (shared server cache). Uncheck to always search the sources yourself."
+              >
+                {renderCheckbox('useServerCache', 'Shared Search Cache', useServerCache, (event) => {
+                  setUseServerCache(event.target.checked);
+                  try {
+                    localStorage.setItem(USE_SERVER_CACHE_KEY, String(event.target.checked));
+                  } catch {
+                    // Ohne localStorage gilt die Wahl nur bis zum Neuladen
+                  }
+                })}
+              </div>
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
