@@ -41,14 +41,17 @@ jobs:
             const owner = context.repo.owner, repo = context.repo.repo, pkg = process.env.PACKAGE;
             const dry = process.env.DRY_RUN === 'true';
             const graceMs = Number(process.env.GRACE_HOURS) * 3600 * 1000;
-            const slugOf = b => {
-              let s = b.replace(/^claude\//, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+/, '').slice(0, 40).replace(/-+$/, '');
-              return s === 'develop' ? 'pr-develop' : s;
+            // Tag-Namen eines Branches: aktuell br-<erste 6 Zeichen sha256(Branch)>, wie in ci.yml/preview.sh;
+            // dazu der alte lange br-<slug>, falls noch Altbestand existiert
+            const crypto = require('crypto');
+            const slugsOf_ = b => {
+              const legacy = b.replace(/^claude\//, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+/, '').slice(0, 40).replace(/-+$/, '');
+              return [crypto.createHash('sha256').update(b).digest('hex').slice(0, 6), legacy, legacy === 'develop' ? 'pr-develop' : legacy];
             };
 
             // Slugs offener PRs nach develop: deren br-Images bleiben
             const openPrs = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', per_page: 100 });
-            const openSlugs = new Set(openPrs.filter(p => p.base.ref === 'develop').map(p => slugOf(p.head.ref)));
+            const openSlugs = new Set(openPrs.filter(p => p.base.ref === 'develop').flatMap(p => slugsOf_(p.head.ref)));
 
             const { data: ownerInfo } = await github.rest.users.getByUsername({ username: owner });
             const isOrg = ownerInfo.type === 'Organization';
