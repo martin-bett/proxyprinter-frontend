@@ -65,6 +65,7 @@ import SearchLog from './log/SearchLog';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
+import { adjustSelectionForCountChange } from './selectionUtils';
 
 const NO_LANGUAGE = 'No Language';
 const languageOfCard = (card: CardResult) => card.languageCode || NO_LANGUAGE;
@@ -1100,13 +1101,29 @@ const DeckInputAndViewer: React.FC = () => {
   }
 
   const updateCardCount = (cardName: string, increment: number) => {
+    const prevCount = cardResults[cardName]?.count ?? 0;
+    const newCount = Math.max(0, prevCount + increment);
+
     setCardResults(prevResults => ({
       ...prevResults,
       [cardName]: {
         ...prevResults[cardName],
-        count: Math.max(0, prevResults[cardName].count + increment)
+        count: newCount
       }
     }));
+
+    // Inherit selection from first copy when count changes
+    if (increment !== 0) {
+      setSelectedCards(prevSelected => ({
+        ...prevSelected,
+        [cardName]: adjustSelectionForCountChange(prevSelected[cardName], prevCount, newCount)
+      }));
+
+      setManualPicks(prevPicks => ({
+        ...prevPicks,
+        [cardName]: adjustSelectionForCountChange(prevPicks[cardName], prevCount, newCount)
+      }));
+    }
   };
 
   const getLanguageLabel = (lang: string) => (
