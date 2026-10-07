@@ -115,4 +115,16 @@ describe('Gallery-Configs über das Backend', () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe('https://x.test/list.json');
     expect(results.map(r => r.imageUrl)).toEqual(['https://x.test/a.png']);
   });
+
+  it('wertet eingefügten Quelltext aus, ohne etwas abzurufen', async () => {
+    const pasted = JSON.stringify([{ data: { children: [{ data: { media_metadata: {
+      aaa: { id: 'aaa', s: { u: 'https://preview.redd.it/aaa.jpg?width=3000&amp;amp;format=pjpg&amp;amp;s=sig' } },
+    } } }] } }, {}]);
+    const api = new ApiFactory({ reddit: redditConfig(pasted) }).createApi('reddit');
+
+    const { results } = await api({});
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(results.map(r => [r.name, r.imageUrl])).toEqual([['aaa', 'https://i.redd.it/aaa.jpg']]);
+  });
 });
