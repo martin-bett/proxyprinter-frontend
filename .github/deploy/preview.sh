@@ -149,13 +149,22 @@ EOF
       PDF_MAX_SIZE_MB: "100"
       JAVA_TOOL_OPTIONS: -Xmx512m
 EOF
-      # PR-Backends: speicherintensive Funktionen aus bzw. kurz halten (develop bleibt wie die Produktion)
-      [ "$SLUG" != develop ] && cat <<EOF
+      # Gemeinsamer Such-Cache: nur im develop-Backend an, auf eigenem Volume (überlebt Neuausrollen, getrennt von der Produktion).
+      # PR-Backends: Such-Cache aus, speicherintensive Funktionen kurz halten.
+      if [ "$SLUG" = develop ]; then
+        cat <<EOF
+      SEARCHCACHE_ENABLED: "true"
+    volumes:
+      - search-cache:/app/search-cache
+EOF
+      else
+        cat <<EOF
       SEARCHCACHE_ENABLED: "false"
       PDF_RETENTION_DAYS: "1"
       UPLOAD_RETENTION_DAYS: "1"
       LOG_DB_RETENTION_DAYS: "3"
 EOF
+      fi
       cat <<EOF
     networks:
       default:
@@ -184,7 +193,7 @@ networks:
     name: ppt-api
     external: true
 EOF
-    [ "$SLUG" = develop ] && printf 'volumes:\n  db-data:\n'
+    [ "$SLUG" = develop ] && printf 'volumes:\n  db-data:\n  search-cache:\n'
   } > "$ENV_DIR/docker-compose.yml"
   ln -sf "$PREVIEW_ROOT/.env" "$ENV_DIR/.env"
 }
