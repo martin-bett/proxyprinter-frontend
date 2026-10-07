@@ -19,7 +19,7 @@ type OverlayTab = 'info' | 'crop';
  * Bild für Vorschau und Zuschnitt: erst die kleine Kopie aus dem lokalen Cache (sofort da, preview),
  * dann das Original aus dem Cache bzw. über den Backend-Proxy (gleiche Origin, also ohne CORS-Probleme).
  */
-const useProxiedImage = (card: CardResult | null | undefined) => {
+export const useProxiedImage = (card: CardResult | null | undefined) => {
   const imageUrl = card?.imageUrl;
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
