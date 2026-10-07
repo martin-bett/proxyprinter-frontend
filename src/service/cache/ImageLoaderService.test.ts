@@ -23,6 +23,7 @@ const request = (result?: any) => {
   },
 };
 (global as any).URL.createObjectURL = () => "blob:test";
+(global as any).URL.revokeObjectURL = () => {};
 class FakeImage {
   onload: (() => void) | null = null;
   onerror: ((e: unknown) => void) | null = null;
