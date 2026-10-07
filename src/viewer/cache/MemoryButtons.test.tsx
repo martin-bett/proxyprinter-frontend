@@ -8,6 +8,15 @@ jest.mock('../../service/cache/hooks/useImageLoaderNumbers', () => ({
   useImageLoaderNumbers: jest.fn(),
 }));
 
+// Echter ImageLoaderService startet im Hintergrund Logik, die nach Testende loggt und Jest scheitern lässt
+jest.mock('../../service/cache/ImageLoaderService', () => ({
+  imageLoaderService: { cacheLimit: 1024 * 1024 * 1024 },
+}));
+
+jest.mock('../../service/cache/hooks/useImageLoaderCache', () => ({
+  useImageLoaderCache: () => ({ totalSize: 0 }),
+}));
+
 jest.mock('../../service/cache/SearchCacheService', () => ({
   __esModule: true,
   default: { getSearchCount: jest.fn().mockResolvedValue(0) },
