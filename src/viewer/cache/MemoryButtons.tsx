@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
@@ -17,7 +16,6 @@ import SearchCacheManagerDialog from './SearchCacheManagerDialog';
 import './MemoryButtons.css';
 
 interface MemoryButtonsProps {
-  /** Leert Decklist, Suchergebnisse und Auswahl */
   onResetDeck: () => Promise<void> | void;
   resetDisabled?: boolean;
 }
@@ -49,28 +47,24 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
   return (
     <>
       <div className="memory-buttons-bar">
-        <button className="memory-button" title="Wartende Downloads" onClick={openQueueDialog}>
+        <button className="memory-button" title="Pending Downloads" onClick={openQueueDialog}>
           <AccessTimeIcon />
           <span className="memory-button-count">{queued}</span>
         </button>
-        <button className="memory-button" title="Aktive Downloads" onClick={openQueueDialog}>
+        <button className="memory-button" title="Active Downloads" onClick={openQueueDialog}>
           <DownloadIcon />
           <span className="memory-button-count">{active}</span>
         </button>
-        <button className="memory-button" title="Cache-Ladevorgänge" onClick={openQueueDialog}>
-          <UploadIcon />
-          <span className="memory-button-count">{cacheLoading}</span>
-        </button>
-        <button className="memory-button" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
+        <button className="memory-button" title="Show Search Cache" onClick={() => setSearchCacheDialogOpen(true)}>
           <SearchIcon />
           <span className="memory-button-count">{searchCount}</span>
         </button>
-        <button className="memory-button" title="Cache anzeigen" onClick={openImageCacheDialog}>
+        <button className="memory-button" title="Show Cache" onClick={openImageCacheDialog}>
           <CacheProgressBar width={120} />
         </button>
         <button
           className="memory-button"
-          title="Deck zurücksetzen"
+          title="Reset Deck"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetDisabled}
         >
@@ -103,11 +97,11 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
       <ClosableDialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)} maxWidth="xs">
         <div className="reset-deck-dialog">
-          <h2>Deck zurücksetzen?</h2>
-          <p>Decklist, Suchergebnisse und Bildauswahl werden geleert. Der aktuelle Stand wird vorher als Snapshot gespeichert.</p>
+          <h2>Reset Deck?</h2>
+          <p>Decklist, search results, and image selection will be cleared. The current state is saved as a snapshot first.</p>
           <div className="reset-deck-actions">
             <ActionButton icon={<CloseIcon />} onClick={() => setResetDialogOpen(false)}>
-              Abbrechen
+              Cancel
             </ActionButton>
             <ActionButton
               icon={<RestartAltIcon />}
@@ -117,7 +111,7 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
                 await onResetDeck();
               }}
             >
-              Zurücksetzen
+              Reset
             </ActionButton>
           </div>
         </div>

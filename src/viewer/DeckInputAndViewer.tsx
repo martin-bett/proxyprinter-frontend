@@ -100,6 +100,7 @@ const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
 const DeckInputAndViewer: React.FC = () => {
   const [decklist, setDecklist] = useState('');
+  const [appendMode, setAppendMode] = useState(false);
   const [cardResults, setCardResults] = useState<CardResultsMap>({});
   const [settings, setSettings] = useState<PdfSettings>(defaultSettings);
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -430,7 +431,9 @@ const DeckInputAndViewer: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setCardResults({});
+    if (!appendMode) {
+      setCardResults({});
+    }
     setLog([]);
     setProgress(0);
 
@@ -582,18 +585,20 @@ const DeckInputAndViewer: React.FC = () => {
       }
     }
 
-    const options = collectFilterOptions(results);
+    const mergedResults = appendMode ? { ...cardResults, ...results } : results;
+
+    const options = collectFilterOptions(mergedResults);
     const keptLanguages = new Set(Array.from(visibleLanguages).filter(lang => options.languages.has(lang)));
     const newVisibleLanguages = keptLanguages.size > 0 ? keptLanguages : options.languages;
     setVisibleApis(options.apis);
     setVisibleLanguages(newVisibleLanguages);
-    setCardResults(results);
+    setCardResults(mergedResults);
     setIsLoading(false);
 
     // Früher manuell gewählte Bilder (aus dem Such-Cache) gelten wieder als manuelle Wahl,
     // der Rest kommt aus der Filter-Priorität
     const initialManualPicks: ManualPicksMap = {};
-    Object.entries(results).forEach(([cardName, cardData]) => {
+    Object.entries(mergedResults).forEach(([cardName, cardData]) => {
       const picks = Array.from({ length: cardData.count }).map((_, index) => {
         const cachedImageUrl = SearchCacheService.getSelectedImage(cardName, index + 1);
         return cachedImageUrl ? cardData.results.find(card => card.imageUrl === cachedImageUrl) ?? null : null;
@@ -603,7 +608,7 @@ const DeckInputAndViewer: React.FC = () => {
     setManualPicks(initialManualPicks);
     setFreshPicks(new Set());
     setSelectedCards(computeSelection({}, {
-      cardResults: results,
+      cardResults: mergedResults,
       manualPicks: initialManualPicks,
       isVisible: card => card.apiName === 'custom' ||
         (newVisibleLanguages.has(card.languageCode || NO_LANGUAGE) && options.apis.has(card.apiName)),
@@ -611,6 +616,7 @@ const DeckInputAndViewer: React.FC = () => {
       apiOrder: applyOrder(storedApiOrder, Object.values(apiConfigs).map(config => config.name).filter(name => options.apis.has(name)).concat(Array.from(options.apis))),
       languageOf: languageOfCard,
     }));
+    setAppendMode(false);
   };
 
   const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
@@ -1410,6 +1416,10 @@ const DeckInputAndViewer: React.FC = () => {
                 })}
               </div>
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+              <ActionButton type="button" icon={<AddIcon />} disabled={isLoading} onClick={(e) => {
+                setAppendMode(true);
+                handleSubmit(e as unknown as React.FormEvent);
+              }}>Append Deck</ActionButton>
             </form>
           </CollapsibleSection>
           <CollapsibleSection

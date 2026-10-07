@@ -58,10 +58,10 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
 
   return (
     <div className="cache-manager-dialog search-cache-manager-dialog">
-      <h2>Such-Cache</h2>
+      <h2>Search Cache</h2>
       <div className="cache-manager-head">
         <div className="cache-manager-usage">
-          <span>{allEntries.length} gespeicherte Suchen</span>
+          <span>{allEntries.length} saved searches</span>
         </div>
         <ActionButton
           icon={<DeleteSweepIcon />}
@@ -69,10 +69,10 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
           onClick={remove(() => SearchCacheService.removeAllSearches())}
           disabled={allEntries.length === 0}
         >
-          Alle Suchen löschen
+          Clear All Searches
         </ActionButton>
       </div>
-      <p className="cache-manager-hint">Die Zahlen sind gefundene Treffer. Klick auf eine Zelle löscht die Suchen dahinter, die rote Markierung zeigt was gelöscht wird.</p>
+      <p className="cache-manager-hint">Numbers show found results. Click on a cell to delete the searches, red highlighting shows what will be deleted.</p>
       <table className="cache-table">
         <thead>
           <tr>
@@ -80,12 +80,12 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
             {apiKeys.map(apiKey => (
               <th key={apiKey}>{apiKey}</th>
             ))}
-            <th>Alle der Karte</th>
+            <th>All per Card</th>
           </tr>
         </thead>
         <tbody>
           <tr className="cache-sum-row">
-            <th className="cache-row-label">API gesamt</th>
+            <th className="cache-row-label">API Total</th>
             {apiKeys.map(apiKey => (
               <SearchCell
                 key={apiKey}
@@ -98,7 +98,7 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
           {cardNames.length === 0 && (
             <tr>
               <td colSpan={apiKeys.length + 2} className="cache-cell is-empty">
-                Keine gespeicherten Suchen
+                No saved searches
               </td>
             </tr>
           )}
@@ -121,7 +121,7 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
         </tbody>
       </table>
       <div className="cache-manager-footer">
-        <ActionButton icon={<CloseIcon />} onClick={onClose}>Schließen</ActionButton>
+        <ActionButton icon={<CloseIcon />} onClick={onClose}>Close</ActionButton>
       </div>
     </div>
   );

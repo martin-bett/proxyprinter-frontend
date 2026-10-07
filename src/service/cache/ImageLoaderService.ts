@@ -196,7 +196,7 @@ class ImageLoaderService {
   private maxConcurrent: number;
   private subscribers: Set<() => void> = new Set();
   private _lastSnapshot: CacheSnapshot | null = null;
-  cacheLimit = 1024 * 1024 * 1024; // 1 GB
+  cacheLimit = 4 * 1024 * 1024 * 1024; // 4 GB
   /** Erfüllt, sobald der persistente Cache beim Start geprüft wurde (Tests warten darauf). */
   readonly ready: Promise<void>;
 

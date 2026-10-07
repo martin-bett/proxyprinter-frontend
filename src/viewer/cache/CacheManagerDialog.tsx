@@ -33,7 +33,7 @@ export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMo
       onClick={showTrash ? onDelete : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      title={showTrash ? "Klicken zum Löschen" : ""}
+      title={showTrash ? "Click to delete" : ""}
     >
       {mbValue !== undefined ? mbValue : value}
     </td>
@@ -44,7 +44,7 @@ export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMo
 function ApiSumRow({ allApis, byApi, toMB }: { allApis: string[]; byApi: Record<string, CacheEntryLike[]>; toMB: (bytes: number) => string }) {
   return (
     <tr className="cache-sum-row">
-      <th className="cache-row-label">API gesamt</th>
+      <th className="cache-row-label">API Total</th>
       {allApis.map(api => (
         <DeletableApiSumCells key={api} api={api} entries={byApi[api] || []} toMB={toMB} />
       ))}
@@ -200,10 +200,10 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
 
   return (
     <div className="cache-manager-dialog">
-      <h2>Bild-Cache</h2>
+      <h2>Image Cache</h2>
       <div className="cache-manager-head">
         <div className="cache-manager-usage">
-          <span>{toMB(totalSize)} MB von {Math.round(imageLoaderService.cacheLimit / (1024 * 1024))} MB belegt</span>
+          <span>{toMB(totalSize)} MB of {Math.round(imageLoaderService.cacheLimit / (1024 * 1024))} MB used</span>
           <CacheProgressBar width={240} />
         </div>
         <form
@@ -217,7 +217,7 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
             Limit (MB)
             <input type="number" min={1} value={limitMB} onChange={handleLimitChange} />
           </label>
-          <ActionButton icon={<SaveIcon />} type="submit">Limit setzen</ActionButton>
+          <ActionButton icon={<SaveIcon />} type="submit">Set Limit</ActionButton>
         </form>
         <ActionButton
           icon={<DeleteSweepIcon />}
@@ -225,10 +225,10 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
           onClick={() => imageLoaderService.clearCache()}
           disabled={allCards.length === 0}
         >
-          Cache leeren
+          Clear Cache
         </ActionButton>
       </div>
-      <p className="cache-manager-hint">Klick auf eine Zelle löscht die Bilder dahinter, die rote Markierung zeigt was gelöscht wird.</p>
+      <p className="cache-manager-hint">Click on a cell to delete the images, red highlighting shows what will be deleted.</p>
       <table className="cache-table">
         <thead>
           <tr>
@@ -236,16 +236,16 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
             {allApis.map(api => (
               <th key={api} colSpan={2}>{api}</th>
             ))}
-            <th colSpan={2}>Alle der Karte</th>
+            <th colSpan={2}>All per Card</th>
           </tr>
           <tr>
             {allApis.map(api => (
               <React.Fragment key={api + "_sub"}>
-                <th>Anzahl</th>
+                <th>Count</th>
                 <th>MB</th>
               </React.Fragment>
             ))}
-            <th>Anzahl</th>
+            <th>Count</th>
             <th>MB</th>
           </tr>
         </thead>
@@ -253,7 +253,7 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
           <ApiSumRow allApis={allApis} byApi={byApi} toMB={toMB} />
           {allCards.length === 0 && (
             <tr>
-              <td colSpan={allApis.length * 2 + 3} className="cache-cell is-empty">Der Cache ist leer</td>
+              <td colSpan={allApis.length * 2 + 3} className="cache-cell is-empty">Cache is empty</td>
             </tr>
           )}
           {allCards.map(cardName => (
@@ -262,7 +262,7 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
         </tbody>
       </table>
       <div className="cache-manager-footer">
-        <ActionButton icon={<CloseIcon />} onClick={onClose}>Schließen</ActionButton>
+        <ActionButton icon={<CloseIcon />} onClick={onClose}>Close</ActionButton>
       </div>
     </div>
   );
