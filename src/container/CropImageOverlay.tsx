@@ -5,6 +5,7 @@ import CropIcon from '@mui/icons-material/Crop';
 import { CropSettings } from "../service/ApiFactory";
 import { CardResult } from "../api/types/types";
 import CropMask from "../viewer/grid/crop/CropMask";
+import { fetchImageViaProxy, imageLoaderService } from "../service/cache/ImageLoaderService";
 
 interface CropImageOverlayProps {
   selectedImage: CardResult | null;
@@ -14,48 +15,59 @@ interface CropImageOverlayProps {
 
 type OverlayTab = 'info' | 'crop';
 
-/** Bild über den Backend-Proxy laden, damit auch Seiten ohne Hotlinking funktionieren. */
-const useProxiedImage = (imageUrl: string | undefined) => {
+/**
+ * Bild für Vorschau und Zuschnitt: erst die kleine Kopie aus dem lokalen Cache (sofort da, preview),
+ * dann das Original aus dem Cache bzw. über den Backend-Proxy (gleiche Origin, also ohne CORS-Probleme).
+ */
+const useProxiedImage = (card: CardResult | null | undefined) => {
+  const imageUrl = card?.imageUrl;
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!imageUrl) {
+    if (!imageUrl || !card) {
       setImageSrc(null);
+      setPreviewSrc(null);
       return;
     }
-    let objectUrl: string | null = null;
+    const urls: string[] = [];
+    const toUrl = (blob: Blob) => {
+      const u = URL.createObjectURL(blob);
+      urls.push(u);
+      return u;
+    };
     let cancelled = false;
     setLoading(true);
     setImageSrc(null);
-    fetch("/api/proxy/image", { method: "GET", cache: "no-store", headers: { "X-Target-URL": imageUrl } })
-      .then((response) => {
-        if (!response.ok) throw new Error("Fehler beim Laden des Bildes");
-        return response.blob();
-      })
-      .then((blob) => {
+    setPreviewSrc(null);
+    (async () => {
+      const cached = await imageLoaderService.getCachedBlobs(card);
+      if (cancelled) return;
+      if (cached?.thumb) setPreviewSrc(toUrl(cached.thumb));
+      try {
+        const blob = cached?.blob || (await fetchImageViaProxy(imageUrl));
         if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setImageSrc(objectUrl);
-      })
-      .catch((error) => {
+        setImageSrc(toUrl(blob));
+      } catch (error) {
         console.error("Bild konnte nicht geladen werden:", error);
         // Ohne Proxy direkt versuchen
         if (!cancelled) setImageSrc(imageUrl);
-      })
-      .finally(() => !cancelled && setLoading(false));
+      }
+    })().finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      urls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [imageUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageUrl, card?.apiName, card?.name]);
 
-  return { imageSrc, loading };
+  return { imageSrc, previewSrc, loading };
 };
 
 const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, cardAspect = 63 / 88 }) => {
   const [tab, setTab] = useState<OverlayTab>('info');
-  const { imageSrc, loading } = useProxiedImage(selectedImage?.imageUrl);
+  const { imageSrc, previewSrc, loading } = useProxiedImage(selectedImage);
   // Zuschnitt direkt am gewählten Bild ablegen, der Dialog übernimmt es beim Schließen
   const handleCropChange = (crops: CropSettings[]) => {
     if (!selectedImage || crops.length === 0) return;
@@ -74,16 +86,16 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
         <Tab value="crop" icon={<CropIcon fontSize="small" />} iconPosition="start" label="Crop" disabled={!selectedImage} />
       </Tabs>
 
-      {loading && (
+      {loading && !(tab === 'info' && previewSrc) && (
         <div className="loading-spinner">
           <div className="spinner"></div>
         </div>
       )}
 
-      {selectedImage && imageSrc && tab === 'info' && (
+      {selectedImage && (imageSrc || previewSrc) && tab === 'info' && (
         <>
           <div className="crop-image-preview">
-            <img src={imageSrc} alt={selectedImage.name} style={{ maxHeight: maxImageHeight }} />
+            <img src={imageSrc || previewSrc || undefined} alt={selectedImage.name} style={{ maxHeight: maxImageHeight }} />
           </div>
           <table className="crop-image-info">
             <tbody>

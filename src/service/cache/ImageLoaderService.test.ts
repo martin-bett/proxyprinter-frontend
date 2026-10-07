@@ -209,3 +209,30 @@ describe("ImageLoaderService mit Proxy Images", () => {
   });
 });
 export {};
+
+describe("ImageLoaderService Thumbnails", () => {
+  const cardInput = { apiName: "A", name: "Bolt", imageUrl: "https://x/bolt.jpg" };
+  const key = "A::Bolt::https://x/bolt.jpg";
+
+  it("liefert mit preferThumbnail die kleine Kopie samt Originalmaßen", async () => {
+    stores.set(key, { cacheKey: key, sizeBytes: 11, timestamp: 1, imageUrl: cardInput.imageUrl, cardInput,
+      blob: { size: 10 }, thumb: { size: 1 }, width: 3000, height: 4000 });
+    const meta = await new Promise<any>((resolve, reject) =>
+      imageLoaderService.addToQueue({ url: cardInput.imageUrl, priority: 1, cardInput, preferThumbnail: true,
+        onLoad: (_img: unknown, _size: number, m: unknown) => resolve(m), onError: reject }));
+    expect(meta).toEqual({ fullWidth: 3000, fullHeight: 4000, thumbnail: true });
+  });
+
+  it("ohne preferThumbnail kommt das Original ohne meta", async () => {
+    const meta = await new Promise<any>((resolve, reject) =>
+      imageLoaderService.addToQueue({ url: cardInput.imageUrl, priority: 1, cardInput,
+        onLoad: (_img: unknown, _size: number, m: unknown) => resolve(m), onError: reject }));
+    expect(meta).toBeUndefined();
+  });
+
+  it("getCachedBlobs liefert Original und kleine Kopie", async () => {
+    const cached = await imageLoaderService.getCachedBlobs(cardInput);
+    expect(cached.thumb).toBeDefined();
+    expect(cached.width).toBe(3000);
+  });
+});
