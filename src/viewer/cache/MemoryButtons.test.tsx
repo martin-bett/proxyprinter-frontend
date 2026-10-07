@@ -1,0 +1,35 @@
+import 'fake-indexeddb/auto';
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import MemoryButtons from './MemoryButtons';
+import { useImageLoaderNumbers } from '../../service/cache/hooks/useImageLoaderNumbers';
+
+jest.mock('../../service/cache/hooks/useImageLoaderNumbers', () => ({
+  useImageLoaderNumbers: jest.fn(),
+}));
+
+jest.mock('../../service/cache/SearchCacheService', () => ({
+  __esModule: true,
+  default: { getSearchCount: jest.fn().mockResolvedValue(0) },
+}));
+
+const mockNumbers = useImageLoaderNumbers as jest.Mock;
+
+describe('MemoryButtons Download-Bubbles', () => {
+  it('blendet Queue- und Download-Bubbles aus, wenn beide Werte 0 sind', () => {
+    mockNumbers.mockReturnValue({ queued: 0, active: 0, cacheLoading: 0 });
+    render(<MemoryButtons onResetDeck={() => {}} />);
+
+    expect(screen.queryByTitle('Wartende Downloads')).toBeNull();
+    expect(screen.queryByTitle('Aktive Downloads')).toBeNull();
+    expect(screen.getByTitle('Cache-Ladevorgänge')).toBeTruthy();
+  });
+
+  it('zeigt die Bubbles, sobald etwas wartet oder lädt', () => {
+    mockNumbers.mockReturnValue({ queued: 3, active: 0, cacheLoading: 0 });
+    render(<MemoryButtons onResetDeck={() => {}} />);
+
+    expect(screen.getByTitle('Wartende Downloads').textContent).toContain('3');
+    expect(screen.getByTitle('Aktive Downloads').textContent).toContain('0');
+  });
+});

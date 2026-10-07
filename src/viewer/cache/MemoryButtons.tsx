@@ -45,18 +45,24 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
   const openQueueDialog = () => setQueueDialogOpen(true);
   const openImageCacheDialog = () => setImageCacheDialogOpen(true);
+  // Download-Bubbles nur zeigen, solange etwas geladen oder eingereiht wird
+  const downloadsIdle = queued === 0 && active === 0;
 
   return (
     <>
       <div className="memory-buttons-bar">
-        <button className="memory-button" title="Wartende Downloads" onClick={openQueueDialog}>
-          <AccessTimeIcon />
-          <span className="memory-button-count">{queued}</span>
-        </button>
-        <button className="memory-button" title="Aktive Downloads" onClick={openQueueDialog}>
-          <DownloadIcon />
-          <span className="memory-button-count">{active}</span>
-        </button>
+        {!downloadsIdle && (
+          <>
+            <button className="memory-button" title="Wartende Downloads" onClick={openQueueDialog}>
+              <AccessTimeIcon />
+              <span className="memory-button-count">{queued}</span>
+            </button>
+            <button className="memory-button" title="Aktive Downloads" onClick={openQueueDialog}>
+              <DownloadIcon />
+              <span className="memory-button-count">{active}</span>
+            </button>
+          </>
+        )}
         <button className="memory-button" title="Cache-Ladevorgänge" onClick={openQueueDialog}>
           <UploadIcon />
           <span className="memory-button-count">{cacheLoading}</span>
