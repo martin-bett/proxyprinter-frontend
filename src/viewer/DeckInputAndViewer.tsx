@@ -7,6 +7,7 @@ import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDia
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
 import { fetchPdfMailEnabled } from './pdf/pdfEmail';
+import { useAuth } from '../service/auth/auth';
 import { DEFAULT_MAX_PDF_SIZE_MB, PdfImageEntry, bytesToMb, estimatePdfBytes, fetchPdfSizeLimitMb, formatMb } from './pdf/pdfSizeLimit';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
@@ -809,7 +810,8 @@ const DeckInputAndViewer: React.FC = () => {
 
   const [pdfSizeLimitMb, setPdfSizeLimitMb] = useState(DEFAULT_MAX_PDF_SIZE_MB);
   const [pdfMailEnabled, setPdfMailEnabled] = useState(false);
-  const pdfEmail = pdfMailEnabled ? settings.email.trim() : '';
+  const auth = useAuth();
+  const pdfSendMail = pdfMailEnabled && settings.sendMail && !!auth.email;
   useEffect(() => {
     fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
     fetchPdfMailEnabled().then(setPdfMailEnabled);
@@ -833,7 +835,7 @@ const DeckInputAndViewer: React.FC = () => {
     setSelectedCards(restored.selectedCards);
     setManualPicks(restored.manualPicks);
     setFreshPicks(new Set());
-    setSettings(prev => ({ ...restored.settings, email: prev.email }));
+    setSettings(prev => ({ ...restored.settings, sendMail: prev.sendMail }));
     setEnabledApis(prev => {
       const wanted = new Set(restored.enabledApis);
       const updated: Record<string, boolean> = {};
@@ -914,11 +916,11 @@ const DeckInputAndViewer: React.FC = () => {
     setPdfProgressError(null);
     setPdfProgressDialogOpen(true);
 
-    const { email, ...pdfSettings } = settings;
+    const { sendMail, ...pdfSettings } = settings;
     const createPdfDto = {
       images: pdfImageEntries.map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
       settings: pdfSettings,
-      ...(pdfEmail ? { email: pdfEmail } : {})
+      ...(pdfSendMail ? { sendMail: true } : {})
     };
     try {
       const response = await fetch('/api/pdf', {
@@ -1806,7 +1808,7 @@ const DeckInputAndViewer: React.FC = () => {
           errorMessage={pdfProgressError}
           onFinish={downloadPDF}
           onClose={closePdfProgressDialog}
-          email={pdfEmail}
+          email={pdfSendMail ? auth.email ?? '' : ''}
         />
       </Dialog>
 
