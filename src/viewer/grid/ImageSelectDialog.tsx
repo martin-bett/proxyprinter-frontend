@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
 import './ImageSelectDialog.css';
+import HoverPreview from './HoverPreview';
 import CardImage, { CardImageError } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
@@ -210,8 +211,9 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     <h3>{apiName}</h3>
                     <div className="image-grid">
                       {visibleResults.map((result, index) => (
-                        <div
+                        <HoverPreview
                           key={index}
+                          card={result}
                           className={`image-option ${result === selectedImage ? 'selected' : ''}`}
                           onClick={() => handleImageSelect(result)}
                         >
@@ -222,7 +224,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                             showImageSettings={true}
                             onlyDimensions={true}
                           />
-                        </div>
+                        </HoverPreview>
                       ))}
                     </div>
                   </div>

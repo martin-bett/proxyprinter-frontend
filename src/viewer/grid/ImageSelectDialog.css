@@ -182,3 +182,14 @@
 .image-select-dialog .filter-count.is-empty {
   opacity: 0.5;
 }
+
+.hover-preview {
+  position: fixed;
+  z-index: 3000;
+  pointer-events: none;
+  background: #000;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.hover-preview img { display: block; }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { fetchImageViaProxy, imageLoaderService } from "../../service/cache/ImageLoaderService";
+import { fetchImageViaProxy, imageLoaderService, ImageLoadMeta } from "../../service/cache/ImageLoaderService";
 import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
@@ -19,6 +19,9 @@ const CARD_ASPECT = 63 / 88;
 // Laden beginnt eine Kartenhöhe vor dem sichtbaren Bereich, entladen erst ab zwei Kartenhöhen
 const LOAD_MARGIN_CARDS = 1;
 const UNLOAD_MARGIN_CARDS = 2;
+
+// Kacheln brauchen keine Originalauflösung: Canvas höchstens so breit (Pixel)
+const MAX_TILE_CANVAS_WIDTH = 640;
 
 export const QUEUE_CATEGORY_SELECT = 'selectgrid';
 const QUEUE_CATEGORY_DECK = 'deckgrid';
@@ -67,6 +70,9 @@ const CardImage: React.FC<CardImageProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState("");
   const imageRef = useRef<HTMLImageElement | null>(null); // Referenz zum geladenen Bild
+  // Originalmaße; weichen von imageRef ab, wenn dort nur die verkleinerte Kopie liegt
+  const fullSizeRef = useRef<{ width: number; height: number } | null>(null);
+  const isThumbRef = useRef(false);
   const [proxyTried, setProxyTried] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [quality, setQuality] = useState<ImageQuality | null>(null);
@@ -176,11 +182,10 @@ const CardImage: React.FC<CardImageProps> = ({
           cardInput: card,
           category: isPermanent ? QUEUE_CATEGORY_DECK : QUEUE_CATEGORY_SELECT,
           signal: abort.signal,
-          onLoad: (img) => {
+          preferThumbnail: true,
+          onLoad: (img, _size, meta) => {
             if (stale()) return;
-            imageRef.current = img;
-            handleLoad(img);
-            renderCanvas(img);
+            applyImage(img, meta);
           },
           onError: (error) => {
             if (stale()) return;
@@ -195,9 +200,7 @@ const CardImage: React.FC<CardImageProps> = ({
                   const img = new window.Image();
                   img.onload = () => {
                     if (stale()) return;
-                    imageRef.current = img;
-                    handleLoad(img);
-                    renderCanvas(img);
+                    applyImage(img);
                   };
                   img.onerror = () => {
                     if (stale()) return;
@@ -251,8 +254,17 @@ const CardImage: React.FC<CardImageProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardInput.cropSettings]);
 
+  const applyImage = (img: HTMLImageElement, meta?: ImageLoadMeta) => {
+    imageRef.current = img;
+    isThumbRef.current = !!meta?.thumbnail;
+    fullSizeRef.current = meta ? { width: meta.fullWidth, height: meta.fullHeight } : { width: img.naturalWidth, height: img.naturalHeight };
+    handleLoad(img);
+    renderCanvas(img);
+  };
+
   const handleLoad = (img: HTMLImageElement) => {
-    const { naturalWidth, naturalHeight } = img;
+    const naturalWidth = fullSizeRef.current?.width ?? img.naturalWidth;
+    const naturalHeight = fullSizeRef.current?.height ?? img.naturalHeight;
 
     const fileType = extractFileType(card?.imageUrl || '');
 
@@ -282,13 +294,16 @@ const CardImage: React.FC<CardImageProps> = ({
     const key = qualityCacheKey(crop);
     imageLoaderService.getCachedQuality(cacheInput, key).then(async (cached) => {
       if (run !== qualityRun.current) return;
-      const result = cached || (await queueImageQuality(img, crop));
+      // Hält die Kachel nur die kleine Kopie, braucht eine neue Messung das Original
+      const source = cached || !isThumbRef.current ? img : await imageLoaderService.loadFullFromCache(cacheInput);
+      if (run !== qualityRun.current) return;
+      const result = cached || (source ? await queueImageQuality(source, crop) : null);
       if (run !== qualityRun.current || !result) return;
       if (!cached) imageLoaderService.saveQuality(cacheInput, key, result);
       setQuality(result);
       const info: ImageInfo = {
-        width: img.naturalWidth,
-        height: img.naturalHeight,
+        width: fullSizeRef.current?.width ?? img.naturalWidth,
+        height: fullSizeRef.current?.height ?? img.naturalHeight,
         fileType: extractFileType(card?.imageUrl || cardInput.imageUrl || ''),
         quality: result,
       };
@@ -320,8 +335,12 @@ const CardImage: React.FC<CardImageProps> = ({
     const { offSetX = 0, offSetY = 0, width = 0, height = 0, isStretch = true } =
       card?.cropSettings || {};
 
-    const cropWidth = width > 0 ? width : img.naturalWidth;
-    const cropHeight = height > 0 ? height : img.naturalHeight;
+    // Crop-Werte gelten für das Original; liegt nur die kleine Kopie vor, umrechnen
+    const scale = fullSizeRef.current ? img.naturalWidth / fullSizeRef.current.width : 1;
+    const cropX = offSetX * scale;
+    const cropY = offSetY * scale;
+    const cropWidth = width > 0 ? width * scale : img.naturalWidth;
+    const cropHeight = height > 0 ? height * scale : img.naturalHeight;
 
     let targetWidth = cropWidth;
     let targetHeight = cropHeight;
@@ -337,15 +356,17 @@ const CardImage: React.FC<CardImageProps> = ({
       }
     }
 
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
+    // Nie größer als nötig zeichnen
+    const shrink = Math.min(1, MAX_TILE_CANVAS_WIDTH / targetWidth);
+    canvas.width = Math.max(1, Math.round(targetWidth * shrink));
+    canvas.height = Math.max(1, Math.round(targetHeight * shrink));
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.drawImage(
       img,
-      offSetX,
-      offSetY,
+      cropX,
+      cropY,
       cropWidth,
       cropHeight,
       0,
