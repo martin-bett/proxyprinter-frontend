@@ -814,6 +814,11 @@ const DeckInputAndViewer: React.FC = () => {
     fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
     fetchPdfMailEnabled().then(setPdfMailEnabled);
   }, []);
+  // Seitenvorschau im Einstellungsdialog: nur die ersten Karten, so viele wie auf eine Seite passen
+  const settingsPreviewCards = useMemo(
+    () => pdfImageEntries.slice(0, 40).map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
+    [pdfImageEntries]
+  );
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
 
@@ -1703,6 +1708,7 @@ const DeckInputAndViewer: React.FC = () => {
             settings={settings}
             onSettingsChange={handleSettingsChange}
             mailEnabled={pdfMailEnabled}
+            previewCards={settingsPreviewCards}
           />
         }
       />

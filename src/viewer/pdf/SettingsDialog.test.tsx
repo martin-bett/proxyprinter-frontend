@@ -29,3 +29,12 @@ describe('SettingsDialog email field', () => {
     expect(screen.getByText(/not set up/i)).toBeInTheDocument();
   });
 });
+
+describe('SettingsDialog preview', () => {
+  it('shows the cards-per-page hint and updates it with the dimensions', () => {
+    render(<SettingsDialog open onClose={jest.fn()} settings={defaultSettings} onSettingsChange={jest.fn()} />);
+    expect(screen.getByText(/3 × 3 cards per A4 page/)).toBeInTheDocument();
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '90' } });
+    expect(screen.getByText(/2 × 3 cards per A4 page/)).toBeInTheDocument();
+  });
+});
