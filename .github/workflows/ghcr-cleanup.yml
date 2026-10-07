@@ -1,0 +1,109 @@
+name: GHCR aufräumen
+
+# Löscht alte PR-Images (Tag br-<slug>) aus ghcr.io und verwaiste, untagged Versionen.
+# Nie angefasst werden: sha-*, latest, develop und alle Platform-Manifeste, auf die diese Tags zeigen.
+# Läuft nachts, nach jedem geschlossenen PR nach develop und von Hand ("dry_run" zeigt nur an).
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  pull_request:
+    types: [closed]
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Nur anzeigen, nichts löschen'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ghcr-cleanup
+  cancel-in-progress: false
+
+env:
+  PACKAGE: mtgprint-frontend
+  # Frisch gepushte Versionen (z. B. Platform-Manifeste eines laufenden Builds) bleiben mindestens so lange stehen
+  GRACE_HOURS: 24
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+        with:
+          script: |
+            const owner = context.repo.owner, repo = context.repo.repo, pkg = process.env.PACKAGE;
+            const dry = process.env.DRY_RUN === 'true';
+            const graceMs = Number(process.env.GRACE_HOURS) * 3600 * 1000;
+            // Tag-Namen eines Branches: aktuell br-<erste 6 Zeichen sha256(Branch)>, wie in ci.yml/preview.sh;
+            // dazu der alte lange br-<slug>, falls noch Altbestand existiert
+            const crypto = require('crypto');
+            const slugsOf_ = b => {
+              const legacy = b.replace(/^claude\//, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+/, '').slice(0, 40).replace(/-+$/, '');
+              return [crypto.createHash('sha256').update(b).digest('hex').slice(0, 6), legacy, legacy === 'develop' ? 'pr-develop' : legacy];
+            };
+
+            // Slugs offener PRs nach develop: deren br-Images bleiben
+            const openPrs = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', per_page: 100 });
+            const openSlugs = new Set(openPrs.filter(p => p.base.ref === 'develop').flatMap(p => slugsOf_(p.head.ref)));
+
+            const { data: ownerInfo } = await github.rest.users.getByUsername({ username: owner });
+            const isOrg = ownerInfo.type === 'Organization';
+            const base = isOrg ? `/orgs/${owner}` : `/users/${owner}`;
+            let versions;
+            try {
+              versions = await github.paginate(`GET ${base}/packages/container/${pkg}/versions`, { per_page: 100 });
+            } catch (e) {
+              core.setFailed(`Paketversionen von ${pkg} nicht lesbar (${e.status}). Paket-Einstellungen: "Manage Actions access" muss dieses Repo mit Rolle Admin enthalten.`);
+              return;
+            }
+            core.info(`${versions.length} Versionen von ${pkg}, offene PR-Slugs: ${[...openSlugs].join(', ') || '-'}`);
+
+            // Registry-Zugriff, um die Kinder (Platform-Manifeste, Attestierungen) der Index-Manifeste zu finden
+            const auth = 'Bearer ' + Buffer.from(process.env.GITHUB_TOKEN || '${{ github.token }}').toString('base64');
+            const accept = ['application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json',
+              'application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json'].join(', ');
+            const children = async ref => {
+              const r = await fetch(`https://ghcr.io/v2/${owner}/${pkg}/manifests/${ref}`, { headers: { Authorization: auth, Accept: accept } });
+              if (!r.ok) throw new Error(`Manifest ${ref}: HTTP ${r.status}`);
+              const m = await r.json();
+              return (m.manifests || []).map(x => x.digest);
+            };
+
+            const isBr = v => (v.metadata?.container?.tags || []).some(t => t.startsWith('br-'));
+            const tagsOf = v => v.metadata?.container?.tags || [];
+            const slugsOf = v => tagsOf(v).filter(t => t.startsWith('br-')).map(t => t.slice(3));
+
+            // Zu löschende Tag-Versionen: br-<slug> ohne offenen PR, Tag-Version älter als Schonfrist.
+            // Hat eine Version br- und andere Tags (sollte nie vorkommen), wird sie nicht gelöscht.
+            const now = Date.now();
+            const old = v => now - new Date(v.updated_at).getTime() > graceMs;
+            const doomedTagged = versions.filter(v => isBr(v) && tagsOf(v).every(t => t.startsWith('br-'))
+              && slugsOf(v).every(s => !openSlugs.has(s)) && old(v));
+
+            // Behalten: alles, was nicht gelöscht wird und getaggt ist, samt Kindern
+            const doomedIds = new Set(doomedTagged.map(v => v.id));
+            const keepDigests = new Set();
+            for (const v of versions) {
+              if (tagsOf(v).length === 0 || doomedIds.has(v.id)) continue;
+              keepDigests.add(v.name);
+              for (const d of await children(v.name)) keepDigests.add(d);
+            }
+
+            // Verwaiste untagged Versionen: von keinem behaltenen Tag referenziert, älter als Schonfrist
+            const orphans = versions.filter(v => tagsOf(v).length === 0 && !keepDigests.has(v.name) && old(v));
+            const toDelete = [...doomedTagged, ...orphans];
+
+            for (const v of toDelete) {
+              const label = tagsOf(v).join(',') || '(untagged)';
+              core.info(`${dry ? 'Würde löschen' : 'Lösche'}: ${v.name.slice(0, 19)} ${label} (${v.updated_at})`);
+              if (dry) continue;
+              await github.request(`DELETE ${base}/packages/container/${pkg}/versions/${v.id}`);
+            }
+            core.info(`${dry ? 'Trockenlauf: ' : ''}${toDelete.length} von ${versions.length} Versionen ${dry ? 'würden gelöscht' : 'gelöscht'}.`);
