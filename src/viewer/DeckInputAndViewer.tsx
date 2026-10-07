@@ -1700,7 +1700,7 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={settingsDialogOpen}
         onClose={handleCloseSettingsDialog}
-        maxWidth='md'
+        maxWidth='lg'
         children={
           <SettingsDialog
             open={settingsDialogOpen}

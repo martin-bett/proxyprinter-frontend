@@ -84,6 +84,27 @@ const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   });
 };
 
+interface PreviewPalette {
+  paper: string;
+  slotLine: string;
+  placeholder: string;
+  placeholderLine: string;
+  shadow: string;
+}
+
+/** Farben aus dem aktiven Theme (CSS-Variablen auf <html>), mit festen Rückfallwerten. */
+const readPalette = (): PreviewPalette => {
+  const style = typeof document !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+  const v = (name: string, fallback: string) => style?.getPropertyValue(`--${name}`).trim() || fallback;
+  return {
+    paper: v('surface', '#ffffff'),
+    slotLine: v('border', '#dbdbdb'),
+    placeholder: v('accent-soft', '#d9e6ff'),
+    placeholderLine: v('accent-strong', '#3273dc'),
+    shadow: v('shadow', 'rgba(0,0,0,0.3)'),
+  };
+};
+
 const drawPage = async (
   canvas: HTMLCanvasElement,
   layout: PageLayout,
@@ -98,19 +119,38 @@ const drawPage = async (
   if (!isCurrent()) return;
 
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.fillStyle = '#ffffff';
+  const palette = readPalette();
+  ctx.fillStyle = palette.paper;
   ctx.fillRect(0, 0, layout.pageWidth, layout.pageHeight);
 
   const placed = cards.length > 0 ? Math.min(cards.length, layout.slots.length) : layout.slots.length;
+
+  // Freie Plätze nur als dezente Umrisse, damit die belegten Karten im Vordergrund stehen
+  ctx.save();
+  ctx.strokeStyle = palette.slotLine;
+  ctx.lineWidth = 0.75;
+  ctx.setLineDash([4, 3]);
+  layout.slots.slice(placed).forEach(slot => ctx.strokeRect(slot.x, slot.y, layout.cardWidth, layout.cardHeight));
+  ctx.restore();
+
   layout.slots.slice(0, placed).forEach((slot, i) => {
     const img = images[i];
+    ctx.save();
+    ctx.shadowColor = palette.shadow;
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
     if (img) {
       const rect = cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings);
       ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, slot.x, slot.y, layout.cardWidth, layout.cardHeight);
     } else {
-      ctx.fillStyle = '#e4e4e4';
+      ctx.fillStyle = palette.placeholder;
       ctx.fillRect(slot.x, slot.y, layout.cardWidth, layout.cardHeight);
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = palette.placeholderLine;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(slot.x, slot.y, layout.cardWidth, layout.cardHeight);
     }
+    ctx.restore();
     if (settings.corners) {
       const color = !settings.cornerColorAuto
         ? settings.cornerColor
@@ -139,7 +179,7 @@ interface PdfPagePreviewProps {
 }
 
 /** Eine A4-Beispielseite, die sich mit den Einstellungen im Dialog mitändert. */
-export function PdfPagePreview({ settings, cards, width = 300 }: PdfPagePreviewProps) {
+export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fitsOnPage, setFitsOnPage] = useState(true);
 
@@ -171,8 +211,8 @@ export function PdfPagePreview({ settings, cards, width = 300 }: PdfPagePreviewP
       />
       <p className="help">
         {fitsOnPage
-          ? `Page 1 of the PDF: ${layout.cardsPerRow} × ${layout.cardsPerColumn} cards per A4 page`
-          : 'These dimensions do not fit on an A4 page.'}
+          ? `${layout.cardsPerRow} × ${layout.cardsPerColumn} = ${layout.slots.length}`
+          : 'Does not fit on A4'}
       </p>
     </div>
   );

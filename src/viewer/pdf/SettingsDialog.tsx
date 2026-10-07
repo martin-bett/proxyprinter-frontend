@@ -72,6 +72,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
 
   return (
     <div className="settings-dialog">
+      <div className="settings-row">
       <div className="settings-category settings-preview">
         <h3 className="title is-4">Preview</h3>
         <PdfPagePreview settings={localSettings} cards={previewCards} />
@@ -164,6 +165,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
             ></div>
           )}
         </div>
+      </div>
       </div>
       <div className="settings-category settings-email">
         <h3 className="title is-4">Email delivery</h3>

@@ -250,8 +250,15 @@
   margin: 5px 25px 5px 25px;
 }
 
-.settings-category.settings-preview {
-  vertical-align: top;
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.settings-row > .settings-category {
+  margin: 5px 12px;
 }
 
 .pdf-page-preview canvas {
