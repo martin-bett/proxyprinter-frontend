@@ -101,6 +101,7 @@ jobs:
     needs: [test, docker]
     if: needs.docker.outputs.preview == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     concurrency:
       group: preview-${{ needs.docker.outputs.slug }}
       cancel-in-progress: false
@@ -133,7 +134,7 @@ jobs:
             printf 'export LEGACY_SLUG=%q\n' "$LEGACY_SLUG"
             printf 'export GHCR_USER=%q GHCR_TOKEN=%q\n' "$GITHUB_ACTOR" "$GHCR_TOKEN"
             cat .github/deploy/preview.sh
-          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
+          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
                 "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc' | tee preview.log
           { grep -m1 '^PREVIEW_URL=' preview.log || true; } | cut -d= -f2- > preview-url.txt
       - name: Link im PR
