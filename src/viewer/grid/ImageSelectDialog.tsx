@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import DownloadIcon from '@mui/icons-material/Download';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import StorageIcon from '@mui/icons-material/Storage';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 
 import './ImageSelectDialog.css';
 import HoverPreview from './HoverPreview';
-import CardImage, { CardImageError } from './CardImage';
+import CardImage, { CardImageError, TileState } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
@@ -35,6 +40,10 @@ const FilterCount: React.FC<{ count: number }> = ({ count }) => (
 );
 
 const languageOf = (result: CardResult) => result.languageCode || NO_LANGUAGE;
+
+const CACHE_STATS_INTERVAL_MS = 5000;
+
+const formatMegabytes = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
 interface ImageSelectDialogProps {
   open: boolean;
@@ -180,6 +189,54 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     setPicked(true);
   };
 
+  // Zustand jeder sichtbaren Kachel, Schlüssel ist die Position im Grid (wie beim Rendern)
+  const [tileStates, setTileStates] = useState<Map<string, TileState>>(() => new Map());
+  const setTileState = useCallback((tileId: string, state: TileState) => {
+    setTileStates(prev => {
+      if (state === null) {
+        if (!prev.has(tileId)) return prev;
+        const next = new Map(prev);
+        next.delete(tileId);
+        return next;
+      }
+      if (prev.get(tileId) === state) return prev;
+      return new Map(prev).set(tileId, state);
+    });
+  }, []);
+
+  const tileCounts = useMemo(() => {
+    const counts: Record<'loading' | 'queued' | 'done', number> = { loading: 0, queued: 0, done: 0 };
+    tileStates.forEach(state => {
+      if (state === 'loading' || state === 'queued' || state === 'done') counts[state]++;
+    });
+    return counts;
+  }, [tileStates]);
+
+  const cardName = useMemo(
+    () => initialSelectedImage?.name ?? Object.values(groupedResults).flat()[0]?.name,
+    [initialSelectedImage, groupedResults]
+  );
+
+  const [cardCache, setCardCache] = useState({ count: 0, bytes: 0 });
+  const refreshCardCache = useCallback(async () => {
+    if (!cardName) return;
+    setCardCache(await imageLoaderService.getCacheStatsForCardName(cardName));
+  }, [cardName]);
+
+  // Gecachte Bilder kommen und gehen auch außerhalb des Dialogs, daher regelmäßig nachzählen
+  useEffect(() => {
+    if (!open) return;
+    refreshCardCache();
+    const interval = setInterval(refreshCardCache, CACHE_STATS_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [open, refreshCardCache]);
+
+  const clearCardCache = async () => {
+    if (!cardName) return;
+    await imageLoaderService.clearCacheForCardName(cardName);
+    refreshCardCache();
+  };
+
   const handleClose = () => {
     imageLoaderService.stopByCategory('selectgrid');
     onClose(picked ? selectedImage : null);
@@ -191,6 +248,30 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     <div className="image-select-dialog">
       <div className="dialog-overlay" onClick={handleClose}>
         <div className="dialog-content" onClick={e => e.stopPropagation()}>
+          <div className="image-select-stats">
+            <span className="image-select-stat" title="Downloading">
+              <DownloadIcon fontSize="small" /> <b>{tileCounts.loading}</b>
+            </span>
+            <span className="image-select-stat" title="Queued">
+              <AccessTimeIcon fontSize="small" /> <b>{tileCounts.queued}</b>
+            </span>
+            <span className="image-select-stat" title="Finished">
+              <CheckCircleOutlineIcon fontSize="small" /> <b>{tileCounts.done}</b>
+            </span>
+            <span className="image-select-stat image-select-stat-cache" title="Image cache used by this card">
+              <StorageIcon fontSize="small" /> <b>{formatMegabytes(cardCache.bytes)}</b>
+              <span className="image-select-stat-muted">({cardCache.count})</span>
+            </span>
+            <button
+              type="button"
+              className="image-select-stat-action"
+              title="Remove cached images of this card"
+              onClick={clearCardCache}
+              disabled={cardCache.count === 0}
+            >
+              <DeleteSweepIcon fontSize="small" />
+            </button>
+          </div>
           <div className="image-selection-container">
             <CropImageOverlay
               selectedImage={selectedImage}
@@ -221,6 +302,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                             cardInput={result}
                             onLoad={(imageInfo) => handleImageLoad(result, imageInfo)}
                             onError={handleImageLoadError}
+                            onTileState={(state) => setTileState(`${apiName}:${index}`, state)}
                             showImageSettings={true}
                             onlyDimensions={true}
                           />

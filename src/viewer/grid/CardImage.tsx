@@ -42,10 +42,15 @@ export interface CardImageError extends CardResult {
   error: string;
 }
 
+/** Zustand einer Kachel für Zähler (z. B. im Bildauswahl-Dialog); null = nichts zu zählen */
+export type TileState = 'queued' | 'loading' | 'done' | 'error' | null;
+
 interface CardImageProps {
   cardInput: CardResult;
   onLoad?: (imageInfo: ImageInfo) => void;
   onError?: (error: CardImageError) => void;
+  /** Meldet den Zustand der Kachel, bei Unmount null */
+  onTileState?: (state: TileState) => void;
   showImageSettings?: boolean;
   onlyDimensions?: boolean;
   priority?: number;
@@ -56,6 +61,7 @@ const CardImage: React.FC<CardImageProps> = ({
   cardInput,
   onLoad,
   onError,
+  onTileState,
   showImageSettings,
   onlyDimensions = false,
   priority = 1,
@@ -79,6 +85,19 @@ const CardImage: React.FC<CardImageProps> = ({
   const qualityRun = useRef(0);
   const loadRun = useRef(0);
   const [placeholderHeight, setPlaceholderHeight] = useState<number | undefined>(undefined);
+
+  // Zustand für die Zähler melden; beim Entladen oder Verschwinden der Kachel austragen
+  useEffect(() => {
+    const state: TileState = lastError ? 'error'
+      : !isLoading ? 'done'
+      : status === 'LOADING' ? 'loading'
+      : status.startsWith('QUEUED') ? 'queued'
+      : null;
+    onTileState?.(state);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isLoading, lastError]);
+
+  useEffect(() => () => onTileState?.(null), []);
 
   useEffect(() => {
     if (isPermanent) {

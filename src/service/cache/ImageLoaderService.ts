@@ -582,6 +582,14 @@ class ImageLoaderService {
     this.notifySubscribers();
   }
 
+  /** Anzahl und Größe aller gecachten Bilder einer Karte (über alle APIs) */
+  async getCacheStatsForCardName(cardName: string): Promise<{ count: number; bytes: number }> {
+    const entries = await getAllFromIndexedDB();
+    return entries
+      .filter(value => value.cardInput?.name === cardName)
+      .reduce((stats, value) => ({ count: stats.count + 1, bytes: stats.bytes + value.sizeBytes }), { count: 0, bytes: 0 });
+  }
+
   async clearCacheForApiName(apiName: string): Promise<void> {
     const entries = await getAllFromIndexedDB();
     for (const value of entries) {
