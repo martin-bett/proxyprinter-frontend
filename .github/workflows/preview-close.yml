@@ -14,6 +14,7 @@ concurrency:
 jobs:
   close:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -37,5 +38,5 @@ jobs:
             printf 'export ACTION=close SIDE=frontend SLUG=%q\n' "$slug"
             printf 'export LEGACY_SLUG=%q\n' "$legacy"
             cat .github/deploy/preview.sh
-          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
+          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
                 "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc'

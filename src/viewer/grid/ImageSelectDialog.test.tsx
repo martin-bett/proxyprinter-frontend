@@ -108,3 +108,61 @@ it('zählt Downloads und fertige Kacheln in der Zeile oben', async () => {
   expect(screen.getByTitle('Downloading').textContent).toContain('2');
   expect(screen.getByTitle('Queued').textContent).toContain('0');
 });
+
+describe('Blättern zur nächsten/vorherigen Karte im Deck', () => {
+  const renderWithNav = (position: number, onStep = jest.fn()) => {
+    render(
+      <ImageSelectDialog
+        open={true}
+        onClose={() => {}}
+        groupedResults={{ scryfall: [card('a', 'good', 'en'), card('b', 'good', 'en')] }}
+        initialSelectedImage={null}
+        onImageLoadError={() => {}}
+        initialVisibleLanguages={new Set(['en'])}
+        initialVisibleApis={new Set(['scryfall'])}
+        deckNav={{ key: `k${position}`, cardName: 'Test', position, total: 3, onStep }}
+      />
+    );
+    return onStep;
+  };
+
+  it('Pfeiltasten blättern ohne Auswahl mit null', () => {
+    const onStep = renderWithNav(2);
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(onStep).toHaveBeenLastCalledWith(1, null);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(onStep).toHaveBeenLastCalledWith(-1, null);
+  });
+
+  it('gibt ein im Dialog angeklicktes Bild beim Blättern mit', () => {
+    const onStep = renderWithNav(2);
+    fireEvent.click(screen.getByText('b'));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(onStep).toHaveBeenLastCalledWith(1, expect.objectContaining({ name: 'b' }));
+  });
+
+  it('blättert nicht über das Deckende hinaus', () => {
+    const onStep = renderWithNav(1);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(onStep).not.toHaveBeenCalled();
+    expect((screen.getByLabelText('Previous card') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByLabelText('Next card') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('die Pfeil-Buttons blättern', () => {
+    const onStep = renderWithNav(2);
+    fireEvent.click(screen.getByLabelText('Next card'));
+    expect(onStep).toHaveBeenLastCalledWith(1, null);
+    fireEvent.click(screen.getByLabelText('Previous card'));
+    expect(onStep).toHaveBeenLastCalledWith(-1, null);
+  });
+
+  it('Pfeiltasten in Eingabefeldern blättern nicht', () => {
+    const onStep = renderWithNav(2);
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'ArrowRight' });
+    expect(onStep).not.toHaveBeenCalled();
+    input.remove();
+  });
+});

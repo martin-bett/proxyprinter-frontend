@@ -4,6 +4,9 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import StorageIcon from '@mui/icons-material/Storage';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import IconButton from '@mui/material/IconButton';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import './ImageSelectDialog.css';
 import HoverPreview from './HoverPreview';
@@ -61,6 +64,19 @@ interface ImageSelectDialogProps {
   apiOrder?: string[];
   onReorderLanguages?: (order: string[]) => void;
   onReorderApis?: (order: string[]) => void;
+  /** Blättern zur vorherigen/nächsten Karte im Deck, ohne den Dialog zu schließen */
+  deckNav?: DeckNav;
+}
+
+/** Position der aktuellen Karte im Deck. Blättern übergibt die Wahl dieser Karte (oder null, wenn nichts geklickt wurde). */
+export interface DeckNav {
+  /** Ändert sich mit jeder Karte, damit die Auswahl im Dialog zurückgesetzt wird */
+  key: string;
+  cardName: string;
+  /** 1-basiert */
+  position: number;
+  total: number;
+  onStep: (delta: -1 | 1, picked: CardResult | null) => void;
 }
 
 const noReorder = () => undefined;
@@ -77,7 +93,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   languageOrder = [],
   apiOrder = [],
   onReorderLanguages = noReorder,
-  onReorderApis = noReorder }) => {
+  onReorderApis = noReorder,
+  deckNav }) => {
   const [selectedImage, setSelectedImage] = useState<CardResult | null>(initialSelectedImage || null);
   // Nur ein Klick auf ein Bild ist eine manuelle Wahl, bloßes Öffnen und Schließen nicht
   const [picked, setPicked] = useState(false);
@@ -155,6 +172,37 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
       setSelectedImage(initialSelectedImage);
     }
   }, [initialSelectedImage]);
+
+  // Beim Blättern zur nächsten Karte: Auswahl und "gewählt"-Merker gehören zur neuen Karte
+  useEffect(() => {
+    setSelectedImage(initialSelectedImage || null);
+    setPicked(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckNav?.key]);
+
+  // Eine manuelle Wahl wird beim Blättern mitgegeben, sonst bleibt die Karte unverändert
+  const stepTo = useCallback((delta: -1 | 1) => {
+    if (!deckNav) return;
+    const target = deckNav.position - 1 + delta;
+    if (target < 0 || target >= deckNav.total) return;
+    deckNav.onStep(delta, picked ? selectedImage : null);
+  }, [deckNav, picked, selectedImage]);
+
+  // Pfeiltasten blättern, außer in Eingabefeldern (z.B. Zahlenfelder im Zuschnitt)
+  useEffect(() => {
+    if (!open || !deckNav) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        stepTo(e.key === 'ArrowLeft' ? -1 : 1);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, deckNav, stepTo]);
 
   const toggleLanguage = (languageCode: string) => {
     setDialogVisibleLanguages(prev => {
@@ -273,6 +321,27 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
             </button>
           </div>
           <div className="image-selection-container">
+            {deckNav && (
+              <div className="deck-nav">
+                <IconButton
+                  aria-label="Previous card"
+                  title="Previous card (←)"
+                  disabled={deckNav.position <= 1}
+                  onClick={() => stepTo(-1)}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+                <span className="deck-nav-label">{deckNav.cardName} · {deckNav.position} / {deckNav.total}</span>
+                <IconButton
+                  aria-label="Next card"
+                  title="Next card (→)"
+                  disabled={deckNav.position >= deckNav.total}
+                  onClick={() => stepTo(1)}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              </div>
+            )}
             <CropImageOverlay
               selectedImage={selectedImage}
               cardAspect={cardAspect}

@@ -620,7 +620,16 @@ const DeckInputAndViewer: React.FC = () => {
     }));
   };
 
-  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+  // Reihenfolge der Kacheln, wie das Raster sie zeigt. Dient dem Blättern im Bildauswahl-Dialog.
+  const deckTiles = useMemo(() => Object.entries(cardResults).flatMap(([name, data]) =>
+    Array.from({ length: uniquePrints ? data.count : 1 }, (_, index) => ({ name, index }))
+  ), [cardResults, uniquePrints]);
+  const currentTilePosition = currentCardName !== null && currentCardIndex !== null
+    ? deckTiles.findIndex(tile => tile.name === currentCardName && tile.index === currentCardIndex)
+    : -1;
+
+  // Speichert die Wahl für die aktuelle Kachel (null = nichts gewählt, nur neu zeichnen)
+  const applyImageChoice = (selectedImage: CardResult | null) => {
     if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
       setSelectedCards(prev => {
         const currentCards = prev[currentCardName] || [];
@@ -646,9 +655,24 @@ const DeckInputAndViewer: React.FC = () => {
       // Ohne neue Wahl kann sich trotzdem der Zuschnitt des gewählten Bildes geändert haben
       setSelectedCards(prev => ({ ...prev }));
     }
+  };
+
+  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+    applyImageChoice(selectedImage);
     setImageSelectDialogOpen(false);
     setCurrentCardName(null);
     setCurrentCardIndex(null);
+  };
+
+  // Zur vorherigen/nächsten Kachel blättern, der Dialog bleibt offen
+  const handleStepImageSelect = (delta: -1 | 1, selectedImage: CardResult | null) => {
+    if (currentCardName === null || currentCardIndex === null) return;
+    const next = deckTiles[currentTilePosition + delta];
+    if (!next) return;
+    applyImageChoice(selectedImage);
+    imageLoaderService.stopByCategory('selectgrid');
+    setCurrentCardName(next.name);
+    setCurrentCardIndex(next.index);
   };
 
   const handleRemoveCard = (cardName: string, index: number) => {
@@ -814,6 +838,11 @@ const DeckInputAndViewer: React.FC = () => {
     fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
     fetchPdfMailEnabled().then(setPdfMailEnabled);
   }, []);
+  // Seitenvorschau im Einstellungsdialog: nur die ersten Karten, so viele wie auf eine Seite passen
+  const settingsPreviewCards = useMemo(
+    () => pdfImageEntries.slice(0, 40).map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
+    [pdfImageEntries]
+  );
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
 
@@ -1695,7 +1724,7 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={settingsDialogOpen}
         onClose={handleCloseSettingsDialog}
-        maxWidth='md'
+        maxWidth='lg'
         children={
           <SettingsDialog
             open={settingsDialogOpen}
@@ -1703,6 +1732,7 @@ const DeckInputAndViewer: React.FC = () => {
             settings={settings}
             onSettingsChange={handleSettingsChange}
             mailEnabled={pdfMailEnabled}
+            previewCards={settingsPreviewCards}
           />
         }
       />
@@ -1728,6 +1758,17 @@ const DeckInputAndViewer: React.FC = () => {
             : {}
         }
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
+        deckNav={
+          currentCardName !== null && currentTilePosition !== -1
+            ? {
+              key: `${currentCardName}#${currentCardIndex}`,
+              cardName: currentCardName,
+              position: currentTilePosition + 1,
+              total: deckTiles.length,
+              onStep: handleStepImageSelect,
+            }
+            : undefined
+        }
       />
 
       <RecropDialog
