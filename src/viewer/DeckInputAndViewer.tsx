@@ -620,7 +620,16 @@ const DeckInputAndViewer: React.FC = () => {
     }));
   };
 
-  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+  // Reihenfolge der Kacheln, wie das Raster sie zeigt. Dient dem Blättern im Bildauswahl-Dialog.
+  const deckTiles = useMemo(() => Object.entries(cardResults).flatMap(([name, data]) =>
+    Array.from({ length: uniquePrints ? data.count : 1 }, (_, index) => ({ name, index }))
+  ), [cardResults, uniquePrints]);
+  const currentTilePosition = currentCardName !== null && currentCardIndex !== null
+    ? deckTiles.findIndex(tile => tile.name === currentCardName && tile.index === currentCardIndex)
+    : -1;
+
+  // Speichert die Wahl für die aktuelle Kachel (null = nichts gewählt, nur neu zeichnen)
+  const applyImageChoice = (selectedImage: CardResult | null) => {
     if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
       setSelectedCards(prev => {
         const currentCards = prev[currentCardName] || [];
@@ -646,9 +655,24 @@ const DeckInputAndViewer: React.FC = () => {
       // Ohne neue Wahl kann sich trotzdem der Zuschnitt des gewählten Bildes geändert haben
       setSelectedCards(prev => ({ ...prev }));
     }
+  };
+
+  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+    applyImageChoice(selectedImage);
     setImageSelectDialogOpen(false);
     setCurrentCardName(null);
     setCurrentCardIndex(null);
+  };
+
+  // Zur vorherigen/nächsten Kachel blättern, der Dialog bleibt offen
+  const handleStepImageSelect = (delta: -1 | 1, selectedImage: CardResult | null) => {
+    if (currentCardName === null || currentCardIndex === null) return;
+    const next = deckTiles[currentTilePosition + delta];
+    if (!next) return;
+    applyImageChoice(selectedImage);
+    imageLoaderService.stopByCategory('selectgrid');
+    setCurrentCardName(next.name);
+    setCurrentCardIndex(next.index);
   };
 
   const handleRemoveCard = (cardName: string, index: number) => {
@@ -1728,6 +1752,17 @@ const DeckInputAndViewer: React.FC = () => {
             : {}
         }
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
+        deckNav={
+          currentCardName !== null && currentTilePosition !== -1
+            ? {
+              key: `${currentCardName}#${currentCardIndex}`,
+              cardName: currentCardName,
+              position: currentTilePosition + 1,
+              total: deckTiles.length,
+              onStep: handleStepImageSelect,
+            }
+            : undefined
+        }
       />
 
       <RecropDialog
