@@ -4,6 +4,7 @@ import { throttledFetch } from "../RequestThrottle";
 
 const DB_NAME = "mtg_cache_db";
 const STORE_NAME = "images";
+const SETTINGS_STORE_NAME = "settings";
 
 /** Loosely-typed card reference used only to build cache keys and for display/filtering. */
 export interface CacheCardInput {
@@ -147,6 +148,10 @@ function openDB(): Promise<IDBDatabase> {
   return openCacheDb(DB_NAME, STORE_NAME);
 }
 
+function openSettingsStore(): Promise<IDBDatabase> {
+  return openCacheDb(DB_NAME, SETTINGS_STORE_NAME);
+}
+
 async function saveToIndexedDB(entry: ImageCacheDbEntry): Promise<void> {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
@@ -163,6 +168,31 @@ async function clearIndexedDB(): Promise<void> {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
   tx.objectStore(STORE_NAME).clear();
+}
+
+async function saveCacheLimitToIndexedDB(limit: number): Promise<void> {
+  try {
+    const db = await openSettingsStore();
+    const tx = db.transaction(SETTINGS_STORE_NAME, "readwrite");
+    tx.objectStore(SETTINGS_STORE_NAME).put({ key: "cacheLimitBytes", value: limit });
+  } catch {
+    // Fehler beim Speichern ignorieren
+  }
+}
+
+async function loadCacheLimitFromIndexedDB(): Promise<number | null> {
+  try {
+    const db = await openSettingsStore();
+    const tx = db.transaction(SETTINGS_STORE_NAME, "readonly");
+    const store = tx.objectStore(SETTINGS_STORE_NAME);
+    return new Promise((resolve, reject) => {
+      const req = store.get("cacheLimitBytes");
+      req.onsuccess = () => resolve(req.result?.value ?? null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return null;
+  }
 }
 
 async function getAllFromIndexedDB(): Promise<ImageCacheDbEntry[]> {
@@ -206,12 +236,17 @@ class ImageLoaderService {
   }
 
   private async _initPersistentCache(): Promise<void> {
+    const savedLimit = await loadCacheLimitFromIndexedDB();
+    if (savedLimit !== null) {
+      this.cacheLimit = savedLimit;
+    }
     await this._enforceCacheLimit();
     this.notifySubscribers();
   }
 
   setCacheLimit(newLimit: number): void {
     this.cacheLimit = newLimit;
+    saveCacheLimitToIndexedDB(newLimit);
     this._enforceCacheLimit();
     this.notifySubscribers();
   }

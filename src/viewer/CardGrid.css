@@ -142,7 +142,7 @@
   font-size: 0.625em;
   text-align: left;
   svg {
-    height: 1em;
+    height: 0.5em;
   }
 }
 .loading-spinner {
@@ -514,6 +514,20 @@
 
 .decklist-input form {
   margin-bottom: 12px;
+}
+
+.decklist-input-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.decklist-append-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
 }
 
 /* Checkbox „Tokens & Extras“ über Analyze; ausgegraut, wenn keine aktive API verbundene Karten liefert */
