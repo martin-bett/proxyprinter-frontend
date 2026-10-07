@@ -1,4 +1,4 @@
-import serverSearchCache, { configHash, configKey, lookupKey } from './ServerSearchCache';
+import serverSearchCache, { configHash, configKey, fetchServerCacheEnabled, lookupKey } from './ServerSearchCache';
 import { Config } from '../ApiFactory';
 
 const config = (overrides: Partial<Record<string, unknown>> = {}): Config => ({
@@ -60,5 +60,16 @@ describe('ServerSearchCache', () => {
     expect(bodies[1].entries).toHaveLength(10);
     expect(bodies[0].entries[0]).toMatchObject({ config: '7', term: 'Card 0' });
     expect(bodies[0].entries[0].result.requestCount).toBeUndefined();
+  });
+
+  it('reads the server switch from /api/search-cache/info', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ enabled: false, retentionDays: 7 }) });
+    await expect(fetchServerCacheEnabled()).resolves.toBe(false);
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ enabled: true, retentionDays: 7 }) });
+    await expect(fetchServerCacheEnabled()).resolves.toBe(true);
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
+    await expect(fetchServerCacheEnabled()).resolves.toBe(false);
+    fetchMock.mockRejectedValueOnce(new Error('offline'));
+    await expect(fetchServerCacheEnabled()).resolves.toBe(true);
   });
 });
