@@ -19,7 +19,9 @@ jest.mock('../../container/CropImageOverlay', () => ({ __esModule: true, default
 jest.mock('../../service/cache/ImageLoaderService', () => ({
   imageLoaderService: {
     stopByCategory: jest.fn(),
-    getCacheStatsForCardName: jest.fn().mockResolvedValue({ count: 0, bytes: 0 }),
+    // Keine jest.fn: CRA setzt Mocks vor jedem Test zurück
+    getCacheStatsForCardName: () => Promise.resolve({ count: 0, bytes: 0 }),
+    getDownloadRate: () => 1.5 * 1024 * 1024,
     clearCacheForCardName: jest.fn(),
   },
 }));
@@ -104,9 +106,11 @@ it('zählt Downloads und fertige Kacheln in der Zeile oben', async () => {
       initialVisibleApis={new Set(['scryfall'])}
     />
   );
-  await waitFor(() => expect(screen.getByTitle('Finished').textContent).toContain('2'));
-  expect(screen.getByTitle('Downloading').textContent).toContain('2');
+  await waitFor(() => expect(screen.getByTitle('Loaded').textContent).toContain('2'));
+  expect(screen.getByTitle(/^Downloading/).textContent).toContain('2');
   expect(screen.getByTitle('Queued').textContent).toContain('0');
+  // Hinweis der Downloads nennt die gebündelte Rate, solange etwas lädt
+  await waitFor(() => expect(screen.getByTitle('Downloading · 1.5 MB/s')).toBeTruthy());
 });
 
 describe('Blättern zur nächsten/vorherigen Karte im Deck', () => {

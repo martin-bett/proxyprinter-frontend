@@ -90,8 +90,8 @@
   grid-row: 1 / 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
+  gap: 28px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
@@ -103,12 +103,14 @@
   font-size: 0.95rem;
 }
 
-.image-select-dialog .image-select-stat-cache {
-  margin-left: auto;
-}
-
-.image-select-dialog .image-select-stat-muted {
-  color: var(--text-muted, inherit);
+/* Größe der gecachten Bilder als Pille in Akzentfarbe */
+.image-select-dialog .image-select-stat-size {
+  padding: 1px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .image-select-dialog .image-select-stat-action {

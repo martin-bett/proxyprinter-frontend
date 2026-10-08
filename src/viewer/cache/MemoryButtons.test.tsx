@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import MemoryButtons from './MemoryButtons';
 import { useImageLoaderNumbers } from '../../service/cache/hooks/useImageLoaderNumbers';
 
@@ -19,7 +19,7 @@ jest.mock('../../service/cache/hooks/useImageLoaderCache', () => ({
 
 jest.mock('../../service/cache/SearchCacheService', () => ({
   __esModule: true,
-  default: { getSearchCount: jest.fn().mockResolvedValue(0) },
+  default: { getSearchCount: () => Promise.resolve(0) },
 }));
 
 const mockNumbers = useImageLoaderNumbers as jest.Mock;
@@ -40,5 +40,16 @@ describe('MemoryButtons Download-Bubbles', () => {
 
     expect(screen.getByTitle('Wartende Downloads').textContent).toContain('3');
     expect(screen.getByTitle('Aktive Downloads').textContent).toContain('0');
+  });
+
+  it('blendet die Bubbles nach dem Fade aus, wenn nichts mehr läuft', async () => {
+    mockNumbers.mockReturnValue({ queued: 1, active: 0, cacheLoading: 0 });
+    const { rerender } = render(<MemoryButtons onResetDeck={() => {}} />);
+    expect(screen.getByTitle('Wartende Downloads')).toBeTruthy();
+
+    mockNumbers.mockReturnValue({ queued: 0, active: 0, cacheLoading: 0 });
+    rerender(<MemoryButtons onResetDeck={() => {}} />);
+    // Noch im Fade: das Element bleibt kurz im DOM, ist dann aber weg
+    await waitFor(() => expect(screen.queryByTitle('Wartende Downloads')).toBeNull(), { timeout: 2000 });
   });
 });
