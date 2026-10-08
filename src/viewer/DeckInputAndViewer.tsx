@@ -62,6 +62,7 @@ import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, h
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
+import { replaceDeckEntry } from './replaceDeckEntry';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
@@ -157,6 +158,8 @@ const DeckInputAndViewer: React.FC = () => {
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
+  // Eintrag ohne Fund, den der Add-Single-Dialog gerade ersetzt (null = normales Hinzufügen)
+  const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [linkListDialogOpen, setLinkListDialogOpen] = useState(false);
   // Deckfinder: Decks per Link, ID oder Name von Deckbuilder-Seiten laden
@@ -240,11 +243,18 @@ const DeckInputAndViewer: React.FC = () => {
   };
 
   const handleAddCustomCard = () => {
+    setReplaceTarget(null);
+    setCustomCardDialogOpen(true);
+  };
+
+  const handleReplaceCard = (cardName: string) => {
+    setReplaceTarget(cardName);
     setCustomCardDialogOpen(true);
   };
 
   const handleCloseCustomCardDialog = () => {
     setCustomCardDialogOpen(false);
+    setReplaceTarget(null);
   };
 
   const handleOpenGalleryDialog = () => {
@@ -288,37 +298,51 @@ const DeckInputAndViewer: React.FC = () => {
     setApiConfigs(configsObject); // Update internal API configs state
   };
 
-  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+  /** Neue Einträge ins Deck: ans Ende oder, mit replaceKey, an die Stelle dieses Eintrags (der dann wegfällt). */
+  const insertDeckEntries = (entries: CardResultsMap, replaceKey: string | null) => {
+    if (replaceKey === null) {
+      setCardResults(prev => ({ ...prev, ...entries }));
+      return;
+    }
+    setCardResults(prev => replaceDeckEntry(prev, replaceKey, entries));
+    const dropOld = <T,>(prev: Record<string, T>) => {
+      if (!(replaceKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[replaceKey];
+      return next;
+    };
+    setSelectedCards(dropOld);
+    setManualPicks(dropOld);
+    setFreshPicks(new Set());
+  };
+
+  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[], replaceKey: string | null = null) => {
     // Freie Schlüssel wählen, damit ein zweites Bild mit gleichem Namen keine Karte überschreibt
-    const usedKeys = new Set(Object.keys(cardResults));
+    const usedKeys = new Set(Object.keys(cardResults).filter(key => key !== replaceKey));
     const cropKeys: string[] = [];
     for (let i = 0; cropKeys.length < crops.length; i++) {
       const key = `${cardName}_crop${i}`;
       if (!usedKeys.has(key)) cropKeys.push(key);
     }
+    // Eintrag in cardResults für jeden Zuschnitt
+    const entries: CardResultsMap = {};
     crops.forEach((crop, cropIndex) => {
-      // Eintrag in cardResults für jeden Zuschnitt
-      const cropKey = cropKeys[cropIndex];
-      const cropCard: CardResult = {
-        name: cardName,
-        imageUrl,
-        apiName: 'custom',
-        languageCode: NO_LANGUAGE,
-        cropSettings: crop,
+      entries[cropKeys[cropIndex]] = {
+        count: 1,
+        results: [{
+          name: cardName,
+          imageUrl,
+          apiName: 'custom',
+          languageCode: NO_LANGUAGE,
+          cropSettings: crop,
+        }],
       };
-
-      setCardResults((prev) => ({
-        ...prev,
-        [cropKey]: {
-          count: 1,
-          results: [cropCard],
-        },
-      }));
-
-      setSelectedCards((prev) => ({
-        ...prev,
-        [cropKey]: [cropCard],
-      }));
+    });
+    insertDeckEntries(entries, replaceKey);
+    setSelectedCards((prev) => {
+      const next = { ...prev };
+      Object.entries(entries).forEach(([key, group]) => { next[key] = [group.results[0]]; });
+      return next;
     });
   };
 
@@ -354,15 +378,16 @@ const DeckInputAndViewer: React.FC = () => {
     }
     if (!finalImageUrl) return;
     const url = finalImageUrl;
+    const replaceKey = replaceTarget;
 
     if (crops && crops.length > 0) {
       // Zuschnitte kommen fertig aus der Maske
-      addCustomCrops(cardName, url, crops);
+      addCustomCrops(cardName, url, crops, replaceKey);
     } else {
       // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln (Google Drive u.ä. nur über den Backend-Proxy)
       loadImageElement(url)
         .then(img => {
-          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }], replaceKey);
         })
         .catch(error => {
           console.error('Fehler beim Laden des Bildes. Überprüfen Sie die URL.', url, error);
@@ -1193,7 +1218,8 @@ const DeckInputAndViewer: React.FC = () => {
     setShowImageSettings(event.target.checked);
   }
 
-  const searchForApis = async (cardName: string) => {
+  /** Sucht eine einzelne Karte über alle aktiven APIs, ohne sie schon ins Deck zu legen. */
+  const searchSingleCard = async (cardName: string): Promise<CardResultsMap> => {
     setIsLoading(true);
     setProgress(0);
 
@@ -1276,9 +1302,13 @@ const DeckInputAndViewer: React.FC = () => {
         })
       }
     };
+    setIsLoading(false);
     // Andere Seiten mehrseitiger Karten werden eigene Einträge, sofern sie nicht schon in der Liste stehen
-    const results = splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name));
+    return splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name && name !== replaceTarget));
+  };
 
+  /** Bestätigtes Suchergebnis aus Add Single ins Deck legen (oder den Eintrag ohne Fund ersetzen). */
+  const addSearchedCard = (results: CardResultsMap) => {
     // Make filter values that this card brings in for the first time visible
     const newOptions = collectFilterOptions(results);
     const addMissing = (prev: Set<string>, values: Set<string>, known: Set<string>) => {
@@ -1288,13 +1318,8 @@ const DeckInputAndViewer: React.FC = () => {
     setVisibleApis(prev => addMissing(prev, newOptions.apis, availableApis));
     setVisibleLanguages(prev => addMissing(prev, newOptions.languages, availableLanguages));
 
-    // Set CardResults with transformed CardEntry objects
-    setCardResults(prevResults => ({
-      ...prevResults,
-      ...results
-    }));
-
-    setIsLoading(false);
+    insertDeckEntries(results, replaceTarget);
+    if (replaceTarget !== null) handleCloseCustomCardDialog();
   };
 
 
@@ -1575,6 +1600,19 @@ const DeckInputAndViewer: React.FC = () => {
                               onLoad={(imageInfo) => handleImageLoad(selectedCard as CardResult, imageInfo)}
                               onError={() => handleImageError(cardName, (selectedCard as CardResult).imageUrl, (selectedCard as CardResult).apiName)}
                             />
+                          ) : cardData.results.length === 0 ? (
+                            // Keine API hat etwas gefunden: Eintrag über Add Single austauschen
+                            <div className="no-image no-results">
+                              <span>No card art found</span>
+                              <button
+                                type="button"
+                                className="button is-small replace-card-button"
+                                title="Search again or add an image for this entry; it replaces the entry in the deck"
+                                onClick={(e) => { e.stopPropagation(); handleReplaceCard(cardName); }}
+                              >
+                                Replace card
+                              </button>
+                            </div>
                           ) : (
                             <div className="no-image">No image available</div>
                           )}
@@ -1788,7 +1826,9 @@ const DeckInputAndViewer: React.FC = () => {
           open={customCardDialogOpen}
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
-          searchForApis={searchForApis}
+          searchCard={searchSingleCard}
+          onAddSearched={addSearchedCard}
+          replaceName={replaceTarget ?? undefined}
           cardAspect={settings.width / settings.height}
           onMaskOpenChange={setCustomCardMaskOpen}
         />}
