@@ -78,7 +78,7 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
         </div>
       )}
 
-      <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave}>Save Snapshot</ActionButton>
+      <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave} data-tour="save-snapshot">Save Snapshot</ActionButton>
 
       {listed.map(snapshot => {
         const info = pdfInfos[snapshot.id];

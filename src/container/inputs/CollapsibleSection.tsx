@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useState } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { onSectionSetOpen } from '../../tutorial/sectionControl';
 import './inputs.css';
 
 interface CollapsibleSectionProps {
@@ -49,8 +50,14 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     }
   }, [storageKey, open]);
 
+  // Tutorials klappen Abschnitte über ihren Schlüssel auf und zu
+  useEffect(() => {
+    if (!storageKey) return;
+    return onSectionSetOpen(storageKey, setOpen);
+  }, [storageKey]);
+
   return (
-    <section className={`collapsible-section ${open ? 'is-open' : ''} ${className ?? ''}`}>
+    <section className={`collapsible-section ${open ? 'is-open' : ''} ${className ?? ''}`} data-section={storageKey}>
       <div className="input-tile collapsible-header">
         <button
           type="button"

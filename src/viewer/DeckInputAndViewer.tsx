@@ -39,6 +39,7 @@ import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
 import VersionInfo from './info/VersionInfo';
 import ThemeChooser from '../theme/ThemeChooser';
+import TutorialMenu from '../tutorial/TutorialMenu';
 import { Minus, Plus } from 'lucide-react';
 import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
@@ -1354,7 +1355,10 @@ const DeckInputAndViewer: React.FC = () => {
 
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
-      <ThemeChooser />
+      <div className="top-left-bubbles">
+        <ThemeChooser />
+        <TutorialMenu />
+      </div>
       <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
       <TitleDiv progress={isLoading ? progress : null} />
 
@@ -1432,6 +1436,7 @@ const DeckInputAndViewer: React.FC = () => {
                 return (
                   <div
                     className="connected-cards-toggle"
+                    data-tour="tokens-extras"
                     title={connectedApis.length > 0 ?
                       `Add tokens, emblems etc. as separate cards. Provided by: ${connectedApis.join(', ')}` :
                       'No active API provides tokens or extras'}
@@ -1450,6 +1455,7 @@ const DeckInputAndViewer: React.FC = () => {
               })()}
               <div
                 className="connected-cards-toggle"
+                data-tour="server-cache"
                 title={serverCacheAvailable ?
                   'Use search results other users already found (shared server cache). Uncheck to always search the sources yourself.' :
                   'The shared search cache is turned off on this server'}
@@ -1464,7 +1470,7 @@ const DeckInputAndViewer: React.FC = () => {
                   }
                 }, false, serverCacheAvailable ? undefined : 'is-disabled')}
               </div>
-              <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+              <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading} data-tour="analyze-deck">Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
           <CollapsibleSection
@@ -1513,7 +1519,7 @@ const DeckInputAndViewer: React.FC = () => {
           <CollapsibleSection storageKey="add-single" title="Add Single">
             <div className="add-single-buttons">
               <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
-              <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
+              <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog} data-tour="gallery-search">Gallery Search</ActionButton>
               <ActionButton icon={<LinkIcon />} onClick={() => setLinkListDialogOpen(true)}>Add Links</ActionButton>
             </div>
           </CollapsibleSection>
@@ -1536,6 +1542,7 @@ const DeckInputAndViewer: React.FC = () => {
             <div className="card-grid">
               <div
                 className="card-tiles"
+                data-tour="card-grid"
                 style={{
                   gridTemplateColumns: `repeat(auto-fill, minmax(${gridSize}rem, ${gridSize}rem))`,
                   // Skalierungsfaktor für Text, Abstände und Buttons in den Tiles (10rem = 1)
@@ -1633,7 +1640,7 @@ const DeckInputAndViewer: React.FC = () => {
           <div className="checkbox-group">
             {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
             {renderCheckbox('showImageSettings', 'Show Image Info', showImageSettings, (event) => handleShowImageSettingsChanged(event))}
-            <div className="grid-size-control">
+            <div className="grid-size-control" data-tour="grid-size">
               <label htmlFor="gridSize" className="block text-sm font-medium text-gray-700">
                 Grid Size {gridSize}
               </label>
@@ -1699,8 +1706,8 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="pdf-controls">
         <CollapsibleSection storageKey="pdf-generation" title="PDF Generation">
 
-        <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
-        <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0 || pdfTooLarge} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
+        <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog} data-tour="pdf-settings">Settings</ActionButton>
+        <ActionButton className="is-primary" data-tour="create-pdf" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0 || pdfTooLarge} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
         {pdfImageEntries.length > 0 && (
           <p className={`pdf-size-estimate${pdfTooLarge ? ' is-error' : ''}`}>
             {pdfTooLarge
