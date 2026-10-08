@@ -436,6 +436,8 @@ const DeckInputAndViewer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Neue Suche = neues Deck: der geladene Snapshot wird ab jetzt nicht mehr überschrieben
+    snapshots.release();
     setIsLoading(true);
     setCardResults({});
     setLog([]);
@@ -875,9 +877,9 @@ const DeckInputAndViewer: React.FC = () => {
 
   const snapshots = useSnapshots({ state: workState, isBusy: isLoading, apply: applySnapshot });
 
-  // Deck zurücksetzen: vorher ein Snapshot, damit man den Stand zurückholen kann.
+  // Deck zurücksetzen: vorher ein Snapshot (bzw. der aktive überschrieben), damit man den Stand zurückholen kann.
   // APIs, Filter und PDF-Einstellungen bleiben, die nächste Analyse setzt die Filter neu.
-  const saveSnapshot = snapshots.save;
+  const saveSnapshot = snapshots.saveAndRelease;
   const resetDeck = useCallback(async () => {
     await saveSnapshot();
     setDecklist('');
