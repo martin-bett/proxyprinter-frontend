@@ -37,6 +37,24 @@ const redditConfig = (link: string): GalleryConfig => base({
   parameterMap: { url: {}, request: { url: link } },
 });
 
+// Reddit-Beitragsseite (HTML), wie in der Migration 2026-10-08_reddit_page_source.sql
+const redditPageConfig = (input: string): GalleryConfig => base({
+  name: 'reddit',
+  baseUrl: 'https://www.reddit.com/comments/{id}/',
+  linkPattern: '(?:/comments/|/gallery/|redd\\.it/)(?<id>[a-z0-9]{4,12})(?:[/?#]|$)',
+  followInputRedirects: true,
+  credential: 'reddit',
+  dataFormat: 'html',
+  dataListField: 'gallery-carousel li',
+  nameField: 'zoomable-img img | attr:src',
+  imageUrlField: 'zoomable-img img | attr:src',
+  namePattern: '^.*/([^/.]+)\\.[a-z0-9]+$',
+  nameReplacement: '$1',
+  parameterMap: { url: {}, request: { url: input } },
+});
+
+const REDDIT_PAGE = `<!DOCTYPE html><html><body><shreddit-post><gallery-carousel><ul><li slot="x"><figure><zoomable-img style="position: absolute; inset: 0"><img class="media-lightbox-img h-full w-full object-contain relative z-1" loading="lazy" src="https://i.redd.it/5muql3270nrh1.png" alt="r/magicTCG - All images here are just a taste of the amazing custom proxies the community has been cooking up recently - theses 4 awesome collages are courtesy of @nafubi_dungeon on instagram."></zoomable-img><gallery-caption image-caption="All images here are just a taste of the amazing custom proxies the community has been cooking up recently - theses 4 awesome collages are courtesy of @nafubi_dungeon on instagram." outbound-url="" shortened-url="" image-index="1"></gallery-caption></figure></li><li slot="x"><figure><zoomable-img style="position: absolute; inset: 0"><img class="media-lightbox-img h-full w-full object-contain relative z-1" loading="lazy" src="https://i.redd.it/5lzkff170nrh1.png" alt="r/magicTCG - @noahdemeis_art on instagram"></zoomable-img><gallery-caption image-caption="@noahdemeis_art on instagram" outbound-url="" shortened-url="" image-index="2"></gallery-caption></figure></li><li slot="x"><figure><zoomable-img style="position: absolute; inset: 0"><img class="media-lightbox-img h-full w-full object-contain relative z-1" loading="lazy" src="https://i.redd.it/93tm4h170nrh1.png" alt="r/magicTCG - @valleyofalfred on instagram"></zoomable-img><gallery-caption image-caption="@valleyofalfred on instagram" outbound-url="" shortened-url="" image-index="3"></gallery-caption></figure></li></ul></gallery-carousel></shreddit-post></body></html>`;
+
 const driveConfig = (link: string): GalleryConfig => base({
   name: 'google_drive',
   baseUrl: 'https://drive.google.com/embeddedfolderview?id={id}',
@@ -126,5 +144,18 @@ describe('Gallery-Configs über das Backend', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(results.map(r => [r.name, r.imageUrl])).toEqual([['aaa', 'https://i.redd.it/aaa.jpg']]);
+  });
+
+  it('liest eine eingefügte Reddit-Beitragsseite (HTML) und nimmt die Originale aus der Galerie', async () => {
+    const api = new ApiFactory({ reddit: redditPageConfig(REDDIT_PAGE) }).createApi('reddit');
+
+    const { results } = await api({});
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(results.map(r => [r.name, r.imageUrl])).toEqual([
+      ['5muql3270nrh1', 'https://i.redd.it/5muql3270nrh1.png'],
+      ['5lzkff170nrh1', 'https://i.redd.it/5lzkff170nrh1.png'],
+      ['93tm4h170nrh1', 'https://i.redd.it/93tm4h170nrh1.png'],
+    ]);
   });
 });
