@@ -13,6 +13,8 @@ import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlin
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CropIcon from '@mui/icons-material/Crop';
+import FindReplaceIcon from '@mui/icons-material/FindReplace';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
 import RecropDialog from './grid/crop/RecropDialog';
@@ -37,6 +39,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import PayPalDonateButton from './info/PayPalDonateButton';
 import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
+import { setLoadingProgressTitle } from '../service/tabTitle';
 import VersionInfo from './info/VersionInfo';
 import ThemeChooser from '../theme/ThemeChooser';
 import TutorialMenu from '../tutorial/TutorialMenu';
@@ -59,10 +62,11 @@ import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
-import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, hasConnectedCards } from '../service/ApiFactory';
+import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, PageProgress, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
+import { replaceDeckEntry } from './replaceDeckEntry';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
@@ -97,6 +101,12 @@ const defaultCropSettings: CropSettings = {
   isStretch: true
 };
 
+/** Laufender Netzsuch-Eintrag im Search Log */
+interface NetworkLog {
+  onPage: (progress: PageProgress) => void;
+  finish: (entry: LogEntry) => void;
+}
+
 const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
 const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
@@ -107,6 +117,11 @@ const DeckInputAndViewer: React.FC = () => {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fortschritt auch im Tab-Titel zeigen, solange Karten aus den APIs geladen werden
+  useEffect(() => {
+    setLoadingProgressTitle(isLoading ? progress : null);
+  }, [isLoading, progress]);
   const [rawDataDialog, setRawDataDialog] = useState<string | null>(null);
   const [categoryStates, setCategoryStates] = useState<Record<string, boolean>>({});
   const [apiConfigs, setApiConfigs] = useState<Record<string, Config>>({}); // New state for API configs
@@ -158,6 +173,8 @@ const DeckInputAndViewer: React.FC = () => {
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
+  // Eintrag ohne Fund, den der Add-Single-Dialog gerade ersetzt (null = normales Hinzufügen)
+  const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [linkListDialogOpen, setLinkListDialogOpen] = useState(false);
   // Deckfinder: Decks per Link, ID oder Name von Deckbuilder-Seiten laden
@@ -236,16 +253,51 @@ const DeckInputAndViewer: React.FC = () => {
     setLog((prevLog) => [...prevLog, entry]);
   };
 
+  // Netzsuchen stehen sofort im Log (läuft noch) und werden nach jeder fertigen Seite aktualisiert.
+  // Wurde das Log inzwischen geleert, kommt ein später fertiger Eintrag nicht zurück.
+  const nextLogId = useRef(0);
+  const startNetworkLog = (configName: string, cardName: string, startedAt: number): NetworkLog => {
+    const id = ++nextLogId.current;
+    setLog((prevLog) => [...prevLog, { id, configName, cardName, source: 'running', count: 0, durationMs: 0, requestCount: 0 }]);
+    const replace = (entry: LogEntry) => setLog((prevLog) => prevLog.map(other => (other.id === id ? { ...entry, id } : other)));
+    return {
+      onPage: ({ count, requestCount }) => replace({ configName, cardName, source: 'running', count, requestCount, durationMs: performance.now() - startedAt }),
+      finish: replace,
+    };
+  };
+  const finishLog = (entry: LogEntry, run: NetworkLog | undefined) => (run ? run.finish(entry) : addToLog(entry));
+
   const handleSettingsChange = (newSettings: PdfSettings) => {
     setSettings(newSettings);
   };
 
   const handleAddCustomCard = () => {
+    setReplaceTarget(null);
+    setCustomCardDialogOpen(true);
+  };
+
+  /** Eintrag ohne Fund ganz aus dem Deck nehmen (alle Exemplare). */
+  const handleDiscardEntry = (cardName: string) => {
+    const drop = <T,>(prev: Record<string, T>) => {
+      if (!(cardName in prev)) return prev;
+      const next = { ...prev };
+      delete next[cardName];
+      return next;
+    };
+    setCardResults(drop);
+    setSelectedCards(drop);
+    setManualPicks(drop);
+    setFreshPicks(new Set());
+  };
+
+  const handleReplaceCard = (cardName: string) => {
+    setReplaceTarget(cardName);
     setCustomCardDialogOpen(true);
   };
 
   const handleCloseCustomCardDialog = () => {
     setCustomCardDialogOpen(false);
+    setReplaceTarget(null);
   };
 
   const handleOpenGalleryDialog = () => {
@@ -289,37 +341,51 @@ const DeckInputAndViewer: React.FC = () => {
     setApiConfigs(configsObject); // Update internal API configs state
   };
 
-  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+  /** Neue Einträge ins Deck: ans Ende oder, mit replaceKey, an die Stelle dieses Eintrags (der dann wegfällt). */
+  const insertDeckEntries = (entries: CardResultsMap, replaceKey: string | null) => {
+    if (replaceKey === null) {
+      setCardResults(prev => ({ ...prev, ...entries }));
+      return;
+    }
+    setCardResults(prev => replaceDeckEntry(prev, replaceKey, entries));
+    const dropOld = <T,>(prev: Record<string, T>) => {
+      if (!(replaceKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[replaceKey];
+      return next;
+    };
+    setSelectedCards(dropOld);
+    setManualPicks(dropOld);
+    setFreshPicks(new Set());
+  };
+
+  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[], replaceKey: string | null = null) => {
     // Freie Schlüssel wählen, damit ein zweites Bild mit gleichem Namen keine Karte überschreibt
-    const usedKeys = new Set(Object.keys(cardResults));
+    const usedKeys = new Set(Object.keys(cardResults).filter(key => key !== replaceKey));
     const cropKeys: string[] = [];
     for (let i = 0; cropKeys.length < crops.length; i++) {
       const key = `${cardName}_crop${i}`;
       if (!usedKeys.has(key)) cropKeys.push(key);
     }
+    // Eintrag in cardResults für jeden Zuschnitt
+    const entries: CardResultsMap = {};
     crops.forEach((crop, cropIndex) => {
-      // Eintrag in cardResults für jeden Zuschnitt
-      const cropKey = cropKeys[cropIndex];
-      const cropCard: CardResult = {
-        name: cardName,
-        imageUrl,
-        apiName: 'custom',
-        languageCode: NO_LANGUAGE,
-        cropSettings: crop,
+      entries[cropKeys[cropIndex]] = {
+        count: 1,
+        results: [{
+          name: cardName,
+          imageUrl,
+          apiName: 'custom',
+          languageCode: NO_LANGUAGE,
+          cropSettings: crop,
+        }],
       };
-
-      setCardResults((prev) => ({
-        ...prev,
-        [cropKey]: {
-          count: 1,
-          results: [cropCard],
-        },
-      }));
-
-      setSelectedCards((prev) => ({
-        ...prev,
-        [cropKey]: [cropCard],
-      }));
+    });
+    insertDeckEntries(entries, replaceKey);
+    setSelectedCards((prev) => {
+      const next = { ...prev };
+      Object.entries(entries).forEach(([key, group]) => { next[key] = [group.results[0]]; });
+      return next;
     });
   };
 
@@ -355,15 +421,16 @@ const DeckInputAndViewer: React.FC = () => {
     }
     if (!finalImageUrl) return;
     const url = finalImageUrl;
+    const replaceKey = replaceTarget;
 
     if (crops && crops.length > 0) {
       // Zuschnitte kommen fertig aus der Maske
-      addCustomCrops(cardName, url, crops);
+      addCustomCrops(cardName, url, crops, replaceKey);
     } else {
       // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln (Google Drive u.ä. nur über den Backend-Proxy)
       loadImageElement(url)
         .then(img => {
-          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }], replaceKey);
         })
         .catch(error => {
           console.error('Fehler beim Laden des Bildes. Überprüfen Sie die URL.', url, error);
@@ -398,6 +465,7 @@ const DeckInputAndViewer: React.FC = () => {
     if (!apiKey || !link || !apiFactory) return [];
     const cacheName = `link:${link}`;
     const startedAt = performance.now();
+    let run: NetworkLog | undefined;
     try {
       if (await SearchCacheService.hasSearchResult(apiKey, cacheName)) {
         const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
@@ -412,14 +480,15 @@ const DeckInputAndViewer: React.FC = () => {
           return fromServer.results;
         }
       }
+      run = startNetworkLog(apiKey, cardName, startedAt);
       const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
       const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
       if (serverCacheActive && config) serverSearchCache.put(config, cacheName, result);
-      addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+      finishLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
       return result.results;
     } catch (error) {
-      addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+      finishLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
       return [];
     }
   };
@@ -491,6 +560,7 @@ const DeckInputAndViewer: React.FC = () => {
         const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
             const startedAt = performance.now();
+            let run: NetworkLog | undefined;
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
@@ -506,18 +576,19 @@ const DeckInputAndViewer: React.FC = () => {
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
                 groupResults[apiKey][entry.name] = fromServer.results;
               } else {
-                result = await api({ cardname: entry.name });
+                run = startNetworkLog(apiKey, entry.name, startedAt);
+                result = await api({ cardname: entry.name }, run.onPage);
                 if (dropConnected) {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
                 const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+                finishLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
                 groupResults[apiKey][entry.name] = resultsArr;
               }
             } catch (error) {
-              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+              finishLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -1194,7 +1265,8 @@ const DeckInputAndViewer: React.FC = () => {
     setShowImageSettings(event.target.checked);
   }
 
-  const searchForApis = async (cardName: string) => {
+  /** Sucht eine einzelne Karte über alle aktiven APIs, ohne sie schon ins Deck zu legen. */
+  const searchSingleCard = async (cardName: string): Promise<CardResultsMap> => {
     setIsLoading(true);
     setProgress(0);
 
@@ -1220,6 +1292,7 @@ const DeckInputAndViewer: React.FC = () => {
         const api = apiFactory!.createApi(apiKey);
 
         const startedAt = performance.now();
+        let run: NetworkLog | undefined;
         try {
           let result: SearchApiResult | undefined;
           if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
@@ -1233,15 +1306,16 @@ const DeckInputAndViewer: React.FC = () => {
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'server', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = result.results;
           } else {
-            result = await api({ cardname: cardEntry.name });
+            run = startNetworkLog(apiKey, cardEntry.name, startedAt);
+            result = await api({ cardname: cardEntry.name }, run.onPage);
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
             if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
             const resultsArr = result?.results || [];
-            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+            finishLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
             groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
-          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+          finishLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
           groupResults[apiKey][cardEntry.name] = [];
         }
 
@@ -1277,9 +1351,13 @@ const DeckInputAndViewer: React.FC = () => {
         })
       }
     };
+    setIsLoading(false);
     // Andere Seiten mehrseitiger Karten werden eigene Einträge, sofern sie nicht schon in der Liste stehen
-    const results = splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name));
+    return splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name && name !== replaceTarget));
+  };
 
+  /** Bestätigtes Suchergebnis aus Add Single ins Deck legen (oder den Eintrag ohne Fund ersetzen). */
+  const addSearchedCard = (results: CardResultsMap) => {
     // Make filter values that this card brings in for the first time visible
     const newOptions = collectFilterOptions(results);
     const addMissing = (prev: Set<string>, values: Set<string>, known: Set<string>) => {
@@ -1289,13 +1367,8 @@ const DeckInputAndViewer: React.FC = () => {
     setVisibleApis(prev => addMissing(prev, newOptions.apis, availableApis));
     setVisibleLanguages(prev => addMissing(prev, newOptions.languages, availableLanguages));
 
-    // Set CardResults with transformed CardEntry objects
-    setCardResults(prevResults => ({
-      ...prevResults,
-      ...results
-    }));
-
-    setIsLoading(false);
+    insertDeckEntries(results, replaceTarget);
+    if (replaceTarget !== null) handleCloseCustomCardDialog();
   };
 
 
@@ -1582,12 +1655,32 @@ const DeckInputAndViewer: React.FC = () => {
                               onLoad={(imageInfo) => handleImageLoad(selectedCard as CardResult, imageInfo)}
                               onError={() => handleImageError(cardName, (selectedCard as CardResult).imageUrl, (selectedCard as CardResult).apiName)}
                             />
+                          ) : cardData.results.length === 0 ? (
+                            // Keine API hat etwas gefunden: Eintrag über Add Single austauschen
+                            <div className="no-image no-results">
+                              <span>No card art found</span>
+                              <ActionButton
+                                icon={<FindReplaceIcon />}
+                                title="Search again or add an image for this entry; it replaces the entry in the deck"
+                                onClick={(e) => { e.stopPropagation(); handleReplaceCard(cardName); }}
+                              >
+                                Replace
+                              </ActionButton>
+                              <ActionButton
+                                icon={<DeleteOutlineIcon />}
+                                title="Remove this entry from the deck"
+                                onClick={(e) => { e.stopPropagation(); handleDiscardEntry(cardName); }}
+                              >
+                                Discard
+                              </ActionButton>
+                            </div>
                           ) : (
                             <div className="no-image">No image available</div>
                           )}
                           <CardTitle name={cardName} />
-                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl */}
-                          <div className="card-count" onClick={(e) => e.stopPropagation()}>
+                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl.
+                              Ohne einen einzigen Fund gibt es stattdessen Replace und Discard. */}
+                          {cardData.results.length > 0 && <div className="card-count" onClick={(e) => e.stopPropagation()}>
                             {!uniquePrints ? (
                               <button
                                 className="count-button remove-card"
@@ -1621,7 +1714,7 @@ const DeckInputAndViewer: React.FC = () => {
                                 <CropIcon fontSize="inherit" />
                               </button>
                             )}
-                          </div>
+                          </div>}
                         </div>
                       </div>
                     );
@@ -1795,7 +1888,9 @@ const DeckInputAndViewer: React.FC = () => {
           open={customCardDialogOpen}
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
-          searchForApis={searchForApis}
+          searchCard={searchSingleCard}
+          onAddSearched={addSearchedCard}
+          replaceName={replaceTarget ?? undefined}
           cardAspect={settings.width / settings.height}
           onMaskOpenChange={setCustomCardMaskOpen}
         />}

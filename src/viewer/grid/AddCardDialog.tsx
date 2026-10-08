@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Divider, TextField } from '@mui/material';
 import { Box } from '@mui/material';
 import { CropSettings } from '../../service/ApiFactory';
+import { CardResultsMap } from '../../api/types/types';
 import CropMask from './crop/CropMask';
 import { loadViaProxy } from './crop/loadViaProxy';
 
@@ -21,20 +22,34 @@ interface AddCardDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: SaveCustomCardFn;
-  searchForApis: (cardName: string) => Promise<void>;
+  /** Sucht die Karte über die aktiven APIs; ins Deck kommt sie erst mit "Add to deck". */
+  searchCard: (cardName: string) => Promise<CardResultsMap>;
+  onAddSearched: (results: CardResultsMap) => void;
+  /** Gesetzt, wenn der Dialog einen Eintrag ohne Fund ersetzt: Name zum Vorbelegen und für den Titel. */
+  replaceName?: string;
   /** Seitenverhältnis einer Karte (Breite / Höhe) aus den PDF-Einstellungen. */
   cardAspect?: number;
   /** Meldet, ob gerade die Zuschnitt-Maske offen ist (dann braucht der Dialog mehr Breite). */
   onMaskOpenChange?: (open: boolean) => void;
 }
 
-const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis, cardAspect = 63 / 88, onMaskOpenChange }) => {
+const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchCard, onAddSearched, replaceName, cardAspect = 63 / 88, onMaskOpenChange }) => {
   const [maskSource, setMaskSource] = useState<MaskSource | null>(null);
   const [cardName, setCardName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  // Ergebnis der letzten Namenssuche, wartet auf "Add to deck"
+  const [searched, setSearched] = useState<{ name: string; results: CardResultsMap } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Beim Öffnen: Name des zu ersetzenden Eintrags vorbelegen, altes Suchergebnis verwerfen
+  useEffect(() => {
+    if (!open) return;
+    setCardName(replaceName ?? '');
+    setSearched(null);
+  }, [open, replaceName]);
 
   // Object-URLs der Vorschau wieder freigeben
   useEffect(() => {
@@ -107,11 +122,24 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
   };
 
   const handleNameSearch = async () => {
-    if (!cardName) {
-      alert('Bitte geben Sie einen Namen ein');
-      return;
+    const name = cardName.trim();
+    if (!name) return;
+    setIsSearching(true);
+    try {
+      setSearched({ name, results: await searchCard(name) });
+    } finally {
+      setIsSearching(false);
     }
-    await searchForApis(cardName);
+  };
+
+  const foundArts = searched ? Object.values(searched.results).reduce((sum, group) => sum + group.results.length, 0) : 0;
+  // Ergebnis gilt nur für den gesuchten Namen; nach einer Änderung muss neu gesucht werden
+  const searchCurrent = searched !== null && searched.name === cardName.trim();
+
+  const handleAddSearched = () => {
+    if (!searched || foundArts === 0) return;
+    onAddSearched(searched.results);
+    setSearched(null);
     setCardName('');
   };
 
@@ -144,7 +172,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
     <>
 
       <header className="modal-card-head">
-        <p className="modal-card-title">Add Custom Card</p>
+        <p className="modal-card-title">{replaceName !== undefined ? `Replace “${replaceName}”` : 'Add Custom Card'}</p>
       </header>
       <Box
         sx={{
@@ -164,19 +192,39 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                   label="cardname"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNameSearch(); } }}
                   variant="outlined"
                   size="small"
                   className="mb-3"
                 />
               </div>
               <Button
-                variant="contained"
+                variant={searchCurrent ? 'outlined' : 'contained'}
                 color="primary"
                 onClick={handleNameSearch}
+                disabled={isSearching || !cardName.trim()}
                 fullWidth
               >
-                Search
+                {isSearching ? 'Searching…' : searched ? 'Search again' : 'Search'}
               </Button>
+              {searched && (
+                <div className="add-single-found" role="status">
+                  <p className={foundArts === 0 ? 'has-text-danger' : undefined}>
+                    {foundArts === 0
+                      ? `No card arts found for “${searched.name}”`
+                      : `Found ${foundArts} card art${foundArts === 1 ? '' : 's'} for “${searched.name}”`}
+                  </p>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddSearched}
+                    disabled={foundArts === 0 || isSearching}
+                    fullWidth
+                  >
+                    {replaceName !== undefined ? 'Replace in deck' : 'Add to deck'}
+                  </Button>
+                </div>
+              )}
             </div>
 
             <Divider className="my-4" />
