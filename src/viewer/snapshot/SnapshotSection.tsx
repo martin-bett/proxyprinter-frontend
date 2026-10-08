@@ -8,7 +8,7 @@ import SaveAsIcon from '@mui/icons-material/SaveAs';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ActionButton from '../../container/inputs/ActionButton';
-import { Snapshot, snapshotLabel } from '../../service/snapshot/snapshot';
+import { Snapshot, snapshotCardsText, snapshotLabel } from '../../service/snapshot/snapshot';
 import { PdfInfo, pdfDownloadUrl, pdfFileName } from '../../service/snapshot/snapshotBackend';
 import './SnapshotSection.css';
 
@@ -73,7 +73,7 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
             <span className="input-tile-title">
               <span className="snapshot-text">
                 <span className="snapshot-label">Restore last session</span>
-                <span className="snapshot-meta">{snapshotLabel(session)} · {formatDate(session.createdAt)}</span>
+                <span className="snapshot-meta">{snapshotLabel(session)} · {snapshotCardsText(session)} · {formatDate(session.createdAt)}</span>
               </span>
             </span>
           </button>
@@ -98,7 +98,7 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
               <span className="input-tile-title">
                 <span className="snapshot-text">
                   <span className="snapshot-label">{label}</span>
-                  <span className="snapshot-meta">{active ? 'Active · ' : ''}{formatDate(snapshot.createdAt)}</span>
+                  <span className="snapshot-meta">{snapshotCardsText(snapshot)} · {formatDate(snapshot.createdAt)}</span>
                   {pdfMeta(snapshot)}
                 </span>
               </span>
