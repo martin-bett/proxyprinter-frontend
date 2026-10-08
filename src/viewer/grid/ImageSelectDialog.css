@@ -24,6 +24,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -161,17 +162,27 @@
     align-items: "center";
     grid-column: 2 / 3;
     grid-row: 2 / 4;
+    min-height: 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
-.image-select-dialog .language-filter {
+/* Rechte Spalte scrollt für sich, damit Statistik-Zeile und Buttons bei vielen Filtern sichtbar bleiben */
+.image-select-dialog .filter-controls {
   grid-column: 3 / 4;
   grid-row: 2 / 4;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 10px;
   border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-select-dialog .language-filter {
   display: flex;
   flex-direction: column;
   gap: 2px;
