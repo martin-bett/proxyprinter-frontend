@@ -149,7 +149,7 @@ class ServerSearchCache {
           (byServerKey.get(id) || []).forEach(request => hits.set(lookupKey(request.apiKey, request.term), hit.result));
         });
       } catch (error) {
-        console.warn('Server-Such-Cache nicht erreichbar', error);
+        console.warn('Server search cache not reachable', error);
       }
     }), LOOKUP_PARALLEL);
     return hits;
@@ -182,7 +182,7 @@ class ServerSearchCache {
           body: JSON.stringify({ entries }),
         });
       } catch (error) {
-        console.warn('Konnte Suchergebnisse nicht an den Server-Cache senden', error);
+        console.warn('Could not send search results to the server cache', error);
       }
     };
     for (const entry of pending) {

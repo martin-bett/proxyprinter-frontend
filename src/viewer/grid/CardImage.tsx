@@ -8,10 +8,10 @@ import { ImageQuality, qualityCacheKey, queueImageQuality } from "../../service/
 import LanguageFlag from "../../container/LanguageFlag";
 
 const RATING_LABEL: Record<ImageQuality["rating"], string> = {
-  good: "gut lesbar",
-  ok: "lesbar, etwas weich",
-  poor: "Text vermutlich schlecht lesbar",
-  unknown: "kein Text erkannt",
+  good: "clearly readable",
+  ok: "readable, slightly soft",
+  poor: "text probably hard to read",
+  unknown: "no text detected",
 };
 
 // Kartenformat 63 x 88 mm, damit lässt sich die Höhe aus der Breite ableiten
@@ -223,7 +223,7 @@ const CardImage: React.FC<CardImageProps> = ({
                   };
                   img.onerror = () => {
                     if (stale()) return;
-                    const proxyError = "Proxy-Image-Load-Fehler";
+                    const proxyError = "Proxy image load error";
                     setIsLoading(false);
                     const combined = [prevError, proxyError].filter(Boolean).join(" | ");
                     setLastError(combined);
@@ -418,7 +418,7 @@ const CardImage: React.FC<CardImageProps> = ({
             {quality && (
               <span
                 className={`quality-dot quality-${quality.rating}`}
-                title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
+                title={`Print sharpness: ${RATING_LABEL[quality.rating]} (sharpness ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
               />
             )}
           </div>
@@ -436,7 +436,7 @@ const CardImage: React.FC<CardImageProps> = ({
               </div>
               {quality && (
                 <div className="info-row">
-                  Schärfe {quality.sharpness.toFixed(2)} · {quality.effectiveDpi} DPI · {RATING_LABEL[quality.rating]}
+                  Sharpness {quality.sharpness.toFixed(2)} · {quality.effectiveDpi} DPI · {RATING_LABEL[quality.rating]}
                 </div>
               )}
               {!onlyDimensions && card && (

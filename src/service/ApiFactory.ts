@@ -571,7 +571,7 @@ export default class ApiFactory {
       if (kind === 'imageUrl' && !regex.test(text)) return '';
       return text.replace(regex, replacement);
     } catch {
-      console.warn(`Ungültiges Regex-Muster in Config ${config.name}: ${pattern}`);
+      console.warn(`Invalid regex pattern in config ${config.name}: ${pattern}`);
       return value;
     }
   }
@@ -849,7 +849,7 @@ export default class ApiFactory {
       return 'Phyrexian';
     }
     // Wenn kein passender Code gefunden wurde
-    console.warn(`Konnte keinen gültigen Sprachcode für "${input}" finden.`);
+    console.warn(`Could not find a valid language code for "${input}".`);
     return input; // Geben Sie den Originalinput zurück
   }
 

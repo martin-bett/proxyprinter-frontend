@@ -66,7 +66,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
             <th style={cellStyle}>Sprache</th>
             <th style={cellStyle}>Kartenname</th>
             <th style={cellStyle}>URL</th>
-            <th style={cellStyle}>Priorität</th>
+            <th style={cellStyle}>Priority</th>
             <th style={cellStyle}>Kategorie</th>
             <th style={cellStyle}>Aktion</th>
           </tr>
@@ -74,7 +74,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
         <tbody>
           {queue.length === 0 && (
             <tr>
-              <td colSpan={7} style={cellStyle}>Keine Einträge in der Queue</td>
+              <td colSpan={7} style={cellStyle}>No entries in the queue</td>
             </tr>
           )}
           {queue.map(entry => (
@@ -100,7 +100,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
           ))}
         </tbody>
       </table>
-      <button style={{ marginTop: 16 }} onClick={onClose}>Schließen</button>
+      <button style={{ marginTop: 16 }} onClick={onClose}>Close</button>
     </div>
   );
 }

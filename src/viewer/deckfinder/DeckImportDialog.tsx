@@ -59,7 +59,7 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
 
   const search = (nextPage: number) => config && run(async () => {
     const found = await searchDecks(config, input, nextPage, await getFingerprint());
-    if (found.length === 0 && nextPage === 1) setError('Keine Decks gefunden.');
+    if (found.length === 0 && nextPage === 1) setError('No decks found.');
     setHits(prev => nextPage === 1 ? found : [...prev, ...found]);
     setPage(nextPage);
   });

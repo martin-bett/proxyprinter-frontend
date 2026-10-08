@@ -74,7 +74,7 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
             </button>
           </>
         )}
-        <button className="memory-button" title="Cache-Ladevorgänge" onClick={openQueueDialog}>
+        <button className="memory-button" title="Cache loading queue" onClick={openQueueDialog}>
           <UploadIcon />
           <span className="memory-button-count">{cacheLoading}</span>
         </button>
@@ -88,7 +88,7 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
         <button
           className="memory-button"
           data-tour="reset-deck"
-          title="Deck zurücksetzen"
+          title="Reset deck"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetDisabled}
         >
@@ -121,11 +121,11 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
       <ClosableDialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)} maxWidth="xs">
         <div className="reset-deck-dialog">
-          <h2>Deck zurücksetzen?</h2>
-          <p>Decklist, Suchergebnisse und Bildauswahl werden geleert. Der aktuelle Stand wird vorher als Snapshot gespeichert.</p>
+          <h2>Reset deck?</h2>
+          <p>Decklist, search results and image selection are cleared. The current state is saved as a snapshot first.</p>
           <div className="reset-deck-actions">
             <ActionButton icon={<CloseIcon />} onClick={() => setResetDialogOpen(false)}>
-              Abbrechen
+              Cancel
             </ActionButton>
             <ActionButton
               icon={<RestartAltIcon />}
@@ -135,7 +135,7 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
                 await onResetDeck();
               }}
             >
-              Zurücksetzen
+              Reset
             </ActionButton>
           </div>
         </div>

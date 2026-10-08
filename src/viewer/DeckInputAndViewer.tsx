@@ -433,7 +433,7 @@ const DeckInputAndViewer: React.FC = () => {
           addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }], replaceKey);
         })
         .catch(error => {
-          console.error('Fehler beim Laden des Bildes. Überprüfen Sie die URL.', url, error);
+          console.error('Error loading the image. Check the URL.', url, error);
         });
     }
 
@@ -970,7 +970,7 @@ const DeckInputAndViewer: React.FC = () => {
     try {
       setDeckFinderConfigs(await fetchDeckFinderConfigs(await getFingerprint()));
     } catch (e) {
-      console.error('Deckfinder-Configs nicht ladbar:', e);
+      console.error('Could not load deckfinder configs:', e);
     }
   }, []);
   useEffect(() => { reloadDeckFinderConfigs(); }, [reloadDeckFinderConfigs]);
@@ -1919,15 +1919,15 @@ const DeckInputAndViewer: React.FC = () => {
       />
       <ClosableDialog open={pendingDeck !== null} onClose={() => setPendingDeck(null)} maxWidth="xs">
         <div className="replace-deck-dialog">
-          <h2>Decklist ersetzen?</h2>
+          <h2>Replace decklist?</h2>
           <p>
-            {pendingDeck?.deckName ? `„${pendingDeck.deckName}“ ` : 'Das geladene Deck '}
-            ({pendingDeck?.entries.reduce((sum, e) => sum + e.count, 0)} Karten) ersetzt die aktuelle Liste.
-            Der aktuelle Stand wird vorher als Snapshot gespeichert.
+            {pendingDeck?.deckName ? `“${pendingDeck.deckName}” ` : 'The loaded deck '}
+            ({pendingDeck?.entries.reduce((sum, e) => sum + e.count, 0)} cards) replaces the current list.
+            The current state is saved as a snapshot first.
           </p>
           <div className="replace-deck-actions">
-            <ActionButton icon={<CloseIcon />} onClick={() => setPendingDeck(null)}>Abbrechen</ActionButton>
-            <ActionButton icon={<DownloadIcon />} className="is-primary" onClick={() => pendingDeck && applyLoadedDeck(pendingDeck, true)}>Ersetzen</ActionButton>
+            <ActionButton icon={<CloseIcon />} onClick={() => setPendingDeck(null)}>Cancel</ActionButton>
+            <ActionButton icon={<DownloadIcon />} className="is-primary" onClick={() => pendingDeck && applyLoadedDeck(pendingDeck, true)}>Replace</ActionButton>
           </div>
         </div>
       </ClosableDialog>

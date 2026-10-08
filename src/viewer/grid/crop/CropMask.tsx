@@ -283,7 +283,7 @@ const CropMask: React.FC<CropMaskProps> = ({
       <div className="crop-mask-image">
         {!natural && !loadError && <CircularProgress size={32} />}
         {loadError && (
-          <p className="help is-danger">Das Bild konnte nicht geladen werden. Bitte die URL prüfen.</p>
+          <p className="help is-danger">The image could not be loaded. Please check the URL.</p>
         )}
         {!loadError && (!natural || !crop) && (
           // Unsichtbar laden, um die natürliche Größe zu kennen
@@ -324,7 +324,7 @@ const CropMask: React.FC<CropMaskProps> = ({
               <FormControlLabel
                 control={<Checkbox checked={keepAspect} onChange={(e) => handleKeepAspect(e.target.checked)} />}
                 label="Keep aspect ratio"
-                title="Hält den Ausschnitt im Kartenformat aus den PDF-Einstellungen, damit das Bild beim Druck nicht verzerrt"
+                title="Keeps the crop in the card format from the PDF settings so the image is not distorted when printed"
               />
               <Button size="small" variant="outlined" onClick={handleWholeImage} disabled={!natural}>
                 Whole image
@@ -336,7 +336,7 @@ const CropMask: React.FC<CropMaskProps> = ({
               {rectField('width', 'Width')}
               {rectField('height', 'Height')}
             </div>
-            <p className="crop-mask-hint">Rahmen mit der Maus verschieben, an den Ecken ziehen oder Werte in Pixeln eingeben.</p>
+            <p className="crop-mask-hint">Move the frame with the mouse, drag the corners or enter values in pixels.</p>
           </>
         ) : (
           <div className="crop-mask-fields">
@@ -355,9 +355,9 @@ const CropMask: React.FC<CropMaskProps> = ({
         {natural && tile && (
           <p className="crop-mask-info">
             {crops.length === 0
-              ? 'Rand und Abstände sind größer als das Bild.'
-              : `${crops.length} ${crops.length === 1 ? 'Karte' : 'Karten'} à ${tile.width} × ${tile.height} px (Bild ${natural.width} × ${natural.height})`}
-            {crops.length > 0 && tileAspectOff > 0.03 && ', weicht vom Kartenformat ab und wird beim Druck gestreckt'}
+              ? 'Margin and gaps are larger than the image.'
+              : `${crops.length} ${crops.length === 1 ? 'card' : 'cards'}, each ${tile.width} × ${tile.height} px (image ${natural.width} × ${natural.height})`}
+            {crops.length > 0 && tileAspectOff > 0.03 && ', differs from the card format and is stretched when printed'}
           </p>
         )}
         {renderThumbs()}

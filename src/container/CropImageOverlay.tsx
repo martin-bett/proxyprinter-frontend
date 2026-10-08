@@ -50,7 +50,7 @@ export const useProxiedImage = (card: CardResult | null | undefined) => {
         if (cancelled) return;
         setImageSrc(toUrl(blob));
       } catch (error) {
-        console.error("Bild konnte nicht geladen werden:", error);
+        console.error("Image could not be loaded:", error);
         // Ohne Proxy direkt versuchen
         if (!cancelled) setImageSrc(imageUrl);
       }
@@ -108,7 +108,7 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
               <tr><td>Sprache:</td><td>{selectedImage.languageCode || "—"}</td></tr>
               {selectedImage.imageInfo && (
                 <tr>
-                  <td>Bildgröße:</td>
+                  <td>Image size:</td>
                   <td>
                     {selectedImage.imageInfo.width} × {selectedImage.imageInfo.height}
                     {selectedImage.imageInfo.fileType ? ` (${selectedImage.imageInfo.fileType})` : ""}
@@ -118,7 +118,7 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
               {hasCrop && (
                 <tr>
                   <td>Zuschnitt:</td>
-                  <td>{crop!.width} × {crop!.height} ab {crop!.offSetX || 0}, {crop!.offSetY || 0}</td>
+                  <td>{crop!.width} × {crop!.height} from {crop!.offSetX || 0}, {crop!.offSetY || 0}</td>
                 </tr>
               )}
             </tbody>

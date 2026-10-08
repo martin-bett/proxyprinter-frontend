@@ -87,7 +87,7 @@ const RawDataDialog: React.FC<RawDataDialogProps> = ({ rawData, onClose }) => {
     >
       <DialogTitle>
         Raw API Response
-        <IconButton aria-label="Schließen" onClick={onClose} className="dialog-close-button">
+        <IconButton aria-label="Close" onClick={onClose} className="dialog-close-button">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -109,7 +109,7 @@ const RawDataDialog: React.FC<RawDataDialogProps> = ({ rawData, onClose }) => {
           </button>
         )}
         <button className="button" onClick={handleCopy}>
-          {copied ? 'Kopiert ✓' : 'Copy to Clipboard'}
+          {copied ? 'Copied ✓' : 'Copy to Clipboard'}
         </button>
         <button className="button" onClick={onClose}>Close</button>
       </DialogActions>

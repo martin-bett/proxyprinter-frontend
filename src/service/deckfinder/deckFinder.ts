@@ -159,7 +159,7 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
     throw new Error('Antwort ist kein JSON. Stimmt das Data Format der Config?');
   }
   const listFields = splitList(config.entryListFields);
-  if (listFields.length === 0) throw new Error('Die Config hat keine Entry List Fields.');
+  if (listFields.length === 0) throw new Error('The config has no entry list fields.');
 
   const entries: (DeckEntry & { board: string | null })[] = [];
   for (const field of listFields) {
@@ -190,7 +190,7 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
       }
     }
   }
-  if (entries.length === 0) throw new Error('Keine Karten in der Antwort gefunden. Stimmen die Felder der Config?');
+  if (entries.length === 0) throw new Error('No cards found in the response. Do the config fields match?');
   return buildDeck(entries, selected, text(valueAt(data, config.deckNameField)));
 }
 
@@ -200,7 +200,7 @@ export function extractSearchHits(config: DeckFinderConfig, body: string): DeckS
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('Antwort der Suche ist kein JSON.');
+    throw new Error('The search response is not JSON.');
   }
   const list = config.searchListField ? valueAt(data, config.searchListField) : data;
   if (!Array.isArray(list)) return [];

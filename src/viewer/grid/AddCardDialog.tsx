@@ -93,10 +93,10 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
       if (response.ok && data.success) {
         return data.generatedId;
       }
-      setUploadError(data.message || 'Ein Fehler ist beim Hochladen aufgetreten.');
+      setUploadError(data.message || 'An error occurred during upload.');
       return null;
     } catch (error) {
-      setUploadError('Ein Fehler ist beim Hochladen der Datei aufgetreten.');
+      setUploadError('An error occurred while uploading the file.');
       console.error('Upload error:', error);
       return null;
     }

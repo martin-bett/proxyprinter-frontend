@@ -7,8 +7,8 @@ type LocatorField = keyof ConnectedCardLocator;
 
 const COLUMNS: { name: LocatorField; label: string; title: string; placeholder: string }[] = [
   { name: 'dataListField', label: 'Data List Field', title: 'Liste im Treffer, z.B. all_parts bei Scryfall', placeholder: 'all_parts' },
-  { name: 'nameField', label: 'Name Field', title: 'Name je Eintrag, wird über alle aktiven APIs gesucht', placeholder: 'name' },
-  { name: 'linkField', label: 'Link Field', title: 'Optional: Link auf das exakte Objekt (gleiches Format wie ein Treffer)', placeholder: 'uri' },
+  { name: 'nameField', label: 'Name Field', title: 'Name of each entry, searched across all active APIs', placeholder: 'name' },
+  { name: 'linkField', label: 'Link Field', title: 'Optional: link to the exact object (same format as a match)', placeholder: 'uri' },
   { name: 'typeField', label: 'Type Field', title: 'Optional: Typ je Eintrag, z.B. type_line', placeholder: 'type_line' },
 ];
 
@@ -38,7 +38,7 @@ const ConnectedCardsTable: React.FC<ConnectedCardsTableProps> = ({ value, editab
       <table className="config-table">
         <tbody>
           <tr className="config-table-group">
-            <th colSpan={COLUMNS.length + (editable ? 1 : 0)} title="Jeder Eintrag einer Liste wird eine eigene Karte (Anzahl 1), gesucht über alle aktiven APIs">
+            <th colSpan={COLUMNS.length + (editable ? 1 : 0)} title="Each entry of a list becomes its own card (count 1), searched across all active APIs">
               Connected Cards
             </th>
           </tr>

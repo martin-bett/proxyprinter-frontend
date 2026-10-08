@@ -136,7 +136,7 @@ export async function loadImageElement(url: string): Promise<HTMLImageElement> {
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Proxy-Bild konnte nicht dekodiert werden"));
+      img.onerror = () => reject(new Error("Proxy image could not be decoded"));
       img.src = objectUrl;
     });
   };
@@ -145,7 +145,7 @@ export async function loadImageElement(url: string): Promise<HTMLImageElement> {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Bild nicht ladbar"));
+      img.onerror = () => reject(new Error("Image could not be loaded"));
       img.src = url;
     });
   } catch (e) {
@@ -176,7 +176,7 @@ export async function fetchImageViaProxy(url: string): Promise<Blob> {
     url
   );
   if (!response.ok) {
-    const reason = `Bild nicht ladbar: ${response.headers.get("X-Proxy-Error") || `Proxy-Fehler ${response.status}`}`;
+    const reason = `Image could not be loaded: ${response.headers.get("X-Proxy-Error") || `Proxy error ${response.status}`}`;
     proxyFailures.set(url, reason);
     throw new Error(reason);
   }
@@ -473,7 +473,7 @@ class ImageLoaderService {
   private async _loadViaProxy(url: string): Promise<{ img: HTMLImageElement; blob: Blob | null }> {
     const blob = await fetchImageViaProxy(url);
     const img = await this._createImageFromBlob(blob);
-    if (!img) throw new Error("Proxy-Bild konnte nicht dekodiert werden");
+    if (!img) throw new Error("Proxy image could not be decoded");
     return { img, blob };
   }
 

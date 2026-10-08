@@ -36,7 +36,7 @@ const ThemeChooser: React.FC = () => {
         className="memory-button theme-chooser-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
         title={`Farbschema: ${theme.name}`}
-        aria-label={`Farbschema wählen (aktuell ${theme.name})`}
+        aria-label={`Choose color scheme (current: ${theme.name})`}
         aria-haspopup="menu"
       >
         <ThemeIcon theme={theme} size="button" />

@@ -42,7 +42,7 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
         const result = await fp.get();
         setFingerprint(result.visitorId);
       } catch (error) {
-        console.error('Fehler beim Laden des Fingerprints:', error);
+        console.error('Error loading the fingerprint:', error);
         setIsLoading(false);
       }
     };
@@ -71,7 +71,7 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
           }
         }
       } catch (error) {
-        console.error('Fehler beim Laden der Ratings:', error);
+        console.error('Error loading the ratings:', error);
       } finally {
         setIsLoading(false);
       }

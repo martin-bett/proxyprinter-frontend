@@ -14,8 +14,8 @@ const sourceIcon: Record<LogEntry['source'], { icon: React.ReactNode; title: str
   cache: { icon: <UploadIcon fontSize="inherit" />, title: 'Aus dem Cache geladen' },
   server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'Aus dem gemeinsamen Server-Cache geladen' },
   network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Aus dem Netz geladen' },
-  error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Fehler' },
-  running: { icon: <CircularProgress size="0.85em" color="inherit" />, title: 'Suche läuft' },
+  error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Error' },
+  running: { icon: <CircularProgress size="0.85em" color="inherit" />, title: 'Searching' },
 };
 
 // Kurz halten, die Spalte ist schmal: 85ms, 1.2s, 12s
@@ -45,7 +45,7 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
         <thead>
           <tr>
             <th>API</th>
-            <th title="Quelle: Cache, Server-Cache oder Netz">Q</th>
+            <th title="Source: cache, server cache or network">Q</th>
             <th className="search-log-cell-number" title="Treffer">#</th>
             <th className="search-log-cell-number" title="Dauer"><TimerOutlinedIcon fontSize="inherit" /></th>
             <th className="search-log-cell-number" title="Anzahl Requests"><SwapVertIcon fontSize="inherit" /></th>

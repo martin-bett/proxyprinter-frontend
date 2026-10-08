@@ -39,7 +39,7 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
         console.log(result);
         if (result.results.length === 0) {
           // Dialog offen lassen, sonst sieht man nicht, dass nichts gefunden wurde
-          setGalleryStatus({ loading: false, error: 'Keine Bilder gefunden.' });
+          setGalleryStatus({ loading: false, error: 'No images found.' });
           return;
         }
         setGalleryStatus({ loading: false });

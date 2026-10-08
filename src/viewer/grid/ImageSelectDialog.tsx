@@ -35,7 +35,7 @@ const qualityFilterOf = (result: CardResult): QualityFilter => {
 };
 
 const FilterCount: React.FC<{ count: number }> = ({ count }) => (
-  <span className={`filter-count ${count === 0 ? 'is-empty' : ''}`} title={`${count} Bilder`}>{count}</span>
+  <span className={`filter-count ${count === 0 ? 'is-empty' : ''}`} title={`${count} ${count === 1 ? 'image' : 'images'}`}>{count}</span>
 );
 
 const languageOf = (result: CardResult) => result.languageCode || NO_LANGUAGE;
