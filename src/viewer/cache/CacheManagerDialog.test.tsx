@@ -21,6 +21,9 @@ jest.mock("../../service/cache/hooks/useImageLoaderCache", () => ({
 jest.mock("./CacheProgressBar", () => ({ CacheProgressBar: () => null }));
 
 describe("CacheManagerDialog Schloss", () => {
+  // Der Service prüft beim Start den Cache; ohne Warten loggt er erst nach Testende
+  beforeAll(() => imageLoaderService.ready);
+
   it("zeigt den Schutzstatus, Klick aufs Schloss schützt die Gruppe statt zu löschen", () => {
     const setLocked = jest.spyOn(imageLoaderService, "setLocked").mockResolvedValue();
     const deleteUnlocked = jest.spyOn(imageLoaderService, "deleteUnlocked").mockResolvedValue();
