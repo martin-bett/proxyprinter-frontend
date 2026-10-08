@@ -1,0 +1,14 @@
+{
+  "themeChooser": {
+    "title": "配色方案：{{name}}",
+    "aria": "选择配色方案（当前：{{name}}）"
+  },
+  "tutorials": {
+    "title": "教程"
+  },
+  "language": {
+    "title": "界面语言：{{name}}",
+    "aria": "选择界面语言（当前：{{name}}）",
+    "hint": "卡牌语言和图片筛选需单独设置。"
+  }
+}

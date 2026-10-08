@@ -1,0 +1,14 @@
+{
+  "themeChooser": {
+    "title": "Farbschema: {{name}}",
+    "aria": "Farbschema wählen (aktuell: {{name}})"
+  },
+  "tutorials": {
+    "title": "Anleitungen"
+  },
+  "language": {
+    "title": "Oberflächensprache: {{name}}",
+    "aria": "Oberflächensprache wählen (aktuell: {{name}})",
+    "hint": "Kartensprachen und Bildfilter werden separat eingestellt."
+  }
+}

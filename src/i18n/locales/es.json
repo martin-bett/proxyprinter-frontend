@@ -1,0 +1,14 @@
+{
+  "themeChooser": {
+    "title": "Tema de color: {{name}}",
+    "aria": "Elegir tema de color (actual: {{name}})"
+  },
+  "tutorials": {
+    "title": "Tutoriales"
+  },
+  "language": {
+    "title": "Idioma de la interfaz: {{name}}",
+    "aria": "Elegir idioma de la interfaz (actual: {{name}})",
+    "hint": "Los idiomas de las cartas y los filtros de imágenes se configuran por separado."
+  }
+}

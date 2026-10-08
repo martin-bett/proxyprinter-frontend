@@ -1,0 +1,14 @@
+{
+  "themeChooser": {
+    "title": "カラーテーマ: {{name}}",
+    "aria": "カラーテーマを選択（現在: {{name}}）"
+  },
+  "tutorials": {
+    "title": "チュートリアル"
+  },
+  "language": {
+    "title": "表示言語: {{name}}",
+    "aria": "表示言語を選択（現在: {{name}}）",
+    "hint": "カードの言語と画像フィルターは別に設定します。"
+  }
+}

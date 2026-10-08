@@ -1,0 +1,14 @@
+{
+  "themeChooser": {
+    "title": "Thème de couleurs : {{name}}",
+    "aria": "Choisir le thème de couleurs (actuel : {{name}})"
+  },
+  "tutorials": {
+    "title": "Tutoriels"
+  },
+  "language": {
+    "title": "Langue de l'interface : {{name}}",
+    "aria": "Choisir la langue de l'interface (actuelle : {{name}})",
+    "hint": "Les langues des cartes et les filtres d'images se règlent séparément."
+  }
+}

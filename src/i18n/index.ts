@@ -13,10 +13,23 @@ export interface UiLanguage {
 // A new language = a new locales/<code>.json, one loader and one entry here.
 export const UI_LANGUAGES: UiLanguage[] = [
   { code: 'en', name: 'English', country: 'gb' },
+  { code: 'de', name: 'Deutsch', country: 'de' },
+  { code: 'fr', name: 'Français', country: 'fr' },
+  { code: 'it', name: 'Italiano', country: 'it' },
+  { code: 'es', name: 'Español', country: 'es' },
+  { code: 'ru', name: 'Русский', country: 'ru' },
+  { code: 'ja', name: '日本語', country: 'jp' },
+  { code: 'zh', name: '中文', country: 'cn' },
 ];
 
 const LOADERS: Record<string, () => Promise<{ default: Record<string, unknown> }>> = {
-  // de: () => import('./locales/de.json'),
+  de: () => import('./locales/de.json'),
+  fr: () => import('./locales/fr.json'),
+  it: () => import('./locales/it.json'),
+  es: () => import('./locales/es.json'),
+  ru: () => import('./locales/ru.json'),
+  ja: () => import('./locales/ja.json'),
+  zh: () => import('./locales/zh.json'),
 };
 
 const FALLBACK = 'en';
@@ -33,14 +46,10 @@ const readStored = (): string | null => {
   }
 };
 
-/** Saved choice, else the first supported browser language, else English. */
+/** Saved choice, else English. Browser language is not used yet: only a few texts are translated so far. */
 export const detectLanguage = (): string => {
   const stored = readStored();
-  if (isSupported(stored)) return stored;
-  const browser = (typeof navigator !== 'undefined' ? navigator.languages ?? [] : [])
-    .map(l => l.toLowerCase().split('-')[0])
-    .find(isSupported);
-  return browser ?? FALLBACK;
+  return isSupported(stored) ? stored : FALLBACK;
 };
 
 const loadBundle = async (code: string) => {
