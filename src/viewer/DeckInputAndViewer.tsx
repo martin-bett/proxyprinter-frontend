@@ -37,6 +37,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import PayPalDonateButton from './info/PayPalDonateButton';
 import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
+import { setLoadingProgressTitle } from '../service/tabTitle';
 import VersionInfo from './info/VersionInfo';
 import ThemeChooser from '../theme/ThemeChooser';
 import TutorialMenu from '../tutorial/TutorialMenu';
@@ -113,6 +114,11 @@ const DeckInputAndViewer: React.FC = () => {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fortschritt auch im Tab-Titel zeigen, solange Karten aus den APIs geladen werden
+  useEffect(() => {
+    setLoadingProgressTitle(isLoading ? progress : null);
+  }, [isLoading, progress]);
   const [rawDataDialog, setRawDataDialog] = useState<string | null>(null);
   const [categoryStates, setCategoryStates] = useState<Record<string, boolean>>({});
   const [apiConfigs, setApiConfigs] = useState<Record<string, Config>>({}); // New state for API configs
