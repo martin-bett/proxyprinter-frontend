@@ -151,6 +151,13 @@ export interface ApiParams {
   pageCount?:number;
 }
 
+/** Zwischenstand einer laufenden Suche, nach jeder fertigen Seite */
+export interface PageProgress {
+  /** Treffer bisher, gefiltert wie das Endergebnis */
+  count: number;
+  requestCount: number;
+}
+
 export interface GalleryParams{
   [key: string]: string | undefined;
 }
@@ -218,13 +225,13 @@ export default class ApiFactory {
     });
   }
 
-  createApi(configKey: string): (params: ApiParams) => Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
+  createApi(configKey: string): (params: ApiParams, onPage?: (progress: PageProgress) => void) => Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     const config = this.configs[configKey];
     if (!config) {
       throw new Error(`Config not found for key: ${configKey}`);
     }
 
-    return (params: ApiParams) => this.executeApiRequest(config, params);
+    return (params: ApiParams, onPage?: (progress: PageProgress) => void) => this.executeApiRequest(config, params, onPage);
   }
 
   private processUrl(baseUrl: string, urlParams: Record<string, string> | undefined): string {
@@ -244,7 +251,8 @@ export default class ApiFactory {
 
   private async executeApiRequest(
     config: Config, 
-    params: ApiParams
+    params: ApiParams,
+    onPage?: (progress: PageProgress) => void
 ): Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     let allResults: SearchResult[] = [];
     let allRawResponses: string[] = [];
@@ -272,6 +280,7 @@ export default class ApiFactory {
 
             const pageResults = await this.processDataList(dataList, config);
             allResults = allResults.concat(pageResults);
+            if (onPage) onPage({ count: this.filterAndDeduplicateResults(allResults, params, config).length, requestCount: allRawResponses.length });
 
             // Erhöhe den PageCount, wenn mehr Seiten verfügbar sind
             if (maxPage && pageCount < maxPage) {
