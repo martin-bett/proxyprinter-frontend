@@ -57,10 +57,10 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
   return (
     <>
-      <div className="memory-buttons-bar">
+      <div className="memory-buttons-bar" data-tour="memory-buttons">
         {downloadsMounted && (
           <>
-            <button className={`memory-button ${fadeClass}`} title="Wartende Downloads" onClick={openQueueDialog}>
+            <button className={`memory-button ${fadeClass}`} data-tour="queue-waiting" title="Wartende Downloads" onClick={openQueueDialog}>
               <AccessTimeIcon />
               <span className="memory-button-count">{queued}</span>
             </button>
@@ -78,15 +78,16 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
           <UploadIcon />
           <span className="memory-button-count">{cacheLoading}</span>
         </button>
-        <button className="memory-button" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
+        <button className="memory-button" data-tour="search-cache" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
           <SearchIcon />
           <span className="memory-button-count">{searchCount}</span>
         </button>
-        <button className="memory-button" title="Cache anzeigen" onClick={openImageCacheDialog}>
+        <button className="memory-button" data-tour="image-cache" title="Cache anzeigen" onClick={openImageCacheDialog}>
           <CacheProgressBar width={120} />
         </button>
         <button
           className="memory-button"
+          data-tour="reset-deck"
           title="Deck zurücksetzen"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetDisabled}
