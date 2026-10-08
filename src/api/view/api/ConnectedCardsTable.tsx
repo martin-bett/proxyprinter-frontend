@@ -1,15 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import type { ParseKeys } from 'i18next';
 import AddIcon from '@mui/icons-material/Add';
 import { ConnectedCardLocator } from '../../../service/ApiFactory';
 import ActionButton from '../../../container/inputs/ActionButton';
 
 type LocatorField = keyof ConnectedCardLocator;
 
-const COLUMNS: { name: LocatorField; label: string; title: string; placeholder: string }[] = [
-  { name: 'dataListField', label: 'Data List Field', title: 'List inside a match, e.g. all_parts on Scryfall', placeholder: 'all_parts' },
-  { name: 'nameField', label: 'Name Field', title: 'Name of each entry, searched across all active APIs', placeholder: 'name' },
-  { name: 'linkField', label: 'Link Field', title: 'Optional: link to the exact object (same format as a match)', placeholder: 'uri' },
-  { name: 'typeField', label: 'Type Field', title: 'Optional: type of each entry, e.g. type_line', placeholder: 'type_line' },
+const COLUMNS: { name: LocatorField; label: ParseKeys; title: ParseKeys; placeholder: string }[] = [
+  { name: 'dataListField', label: 'configCommon.fields.dataListField', title: 'apiConfig.connectedCards.dataListFieldTitle', placeholder: 'all_parts' },
+  { name: 'nameField', label: 'configCommon.fields.nameField', title: 'apiConfig.connectedCards.nameFieldTitle', placeholder: 'name' },
+  { name: 'linkField', label: 'apiConfig.connectedCards.linkField', title: 'apiConfig.connectedCards.linkFieldTitle', placeholder: 'uri' },
+  { name: 'typeField', label: 'apiConfig.connectedCards.typeField', title: 'apiConfig.connectedCards.typeFieldTitle', placeholder: 'type_line' },
 ];
 
 const emptyLocator = (): ConnectedCardLocator => ({ dataListField: '', nameField: '', linkField: '', typeField: '' });
@@ -25,6 +27,7 @@ interface ConnectedCardsTableProps {
  * jeder Eintrag wird eine eigene Karte mit Anzahl 1 und über alle aktiven APIs per Name gesucht.
  */
 const ConnectedCardsTable: React.FC<ConnectedCardsTableProps> = ({ value, editable, onChange }) => {
+  const { t } = useTranslation();
   const rows = value ?? [];
   if (!editable && rows.length === 0) {
     return null;
@@ -38,12 +41,12 @@ const ConnectedCardsTable: React.FC<ConnectedCardsTableProps> = ({ value, editab
       <table className="config-table">
         <tbody>
           <tr className="config-table-group">
-            <th colSpan={COLUMNS.length + (editable ? 1 : 0)} title="Each entry of a list becomes its own card (count 1), searched across all active APIs">
-              Connected Cards
+            <th colSpan={COLUMNS.length + (editable ? 1 : 0)} title={t('apiConfig.connectedCards.titleTooltip')}>
+              {t('apiConfig.connectedCards.title')}
             </th>
           </tr>
           <tr>
-            {COLUMNS.map(column => <th key={column.name} title={column.title}>{column.label}</th>)}
+            {COLUMNS.map(column => <th key={column.name} title={t(column.title)}>{t(column.label)}</th>)}
             {editable ? <th /> : null}
           </tr>
           {rows.map((row, index) => (
@@ -64,7 +67,7 @@ const ConnectedCardsTable: React.FC<ConnectedCardsTableProps> = ({ value, editab
               ))}
               {editable ? (
                 <td>
-                  <button type="button" className="delete is-small" title="Remove list" onClick={() => onChange(rows.filter((_, i) => i !== index))} />
+                  <button type="button" className="delete is-small" title={t('apiConfig.connectedCards.removeList')} onClick={() => onChange(rows.filter((_, i) => i !== index))} />
                 </td>
               ) : null}
             </tr>
@@ -72,7 +75,7 @@ const ConnectedCardsTable: React.FC<ConnectedCardsTableProps> = ({ value, editab
         </tbody>
       </table>
       {editable ? (
-        <ActionButton icon={<AddIcon />} onClick={() => onChange([...rows, emptyLocator()])}>Add list</ActionButton>
+        <ActionButton icon={<AddIcon />} onClick={() => onChange([...rows, emptyLocator()])}>{t('apiConfig.connectedCards.addList')}</ActionButton>
       ) : null}
     </div>
   );

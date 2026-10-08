@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CropSettings } from '../../service/ApiFactory';
 import { PdfSettings } from './SettingsDialog';
 import { computePageLayout, cornerRadius, gridLinePositions, PageLayout } from './pdfLayout';
@@ -180,6 +181,7 @@ interface PdfPagePreviewProps {
 
 /** Eine A4-Beispielseite, die sich mit den Einstellungen im Dialog mitändert. */
 export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fitsOnPage, setFitsOnPage] = useState(true);
 
@@ -207,12 +209,12 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
         width={Math.round(width * dpr)}
         height={Math.round(height * dpr)}
         style={{ width, height }}
-        aria-label="Page preview"
+        aria-label={t('pdf.preview.ariaLabel')}
       />
       <p className="help">
         {fitsOnPage
           ? `${layout.cardsPerRow} × ${layout.cardsPerColumn} = ${layout.slots.length}`
-          : 'Does not fit on A4'}
+          : t('pdf.preview.doesNotFit')}
       </p>
     </div>
   );

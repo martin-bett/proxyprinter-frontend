@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { HTMLElement } from 'node-html-parser';
 import { FieldAssignment, FieldRole } from './jsonFields';
 import { elementSelector, fieldElement, listItems } from './htmlFields';
@@ -65,6 +66,7 @@ function interestingAttrs(el: HTMLElement): string {
 }
 
 const HtmlNode: React.FC<{ el: HTMLElement; marks: Marks; onSelect: (el: HTMLElement) => void }> = ({ el, marks, onSelect }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(() => marks.open.has(el));
   const children = el.childNodes.filter((c): c is HTMLElement => c instanceof HTMLElement && !SKIP.has(c.tagName.toLowerCase()));
   const roles = marks.roles.get(el) || [];
@@ -87,7 +89,7 @@ const HtmlNode: React.FC<{ el: HTMLElement; marks: Marks; onSelect: (el: HTMLEle
       {open && children.length > 0 && (
         <div className="wiz-children">
           {children.slice(0, MAX_CHILDREN).map((c, i) => <HtmlNode key={i} el={c} marks={marks} onSelect={onSelect} />)}
-          {children.length > MAX_CHILDREN && <div className="wiz-more">… {children.length - MAX_CHILDREN} more</div>}
+          {children.length > MAX_CHILDREN && <div className="wiz-more">{t('wizard.tree.more', { count: children.length - MAX_CHILDREN })}</div>}
         </div>
       )}
     </div>

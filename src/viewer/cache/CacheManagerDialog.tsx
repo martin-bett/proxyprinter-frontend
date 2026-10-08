@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { imageLoaderService, CacheCardInput, CacheEntryFilter } from "../../service/cache/ImageLoaderService";
 import { useImageLoaderCache } from "../../service/cache/hooks/useImageLoaderCache";
 import CloseIcon from "@mui/icons-material/Close";
@@ -34,6 +35,7 @@ interface DeletableCellProps {
 // Zelle, die beim Klick ihren Cache löscht. Beim Überfahren färbt sie sich (mit ihrer Partnerzelle) rot;
 // kein zusätzliches Icon, damit sich die Spaltenbreiten nicht verschieben.
 export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMouseEnter, onMouseLeave, title, protectHover }: DeletableCellProps) {
+  const { t } = useTranslation();
   const classes = ["cache-cell", showTrash ? "is-deletable" : "is-empty"];
   if (showTrash && hover) classes.push("is-hover");
   if (protectHover) classes.push(`is-protect-${protectHover}`);
@@ -43,7 +45,7 @@ export function DeletableCell({ value, mbValue, showTrash, onDelete, hover, onMo
       onClick={showTrash ? onDelete : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      title={title ?? (showTrash ? "Click to delete" : "")}
+      title={title ?? (showTrash ? t("cache.manager.clickToDelete") : "")}
     >
       {mbValue !== undefined ? mbValue : value}
     </td>
@@ -59,16 +61,17 @@ interface LockCellProps {
 
 // Schloss einer Gruppe: geschlossen = alle Einträge geschützt, halb transparent = nur ein Teil. Löscht nie.
 function LockCell({ entries, onToggle, onHover, hover }: LockCellProps) {
+  const { t } = useTranslation();
   if (entries.length === 0) return <td className="cache-cell cache-lock-cell is-empty" />;
   const lockedCount = entries.filter(e => e.locked).length;
   const allLocked = lockedCount === entries.length;
   const action: ProtectHover = allLocked ? "unlock" : "lock";
   const state = allLocked ? "is-locked" : lockedCount > 0 ? "is-partial" : "is-unlocked";
   const title = allLocked
-    ? "Protected. Click to remove protection"
+    ? t("cache.manager.lock.protected")
     : lockedCount > 0
-      ? `${lockedCount} of ${entries.length} protected. Click to protect all`
-      : "Click to protect from deletion";
+      ? t("cache.manager.lock.partial", { locked: lockedCount, total: entries.length })
+      : t("cache.manager.lock.unprotected");
   return (
     <td
       className={`cache-cell cache-lock-cell ${state}${hover ? ` is-protect-${hover}` : ""}`}
@@ -93,13 +96,14 @@ interface CacheGroupCellsProps {
 // Anzahl, MB und Schloss einer Gruppe von Einträgen (API, Karte, beides oder alles).
 // Löschen trifft nur ungeschützte Einträge; das Schloss schützt oder entsperrt die ganze Gruppe.
 function CacheGroupCells({ entries, filter, toMB }: CacheGroupCellsProps) {
+  const { t } = useTranslation();
   const [hover, setHover] = useState(false);
   const [protectHover, setProtectHover] = useState<ProtectHover | undefined>();
   const lockedCount = entries.filter(e => e.locked).length;
   const deletable = entries.length > lockedCount;
   const title = !deletable
-    ? lockedCount > 0 ? "Protected" : ""
-    : lockedCount > 0 ? `Click to delete (${lockedCount} protected stay)` : "Click to delete";
+    ? lockedCount > 0 ? t("cache.manager.groupProtected") : ""
+    : lockedCount > 0 ? t("cache.manager.deleteKeepProtected", { count: lockedCount }) : t("cache.manager.clickToDelete");
   const cellProps = {
     onDelete: () => imageLoaderService.deleteUnlocked(filter),
     showTrash: deletable,
@@ -125,9 +129,10 @@ function CacheGroupCells({ entries, filter, toMB }: CacheGroupCellsProps) {
 
 // Zeilen-Komponente für API-Gesamtsummen
 function ApiSumRow({ allApis, byApi, toMB }: { allApis: string[]; byApi: Record<string, CacheEntryLike[]>; toMB: (bytes: number) => string }) {
+  const { t } = useTranslation();
   return (
     <tr className="cache-sum-row">
-      <th className="cache-row-label">API total</th>
+      <th className="cache-row-label">{t("cache.manager.apiTotal")}</th>
       {allApis.map(api => (
         <CacheGroupCells key={api} entries={byApi[api] || []} filter={{ apiName: api }} toMB={toMB} />
       ))}
@@ -155,9 +160,10 @@ function CardRow({ cardName, allApis, byCard, toMB }: { cardName: string; allApi
   );
 }
 
-const LockHeader = () => (
-  <th className="cache-lock-head" title="Protect from deletion"><LockIcon fontSize="inherit" /></th>
-);
+const LockHeader = () => {
+  const { t } = useTranslation();
+  return <th className="cache-lock-head" title={t("cache.manager.protectFromDeletion")}><LockIcon fontSize="inherit" /></th>;
+};
 
 interface CacheManagerDialogProps {
   open: boolean;
@@ -165,6 +171,7 @@ interface CacheManagerDialogProps {
 }
 
 export default function CacheManagerDialog({ open, onClose }: CacheManagerDialogProps) {
+  const { t } = useTranslation();
   const { byApi, byCard, totalSize, lockedCount } = useImageLoaderCache();
   const [limitMB, setLimitMB] = useState(imageLoaderService.cacheLimit / (1024 * 1024));
 
@@ -181,12 +188,12 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
 
   return (
     <div className="cache-manager-dialog">
-      <h2>Image cache</h2>
+      <h2>{t("cache.manager.title")}</h2>
       <div className="cache-manager-head">
         <div className="cache-manager-usage">
           <span>
-            {toMB(totalSize)} MB of {Math.round(imageLoaderService.cacheLimit / (1024 * 1024))} MB used
-            {lockedCount > 0 && <> · {lockedCount} protected</>}
+            {t("cache.manager.usage", { used: toMB(totalSize), limit: Math.round(imageLoaderService.cacheLimit / (1024 * 1024)) })}
+            {lockedCount > 0 && <> · {t("cache.manager.protectedCount", { count: lockedCount })}</>}
           </span>
           <CacheProgressBar width={240} />
         </div>
@@ -198,10 +205,10 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
           }}
         >
           <label>
-            Limit (MB)
+            {t("cache.manager.limitLabel")}
             <input type="number" min={1} value={limitMB} onChange={handleLimitChange} />
           </label>
-          <ActionButton icon={<SaveIcon />} type="submit">Set limit</ActionButton>
+          <ActionButton icon={<SaveIcon />} type="submit">{t("cache.manager.setLimit")}</ActionButton>
         </form>
         <ActionButton
           icon={<DeleteSweepIcon />}
@@ -209,13 +216,11 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
           onClick={() => imageLoaderService.clearCache()}
           disabled={allApis.flatMap(api => byApi[api]).every(e => e.locked)}
         >
-          Clear cache
+          {t("cache.manager.clearCache")}
         </ActionButton>
       </div>
       <p className="cache-manager-hint">
-        Click a cell to delete the images behind it, the red highlight shows what gets deleted.
-        The lock protects images: they stay when you clear the cache and are only removed to make room
-        when the protected images alone exceed the limit.
+        {t("cache.manager.hint")}
       </p>
       <table className="cache-table">
         <thead>
@@ -224,17 +229,17 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
             {allApis.map(api => (
               <th key={api} colSpan={3}>{api}</th>
             ))}
-            <th colSpan={3}>All APIs</th>
+            <th colSpan={3}>{t("cache.manager.allApis")}</th>
           </tr>
           <tr>
             {allApis.map(api => (
               <React.Fragment key={api + "_sub"}>
-                <th>Count</th>
+                <th>{t("cache.manager.count")}</th>
                 <th>MB</th>
                 <LockHeader />
               </React.Fragment>
             ))}
-            <th>Count</th>
+            <th>{t("cache.manager.count")}</th>
             <th>MB</th>
             <LockHeader />
           </tr>
@@ -243,7 +248,7 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
           <ApiSumRow allApis={allApis} byApi={byApi} toMB={toMB} />
           {allCards.length === 0 && (
             <tr>
-              <td colSpan={allApis.length * 3 + 4} className="cache-cell is-empty">The cache is empty</td>
+              <td colSpan={allApis.length * 3 + 4} className="cache-cell is-empty">{t("cache.manager.empty")}</td>
             </tr>
           )}
           {allCards.map(cardName => (
@@ -252,7 +257,7 @@ export default function CacheManagerDialog({ open, onClose }: CacheManagerDialog
         </tbody>
       </table>
       <div className="cache-manager-footer">
-        <ActionButton icon={<CloseIcon />} onClick={onClose}>Close</ActionButton>
+        <ActionButton icon={<CloseIcon />} onClick={onClose}>{t("common.close")}</ActionButton>
       </div>
     </div>
   );

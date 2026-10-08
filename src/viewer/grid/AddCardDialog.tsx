@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useEffect, useState } from 'react';
 import { Button, Divider, TextField } from '@mui/material';
 import { Box } from '@mui/material';
@@ -34,6 +35,7 @@ interface AddCardDialogProps {
 }
 
 const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchCard, onAddSearched, replaceName, cardAspect = 63 / 88, onMaskOpenChange }) => {
+  const { t } = useTranslation();
   const [maskSource, setMaskSource] = useState<MaskSource | null>(null);
   const [cardName, setCardName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -93,10 +95,10 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
       if (response.ok && data.success) {
         return data.generatedId;
       }
-      setUploadError(data.message || 'An error occurred during upload.');
+      setUploadError(data.message || t('addCard.uploadError'));
       return null;
     } catch (error) {
-      setUploadError('An error occurred while uploading the file.');
+      setUploadError(t('addCard.uploadFileError'));
       console.error('Upload error:', error);
       return null;
     }
@@ -151,7 +153,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
     return (
       <>
         <header className="modal-card-head">
-          <p className="modal-card-title">Crop Image</p>
+          <p className="modal-card-title">{t('crop.title')}</p>
         </header>
         <section className="modal-card-body">
           <CropMask
@@ -172,7 +174,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
     <>
 
       <header className="modal-card-head">
-        <p className="modal-card-title">{replaceName !== undefined ? `Replace “${replaceName}”` : 'Add Custom Card'}</p>
+        <p className="modal-card-title">{replaceName !== undefined ? t('addCard.titleReplace', { name: replaceName }) : t('addCard.title')}</p>
       </header>
       <Box
         sx={{
@@ -185,11 +187,11 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
           <section className="modal-card-body">
             {/* Name Search Section */}
             <div className="box">
-              <h3 className="title is-5">Search Apis</h3>
+              <h3 className="title is-5">{t('addCard.searchApis')}</h3>
               <div className="field">
                 <TextField
                   fullWidth
-                  label="cardname"
+                  label={t('addCard.cardName')}
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNameSearch(); } }}
@@ -205,14 +207,14 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                 disabled={isSearching || !cardName.trim()}
                 fullWidth
               >
-                {isSearching ? 'Searching…' : searched ? 'Search again' : 'Search'}
+                {isSearching ? t('addCard.searching') : searched ? t('addCard.searchAgain') : t('common.search')}
               </Button>
               {searched && (
                 <div className="add-single-found" role="status">
                   <p className={foundArts === 0 ? 'has-text-danger' : undefined}>
                     {foundArts === 0
-                      ? `No card arts found for “${searched.name}”`
-                      : `Found ${foundArts} card art${foundArts === 1 ? '' : 's'} for “${searched.name}”`}
+                      ? t('addCard.foundNone', { name: searched.name })
+                      : t('addCard.found', { count: foundArts, name: searched.name })}
                   </p>
                   <Button
                     variant="contained"
@@ -221,7 +223,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                     disabled={foundArts === 0 || isSearching}
                     fullWidth
                   >
-                    {replaceName !== undefined ? 'Replace in deck' : 'Add to deck'}
+                    {replaceName !== undefined ? t('addCard.replaceInDeck') : t('addCard.addToDeck')}
                   </Button>
                 </div>
               )}
@@ -231,11 +233,11 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
 
             {/* External URL Section */}
             <div className="box">
-              <h3 className="title is-5">Insert ImageUrl</h3>
+              <h3 className="title is-5">{t('addCard.insertImageUrl')}</h3>
               <div className="field">
                 <TextField
                   fullWidth
-                  label="Image URL"
+                  label={t('addCard.imageUrl')}
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   variant="outlined"
@@ -250,7 +252,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                 disabled={!imageUrl.trim()}
                 fullWidth
               >
-                Next: crop
+                {t('addCard.nextCrop')}
               </Button>
             </div>
 
@@ -259,7 +261,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
 
             {/* File Upload Section */}
             <div className="box">
-              <h3 className="title is-5">upload file</h3>
+              <h3 className="title is-5">{t('addCard.uploadFile')}</h3>
               <div className="field">
                 <div className="file has-name is-fullwidth">
                   <label className="file-label">
@@ -270,10 +272,10 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                       accept="image/*"
                     />
                     <span className="file-cta">
-                      <span className="file-label">choose file...</span>
+                      <span className="file-label">{t('addCard.chooseFile')}</span>
                     </span>
                     <span className="file-name">
-                      {file ? file.name : 'no file chosen'}
+                      {file ? file.name : t('addCard.noFileChosen')}
                     </span>
                   </label>
                 </div>
@@ -285,7 +287,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                 disabled={!file}
                 fullWidth
               >
-                Next: crop
+                {t('addCard.nextCrop')}
               </Button>
             </div>
 

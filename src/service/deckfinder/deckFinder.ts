@@ -3,6 +3,7 @@
 // und das Deck als Decklist-Text im Arena-Format gebaut. Konzept: concepts/deckfinder.md.
 import { DeckEntry } from '../../api/types/types';
 import { formatDeckLine, parseDeckLine, sectionHeader } from '../deck/deckParser';
+import i18n from '../../i18n';
 
 export interface DeckFinderConfig {
   id: number;
@@ -156,10 +157,10 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('The response is not JSON. Does the config\'s data format match?');
+    throw new Error(i18n.t('errors.deckFinder.notJson'));
   }
   const listFields = splitList(config.entryListFields);
-  if (listFields.length === 0) throw new Error('The config has no entry list fields.');
+  if (listFields.length === 0) throw new Error(i18n.t('errors.deckFinder.noEntryListFields'));
 
   const entries: (DeckEntry & { board: string | null })[] = [];
   for (const field of listFields) {
@@ -190,7 +191,7 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
       }
     }
   }
-  if (entries.length === 0) throw new Error('No cards found in the response. Do the config fields match?');
+  if (entries.length === 0) throw new Error(i18n.t('errors.deckFinder.noCards'));
   return buildDeck(entries, selected, text(valueAt(data, config.deckNameField)));
 }
 
@@ -200,7 +201,7 @@ export function extractSearchHits(config: DeckFinderConfig, body: string): DeckS
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('The search response is not JSON.');
+    throw new Error(i18n.t('errors.deckFinder.searchNotJson'));
   }
   const list = config.searchListField ? valueAt(data, config.searchListField) : data;
   if (!Array.isArray(list)) return [];

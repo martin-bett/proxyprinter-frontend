@@ -1,4 +1,5 @@
 import React, { CSSProperties, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { imageLoaderService } from "../../service/cache/ImageLoaderService";
 import { useImageLoaderQueue } from "../../service/cache/hooks/useImageLoaderQueue";
 
@@ -26,6 +27,7 @@ interface QueueManagerDialogProps {
 }
 
 export default function QueueManagerDialog({ open, onClose }: QueueManagerDialogProps) {
+  const { t } = useTranslation();
   const queue = useImageLoaderQueue();
 
   // APIs und Sprachen dynamisch aus der Queue extrahieren
@@ -42,9 +44,9 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
 
   return (
     <div className="queue-manager-dialog" style={{ background: "var(--surface)", color: "var(--text)", padding: 24, borderRadius: 8, maxWidth: 900, margin: "40px auto" }}>
-      <h2>Queue Manager</h2>
+      <h2>{t('cache.queue.title')}</h2>
       <div style={{ marginBottom: 12 }}>
-        <b>Cancel API:</b>{" "}
+        <b>{t('cache.queue.cancelApi')}</b>{" "}
         {apis.map(api => (
           <button key={api} style={{ margin: 2 }} onClick={() => imageLoaderService.stopQueueForApi(api)}>
             {api}
@@ -52,7 +54,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
         ))}
       </div>
       <div style={{ marginBottom: 12 }}>
-        <b>Cancel language:</b>{" "}
+        <b>{t('cache.queue.cancelLanguage')}</b>{" "}
         {languages.map(lang => (
           <button key={lang} style={{ margin: 2 }} onClick={() => imageLoaderService.stopQueueForLanguage(lang)}>
             {lang}
@@ -62,19 +64,19 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
       <table style={{ borderCollapse: "collapse", width: "100%", marginTop: 16 }}>
         <thead>
           <tr>
-            <th style={cellStyle}>API</th>
-            <th style={cellStyle}>Language</th>
-            <th style={cellStyle}>Card name</th>
-            <th style={cellStyle}>URL</th>
-            <th style={cellStyle}>Priority</th>
-            <th style={cellStyle}>Category</th>
-            <th style={cellStyle}>Action</th>
+            <th style={cellStyle}>{t('cache.queue.columns.api')}</th>
+            <th style={cellStyle}>{t('common.language')}</th>
+            <th style={cellStyle}>{t('cache.queue.columns.cardName')}</th>
+            <th style={cellStyle}>{t('common.url')}</th>
+            <th style={cellStyle}>{t('cache.queue.columns.priority')}</th>
+            <th style={cellStyle}>{t('cache.queue.columns.category')}</th>
+            <th style={cellStyle}>{t('cache.queue.columns.action')}</th>
           </tr>
         </thead>
         <tbody>
           {queue.length === 0 && (
             <tr>
-              <td colSpan={7} style={cellStyle}>No entries in the queue</td>
+              <td colSpan={7} style={cellStyle}>{t('cache.queue.empty')}</td>
             </tr>
           )}
           {queue.map(entry => (
@@ -89,7 +91,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
               <td style={cellStyle}>{entry.category}</td>
               <td style={cellStyle}>
                 <button
-                  title="Cancel entry"
+                  title={t('cache.queue.cancelEntry')}
                   onClick={() => imageLoaderService.removeFromQueueByCacheKey(entry.cacheKey)}
                   style={{ background: "none", border: "none", cursor: "pointer" }}
                 >
@@ -100,7 +102,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
           ))}
         </tbody>
       </table>
-      <button style={{ marginTop: 16 }} onClick={onClose}>Close</button>
+      <button style={{ marginTop: 16 }} onClick={onClose}>{t('common.close')}</button>
     </div>
   );
 }

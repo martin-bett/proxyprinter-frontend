@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactCrop, { PercentCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button, Checkbox, CircularProgress, FormControlLabel, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
@@ -52,8 +53,9 @@ const hasArea = (crop?: CropSettings) => !!crop && (crop.width || 0) > 0 && (cro
 
 const CropMask: React.FC<CropMaskProps> = ({
   imageSrc, cardAspect, loadFallback, initialCrop, allowCut = true, layout = 'side', maxImageHeight,
-  onChange, onConfirm, onBack, backLabel = 'Back', confirmLabel, busy, error,
+  onChange, onConfirm, onBack, backLabel, confirmLabel, busy, error,
 }) => {
+  const { t } = useTranslation();
   const [src, setSrc] = useState(imageSrc);
   const [triedFallback, setTriedFallback] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -199,7 +201,7 @@ const CropMask: React.FC<CropMaskProps> = ({
 
   const imageStyle = display ? { width: display.width, height: display.height } : undefined;
   const image = (
-    <img src={src} alt="Crop" style={imageStyle} />
+    <img src={src} alt={t('crop.imageAlt')} style={imageStyle} />
   );
 
   // Cut-Vorschau: weggeschnittene Ränder abdunkeln, Kacheln nummerieren
@@ -250,7 +252,7 @@ const CropMask: React.FC<CropMaskProps> = ({
             <div
               key={i}
               className="crop-mask-thumb"
-              title={`Karte ${i + 1}`}
+              title={t('crop.cardTitle', { number: i + 1 })}
               style={{
                 width: thumbWidth,
                 height: THUMB_HEIGHT,
@@ -283,7 +285,7 @@ const CropMask: React.FC<CropMaskProps> = ({
       <div className="crop-mask-image">
         {!natural && !loadError && <CircularProgress size={32} />}
         {loadError && (
-          <p className="help is-danger">The image could not be loaded. Please check the URL.</p>
+          <p className="help is-danger">{t('crop.loadError')}</p>
         )}
         {!loadError && (!natural || !crop) && (
           // Unsichtbar laden, um die natürliche Größe zu kennen
@@ -298,7 +300,7 @@ const CropMask: React.FC<CropMaskProps> = ({
             minHeight={10}
             onChange={(_, percentCrop) => { setDraft({}); setTouched(true); setCrop(percentCrop); }}
           >
-            <img src={src} alt="Crop" style={imageStyle} />
+            <img src={src} alt={t('crop.imageAlt')} style={imageStyle} />
           </ReactCrop>
         )}
         {!loadError && natural && mode === 'cut' && renderCutPreview()}
@@ -313,8 +315,8 @@ const CropMask: React.FC<CropMaskProps> = ({
             value={mode}
             onChange={(_, value: MaskMode | null) => { if (value) { setMode(value); setTouched(true); } }}
           >
-            <ToggleButton value="crop"><CropIcon fontSize="small" />&nbsp;Crop</ToggleButton>
-            <ToggleButton value="cut"><GridOnIcon fontSize="small" />&nbsp;Cut gallery</ToggleButton>
+            <ToggleButton value="crop"><CropIcon fontSize="small" />&nbsp;{t('crop.modeCrop')}</ToggleButton>
+            <ToggleButton value="cut"><GridOnIcon fontSize="small" />&nbsp;{t('crop.modeCut')}</ToggleButton>
           </ToggleButtonGroup>
         )}
 
@@ -323,30 +325,30 @@ const CropMask: React.FC<CropMaskProps> = ({
             <div className="crop-mask-row">
               <FormControlLabel
                 control={<Checkbox checked={keepAspect} onChange={(e) => handleKeepAspect(e.target.checked)} />}
-                label="Keep aspect ratio"
-                title="Keeps the crop in the card format from the PDF settings so the image is not distorted when printed"
+                label={t('crop.keepAspect')}
+                title={t('crop.keepAspectHint')}
               />
               <Button size="small" variant="outlined" onClick={handleWholeImage} disabled={!natural}>
-                Whole image
+                {t('crop.wholeImage')}
               </Button>
             </div>
             <div className="crop-mask-fields">
-              {rectField('x', 'Offset X')}
-              {rectField('y', 'Offset Y')}
-              {rectField('width', 'Width')}
-              {rectField('height', 'Height')}
+              {rectField('x', t('crop.offsetX'))}
+              {rectField('y', t('crop.offsetY'))}
+              {rectField('width', t('crop.width'))}
+              {rectField('height', t('crop.height'))}
             </div>
-            <p className="crop-mask-hint">Move the frame with the mouse, drag the corners or enter values in pixels.</p>
+            <p className="crop-mask-hint">{t('crop.hint')}</p>
           </>
         ) : (
           <div className="crop-mask-fields">
-            <TextField label="Rows" type="number" size="small" inputProps={{ min: 1 }}
+            <TextField label={t('crop.rows')} type="number" size="small" inputProps={{ min: 1 }}
               value={grid.rows} onChange={(e) => updateGrid('rows', e.target.value)} />
-            <TextField label="Columns" type="number" size="small" inputProps={{ min: 1 }}
+            <TextField label={t('crop.columns')} type="number" size="small" inputProps={{ min: 1 }}
               value={grid.cols} onChange={(e) => updateGrid('cols', e.target.value)} />
-            <TextField label="Outer border (px)" type="number" size="small" inputProps={{ min: 0 }}
+            <TextField label={t('crop.outerBorder')} type="number" size="small" inputProps={{ min: 0 }}
               value={grid.margin} onChange={(e) => updateGrid('margin', e.target.value)} />
-            <TextField label="Gap between cards (px)" type="number" size="small" inputProps={{ min: 0 }}
+            <TextField label={t('crop.gap')} type="number" size="small" inputProps={{ min: 0 }}
               disabled={grid.rows === 1 && grid.cols === 1}
               value={grid.gap} onChange={(e) => updateGrid('gap', e.target.value)} />
           </div>
@@ -355,9 +357,10 @@ const CropMask: React.FC<CropMaskProps> = ({
         {natural && tile && (
           <p className="crop-mask-info">
             {crops.length === 0
-              ? 'Margin and gaps are larger than the image.'
-              : `${crops.length} ${crops.length === 1 ? 'card' : 'cards'}, each ${tile.width} × ${tile.height} px (image ${natural.width} × ${natural.height})`}
-            {crops.length > 0 && tileAspectOff > 0.03 && ', differs from the card format and is stretched when printed'}
+              ? t('crop.info.tooLarge')
+              : t(tileAspectOff > 0.03 ? 'crop.info.summaryStretched' : 'crop.info.summary', {
+                count: crops.length, tileWidth: tile.width, tileHeight: tile.height, imageWidth: natural.width, imageHeight: natural.height,
+              })}
           </p>
         )}
         {renderThumbs()}
@@ -365,7 +368,7 @@ const CropMask: React.FC<CropMaskProps> = ({
 
         {onConfirm && (
           <div className="crop-mask-actions">
-            {onBack && <Button variant="outlined" onClick={onBack} disabled={busy}>{backLabel}</Button>}
+            {onBack && <Button variant="outlined" onClick={onBack} disabled={busy}>{backLabel ?? t('common.back')}</Button>}
             <Button
               variant="contained"
               onClick={() => onConfirm(crops)}
@@ -375,7 +378,7 @@ const CropMask: React.FC<CropMaskProps> = ({
                 ? <CircularProgress size={24} />
                 : confirmLabel
                   ? confirmLabel(crops.length)
-                  : crops.length > 1 ? `Add ${crops.length} cards` : 'Add card'}
+                  : t('crop.addCards', { count: Math.max(1, crops.length) })}
             </Button>
           </div>
         )}

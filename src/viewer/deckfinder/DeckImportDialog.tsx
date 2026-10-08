@@ -4,6 +4,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { useTranslation } from 'react-i18next';
 import ActionButton from '../../container/inputs/ActionButton';
 import DeckFinderConfigManager from '../../api/view/deckfinder/DeckFinderConfigManager';
 import {
@@ -25,6 +26,7 @@ interface DeckImportDialogProps {
 
 /** Deck per Link, ID oder Name von einer Deckbuilder-Seite laden. */
 const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInput, autoRun, startInManage, onReloadConfigs, onLoaded }) => {
+  const { t } = useTranslation();
   const [input, setInput] = useState(initialInput || '');
   const [configId, setConfigId] = useState<number | null>(null);
   const [boards, setBoards] = useState<string[]>([]);
@@ -59,7 +61,7 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
 
   const search = (nextPage: number) => config && run(async () => {
     const found = await searchDecks(config, input, nextPage, await getFingerprint());
-    if (found.length === 0 && nextPage === 1) setError('No decks found.');
+    if (found.length === 0 && nextPage === 1) setError(t('deckImport.noDecks'));
     setHits(prev => nextPage === 1 ? found : [...prev, ...found]);
     setPage(nextPage);
   });
@@ -83,8 +85,8 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
     return (
       <div className="deck-import">
         <div className="deck-import-header">
-          <h3 className="title is-5">Deckfinder Sources</h3>
-          <ActionButton icon={<DownloadIcon />} onClick={() => setManage(false)}>Back to import</ActionButton>
+          <h3 className="title is-5">{t('deckImport.sourcesTitle')}</h3>
+          <ActionButton icon={<DownloadIcon />} onClick={() => setManage(false)}>{t('deckImport.backToImport')}</ActionButton>
         </div>
         <DeckFinderConfigManager configs={configs} onChanged={onReloadConfigs} />
       </div>
@@ -94,19 +96,19 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
   return (
     <form className="deck-import" onSubmit={(e) => { e.preventDefault(); submit(); }}>
       <div className="deck-import-header">
-        <h3 className="title is-5">Import Deck</h3>
-        <ActionButton icon={<SettingsIcon />} onClick={() => setManage(true)}>Sources</ActionButton>
+        <h3 className="title is-5">{t('deckImport.title')}</h3>
+        <ActionButton icon={<SettingsIcon />} onClick={() => setManage(true)}>{t('deckImport.sources')}</ActionButton>
       </div>
 
       <div className="deck-import-source">
-        <label htmlFor="deck-import-source">Source</label>
+        <label htmlFor="deck-import-source">{t('deckImport.source')}</label>
         <select
           id="deck-import-source"
           value={config?.id ?? ''}
           disabled={!!linkConfig}
           onChange={(e) => setConfigId(Number(e.target.value))}
         >
-          {configs.map(c => <option key={c.id} value={c.id}>{c.name}{c.published ? '' : ' (private)'}</option>)}
+          {configs.map(c => <option key={c.id} value={c.id}>{c.published ? c.name : t('deckImport.privateSource', { name: c.name })}</option>)}
         </select>
         {config?.officialWebsite && (
           <a href={config.officialWebsite} target="_blank" rel="noreferrer" className="deck-import-site">
@@ -120,15 +122,15 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
         autoFocus
         size="small"
         variant="outlined"
-        label={config?.searchUrl ? 'Deck link, ID or deck name' : 'Deck link or ID'}
+        label={config?.searchUrl ? t('deckImport.inputLabelSearch') : t('deckImport.inputLabel')}
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        helperText={linkConfig ? `${linkConfig.name} link recognized` : ' '}
+        helperText={linkConfig ? t('deckImport.linkRecognized', { name: linkConfig.name }) : ' '}
       />
 
       {optionalBoards.length > 0 && (
         <div className="deck-import-boards">
-          <span>Also load:</span>
+          <span>{t('deckImport.alsoLoad')}</span>
           {optionalBoards.map(board => (
             <label key={board}>
               <input
@@ -144,11 +146,11 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
 
       <div className="deck-import-actions">
         <ActionButton type="button" className="is-primary" icon={<DownloadIcon />} disabled={busy || !config || !input.trim()} onClick={() => load(input)}>
-          Load deck
+          {t('deckImport.loadDeck')}
         </ActionButton>
         {config?.searchUrl && (
           <ActionButton type="button" icon={<SearchIcon />} disabled={busy || !canSearch} onClick={() => search(1)}>
-            Search by name
+            {t('deckImport.searchByName')}
           </ActionButton>
         )}
       </div>
@@ -161,17 +163,17 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
           <ul className="deck-import-hits">
             {hits.map(hit => (
               <li key={hit.id}>
-                <button type="button" disabled={busy} onClick={() => load(hit.id)} title={`Load ${hit.name}`}>
+                <button type="button" disabled={busy} onClick={() => load(hit.id)} title={t('deckImport.loadHit', { name: hit.name })}>
                   {hit.image ? <img src={hit.image} alt="" loading="lazy" /> : <span className="deck-import-noimage" />}
                   <span className="deck-import-hit-name">{hit.name}</span>
                   <span className="deck-import-hit-meta">
-                    {[hit.owner, hit.info && `${hit.info} cards`].filter(Boolean).join(' · ')}
+                    {[hit.owner, hit.info && t('deckImport.hitCards', { info: hit.info })].filter(Boolean).join(' · ')}
                   </span>
                 </button>
               </li>
             ))}
           </ul>
-          <ActionButton type="button" icon={<SearchIcon />} disabled={busy} onClick={() => search(page + 1)}>More results</ActionButton>
+          <ActionButton type="button" icon={<SearchIcon />} disabled={busy} onClick={() => search(page + 1)}>{t('deckImport.moreResults')}</ActionButton>
         </>
       )}
     </form>

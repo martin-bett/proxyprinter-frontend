@@ -10,5 +10,908 @@
     "title": "Interface language: {{name}}",
     "aria": "Choose interface language (current: {{name}})",
     "hint": "Card languages and image filters are set separately."
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "apply": "Apply",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "search": "Search",
+    "loading": "Loading…",
+    "error": "Error",
+    "replace": "Replace",
+    "reset": "Reset",
+    "copy": "Copy",
+    "download": "Download",
+    "add": "Add",
+    "remove": "Remove",
+    "rename": "Rename",
+    "preview": "Preview",
+    "settings": "Settings",
+    "name": "Name",
+    "language": "Language",
+    "set": "Set",
+    "url": "URL",
+    "none": "None",
+    "info": "Info",
+    "test": "Test",
+    "overwrite": "Overwrite",
+    "load": "Load",
+    "retry": "Run again"
+  },
+  "configCommon": {
+    "groups": {
+      "baseInfo": "Base Info",
+      "request": "Request",
+      "locator": "Locator",
+      "search": "Search",
+      "followLink": "Follow Link",
+      "nestedLanguage": "Nested Language",
+      "cardFaces": "Card Faces"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "officialWebsite": "Official Website",
+      "method": "Method",
+      "dataFormat": "Data Format",
+      "baseUrl": "Base URL",
+      "parameterMap": "Parameter Map",
+      "paginationField": "Pagination Field",
+      "dataListField": "Data List Field",
+      "nameField": "Name Field",
+      "imageUrlField": "Image URL Field",
+      "languageField": "Language Field",
+      "defaultLanguage": "Default Language",
+      "setField": "Set Field",
+      "linkPattern": "Link Pattern"
+    },
+    "options": {
+      "get": "GET",
+      "post": "POST",
+      "json": "JSON",
+      "html": "HTML",
+      "text": "Text",
+      "urlEncoded": "URL Encoded",
+      "multipart": "Multipart"
+    },
+    "titles": {
+      "defaultLanguage": "Language for cards where the source provides no language"
+    },
+    "categories": {
+      "mtg": "MTG",
+      "poke": "Poke",
+      "yugi": "Yugi",
+      "misc": "Misc"
+    },
+    "categoryIcons": {
+      "mtg": "MTG Icon",
+      "poke": "Pokemon Icon",
+      "yugi": "Yugi Icon",
+      "misc": "Misc Icon"
+    },
+    "languages": {
+      "en": "English",
+      "de": "German",
+      "fr": "French",
+      "it": "Italian",
+      "es": "Spanish",
+      "pt": "Portuguese",
+      "ja": "Japanese",
+      "ko": "Korean",
+      "ru": "Russian",
+      "zh": "Chinese",
+      "ph": "Phyrexian"
+    },
+    "noProperties": "No properties.",
+    "setProperties": "SET properties",
+    "unsetProperties": "UNSET properties",
+    "configSettings": "Config Settings",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "copyConfig": "Copy Config"
+  },
+  "apiConfig": {
+    "fields": {
+      "customArts": "Custom Arts",
+      "concurrentLimit": "Concurrent Limit",
+      "requestFormat": "Request Format",
+      "csrfTokenVariableName": "CSRF Token Variable Name",
+      "requiresCsrfToken": "Requires CSRF Token",
+      "useBackendProxy": "Use Backend Proxy",
+      "proxyImages": "Proxy Images",
+      "nameSplitCharacter": "Name Split Character",
+      "setNumberField": "Set Number Field",
+      "followLinkField": "Follow Link Field",
+      "followLinkImageField": "Image Field"
+    },
+    "titles": {
+      "proxyImages": "Load images of this API through the backend (for hosts without CORS headers)",
+      "cardFacesDataListField": "List of card faces, e.g. card_faces on Scryfall. Each face with an image becomes its own match."
+    },
+    "connectedCards": {
+      "dataListFieldTitle": "List inside a match, e.g. all_parts on Scryfall",
+      "nameFieldTitle": "Name of each entry, searched across all active APIs",
+      "linkField": "Link Field",
+      "linkFieldTitle": "Optional: link to the exact object (same format as a match)",
+      "typeField": "Type Field",
+      "typeFieldTitle": "Optional: type of each entry, e.g. type_line",
+      "title": "Connected Cards",
+      "titleTooltip": "Each entry of a list becomes its own card (count 1), searched across all active APIs",
+      "removeList": "Remove list",
+      "addList": "Add list"
+    },
+    "dialog": {
+      "title": "Select Configs",
+      "createConfig": "Create Config",
+      "controls": "Controls"
+    }
+  },
+  "galleryConfig": {
+    "fields": {
+      "followInputRedirects": "Follow Link Redirects",
+      "credential": "Credential",
+      "imageUrlPattern": "Image URL Pattern",
+      "imageUrlReplacement": "Image URL Replacement",
+      "namePattern": "Name Pattern",
+      "nameReplacement": "Name Replacement"
+    },
+    "titles": {
+      "parameterMap": "Each entry becomes an input field. Leave empty if the source needs no input",
+      "linkPattern": "Regex with named groups, e.g. (?<id>\\d+). The groups fill {id} etc. in the Base URL; with Link Pattern or Credential the backend fetches the source",
+      "followInputRedirects": "If the link does not match the pattern, follow its redirects first (short and share links)",
+      "credential": "Name of a credential stored by the server operator (e.g. reddit). Cookie or token stay on the server and are only sent to the matching host",
+      "imageUrlPattern": "Regex on the image URL read. If it does not match, the entry is dropped (e.g. videos, subfolders)",
+      "imageUrlReplacement": "Replacement for the pattern, groups as $1, e.g. https://i.redd.it/$1",
+      "namePattern": "Regex on the name read, e.g. \\.\\w+$ for the file extension",
+      "nameReplacement": "Replacement for the pattern, empty = remove"
+    },
+    "executor": {
+      "pasteLink": "Paste link",
+      "execute": "Execute"
+    },
+    "noImages": "No images found."
+  },
+  "deckFinderConfig": {
+    "fields": {
+      "fetchUrl": "Fetch URL",
+      "deckNameField": "Deck Name Field",
+      "entryListFields": "Entry List Fields",
+      "quantityField": "Quantity Field",
+      "numberField": "Number Field",
+      "boardField": "Board Field",
+      "optionalBoards": "Optional Boards",
+      "searchUrl": "Search URL",
+      "searchListField": "Result List Field",
+      "searchIdField": "Deck ID Field",
+      "searchNameField": "Deck Name Field",
+      "searchOwnerField": "Owner Field",
+      "searchImageField": "Image Field",
+      "searchInfoField": "Info Field"
+    },
+    "titles": {
+      "linkPattern": "Regex for deck links; the group (?<id>...) provides the deck ID",
+      "fetchUrl": "Fetch URL with {id}",
+      "entryListFields": "Paths to the card lists, comma-separated. \"*\" = all values of an object, \"Sideboard=path\" assigns the list to a board",
+      "numberField": "Collector number, only together with set",
+      "boardField": "Category or categories of an entry, text or list",
+      "optionalBoards": "Boards that are only loaded on request, comma-separated (for text: section headers)",
+      "searchUrl": "Search URL with {query} and optional {page}",
+      "searchInfoField": "e.g. card count"
+    },
+    "new": "New"
+  },
+  "rating": {
+    "title": "Rating",
+    "availability": "Availability",
+    "quality": "Quality"
+  },
+  "pdf": {
+    "preview": {
+      "ariaLabel": "Page preview",
+      "doesNotFit": "Does not fit on A4"
+    },
+    "progress": {
+      "title": "Generating PDF",
+      "category": {
+        "queued": "Queue",
+        "download": "Download",
+        "build": "Build",
+        "finishing": "Finishing"
+      },
+      "queuePosition": "Position {{current}} of {{total}}",
+      "pageCount_one": "{{count}} page",
+      "pageCount_other": "{{count}} pages",
+      "starting": "Starting PDF generation...",
+      "emailNotice": "The download link will also be sent to {{email}}."
+    },
+    "settings": {
+      "dimensions": "Dimensions",
+      "width": "Width: ",
+      "height": "Height: ",
+      "verticalMargin": "Vertical Margin: ",
+      "horizontalMargin": "Horizontal Margin: ",
+      "maxDpi": "Max Dpi: ",
+      "cutlines": "Cutlines",
+      "lineThickness": "Line Thickness: ",
+      "cutLineColor": "Cut Line Color: ",
+      "corners": "Corners",
+      "detectBorderColor": "Detect BorderColor",
+      "cornerColor": "Corner Color: ",
+      "ok": "Ok",
+      "email": {
+        "title": "Email delivery",
+        "label": "Send the download link to (optional): ",
+        "placeholder": "you@example.com",
+        "invalid": "Please enter a valid email address or leave the field empty.",
+        "hint": "Useful for large decks: you can close the page, the link arrives when the PDF is ready.",
+        "notAvailable": "Email delivery is not set up on this server."
+      }
+    }
+  },
+  "snapshot": {
+    "cardsCount_one": "{{count}} card",
+    "cardsCount_other": "{{count}} cards",
+    "pdfExpired": "PDF expired",
+    "pdfAvailable": "PDF {{size}}, available until {{date}}",
+    "restoreLastSession": "Restore last session",
+    "save": "Save Snapshot",
+    "activeTitle": "{{label}} is active: changes are saved here",
+    "loadTitle": "Load {{label}}",
+    "downloadPdf": "Download PDF",
+    "downloadPdfOf": "Download PDF of {{label}}",
+    "overwriteTitle": "Overwrite with current state",
+    "overwriteAria": "Overwrite {{label}} with current state",
+    "renameAria": "Rename {{label}}",
+    "deleteAria": "Delete {{label}}",
+    "storedInBrowser": "Stored in this browser · {{size}}",
+    "deleteAll": "Delete all",
+    "saveFailed": "The snapshot could not be saved.",
+    "customCardsGone_one": "{{count}} custom card is no longer available on the server, please upload again.",
+    "customCardsGone_other": "{{count}} custom cards are no longer available on the server, please upload again.",
+    "pdfLinkRemoved": "The link to its PDF will be removed.",
+    "confirmOverwrite": "Overwrite \"{{label}}\" with the current state?",
+    "namePrompt": "Snapshot name",
+    "confirmDelete": "Delete snapshot \"{{label}}\"?",
+    "confirmDeleteAll": "Delete all snapshots stored in this browser?"
+  },
+  "cache": {
+    "progressTitle": "Cache: {{used}} MB / {{limit}} MB",
+    "manager": {
+      "title": "Image cache",
+      "clickToDelete": "Click to delete",
+      "groupProtected": "Protected",
+      "deleteKeepProtected": "Click to delete ({{count}} protected stay)",
+      "lock": {
+        "protected": "Protected. Click to remove protection",
+        "partial": "{{locked}} of {{total}} protected. Click to protect all",
+        "unprotected": "Click to protect from deletion"
+      },
+      "protectFromDeletion": "Protect from deletion",
+      "apiTotal": "API total",
+      "usage": "{{used}} MB of {{limit}} MB used",
+      "protectedCount": "{{count}} protected",
+      "limitLabel": "Limit (MB)",
+      "setLimit": "Set limit",
+      "clearCache": "Clear cache",
+      "hint": "Click a cell to delete the images behind it, the red highlight shows what gets deleted. The lock protects images: they stay when you clear the cache and are only removed to make room when the protected images alone exceed the limit.",
+      "count": "Count",
+      "allApis": "All APIs",
+      "empty": "The cache is empty"
+    },
+    "buttons": {
+      "waitingDownloads": "Waiting downloads",
+      "activeDownloads": "Active downloads",
+      "activeDownloadsRate": "Active downloads · {{rate}}",
+      "cacheLoadingQueue": "Cache loading queue",
+      "showSearchCache": "Show search cache",
+      "showImageCache": "Show image cache",
+      "resetDeck": "Reset deck",
+      "resetDialog": {
+        "title": "Reset deck?",
+        "text": "Decklist, search results and image selection are cleared. The current state is saved as a snapshot first."
+      }
+    },
+    "queue": {
+      "title": "Queue Manager",
+      "cancelApi": "Cancel API:",
+      "cancelLanguage": "Cancel language:",
+      "columns": {
+        "api": "API",
+        "cardName": "Card name",
+        "priority": "Priority",
+        "category": "Category",
+        "action": "Action"
+      },
+      "empty": "No entries in the queue",
+      "cancelEntry": "Cancel entry"
+    },
+    "search": {
+      "title": "Search cache",
+      "savedCount_one": "{{count}} saved search",
+      "savedCount_other": "{{count}} saved searches",
+      "deleteAll": "Delete all searches",
+      "hint": "The numbers are matches found. Clicking a cell deletes the searches behind it; the red highlight shows what will be deleted.",
+      "allForCard": "All for card",
+      "empty": "No saved searches"
+    }
+  },
+  "log": {
+    "raw": {
+      "title": "Raw API Response",
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all",
+      "copied": "Copied ✓",
+      "copy": "Copy to Clipboard"
+    },
+    "source": {
+      "cache": "Loaded from cache",
+      "server": "Loaded from the shared server cache",
+      "network": "Loaded from the network",
+      "error": "Error",
+      "running": "Searching"
+    },
+    "columns": {
+      "source": "Source: cache, server cache or network",
+      "matches": "Matches",
+      "duration": "Duration",
+      "requests": "Number of requests"
+    },
+    "showRaw": "{{title}}: Show raw data"
+  },
+  "deckImport": {
+    "noDecks": "No decks found.",
+    "sourcesTitle": "Deckfinder Sources",
+    "backToImport": "Back to import",
+    "title": "Import Deck",
+    "sources": "Sources",
+    "source": "Source",
+    "privateSource": "{{name}} (private)",
+    "inputLabelSearch": "Deck link, ID or deck name",
+    "inputLabel": "Deck link or ID",
+    "linkRecognized": "{{name}} link recognized",
+    "alsoLoad": "Also load:",
+    "loadDeck": "Load deck",
+    "searchByName": "Search by name",
+    "loadHit": "Load {{name}}",
+    "hitCards": "{{info}} cards",
+    "moreResults": "More results"
+  },
+  "cacheService": {
+    "proxyDecodeFailed": "Proxy image could not be decoded",
+    "imageLoadFailed": "Image could not be loaded",
+    "imageLoadFailedReason": "Image could not be loaded: {{reason}}",
+    "proxyError": "Proxy error {{status}}",
+    "thumbnailFailed": "Thumbnail could not be created from blob",
+    "blobFailed": "Image could not be created from blob",
+    "urlFailed": "Image could not be loaded from url"
+  },
+  "grid": {
+    "proxyImageLoadError": "Proxy image load error",
+    "printSharpness": "Print sharpness: {{rating}} (sharpness {{sharpness}}, {{dpi}} DPI)",
+    "unknownResolution": "Unknown resolution",
+    "sharpnessLine": "Sharpness {{sharpness}} · {{dpi}} DPI · {{rating}}",
+    "noLanguage": "NO LANGUAGE",
+    "noSetInfo": "NO SET INFO",
+    "linkList": {
+      "title": "Add Links",
+      "label": "Image URLs (separated by comma, semicolon or new line)",
+      "add_one": "Add 1 image",
+      "add_other": "Add {{count}} images"
+    }
+  },
+  "quality": {
+    "rating": {
+      "good": "clearly readable",
+      "ok": "readable, slightly soft",
+      "poor": "text probably hard to read",
+      "unknown": "no text detected"
+    }
+  },
+  "crop": {
+    "imageAlt": "Crop",
+    "cardTitle": "Card {{number}}",
+    "loadError": "The image could not be loaded. Please check the URL.",
+    "modeCrop": "Crop",
+    "modeCut": "Cut gallery",
+    "keepAspect": "Keep aspect ratio",
+    "keepAspectHint": "Keeps the crop in the card format from the PDF settings so the image is not distorted when printed",
+    "wholeImage": "Whole image",
+    "offsetX": "Offset X",
+    "offsetY": "Offset Y",
+    "width": "Width",
+    "height": "Height",
+    "hint": "Move the frame with the mouse, drag the corners or enter values in pixels.",
+    "rows": "Rows",
+    "columns": "Columns",
+    "outerBorder": "Outer border (px)",
+    "gap": "Gap between cards (px)",
+    "info": {
+      "tooLarge": "Margin and gaps are larger than the image.",
+      "summary_one": "{{count}} card, each {{tileWidth}} × {{tileHeight}} px (image {{imageWidth}} × {{imageHeight}})",
+      "summary_other": "{{count}} cards, each {{tileWidth}} × {{tileHeight}} px (image {{imageWidth}} × {{imageHeight}})",
+      "summaryStretched_one": "{{count}} card, each {{tileWidth}} × {{tileHeight}} px (image {{imageWidth}} × {{imageHeight}}), differs from the card format and is stretched when printed",
+      "summaryStretched_other": "{{count}} cards, each {{tileWidth}} × {{tileHeight}} px (image {{imageWidth}} × {{imageHeight}}), differs from the card format and is stretched when printed"
+    },
+    "addCards_one": "Add card",
+    "addCards_other": "Add {{count}} cards",
+    "title": "Crop Image",
+    "applyCards": "Apply ({{count}} cards)"
+  },
+  "imageSelect": {
+    "quality": {
+      "good": "Clearly readable",
+      "ok": "Slightly soft",
+      "poor": "Hard to read",
+      "unrated": "Not rated"
+    },
+    "imageCount_one": "{{count}} image",
+    "imageCount_other": "{{count}} images",
+    "previousCard": "Previous card",
+    "previousCardHint": "Previous card (←)",
+    "nextCard": "Next card",
+    "nextCardHint": "Next card (→)",
+    "filterLanguage": "Filter by Language",
+    "filterApi": "Filter by API",
+    "filterSharpness": "Filter by Sharpness",
+    "noLanguage": "No Language",
+    "stats": {
+      "downloading": "Downloading",
+      "queued": "Queued",
+      "loaded": "Loaded",
+      "cached": "Cached images of this card",
+      "removeCached": "Remove cached images of this card"
+    }
+  },
+  "addCard": {
+    "uploadError": "An error occurred during upload.",
+    "uploadFileError": "An error occurred while uploading the file.",
+    "title": "Add Custom Card",
+    "titleReplace": "Replace “{{name}}”",
+    "searchApis": "Search Apis",
+    "cardName": "cardname",
+    "searching": "Searching…",
+    "searchAgain": "Search again",
+    "foundNone": "No card arts found for “{{name}}”",
+    "found_one": "Found {{count}} card art for “{{name}}”",
+    "found_other": "Found {{count}} card arts for “{{name}}”",
+    "replaceInDeck": "Replace in deck",
+    "addToDeck": "Add to deck",
+    "insertImageUrl": "Insert ImageUrl",
+    "imageUrl": "Image URL",
+    "nextCrop": "Next: crop",
+    "uploadFile": "upload file",
+    "chooseFile": "choose file...",
+    "noFileChosen": "no file chosen"
+  },
+  "container": {
+    "onlyThisHint": "Hold for 2 seconds to show only this one",
+    "cropOverlay": {
+      "tabCrop": "Crop",
+      "name": "Name:",
+      "set": "Set:",
+      "api": "API:",
+      "language": "Language:",
+      "imageSize": "Image size:",
+      "crop": "Crop:",
+      "cropValue": "{{width}} × {{height}} from {{x}}, {{y}}"
+    },
+    "iconBar": {
+      "viewFiltering": "View Filtering"
+    },
+    "sortable": {
+      "priorityHint": "Drag to set the priority: the top entry wins, the ones below are fallbacks",
+      "handleAria": "{{hint}} (position {{position}} of {{total}})",
+      "preferred": "Preferred",
+      "fallback": "Fallback {{rank}}"
+    }
+  },
+  "deckInput": {
+    "pdfError": {
+      "lostConnection": "Lost connection to the PDF generation. Please try again.",
+      "startFailed": "Failed to start PDF generation. Please try again.",
+      "downloadFailed": "Failed to download PDF. Please try again."
+    },
+    "categoryIcon": {
+      "mtg": "MTG Icon",
+      "poke": "Pokemon Icon",
+      "misc": "Misc Icon"
+    },
+    "noLanguage": "No Language",
+    "ratio": {
+      "active": "{{selected}} / {{total}} active",
+      "shown": "{{selected}} / {{total}} shown"
+    },
+    "snapshots": {
+      "title": "Snapshots",
+      "saved": "{{count}} saved",
+      "noneSaved": "none saved"
+    },
+    "apiSelection": {
+      "title": "API Selection",
+      "manage": "Manage APIs",
+      "categoryRatio": "{{category}}: {{selected}} / {{total}}"
+    },
+    "decklist": {
+      "title": "Enter Decklist",
+      "cards_one": "{{count}} card",
+      "cards_other": "{{count}} cards",
+      "empty": "empty",
+      "analyze": "Analyze Deck"
+    },
+    "tokens": {
+      "label": "Tokens & Extras",
+      "tooltip": "Add tokens, emblems etc. as separate cards. Provided by: {{apis}}",
+      "none": "No active API provides tokens or extras"
+    },
+    "serverCache": {
+      "label": "Shared Search Cache",
+      "tooltip": "Use search results other users already found (shared server cache). Uncheck to always search the sources yourself.",
+      "disabled": "The shared search cache is turned off on this server"
+    },
+    "import": {
+      "title": "Import Deck",
+      "sources": "Deckfinder sources",
+      "placeholder": "Deck link, ID or name",
+      "detected": "{{name}} link",
+      "load": "Load Deck",
+      "searchByName": "Search by Name",
+      "options": "Options"
+    },
+    "addSingle": {
+      "title": "Add Single",
+      "gallery": "Gallery Search",
+      "links": "Add Links"
+    },
+    "searchLog": {
+      "title": "Search Log",
+      "entries_one": "{{count}} entry",
+      "entries_other": "{{count}} entries"
+    },
+    "card": {
+      "cropImage": "Crop image",
+      "neededBy": "Needed by: {{names}}",
+      "noArt": "No card art found",
+      "replaceTooltip": "Search again or add an image for this entry; it replaces the entry in the deck",
+      "discardTooltip": "Remove this entry from the deck",
+      "discard": "Discard",
+      "noImage": "No image available",
+      "removeCard": "Remove card",
+      "oneLess": "One less",
+      "oneMore": "One more"
+    },
+    "view": {
+      "title": "View Selection",
+      "uniquePrints": "Unique Prints",
+      "showImageInfo": "Show Image Info",
+      "gridSize": "Grid Size {{size}}",
+      "languageFilter": "Language Filter",
+      "apiFilter": "API Filter"
+    },
+    "pdf": {
+      "title": "PDF Generation",
+      "create": "Create PDF",
+      "tooLarge": "The PDF would be about {{size}}, the limit is {{limit}} MB. Split the deck into several PDFs or lower Max DPI in the settings.",
+      "estimate": "Estimated size: about {{size}}",
+      "estimateWithLimit": "Estimated size: about {{size}} of max. {{limit}} MB"
+    },
+    "replaceDeck": {
+      "title": "Replace decklist?",
+      "messageNamed_one": "“{{name}}” ({{count}} card) replaces the current list. The current state is saved as a snapshot first.",
+      "messageNamed_other": "“{{name}}” ({{count}} cards) replaces the current list. The current state is saved as a snapshot first.",
+      "messageUnnamed_one": "The loaded deck ({{count}} card) replaces the current list. The current state is saved as a snapshot first.",
+      "messageUnnamed_other": "The loaded deck ({{count}} cards) replaces the current list. The current state is saved as a snapshot first."
+    }
+  },
+  "info": {
+    "disclaimer": {
+      "title": "Disclaimer",
+      "sources": "This website loads card images and information from public sources and third-party APIs. I am not responsible for the content provided by these sources. No copyright or ownership of the artwork is claimed, and all rights remain with their respective owners.",
+      "noncommercial": "This project is non-commercial and intended for personal, educational, or research purposes only. No profit is made from the use of this site.",
+      "accept": "By continuing, you acknowledge and accept this disclaimer.",
+      "understand": "I Understand"
+    },
+    "participate": "Participate",
+    "donate": "Donate"
+  },
+  "tour": {
+    "createDeck": {
+      "title": "How to create a deck",
+      "steps": {
+        "s1": {
+          "title": "Enter your decklist",
+          "content": "Paste or type your deck here, one card per line with the count first, for example \"4 Lightning Bolt\". Exports from the common deckbuilders work as they are."
+        },
+        "s2": {
+          "title": "Tokens & Extras",
+          "content": "When this is checked, tokens, emblems and other extras your cards create are added as separate cards."
+        },
+        "s3": {
+          "title": "Search the images",
+          "content": "Analyze Deck searches all active sources for every card. The results show up in the grid as they arrive."
+        },
+        "s4": {
+          "title": "Or import a deck",
+          "content": "Paste a deck link or ID and press Load Deck, or type a deck name and use Search by Name. Before an imported deck replaces your list, the current state is saved as a snapshot."
+        },
+        "s5": {
+          "title": "Add single cards",
+          "content": "Add your own image, search a gallery, or paste a list of image links to add cards one by one."
+        },
+        "s6": {
+          "title": "Your deck",
+          "content": "Every card gets a tile. Click a tile to pick a different image, use + and − to change the count."
+        },
+        "s7": {
+          "title": "Print it",
+          "content": "When you are happy with the selection, Create PDF builds a printable sheet of all cards."
+        }
+      }
+    },
+    "changeSources": {
+      "title": "How to change sources",
+      "steps": {
+        "s1": {
+          "title": "Choose your sources",
+          "content": "Each entry is a source the search asks for card images. Check or uncheck single sources, or click a category to switch all of its sources at once."
+        },
+        "s2": {
+          "title": "Manage sources",
+          "content": "The gear opens the source manager. There you can add new sources, edit existing ones or test them."
+        },
+        "s3": {
+          "title": "Shared search cache",
+          "content": "Reuses search results other users already found, which is much faster. Uncheck it to always ask the sources yourself, for example after changing a source."
+        },
+        "s4": {
+          "title": "Galleries",
+          "content": "Gallery Search browses image galleries that are not part of the regular card search."
+        },
+        "s5": {
+          "title": "Deck sources",
+          "content": "This gear manages the deckbuilder sites decks can be imported from."
+        }
+      }
+    },
+    "cardAppearance": {
+      "title": "How to edit card appearance",
+      "steps": {
+        "s1": {
+          "title": "View settings",
+          "content": "Unique Prints shows one tile per copy, so every copy can get its own image. Show Image Info adds size and quality details to each tile."
+        },
+        "s2": {
+          "title": "Grid size",
+          "content": "Makes the tiles in the grid bigger or smaller. This only changes the view, not the PDF."
+        },
+        "s3": {
+          "title": "Pick and crop images",
+          "content": "Click a tile to see all images found for that card and choose another one. Your own images can be cropped again with the crop button on their tile."
+        },
+        "s4": {
+          "title": "Print settings",
+          "content": "Card size, margins, cut lines, rounded corners and the maximum image resolution are set here. The preview shows how a page will look."
+        }
+      }
+    },
+    "storage": {
+      "title": "Storage management",
+      "steps": {
+        "s1": {
+          "title": "Downloads and caches",
+          "content": "These bubbles show what is happening in the background: waiting and active downloads and images being loaded from the cache. Click one to see the queue."
+        },
+        "s2": {
+          "title": "Search cache",
+          "content": "Search results are kept in your browser, so searching the same card again is instant. Click to see or delete stored searches."
+        },
+        "s3": {
+          "title": "Image cache",
+          "content": "Downloaded images are stored in your browser too. The bar shows how full the image cache is; click it to clean up."
+        },
+        "s4": {
+          "title": "Reset deck",
+          "content": "Clears the decklist, results and selection. You will be asked before anything is removed."
+        },
+        "s5": {
+          "title": "Snapshots",
+          "content": "Snapshots are also stored in this browser. Delete old ones here to free space."
+        }
+      }
+    },
+    "filters": {
+      "title": "Working with filters",
+      "steps": {
+        "s1": {
+          "title": "Language filter",
+          "content": "Uncheck a language to hide its images. Hold an entry for 2 seconds to show only that language."
+        },
+        "s2": {
+          "title": "Priority",
+          "content": "Drag entries to reorder them. The order decides which image is picked automatically: the top entry wins, the others are the fallback. The number shows each entry's rank."
+        },
+        "s3": {
+          "title": "Source filter",
+          "content": "Works the same way for sources: hide sources, hold to show only one, drag to set which source is preferred."
+        },
+        "s4": {
+          "title": "Effect on your deck",
+          "content": "A card you picked by hand stays picked as long as it matches the filters. Tiles without any matching image are marked. The image selection dialog has the same filters."
+        }
+      }
+    },
+    "snapshots": {
+      "title": "What are snapshots",
+      "steps": {
+        "s1": {
+          "title": "Snapshots",
+          "content": "A snapshot stores your whole work: the decklist, the images you picked, active sources, filters and print settings. Snapshots are kept in this browser. After a reload, \"Restore last session\" brings back where you left off."
+        },
+        "s2": {
+          "title": "Save",
+          "content": "Saves the current state. A snapshot is also made automatically when you create a PDF and before an imported deck replaces your list."
+        },
+        "s3": {
+          "title": "Load and manage",
+          "content": "Click a snapshot to load it. The buttons next to it overwrite it with the current state, rename or delete it. Snapshots of a created PDF can download it again while it is available."
+        }
+      }
+    },
+    "locale": {
+      "skip": "Skip",
+      "nextWithProgress": "Next ({step} of {steps})"
+    }
+  },
+  "themes": {
+    "plains": "Plains",
+    "island": "Island",
+    "swamp": "Swamp",
+    "mountain": "Mountain",
+    "forest": "Forest",
+    "midnight": "Midnight"
+  },
+  "errors": {
+    "deckFinder": {
+      "notJson": "The response is not JSON. Does the config's data format match?",
+      "noEntryListFields": "The config has no entry list fields.",
+      "noCards": "No cards found in the response. Do the config fields match?",
+      "searchNotJson": "The search response is not JSON."
+    }
+  },
+  "wizard": {
+    "title": "Create API",
+    "steps": {
+      "request": "Request",
+      "searchTerm": "Search term",
+      "fields": "Fields"
+    },
+    "request": {
+      "help": "Paste a search request that already returns results, e.g. <0>https://api.scryfall.com/cards/search?q=Lightning+Bolt</0>.",
+      "method": "Method",
+      "restUrl": "REST URL",
+      "bodyFormat": "Body format",
+      "formatForm": "Form (a=1&b=2)",
+      "body": "Body",
+      "expert": "Source needs follow links, CSRF tokens or nested languages?",
+      "createEmpty": "Create an empty config and fill it in by hand"
+    },
+    "searchTerm": {
+      "help": "Which card name did you search for in this request? It gets replaced by <0>{cardname}</0>, so every search fills in the card from the decklist.",
+      "cardName": "Card name",
+      "baseUrl": "Base URL",
+      "query": "Query"
+    },
+    "test": {
+      "help": "The request runs directly in your browser first. If the source blocks that (CORS), it runs through our backend and the config is set to use the backend proxy.",
+      "running": "Running…",
+      "run": "Run test request",
+      "status": "Status",
+      "httpStatus": "HTTP {{status}}",
+      "route": "Route",
+      "routeDirect": "direct from the browser",
+      "routeProxy": "via backend proxy",
+      "useBackendProxy": "Use Backend Proxy",
+      "directFailed": "(direct call failed: {{error}})",
+      "format": "Format",
+      "detected": "detected from the answer ({{contentType}})",
+      "noContentType": "no content type",
+      "truncated": "The answer was cut off at 3 MB.",
+      "parseError": "Could not read the answer as {{format}}: {{error}}"
+    },
+    "preview": {
+      "summary": "{{all}} results, {{matching}} match \"{{name}}\"",
+      "chooseList": "Choose the result list to see results.",
+      "image": "Image",
+      "lang": "Lang",
+      "number": "No.",
+      "more": "… and {{count}} more",
+      "noMatch": "No result has exactly the name \"{{name}}\". Searches only keep exact name matches, so check the name field or set a split character (e.g. <0>//</0> for double-faced names)."
+    },
+    "fields": {
+      "helpJson": "Pick a field, then click the matching value in the raw data. Fields are read relative to one list entry.",
+      "helpHtml": "Pick a field, then click the matching value in the raw data. Values use the syntax \"css-selector | innerText\" or \"css-selector | attr:src\".",
+      "wholeAnswer": "(whole answer)",
+      "splitChar": "Split char",
+      "splitCharHint": "Character between the names of multi-part cards, e.g. // at Scryfall",
+      "splitCharPlaceholder": "e.g. //",
+      "followPages": "Follow next pages via <0>{{field}}</0>",
+      "guessAgain": "Guess fields again"
+    },
+    "roles": {
+      "dataListField": {
+        "label": "Result list",
+        "hint": "The list that holds one entry per card"
+      },
+      "nameField": {
+        "hint": "Card name, must match the searched name"
+      },
+      "imageUrlField": {
+        "label": "Image",
+        "hint": "URL of the card image"
+      },
+      "languageField": {
+        "hint": "Language of the card (optional)"
+      },
+      "setField": {
+        "hint": "Set / edition (optional)"
+      },
+      "setNumberField": {
+        "label": "Set number",
+        "hint": "Collector number (optional)"
+      }
+    },
+    "save": {
+      "category": "Category",
+      "categoryMisc": "Misc",
+      "officialWebsite": "Official Website",
+      "defaultLanguage": "Default Language",
+      "defaultLanguageHint": "Language for cards the source does not tag with a language",
+      "proxyImages": "Proxy Images",
+      "imageChecking": "checking whether images load directly…",
+      "imageDirect": "images load directly, no proxy needed",
+      "imageProxy": "images block direct loading, load them through the backend",
+      "imageIdle": "load images through the backend",
+      "nameTaken": "A config with this name already exists.",
+      "configPreview": "Config that will be saved",
+      "help": "The config is saved as private. Pagination, follow links and the other expert fields can be edited afterwards in the config settings.",
+      "saving": "Saving…",
+      "saveConfig": "Save config",
+      "createFailed": "create failed (HTTP {{status}})",
+      "createNoId": "create returned no id",
+      "saveFailed": "save failed (HTTP {{status}})"
+    },
+    "tree": {
+      "collapse": "collapse",
+      "expand": "expand",
+      "root": "(root)",
+      "more": "… {{count}} more"
+    },
+    "template": {
+      "urlInvalid": "Please enter a full URL starting with http:// or https://",
+      "jsonBodyObject": "The JSON body must be an object like {\"q\": \"Lightning Bolt\"}",
+      "jsonBodyInvalid": "The body is not valid JSON",
+      "needCardName": "Please enter the card name used in your query",
+      "nameInPath": "The card name is part of the URL path. Only query parameters (…?q=Name) can be used for searching.",
+      "notInQuery": "\"{{name}}\" was not found in the query parameters of the URL.",
+      "repeatedParam": "The URL repeats a parameter; only its last value is kept.",
+      "nestedJson": "\"{{key}}\" is nested JSON; it is stored as text.",
+      "sentAsText": "\"{{key}}\" is sent as text (\"{{value}}\") instead of {{type}}.",
+      "postNameInUrl": "For POST the card name has to be in the body, not in the URL.",
+      "notInBody": "\"{{name}}\" was not found in the request body."
+    },
+    "pick": {
+      "clickList": "Click on a list (an array of entries).",
+      "chooseListFirst": "Choose the result list first.",
+      "clickInsideEntry": "Click on a value inside one entry of the result list.",
+      "clickElement": "Click on an element.",
+      "clickInsideMarked": "Click on an element inside one of the marked list entries."
+    },
+    "testRequest": {
+      "backendFailed": "Backend test request failed (HTTP {{status}})"
+    }
   }
 }

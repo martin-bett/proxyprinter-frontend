@@ -2,6 +2,8 @@
 // die Config-Felder baseUrl + parameterMap, in denen der Name durch {cardname}
 // ersetzt ist. ApiFactory setzt den Platzhalter bei jeder Suche wieder ein.
 
+import i18n from '../../../../i18n';
+
 export type WizardMethod = 'GET' | 'POST';
 export type WizardBodyFormat = 'json' | 'urlencoded';
 
@@ -63,15 +65,15 @@ function parseUrl(raw: string): URL | null {
 }
 
 export function validateRequest(req: WizardRequest): string | null {
-  if (!parseUrl(req.url)) return 'Please enter a full URL starting with http:// or https://';
+  if (!parseUrl(req.url)) return i18n.t('wizard.template.urlInvalid');
   if (req.method === 'POST' && req.requestFormat === 'json' && req.body.trim()) {
     try {
       const parsed = JSON.parse(req.body);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        return 'The JSON body must be an object like {"q": "Lightning Bolt"}';
+        return i18n.t('wizard.template.jsonBodyObject');
       }
     } catch {
-      return 'The body is not valid JSON';
+      return i18n.t('wizard.template.jsonBodyInvalid');
     }
   }
   return null;
@@ -91,7 +93,7 @@ function nameInPath(url: URL, searchName: string): boolean {
 export function buildTemplate(req: WizardRequest, searchName: string): TemplateResult {
   const invalid = validateRequest(req);
   if (invalid) return { error: invalid };
-  if (!searchName.trim()) return { error: 'Please enter the card name used in your query' };
+  if (!searchName.trim()) return { error: i18n.t('wizard.template.needCardName') };
   const url = parseUrl(req.url) as URL;
   const warnings: string[] = [];
 
@@ -100,12 +102,12 @@ export function buildTemplate(req: WizardRequest, searchName: string): TemplateR
     if (nameParams.length === 0) {
       return {
         error: nameInPath(url, searchName)
-          ? 'The card name is part of the URL path. Only query parameters (…?q=Name) can be used for searching.'
-          : `"${searchName.trim()}" was not found in the query parameters of the URL.`,
+          ? i18n.t('wizard.template.nameInPath')
+          : i18n.t('wizard.template.notInQuery', { name: searchName.trim() }),
       };
     }
     if (new Set(Array.from(url.searchParams.keys())).size < Array.from(url.searchParams.keys()).length) {
-      warnings.push('The URL repeats a parameter; only its last value is kept.');
+      warnings.push(i18n.t('wizard.template.repeatedParam'));
     }
     return {
       baseUrl: url.origin + url.pathname,
@@ -121,11 +123,11 @@ export function buildTemplate(req: WizardRequest, searchName: string): TemplateR
     const parsed = req.body.trim() ? JSON.parse(req.body) : {};
     entries = Object.entries(parsed).map(([key, value]) => {
       if (value !== null && typeof value === 'object') {
-        warnings.push(`"${key}" is nested JSON; it is stored as text.`);
+        warnings.push(i18n.t('wizard.template.nestedJson', { key }));
         return [key, JSON.stringify(value)];
       }
       if (typeof value !== 'string') {
-        warnings.push(`"${key}" is sent as text ("${String(value)}") instead of ${typeof value}.`);
+        warnings.push(i18n.t('wizard.template.sentAsText', { key, value: String(value), type: typeof value }));
       }
       return [key, String(value)];
     });
@@ -137,8 +139,8 @@ export function buildTemplate(req: WizardRequest, searchName: string): TemplateR
     const inUrl = replaceName(req.url, searchName) !== req.url;
     return {
       error: inUrl
-        ? 'For POST the card name has to be in the body, not in the URL.'
-        : `"${searchName.trim()}" was not found in the request body.`,
+        ? i18n.t('wizard.template.postNameInUrl')
+        : i18n.t('wizard.template.notInBody', { name: searchName.trim() }),
     };
   }
   return {

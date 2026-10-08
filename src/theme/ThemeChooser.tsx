@@ -31,14 +31,15 @@ const ThemeChooser: React.FC = () => {
   const { t } = useTranslation();
   const { theme, themes, setThemeId } = useAppTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const themeName = (th: AppTheme) => t(`themes.${th.id}` as 'themes.plains', { defaultValue: th.name });
 
   return (
     <div className="theme-chooser-bar">
       <button
         className="memory-button theme-chooser-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        title={t('themeChooser.title', { name: theme.name })}
-        aria-label={t('themeChooser.aria', { name: theme.name })}
+        title={t('themeChooser.title', { name: themeName(theme) })}
+        aria-label={t('themeChooser.aria', { name: themeName(theme) })}
         aria-haspopup="menu"
       >
         <ThemeIcon theme={theme} size="button" />
@@ -54,8 +55,8 @@ const ThemeChooser: React.FC = () => {
             key={th.id}
             selected={th.id === theme.id}
             className="theme-chooser-item"
-            title={th.name}
-            aria-label={th.name}
+            title={themeName(th)}
+            aria-label={themeName(th)}
             onClick={() => { setThemeId(th.id); setAnchorEl(null); }}
           >
             <ThemeIcon theme={th} size="menu" />

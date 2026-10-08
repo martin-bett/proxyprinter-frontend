@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -55,39 +56,39 @@ export interface ApiConfigFormState {
 }
 
 const API_CONFIG_FIELDS: ConfigField[] = [
-  { group: 'Base Info', name: 'name', label: 'Name', required: true },
-  { group: 'Base Info', name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS },
-  { group: 'Base Info', name: 'officialWebsite', label: 'Official Website' },
-  { group: 'Base Info', name: 'customArts', label: 'Custom Arts', type: 'checkbox' },
-  { group: 'Request', name: 'method', label: 'Method', type: 'select', options: [['GET', 'GET'], ['POST', 'POST']] },
-  { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['html', 'HTML']] },
-  { group: 'Request', name: 'baseUrl', label: 'Base URL' },
-  { group: 'Request', name: 'parameterMap', label: 'Parameter Map', type: 'json' },
-  { group: 'Request', name: 'concurrentLimit', label: 'Concurrent Limit', type: 'number' },
-  { group: 'Request', name: 'requestFormat', label: 'Request Format', type: 'select', options: [['urlencoded', 'URL Encoded'], ['multipart', 'Multipart'], ['json', 'JSON']] },
-  { group: 'Request', name: 'csrfTokenVariableName', label: 'CSRF Token Variable Name' },
-  { group: 'Request', name: 'requiresCsrfToken', label: 'Requires CSRF Token', type: 'checkbox' },
-  { group: 'Request', name: 'useBackendProxy', label: 'Use Backend Proxy', type: 'checkbox' },
-  { group: 'Request', name: 'proxyImages', label: 'Proxy Images', type: 'checkbox', title: 'Load images of this API through the backend (for hosts without CORS headers)' },
-  { group: 'Locator', name: 'paginationField', label: 'Pagination Field' },
-  { group: 'Locator', name: 'dataListField', label: 'Data List Field' },
-  { group: 'Locator', name: 'nameField', label: 'Name Field' },
-  { group: 'Locator', name: 'imageUrlField', label: 'Image URL Field' },
-  { group: 'Locator', name: 'languageField', label: 'Language Field' },
-  { group: 'Locator', name: 'defaultLanguage', label: 'Default Language', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'Language for cards where the source provides no language' },
-  { group: 'Locator', name: 'setField', label: 'Set Field' },
-  { group: 'Locator', name: 'nameSplitCharacter', label: 'Name Split Character' },
-  { group: 'Locator', name: 'setNumberField', label: 'Set Number Field' },
-  { group: 'Follow Link', name: 'followLinkField', label: 'Follow Link Field' },
-  { group: 'Follow Link', name: 'followLinkDataListField', label: 'Data List Field' },
-  { group: 'Follow Link', name: 'followLinkImageField', label: 'Image Field' },
-  { group: 'Follow Link', name: 'followLinkLanguageField', label: 'Language Field' },
-  { group: 'Nested Language', name: 'nestedLanguageDataListField', label: 'Data List Field' },
-  { group: 'Nested Language', name: 'nestedLanguageImageUrlField', label: 'Image URL Field' },
-  { group: 'Nested Language', name: 'nestedLanguageLanguageField', label: 'Language Field' },
-  { group: 'Card Faces', name: 'cardFacesDataListField', label: 'Data List Field', title: 'List of card faces, e.g. card_faces on Scryfall. Each face with an image becomes its own match.' },
-  { group: 'Card Faces', name: 'cardFacesImageUrlField', label: 'Image URL Field' },
-  { group: 'Card Faces', name: 'cardFacesNameField', label: 'Name Field' },
+  { group: 'configCommon.groups.baseInfo', name: 'name', label: 'configCommon.fields.name', required: true },
+  { group: 'configCommon.groups.baseInfo', name: 'category', label: 'configCommon.fields.category', type: 'select', options: CATEGORY_OPTIONS },
+  { group: 'configCommon.groups.baseInfo', name: 'officialWebsite', label: 'configCommon.fields.officialWebsite' },
+  { group: 'configCommon.groups.baseInfo', name: 'customArts', label: 'apiConfig.fields.customArts', type: 'checkbox' },
+  { group: 'configCommon.groups.request', name: 'method', label: 'configCommon.fields.method', type: 'select', options: [['GET', 'configCommon.options.get'], ['POST', 'configCommon.options.post']] },
+  { group: 'configCommon.groups.request', name: 'dataFormat', label: 'configCommon.fields.dataFormat', type: 'select', options: [['json', 'configCommon.options.json'], ['html', 'configCommon.options.html']] },
+  { group: 'configCommon.groups.request', name: 'baseUrl', label: 'configCommon.fields.baseUrl' },
+  { group: 'configCommon.groups.request', name: 'parameterMap', label: 'configCommon.fields.parameterMap', type: 'json' },
+  { group: 'configCommon.groups.request', name: 'concurrentLimit', label: 'apiConfig.fields.concurrentLimit', type: 'number' },
+  { group: 'configCommon.groups.request', name: 'requestFormat', label: 'apiConfig.fields.requestFormat', type: 'select', options: [['urlencoded', 'configCommon.options.urlEncoded'], ['multipart', 'configCommon.options.multipart'], ['json', 'configCommon.options.json']] },
+  { group: 'configCommon.groups.request', name: 'csrfTokenVariableName', label: 'apiConfig.fields.csrfTokenVariableName' },
+  { group: 'configCommon.groups.request', name: 'requiresCsrfToken', label: 'apiConfig.fields.requiresCsrfToken', type: 'checkbox' },
+  { group: 'configCommon.groups.request', name: 'useBackendProxy', label: 'apiConfig.fields.useBackendProxy', type: 'checkbox' },
+  { group: 'configCommon.groups.request', name: 'proxyImages', label: 'apiConfig.fields.proxyImages', type: 'checkbox', title: 'apiConfig.titles.proxyImages' },
+  { group: 'configCommon.groups.locator', name: 'paginationField', label: 'configCommon.fields.paginationField' },
+  { group: 'configCommon.groups.locator', name: 'dataListField', label: 'configCommon.fields.dataListField' },
+  { group: 'configCommon.groups.locator', name: 'nameField', label: 'configCommon.fields.nameField' },
+  { group: 'configCommon.groups.locator', name: 'imageUrlField', label: 'configCommon.fields.imageUrlField' },
+  { group: 'configCommon.groups.locator', name: 'languageField', label: 'configCommon.fields.languageField' },
+  { group: 'configCommon.groups.locator', name: 'defaultLanguage', label: 'configCommon.fields.defaultLanguage', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'configCommon.titles.defaultLanguage' },
+  { group: 'configCommon.groups.locator', name: 'setField', label: 'configCommon.fields.setField' },
+  { group: 'configCommon.groups.locator', name: 'nameSplitCharacter', label: 'apiConfig.fields.nameSplitCharacter' },
+  { group: 'configCommon.groups.locator', name: 'setNumberField', label: 'apiConfig.fields.setNumberField' },
+  { group: 'configCommon.groups.followLink', name: 'followLinkField', label: 'apiConfig.fields.followLinkField' },
+  { group: 'configCommon.groups.followLink', name: 'followLinkDataListField', label: 'configCommon.fields.dataListField' },
+  { group: 'configCommon.groups.followLink', name: 'followLinkImageField', label: 'apiConfig.fields.followLinkImageField' },
+  { group: 'configCommon.groups.followLink', name: 'followLinkLanguageField', label: 'configCommon.fields.languageField' },
+  { group: 'configCommon.groups.nestedLanguage', name: 'nestedLanguageDataListField', label: 'configCommon.fields.dataListField' },
+  { group: 'configCommon.groups.nestedLanguage', name: 'nestedLanguageImageUrlField', label: 'configCommon.fields.imageUrlField' },
+  { group: 'configCommon.groups.nestedLanguage', name: 'nestedLanguageLanguageField', label: 'configCommon.fields.languageField' },
+  { group: 'configCommon.groups.cardFaces', name: 'cardFacesDataListField', label: 'configCommon.fields.dataListField', title: 'apiConfig.titles.cardFacesDataListField' },
+  { group: 'configCommon.groups.cardFaces', name: 'cardFacesImageUrlField', label: 'configCommon.fields.imageUrlField' },
+  { group: 'configCommon.groups.cardFaces', name: 'cardFacesNameField', label: 'configCommon.fields.nameField' },
 ];
 
 interface ApiConfigWizardProps {
@@ -100,6 +101,7 @@ interface ApiConfigWizardProps {
 }
 
 const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPublish, onDelete, onCopy, initialConfig }) => {
+  const { t } = useTranslation();
   const [isOwner, setIsOwner] = useState(false);
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [config, setConfig] = useState<ApiConfigFormState>({
@@ -218,7 +220,7 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
 
   return (
     <div className="wizard-container">
-      <h1 className='title is-4'>Config Settings</h1>
+      <h1 className='title is-4'>{t('configCommon.configSettings')}</h1>
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
         <ConfigFieldTable
           fields={API_CONFIG_FIELDS}
@@ -236,14 +238,14 @@ const ApiConfigWizard: React.FC<ApiConfigWizardProps> = ({ onClose, onSave, onPu
         <div className="config-actions">
           {isOwner ? (
             <>
-              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>Save</ActionButton>
+              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>{t('common.save')}</ActionButton>
               <ActionButton icon={config.published ? <LockIcon /> : <PublicIcon />} onClick={handlePublish}>
-                {config.published ? 'Unpublish' : 'Publish'}
+                {config.published ? t('configCommon.unpublish') : t('configCommon.publish')}
               </ActionButton>
-              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>Delete</ActionButton>
+              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>{t('common.delete')}</ActionButton>
             </>
           ) : null}
-          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>Copy Config</ActionButton>
+          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>{t('configCommon.copyConfig')}</ActionButton>
         </div>
       </form>
     </div>

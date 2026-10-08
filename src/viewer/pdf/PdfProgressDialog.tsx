@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import './PdfProgressDialog.css';
+import { useTranslation } from 'react-i18next';
 import ProgressBar from '../../components/progress/ProgressBar';
 
 export type ProgressCategory = 'queued' | 'download' | 'build' | 'finishing';
@@ -28,12 +29,12 @@ interface PdfProgressDialogProps {
 }
 
 const CATEGORY_ORDER: ProgressCategory[] = ['queued', 'download', 'build', 'finishing'];
-const CATEGORY_LABELS: Record<ProgressCategory, string> = {
-  queued: 'Queue',
-  download: 'Download',
-  build: 'Build',
-  finishing: 'Finishing',
-};
+const CATEGORY_LABEL_KEYS = {
+  queued: 'pdf.progress.category.queued',
+  download: 'pdf.progress.category.download',
+  build: 'pdf.progress.category.build',
+  finishing: 'pdf.progress.category.finishing',
+} as const;
 
 /** Kurze Pause, damit der fertige Balken sichtbar ist, bevor der Download startet. */
 const FINISH_DELAY_MS = 800;
@@ -49,6 +50,7 @@ export const isFinished = (dto: ProgressDto | undefined): boolean =>
   !!dto && dto.category === 'finishing' && !dto.error && dto.fileSize > 0;
 
 const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDtos, errorMessage, onFinish, onClose, email }) => {
+  const { t } = useTranslation();
   // Letzter Eintrag je Kategorie
   const latestByCategory = useMemo(() => {
     const map: Partial<Record<ProgressCategory, ProgressDto>> = {};
@@ -83,7 +85,7 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
 
   return (
     <div className="pdf-progress-dialog">
-      <h3>Generating PDF</h3>
+      <h3>{t('pdf.progress.title')}</h3>
       <div className="pdf-progress-rows">
         {CATEGORY_ORDER.map((category, index) => {
           const dto = latestByCategory[category];
@@ -97,16 +99,16 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
           return (
             <div className={`pdf-progress-row ${state}`} key={category}>
               <div className="pdf-progress-row-header">
-                <span className="pdf-progress-label">{CATEGORY_LABELS[category]}</span>
+                <span className="pdf-progress-label">{t(CATEGORY_LABEL_KEYS[category])}</span>
                 <span className="pdf-progress-meta">
                   {category === 'queued' && active && dto && dto.total > 0 && dto.current > 0 && (
-                    <span>Position {dto.current} of {dto.total}</span>
+                    <span>{t('pdf.progress.queuePosition', { current: dto.current, total: dto.total })}</span>
                   )}
                   {(category === 'download' || category === 'build') && dto && dto.total > 0 && (
                     <span>{dto.current}/{dto.total}</span>
                   )}
                   {category === 'build' && dto?.pageCount ? (
-                    <span>{dto.pageCount} {dto.pageCount === 1 ? 'page' : 'pages'}</span>
+                    <span>{t('pdf.progress.pageCount', { count: dto.pageCount })}</span>
                   ) : null}
                   {category !== 'queued' && dto?.fileSize ? <span>{formatFileSize(dto.fileSize)}</span> : null}
                 </span>
@@ -133,14 +135,14 @@ const PdfProgressDialog: React.FC<PdfProgressDialogProps> = ({ open, progressDto
         })}
       </div>
       <div className={`pdf-progress-message${error ? ' is-error' : ''}`}>
-        {error || lastDto?.message || 'Starting PDF generation...'}
+        {error || lastDto?.message || t('pdf.progress.starting')}
       </div>
       {email && !error && (
-        <div className="pdf-progress-email">The download link will also be sent to {email}.</div>
+        <div className="pdf-progress-email">{t('pdf.progress.emailNotice', { email })}</div>
       )}
       {error && (
         <div className="pdf-progress-actions">
-          <button className="button" onClick={onClose}>Close</button>
+          <button className="button" onClick={onClose}>{t('common.close')}</button>
         </div>
       )}
     </div>

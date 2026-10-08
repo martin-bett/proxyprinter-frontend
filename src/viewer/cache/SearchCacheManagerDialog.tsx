@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ActionButton from "../../container/inputs/ActionButton";
@@ -30,6 +31,7 @@ interface SearchCacheManagerDialogProps {
 }
 
 export default function SearchCacheManagerDialog({ open, onClose, onChange }: SearchCacheManagerDialogProps) {
+  const { t } = useTranslation();
   const [searches, setSearches] = useState<SearchesByApi>({});
 
   const reload = useCallback(async () => {
@@ -58,10 +60,10 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
 
   return (
     <div className="cache-manager-dialog search-cache-manager-dialog">
-      <h2>Search cache</h2>
+      <h2>{t('cache.search.title')}</h2>
       <div className="cache-manager-head">
         <div className="cache-manager-usage">
-          <span>{allEntries.length} gespeicherte Suchen</span>
+          <span>{t('cache.search.savedCount', { count: allEntries.length })}</span>
         </div>
         <ActionButton
           icon={<DeleteSweepIcon />}
@@ -69,10 +71,10 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
           onClick={remove(() => SearchCacheService.removeAllSearches())}
           disabled={allEntries.length === 0}
         >
-          Delete all searches
+          {t('cache.search.deleteAll')}
         </ActionButton>
       </div>
-      <p className="cache-manager-hint">The numbers are matches found. Clicking a cell deletes the searches behind it; the red highlight shows what will be deleted.</p>
+      <p className="cache-manager-hint">{t('cache.search.hint')}</p>
       <table className="cache-table">
         <thead>
           <tr>
@@ -80,12 +82,12 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
             {apiKeys.map(apiKey => (
               <th key={apiKey}>{apiKey}</th>
             ))}
-            <th>All for card</th>
+            <th>{t('cache.search.allForCard')}</th>
           </tr>
         </thead>
         <tbody>
           <tr className="cache-sum-row">
-            <th className="cache-row-label">All APIs</th>
+            <th className="cache-row-label">{t('cache.manager.allApis')}</th>
             {apiKeys.map(apiKey => (
               <SearchCell
                 key={apiKey}
@@ -98,7 +100,7 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
           {cardNames.length === 0 && (
             <tr>
               <td colSpan={apiKeys.length + 2} className="cache-cell is-empty">
-                No saved searches
+                {t('cache.search.empty')}
               </td>
             </tr>
           )}
@@ -121,7 +123,7 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
         </tbody>
       </table>
       <div className="cache-manager-footer">
-        <ActionButton icon={<CloseIcon />} onClick={onClose}>Close</ActionButton>
+        <ActionButton icon={<CloseIcon />} onClick={onClose}>{t('common.close')}</ActionButton>
       </div>
     </div>
   );

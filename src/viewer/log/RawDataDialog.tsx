@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -60,6 +61,7 @@ interface RawDataDialogProps {
 }
 
 const RawDataDialog: React.FC<RawDataDialogProps> = ({ rawData, onClose }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [expandAll, setExpandAll] = useState(false);
   const parsed = useMemo(() => (rawData ? parseRawResponse(rawData) : null), [rawData]);
@@ -86,8 +88,8 @@ const RawDataDialog: React.FC<RawDataDialogProps> = ({ rawData, onClose }) => {
       TransitionProps={{ onExited: () => { setCopied(false); setExpandAll(false); } }}
     >
       <DialogTitle>
-        Raw API Response
-        <IconButton aria-label="Close" onClick={onClose} className="dialog-close-button">
+        {t('log.raw.title')}
+        <IconButton aria-label={t('common.close')} onClick={onClose} className="dialog-close-button">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -105,13 +107,13 @@ const RawDataDialog: React.FC<RawDataDialogProps> = ({ rawData, onClose }) => {
       <DialogActions>
         {parsed?.kind === 'json' && (
           <button className="button" onClick={() => setExpandAll(prev => !prev)}>
-            {expandAll ? 'Collapse all' : 'Expand all'}
+            {expandAll ? t('log.raw.collapseAll') : t('log.raw.expandAll')}
           </button>
         )}
         <button className="button" onClick={handleCopy}>
-          {copied ? 'Copied ✓' : 'Copy to Clipboard'}
+          {copied ? t('log.raw.copied') : t('log.raw.copy')}
         </button>
-        <button className="button" onClick={onClose}>Close</button>
+        <button className="button" onClick={onClose}>{t('common.close')}</button>
       </DialogActions>
     </Dialog>
   );

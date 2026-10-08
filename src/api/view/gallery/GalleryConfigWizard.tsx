@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -38,25 +39,25 @@ export interface GalleryConfigFormState {
 }
 
 const GALLERY_CONFIG_FIELDS: ConfigField[] = [
-  { group: 'Base Info', name: 'name', label: 'Name', required: true },
-  { group: 'Base Info', name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS },
-  { group: 'Base Info', name: 'officialWebsite', label: 'Official Website' },
-  { group: 'Request', name: 'method', label: 'Method', type: 'select', options: [['GET', 'GET'], ['POST', 'POST']] },
-  { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['html', 'HTML']] },
-  { group: 'Request', name: 'baseUrl', label: 'Base URL' },
-  { group: 'Request', name: 'parameterMap', label: 'Parameter Map', type: 'json', title: 'Each entry becomes an input field. Leave empty if the source needs no input' },
-  { group: 'Request', name: 'linkPattern', label: 'Link Pattern', title: 'Regex with named groups, e.g. (?<id>\\d+). The groups fill {id} etc. in the Base URL; with Link Pattern or Credential the backend fetches the source' },
-  { group: 'Request', name: 'followInputRedirects', label: 'Follow Link Redirects', type: 'checkbox', title: 'If the link does not match the pattern, follow its redirects first (short and share links)' },
-  { group: 'Request', name: 'credential', label: 'Credential', title: 'Name of a credential stored by the server operator (e.g. reddit). Cookie or token stay on the server and are only sent to the matching host' },
-  { group: 'Locator', name: 'paginationField', label: 'Pagination Field' },
-  { group: 'Locator', name: 'dataListField', label: 'Data List Field' },
-  { group: 'Locator', name: 'nameField', label: 'Name Field' },
-  { group: 'Locator', name: 'imageUrlField', label: 'Image URL Field' },
-  { group: 'Locator', name: 'imageUrlPattern', label: 'Image URL Pattern', title: 'Regex on the image URL read. If it does not match, the entry is dropped (e.g. videos, subfolders)' },
-  { group: 'Locator', name: 'imageUrlReplacement', label: 'Image URL Replacement', title: 'Replacement for the pattern, groups as $1, e.g. https://i.redd.it/$1' },
-  { group: 'Locator', name: 'namePattern', label: 'Name Pattern', title: 'Regex on the name read, e.g. \\.\\w+$ for the file extension' },
-  { group: 'Locator', name: 'nameReplacement', label: 'Name Replacement', title: 'Replacement for the pattern, empty = remove' },
-  { group: 'Locator', name: 'defaultLanguage', label: 'Default Language', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'Language for cards where the source provides no language' },
+  { group: 'configCommon.groups.baseInfo', name: 'name', label: 'configCommon.fields.name', required: true },
+  { group: 'configCommon.groups.baseInfo', name: 'category', label: 'configCommon.fields.category', type: 'select', options: CATEGORY_OPTIONS },
+  { group: 'configCommon.groups.baseInfo', name: 'officialWebsite', label: 'configCommon.fields.officialWebsite' },
+  { group: 'configCommon.groups.request', name: 'method', label: 'configCommon.fields.method', type: 'select', options: [['GET', 'configCommon.options.get'], ['POST', 'configCommon.options.post']] },
+  { group: 'configCommon.groups.request', name: 'dataFormat', label: 'configCommon.fields.dataFormat', type: 'select', options: [['json', 'configCommon.options.json'], ['html', 'configCommon.options.html']] },
+  { group: 'configCommon.groups.request', name: 'baseUrl', label: 'configCommon.fields.baseUrl' },
+  { group: 'configCommon.groups.request', name: 'parameterMap', label: 'configCommon.fields.parameterMap', type: 'json', title: 'galleryConfig.titles.parameterMap' },
+  { group: 'configCommon.groups.request', name: 'linkPattern', label: 'configCommon.fields.linkPattern', title: 'galleryConfig.titles.linkPattern' },
+  { group: 'configCommon.groups.request', name: 'followInputRedirects', label: 'galleryConfig.fields.followInputRedirects', type: 'checkbox', title: 'galleryConfig.titles.followInputRedirects' },
+  { group: 'configCommon.groups.request', name: 'credential', label: 'galleryConfig.fields.credential', title: 'galleryConfig.titles.credential' },
+  { group: 'configCommon.groups.locator', name: 'paginationField', label: 'configCommon.fields.paginationField' },
+  { group: 'configCommon.groups.locator', name: 'dataListField', label: 'configCommon.fields.dataListField' },
+  { group: 'configCommon.groups.locator', name: 'nameField', label: 'configCommon.fields.nameField' },
+  { group: 'configCommon.groups.locator', name: 'imageUrlField', label: 'configCommon.fields.imageUrlField' },
+  { group: 'configCommon.groups.locator', name: 'imageUrlPattern', label: 'galleryConfig.fields.imageUrlPattern', title: 'galleryConfig.titles.imageUrlPattern' },
+  { group: 'configCommon.groups.locator', name: 'imageUrlReplacement', label: 'galleryConfig.fields.imageUrlReplacement', title: 'galleryConfig.titles.imageUrlReplacement' },
+  { group: 'configCommon.groups.locator', name: 'namePattern', label: 'galleryConfig.fields.namePattern', title: 'galleryConfig.titles.namePattern' },
+  { group: 'configCommon.groups.locator', name: 'nameReplacement', label: 'galleryConfig.fields.nameReplacement', title: 'galleryConfig.titles.nameReplacement' },
+  { group: 'configCommon.groups.locator', name: 'defaultLanguage', label: 'configCommon.fields.defaultLanguage', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'configCommon.titles.defaultLanguage' },
 ];
 
 interface GalleryConfigWizardProps {
@@ -69,6 +70,7 @@ interface GalleryConfigWizardProps {
 }
 
 const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPublish, onDelete, onCopy, initialConfig }) => {
+  const { t } = useTranslation();
   const [isOwner, setIsOwner] = useState(false);
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [config, setConfig] = useState<GalleryConfigFormState>({
@@ -172,7 +174,7 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
 
   return (
     <div className="wizard-container">
-      <h1 className='title is-4'>Config Settings</h1>
+      <h1 className='title is-4'>{t('configCommon.configSettings')}</h1>
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
         <ConfigFieldTable
           fields={GALLERY_CONFIG_FIELDS}
@@ -185,14 +187,14 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
         <div className="config-actions">
           {isOwner ? (
             <>
-              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>Save</ActionButton>
+              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>{t('common.save')}</ActionButton>
               <ActionButton icon={config.published ? <LockIcon /> : <PublicIcon />} onClick={handlePublish}>
-                {config.published ? 'Unpublish' : 'Publish'}
+                {config.published ? t('configCommon.unpublish') : t('configCommon.publish')}
               </ActionButton>
-              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>Delete</ActionButton>
+              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>{t('common.delete')}</ActionButton>
             </>
           ) : null}
-          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>Copy Config</ActionButton>
+          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>{t('configCommon.copyConfig')}</ActionButton>
         </div>
       </form>
     </div>

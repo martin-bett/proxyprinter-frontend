@@ -24,16 +24,32 @@ const JOYRIDE_STYLES = {
   buttonSkip: { color: 'var(--text-muted)' },
 };
 
-const resolveStep = ({ fallbackTarget, openSections, closeSections, ...step }: TutorialStep): Step => {
-  const missing = typeof step.target === 'string' && !document.querySelector(step.target);
-  return { disableBeacon: true, ...step, target: fallbackTarget && missing ? fallbackTarget : step.target };
-};
+// Titel und Texte der Schritte sind i18n-Schlüssel und werden erst hier übersetzt
+type Translate = (key: string) => string;
 
-const LOCALE = { back: 'Back', close: 'Close', last: 'Done', next: 'Next', nextLabelWithProgress: 'Next ({step} of {steps})', skip: 'Skip' };
+const resolveStep = (translate: Translate) => ({ fallbackTarget, openSections, closeSections, ...step }: TutorialStep): Step => {
+  const missing = typeof step.target === 'string' && !document.querySelector(step.target);
+  return {
+    disableBeacon: true,
+    ...step,
+    title: typeof step.title === 'string' ? translate(step.title) : step.title,
+    content: typeof step.content === 'string' ? translate(step.content) : step.content,
+    target: fallbackTarget && missing ? fallbackTarget : step.target,
+  };
+};
 
 // "?"-Bubble neben dem Theme-Chooser: Liste der Tutorials, die Auswahl startet die Joyride-Tour
 const TutorialMenu: React.FC = () => {
-  const { t: translate } = useTranslation();
+  const { t } = useTranslation();
+  const translate: Translate = (key) => t(key as 'tutorials.title');
+  const locale = {
+    back: t('common.back'),
+    close: t('common.close'),
+    last: t('common.done'),
+    next: t('common.next'),
+    nextLabelWithProgress: t('tour.locale.nextWithProgress'),
+    skip: t('tour.locale.skip'),
+  };
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [tutorial, setTutorial] = useState<Tutorial | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -90,8 +106,8 @@ const TutorialMenu: React.FC = () => {
       <button
         className="memory-button tutorial-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        title={translate('tutorials.title')}
-        aria-label={translate('tutorials.title')}
+        title={t('tutorials.title')}
+        aria-label={t('tutorials.title')}
         aria-haspopup="menu"
       >
         ?
@@ -100,18 +116,18 @@ const TutorialMenu: React.FC = () => {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
-        MenuListProps={{ className: 'tutorial-menu', subheader: <li className="tutorial-menu-header">{translate('tutorials.title')}</li> }}
+        MenuListProps={{ className: 'tutorial-menu', subheader: <li className="tutorial-menu-header">{t('tutorials.title')}</li> }}
       >
-        {TUTORIALS.map(t => (
-          <MenuItem key={t.id} className="tutorial-menu-item" onClick={() => start(t)}>
-            {t.title}
+        {TUTORIALS.map(tut => (
+          <MenuItem key={tut.id} className="tutorial-menu-item" onClick={() => start(tut)}>
+            {translate(tut.title)}
           </MenuItem>
         ))}
       </Menu>
       {tutorial && (
         <Joyride
           key={tutorial.id}
-          steps={tutorial.steps.map(resolveStep)}
+          steps={tutorial.steps.map(resolveStep(translate))}
           stepIndex={stepIndex}
           run
           continuous
@@ -119,7 +135,7 @@ const TutorialMenu: React.FC = () => {
           showSkipButton
           scrollOffset={120}
           callback={handleCallback}
-          locale={LOCALE}
+          locale={locale}
           styles={JOYRIDE_STYLES}
         />
       )}

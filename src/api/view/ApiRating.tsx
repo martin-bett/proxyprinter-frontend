@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import Skeleton from '@mui/material/Skeleton';
 import { Config } from '../../service/ApiFactory';
@@ -16,6 +17,7 @@ interface ApiRatingProps {
 }
 
 const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
+  const { t } = useTranslation();
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [config, setConfig] = useState<Config | (Pick<Config, 'ratingValue' | 'ratingCount' | 'averageRating'> & { id?: number })>({ ratingValue: 0, ratingCount: 0, averageRating: 0 });
   const [ratings, setRatings] = useState<Rating[]>([]);
@@ -175,17 +177,17 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
   return (
     <>
     <div className="rating-container">
-      <div className="rating-title">Rating</div>
+      <div className="rating-title">{t('rating.title')}</div>
       <div className="is-flex is-justify-content-center" style={{ gap: '4rem' }}>
         <div className="is-flex is-flex-direction-column is-align-items-center" style={{ gap: '0.75rem' }}>
-          <span className="rating-label">Availability</span>
+          <span className="rating-label">{t('rating.availability')}</span>
           <RatingStars
             score={currentRating.scoreAvailability}
             onRatingClick={(score) => config.id !== undefined && handleRating(config.id, score, 'availability')}
           />
         </div>
         <div className="is-flex is-flex-direction-column is-align-items-center" style={{ gap: '0.75rem' }}>
-          <span className="rating-label">Quality</span>
+          <span className="rating-label">{t('rating.quality')}</span>
           <RatingStars
             score={currentRating.scoreQuality}
             onRatingClick={(score) => config.id !== undefined && handleRating(config.id, score, 'quality')}

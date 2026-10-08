@@ -1,3 +1,4 @@
+import i18n from '../../i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   RestoredState, Snapshot, WorkState, createSnapshot, customUploadIds, isEmptySnapshot, isEmptyState, overwriteSnapshot, restoreSnapshot, snapshotLabel,
@@ -194,7 +195,7 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
       await refreshList();
     } catch (error) {
       console.error('Could not save snapshot', error);
-      setNotice('The snapshot could not be saved.');
+      setNotice(i18n.t('snapshot.saveFailed'));
     }
   }, [refreshList, setActive]);
 
@@ -230,7 +231,7 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
     lastSessionHash.current = null;
     setRestorable(null);
     setNotice(droppedCustomCards > 0
-      ? `${droppedCustomCards} custom ${droppedCustomCards === 1 ? 'card is' : 'cards are'} no longer available on the server, please upload again.`
+      ? i18n.t('snapshot.customCardsGone', { count: droppedCustomCards })
       : null);
     const all = await refreshList();
     refreshPdfInfos(all);
@@ -239,8 +240,8 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
   /** Ersetzt den Inhalt eines Snapshots durch den aktuellen Stand, Name bleibt */
   const overwrite = useCallback(async (snapshot: Snapshot) => {
     if (isEmptyState(stateRef.current)) return;
-    const pdfNote = snapshot.pdf.generated ? '\nThe link to its PDF will be removed.' : '';
-    if (!window.confirm(`Overwrite "${snapshotLabel(snapshot)}" with the current state?${pdfNote}`)) return;
+    const pdfNote = snapshot.pdf.generated ? '\n' + i18n.t('snapshot.pdfLinkRemoved') : '';
+    if (!window.confirm(i18n.t('snapshot.confirmOverwrite', { label: snapshotLabel(snapshot) }) + pdfNote)) return;
     const updated = overwriteSnapshot(snapshot, stateRef.current);
     try {
       await putSnapshot(updated);
@@ -252,12 +253,12 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
       refreshPdfInfos(all);
     } catch (error) {
       console.error('Could not overwrite snapshot', error);
-      setNotice('The snapshot could not be saved.');
+      setNotice(i18n.t('snapshot.saveFailed'));
     }
   }, [refreshList, refreshPdfInfos, setActive]);
 
   const rename = useCallback(async (snapshot: Snapshot) => {
-    const name = window.prompt('Snapshot name', snapshotLabel(snapshot));
+    const name = window.prompt(i18n.t('snapshot.namePrompt'), snapshotLabel(snapshot));
     if (name === null) return;
     const custom = name.trim();
     await putSnapshot({ ...snapshot, label: { ...snapshot.label, custom: custom || undefined } });
@@ -265,14 +266,14 @@ export function useSnapshots({ state, isBusy, apply }: Options) {
   }, [refreshList]);
 
   const remove = useCallback(async (snapshot: Snapshot) => {
-    if (!window.confirm(`Delete snapshot "${snapshotLabel(snapshot)}"?`)) return;
+    if (!window.confirm(i18n.t('snapshot.confirmDelete', { label: snapshotLabel(snapshot) }))) return;
     await deleteSnapshot(snapshot.id);
     if (snapshot.id === activeIdRef.current) setActive(null);
     await refreshList();
   }, [refreshList, setActive]);
 
   const removeAll = useCallback(async () => {
-    if (!window.confirm('Delete all snapshots stored in this browser?')) return;
+    if (!window.confirm(i18n.t('snapshot.confirmDeleteAll'))) return;
     await deleteAllSnapshots();
     setActive(null);
     lastSessionHash.current = null;
