@@ -17,6 +17,7 @@ pick and crop images, generate a printable proxy PDF. Backend lives in `martin-b
 - `api/view/` – config dialogs and wizards for API, gallery and deckfinder configs
 - `container/` – shared UI pieces (`inputs/` with `CollapsibleSection`, `ActionButton`, …)
 - `theme/` – theme chooser and theme definitions
+- `i18n/` – i18next setup, `locales/en.json`, language chooser (flag bubble next to the `?` bubble). New UI texts go in `en.json` and are used via `useTranslation`; the UI language never changes card language filters. Concept: `concepts/mehrsprachigkeit.md` in the project files.
 - Configs are loaded from the backend (`/api/configs`). `src/api/configs/*.ts` is not imported anywhere.
 - Tests sit next to the code as `*.test.ts(x)`; tests touching IndexedDB import `fake-indexeddb/auto` themselves.
 
