@@ -1,8 +1,8 @@
 import React, { useCallback, useRef, useState } from 'react';
-import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS } from 'react-joyride';
+import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS, Step } from 'react-joyride';
 import { Menu, MenuItem } from '@mui/material';
 import { isSectionOpen, setSectionOpen } from './sectionControl';
-import { Tutorial, TUTORIALS } from './tutorials';
+import { Tutorial, TutorialStep, TUTORIALS } from './tutorials';
 import '../viewer/cache/MemoryButtons.css';
 import './TutorialMenu.css';
 
@@ -21,6 +21,11 @@ const JOYRIDE_STYLES = {
   tooltipContent: { padding: '12px 4px 4px', textAlign: 'left' as const },
   buttonBack: { color: 'var(--text-muted)' },
   buttonSkip: { color: 'var(--text-muted)' },
+};
+
+const resolveStep = ({ fallbackTarget, openSections, closeSections, ...step }: TutorialStep): Step => {
+  const missing = typeof step.target === 'string' && !document.querySelector(step.target);
+  return { disableBeacon: true, ...step, target: fallbackTarget && missing ? fallbackTarget : step.target };
 };
 
 const LOCALE = { back: 'Back', close: 'Close', last: 'Done', next: 'Next', nextLabelWithProgress: 'Next ({step} of {steps})', skip: 'Skip' };
@@ -104,7 +109,7 @@ const TutorialMenu: React.FC = () => {
       {tutorial && (
         <Joyride
           key={tutorial.id}
-          steps={tutorial.steps.map(step => ({ disableBeacon: true, ...step }))}
+          steps={tutorial.steps.map(resolveStep)}
           stepIndex={stepIndex}
           run
           continuous

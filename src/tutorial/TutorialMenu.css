@@ -20,3 +20,10 @@
 .MuiMenuItem-root.tutorial-menu-item {
   font-size: 0.95rem;
 }
+
+/* Die Seite ist per html { zoom } verkleinert. Joyride misst Ziele in sichtbaren Pixeln und zeichnet
+   Spotlight und Tooltip im gezoomten Body, daher Zoom hier aufheben, sonst sitzen sie um 10 % daneben. */
+#react-joyride-portal,
+.__floater {
+  zoom: calc(1 / var(--page-zoom));
+}

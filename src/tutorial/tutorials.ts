@@ -8,6 +8,8 @@ export interface TutorialStep extends Step {
   openSections?: string[];
   /** Abschnitte (storageKey), die vor diesem Schritt zugeklappt werden */
   closeSections?: string[];
+  /** Ersatzziel, wenn target gerade nicht im DOM steht (z. B. erste Karte bei leerem Deck) */
+  fallbackTarget?: string;
 }
 
 export interface Tutorial {
@@ -63,7 +65,8 @@ export const TUTORIALS: Tutorial[] = [
         placement: 'right',
       },
       {
-        target: tour('card-grid'),
+        target: `${tour('card-grid')} .card-tile`,
+        fallbackTarget: '.decklist-viewer',
         title: 'Your deck',
         content: 'Every card gets a tile. Click a tile to pick a different image, use + and − to change the count.',
         placement: 'auto',
@@ -140,7 +143,8 @@ export const TUTORIALS: Tutorial[] = [
         placement: 'left',
       },
       {
-        target: tour('card-grid'),
+        target: `${tour('card-grid')} .card-tile`,
+        fallbackTarget: '.decklist-viewer',
         title: 'Pick and crop images',
         content: 'Click a tile to see all images found for that card and choose another one. '
           + 'Your own images can be cropped again with the crop button on their tile.',
@@ -223,7 +227,8 @@ export const TUTORIALS: Tutorial[] = [
         placement: 'left',
       },
       {
-        target: tour('card-grid'),
+        target: `${tour('card-grid')} .card-tile`,
+        fallbackTarget: '.decklist-viewer',
         title: 'Effect on your deck',
         content: 'A card you picked by hand stays picked as long as it matches the filters. '
           + 'Tiles without any matching image are marked. The image selection dialog has the same filters.',
