@@ -10,6 +10,9 @@ const flatten = (obj: Record<string, unknown>, prefix = ''): Record<string, stri
       ? { ...acc, ...flatten(v as Record<string, unknown>, key) }
       : { ...acc, [key]: String(v) };
   }, {});
+// Plural variants differ per language (ru has few/many, ja/zh only other), so compare the base keys.
+const PLURAL = /_(zero|one|two|few|many|other)$/;
+const baseKeys = (keys: string[]) => Array.from(new Set(keys.map(k => k.replace(PLURAL, '')))).sort();
 const placeholders = (s: string) => (s.match(/{{\s*\w+\s*}}/g) ?? []).map(p => p.replace(/\s/g, '')).sort();
 
 describe('locales', () => {
@@ -23,7 +26,12 @@ describe('locales', () => {
   it.each(others.length ? others : [null])('%s has the same keys and placeholders as en.json', file => {
     if (!file) return;
     const other = flatten(JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')));
-    expect(Object.keys(other).sort()).toEqual(Object.keys(base).sort());
-    Object.keys(base).forEach(key => expect([key, placeholders(other[key])]).toEqual([key, placeholders(base[key])]));
+    expect(baseKeys(Object.keys(other))).toEqual(baseKeys(Object.keys(base)));
+    Object.keys(base).forEach(key => {
+      const variant = other[key] ?? other[key.replace(PLURAL, '_other')];
+      expect(variant).toBeDefined();
+      // {{count}} may be dropped in a singular variant ("a card"), so only compare non-plural keys strictly
+      if (!PLURAL.test(key)) expect([key, placeholders(variant)]).toEqual([key, placeholders(base[key])]);
+    });
   });
 });
