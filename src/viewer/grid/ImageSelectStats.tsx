@@ -45,8 +45,9 @@ const ImageSelectStats: React.FC<ImageSelectStatsProps> = ({ open, cardName, cou
 
   return (
     <div className="image-select-stats">
-      <span className="image-select-stat" title={rate > 0 ? `Downloading · ${formatRate(rate)}` : 'Downloading'}>
+      <span className="image-select-stat" title="Downloading">
         <DownloadIcon fontSize="small" /> <b>{counts.loading}</b>
+        <span className="image-select-stat-value">({formatRate(rate)})</span>
       </span>
       <span className="image-select-stat" title="Queued">
         <AccessTimeIcon fontSize="small" /> <b>{counts.queued}</b>
@@ -56,7 +57,7 @@ const ImageSelectStats: React.FC<ImageSelectStatsProps> = ({ open, cardName, cou
       </span>
       <span className="image-select-stat" title="Cached images of this card">
         <StorageIcon fontSize="small" /> <b>{cache.count}</b>
-        <span className="image-select-stat-size">({formatMegabytes(cache.bytes)})</span>
+        <span className="image-select-stat-value">({formatMegabytes(cache.bytes)})</span>
       </span>
       <button
         type="button"

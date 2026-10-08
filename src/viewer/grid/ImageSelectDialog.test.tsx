@@ -107,10 +107,10 @@ it('zählt Downloads und fertige Kacheln in der Zeile oben', async () => {
     />
   );
   await waitFor(() => expect(screen.getByTitle('Loaded').textContent).toContain('2'));
-  expect(screen.getByTitle(/^Downloading/).textContent).toContain('2');
+  expect(screen.getByTitle('Downloading').textContent).toContain('2');
   expect(screen.getByTitle('Queued').textContent).toContain('0');
-  // Hinweis der Downloads nennt die gebündelte Rate, solange etwas lädt
-  await waitFor(() => expect(screen.getByTitle('Downloading · 1.5 MB/s')).toBeTruthy());
+  // Die gebündelte Download-Rate steht immer neben dem Zähler
+  await waitFor(() => expect(screen.getByTitle('Downloading').textContent).toContain('(1.5 MB/s)'));
 });
 
 describe('Blättern zur nächsten/vorherigen Karte im Deck', () => {
