@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, MenuItem } from '@mui/material';
 import PaletteIcon from '@mui/icons-material/Palette';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme } from './ThemeContext';
 import { AppTheme } from './themes';
 import ManaSymbol from './ManaSymbol';
@@ -27,6 +28,7 @@ const ThemeIcon: React.FC<{ theme: AppTheme; size: 'button' | 'menu' }> = ({ the
 
 // Bubble oben links, im selben Stil wie die Cache-Bubbles oben rechts; nur Symbole, Namen als Tooltip
 const ThemeChooser: React.FC = () => {
+  const { t } = useTranslation();
   const { theme, themes, setThemeId } = useAppTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
@@ -35,8 +37,8 @@ const ThemeChooser: React.FC = () => {
       <button
         className="memory-button theme-chooser-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        title={`Farbschema: ${theme.name}`}
-        aria-label={`Choose color scheme (current: ${theme.name})`}
+        title={t('themeChooser.title', { name: theme.name })}
+        aria-label={t('themeChooser.aria', { name: theme.name })}
         aria-haspopup="menu"
       >
         <ThemeIcon theme={theme} size="button" />
@@ -47,16 +49,16 @@ const ThemeChooser: React.FC = () => {
         onClose={() => setAnchorEl(null)}
         MenuListProps={{ className: 'theme-chooser-menu' }}
       >
-        {themes.map(t => (
+        {themes.map(th => (
           <MenuItem
-            key={t.id}
-            selected={t.id === theme.id}
+            key={th.id}
+            selected={th.id === theme.id}
             className="theme-chooser-item"
-            title={t.name}
-            aria-label={t.name}
-            onClick={() => { setThemeId(t.id); setAnchorEl(null); }}
+            title={th.name}
+            aria-label={th.name}
+            onClick={() => { setThemeId(th.id); setAnchorEl(null); }}
           >
-            <ThemeIcon theme={t} size="menu" />
+            <ThemeIcon theme={th} size="menu" />
           </MenuItem>
         ))}
       </Menu>

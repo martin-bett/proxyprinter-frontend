@@ -199,7 +199,7 @@ const CropMask: React.FC<CropMaskProps> = ({
 
   const imageStyle = display ? { width: display.width, height: display.height } : undefined;
   const image = (
-    <img src={src} alt="Zuschnitt" style={imageStyle} />
+    <img src={src} alt="Crop" style={imageStyle} />
   );
 
   // Cut-Vorschau: weggeschnittene Ränder abdunkeln, Kacheln nummerieren
@@ -298,7 +298,7 @@ const CropMask: React.FC<CropMaskProps> = ({
             minHeight={10}
             onChange={(_, percentCrop) => { setDraft({}); setTouched(true); setCrop(percentCrop); }}
           >
-            <img src={src} alt="Zuschnitt" style={imageStyle} />
+            <img src={src} alt="Crop" style={imageStyle} />
           </ReactCrop>
         )}
         {!loadError && natural && mode === 'cut' && renderCutPreview()}

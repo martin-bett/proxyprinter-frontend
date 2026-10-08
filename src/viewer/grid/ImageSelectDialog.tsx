@@ -23,10 +23,10 @@ const NO_LANGUAGE = 'No Language';
 // laufen unter "unrated", damit sie standardmäßig sichtbar bleiben und überhaupt gemessen werden.
 type QualityFilter = 'good' | 'ok' | 'poor' | 'unrated';
 const QUALITY_FILTERS: { key: QualityFilter; label: string }[] = [
-  { key: 'good', label: 'Gut lesbar' },
-  { key: 'ok', label: 'Etwas weich' },
-  { key: 'poor', label: 'Schlecht lesbar' },
-  { key: 'unrated', label: 'Nicht bewertet' },
+  { key: 'good', label: 'Clearly readable' },
+  { key: 'ok', label: 'Slightly soft' },
+  { key: 'poor', label: 'Hard to read' },
+  { key: 'unrated', label: 'Not rated' },
 ];
 
 const qualityFilterOf = (result: CardResult): QualityFilter => {

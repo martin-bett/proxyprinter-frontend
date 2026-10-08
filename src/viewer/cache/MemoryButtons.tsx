@@ -60,13 +60,13 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
       <div className="memory-buttons-bar" data-tour="memory-buttons">
         {downloadsMounted && (
           <>
-            <button className={`memory-button ${fadeClass}`} data-tour="queue-waiting" title="Wartende Downloads" onClick={openQueueDialog}>
+            <button className={`memory-button ${fadeClass}`} data-tour="queue-waiting" title="Waiting downloads" onClick={openQueueDialog}>
               <AccessTimeIcon />
               <span className="memory-button-count">{queued}</span>
             </button>
             <button
               className={`memory-button ${fadeClass}`}
-              title={downloadRate > 0 ? `Aktive Downloads · ${formatRate(downloadRate)}` : 'Aktive Downloads'}
+              title={downloadRate > 0 ? `Active downloads · ${formatRate(downloadRate)}` : 'Active downloads'}
               onClick={openQueueDialog}
             >
               <DownloadIcon />
@@ -78,11 +78,11 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
           <UploadIcon />
           <span className="memory-button-count">{cacheLoading}</span>
         </button>
-        <button className="memory-button" data-tour="search-cache" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
+        <button className="memory-button" data-tour="search-cache" title="Show search cache" onClick={() => setSearchCacheDialogOpen(true)}>
           <SearchIcon />
           <span className="memory-button-count">{searchCount}</span>
         </button>
-        <button className="memory-button" data-tour="image-cache" title="Cache anzeigen" onClick={openImageCacheDialog}>
+        <button className="memory-button" data-tour="image-cache" title="Show image cache" onClick={openImageCacheDialog}>
           <CacheProgressBar width={120} />
         </button>
         <button

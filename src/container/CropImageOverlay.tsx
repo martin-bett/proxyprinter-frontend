@@ -105,7 +105,7 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
                 <td>{selectedImage.set}{selectedImage.setNumber ? ` (${selectedImage.setNumber})` : ""}</td>
               </tr>
               <tr><td>API:</td><td>{selectedImage.apiName}</td></tr>
-              <tr><td>Sprache:</td><td>{selectedImage.languageCode || "—"}</td></tr>
+              <tr><td>Language:</td><td>{selectedImage.languageCode || "—"}</td></tr>
               {selectedImage.imageInfo && (
                 <tr>
                   <td>Image size:</td>
@@ -117,7 +117,7 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
               )}
               {hasCrop && (
                 <tr>
-                  <td>Zuschnitt:</td>
+                  <td>Crop:</td>
                   <td>{crop!.width} × {crop!.height} from {crop!.offSetX || 0}, {crop!.offSetY || 0}</td>
                 </tr>
               )}

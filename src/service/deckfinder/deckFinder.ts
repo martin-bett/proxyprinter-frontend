@@ -156,7 +156,7 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('Antwort ist kein JSON. Stimmt das Data Format der Config?');
+    throw new Error('The response is not JSON. Does the config\'s data format match?');
   }
   const listFields = splitList(config.entryListFields);
   if (listFields.length === 0) throw new Error('The config has no entry list fields.');

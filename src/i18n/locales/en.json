@@ -1,0 +1,14 @@
+{
+  "themeChooser": {
+    "title": "Color scheme: {{name}}",
+    "aria": "Choose color scheme (current: {{name}})"
+  },
+  "tutorials": {
+    "title": "Tutorials"
+  },
+  "language": {
+    "title": "Interface language: {{name}}",
+    "aria": "Choose interface language (current: {{name}})",
+    "hint": "Card languages and image filters are set separately."
+  }
+}

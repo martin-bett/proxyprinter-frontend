@@ -162,7 +162,7 @@ describe("ImageLoaderService mit Proxy Images", () => {
     for (let i = 0; i < 10 && errors.length < 1; i++) await new Promise(r => setTimeout(r, 50));
     await add();
     await flush();
-    expect(errors).toEqual(["Bild nicht ladbar: HTTP 308", "Bild nicht ladbar: HTTP 308"]);
+    expect(errors).toEqual(["Image could not be loaded: HTTP 308", "Image could not be loaded: HTTP 308"]);
     expect((global as any).fetch).toHaveBeenCalledTimes(1);
   });
 

@@ -15,14 +15,14 @@ const DECK_FINDER_FIELDS: ConfigField[] = [
   { group: 'Base Info', name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS },
   { group: 'Base Info', name: 'officialWebsite', label: 'Official Website' },
   { group: 'Request', name: 'linkPattern', label: 'Link Pattern', title: 'Regex for deck links; the group (?<id>...) provides the deck ID' },
-  { group: 'Request', name: 'fetchUrl', label: 'Fetch URL', title: 'Abruf-URL mit {id}' },
+  { group: 'Request', name: 'fetchUrl', label: 'Fetch URL', title: 'Fetch URL with {id}' },
   { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['text', 'Text']] },
   { group: 'Locator', name: 'deckNameField', label: 'Deck Name Field' },
   { group: 'Locator', name: 'entryListFields', label: 'Entry List Fields', title: 'Paths to the card lists, comma-separated. "*" = all values of an object, "Sideboard=path" assigns the list to a board' },
   { group: 'Locator', name: 'quantityField', label: 'Quantity Field' },
   { group: 'Locator', name: 'nameField', label: 'Name Field' },
   { group: 'Locator', name: 'setField', label: 'Set Field' },
-  { group: 'Locator', name: 'numberField', label: 'Number Field', title: 'Sammlernummer, nur zusammen mit Set' },
+  { group: 'Locator', name: 'numberField', label: 'Number Field', title: 'Collector number, only together with set' },
   { group: 'Locator', name: 'boardField', label: 'Board Field', title: 'Category or categories of an entry, text or list' },
   { group: 'Locator', name: 'optionalBoards', label: 'Optional Boards', title: 'Boards that are only loaded on request, comma-separated (for text: section headers)' },
   { group: 'Search', name: 'searchUrl', label: 'Search URL', title: 'Search URL with {query} and optional {page}' },
@@ -31,7 +31,7 @@ const DECK_FINDER_FIELDS: ConfigField[] = [
   { group: 'Search', name: 'searchNameField', label: 'Deck Name Field' },
   { group: 'Search', name: 'searchOwnerField', label: 'Owner Field' },
   { group: 'Search', name: 'searchImageField', label: 'Image Field' },
-  { group: 'Search', name: 'searchInfoField', label: 'Info Field', title: 'z. B. Kartenanzahl' },
+  { group: 'Search', name: 'searchInfoField', label: 'Info Field', title: 'e.g. card count' },
 ];
 
 interface DeckFinderConfigManagerProps {

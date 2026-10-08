@@ -58,7 +58,7 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
 
   return (
     <div className="cache-manager-dialog search-cache-manager-dialog">
-      <h2>Such-Cache</h2>
+      <h2>Search cache</h2>
       <div className="cache-manager-head">
         <div className="cache-manager-usage">
           <span>{allEntries.length} gespeicherte Suchen</span>
@@ -85,7 +85,7 @@ export default function SearchCacheManagerDialog({ open, onClose, onChange }: Se
         </thead>
         <tbody>
           <tr className="cache-sum-row">
-            <th className="cache-row-label">API gesamt</th>
+            <th className="cache-row-label">All APIs</th>
             {apiKeys.map(apiKey => (
               <SearchCell
                 key={apiKey}

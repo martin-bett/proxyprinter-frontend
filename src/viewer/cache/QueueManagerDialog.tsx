@@ -44,7 +44,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
     <div className="queue-manager-dialog" style={{ background: "var(--surface)", color: "var(--text)", padding: 24, borderRadius: 8, maxWidth: 900, margin: "40px auto" }}>
       <h2>Queue Manager</h2>
       <div style={{ marginBottom: 12 }}>
-        <b>API abbrechen:</b>{" "}
+        <b>Cancel API:</b>{" "}
         {apis.map(api => (
           <button key={api} style={{ margin: 2 }} onClick={() => imageLoaderService.stopQueueForApi(api)}>
             {api}
@@ -52,7 +52,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
         ))}
       </div>
       <div style={{ marginBottom: 12 }}>
-        <b>Sprache abbrechen:</b>{" "}
+        <b>Cancel language:</b>{" "}
         {languages.map(lang => (
           <button key={lang} style={{ margin: 2 }} onClick={() => imageLoaderService.stopQueueForLanguage(lang)}>
             {lang}
@@ -63,12 +63,12 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
         <thead>
           <tr>
             <th style={cellStyle}>API</th>
-            <th style={cellStyle}>Sprache</th>
-            <th style={cellStyle}>Kartenname</th>
+            <th style={cellStyle}>Language</th>
+            <th style={cellStyle}>Card name</th>
             <th style={cellStyle}>URL</th>
             <th style={cellStyle}>Priority</th>
-            <th style={cellStyle}>Kategorie</th>
-            <th style={cellStyle}>Aktion</th>
+            <th style={cellStyle}>Category</th>
+            <th style={cellStyle}>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -89,7 +89,7 @@ export default function QueueManagerDialog({ open, onClose }: QueueManagerDialog
               <td style={cellStyle}>{entry.category}</td>
               <td style={cellStyle}>
                 <button
-                  title="Eintrag abbrechen"
+                  title="Cancel entry"
                   onClick={() => imageLoaderService.removeFromQueueByCacheKey(entry.cacheKey)}
                   style={{ background: "none", border: "none", cursor: "pointer" }}
                 >

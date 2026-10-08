@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS, Step } from 'react-joyride';
 import { Menu, MenuItem } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { isSectionOpen, setSectionOpen } from './sectionControl';
 import { Tutorial, TutorialStep, TUTORIALS } from './tutorials';
 import '../viewer/cache/MemoryButtons.css';
@@ -32,6 +33,7 @@ const LOCALE = { back: 'Back', close: 'Close', last: 'Done', next: 'Next', nextL
 
 // "?"-Bubble neben dem Theme-Chooser: Liste der Tutorials, die Auswahl startet die Joyride-Tour
 const TutorialMenu: React.FC = () => {
+  const { t: translate } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [tutorial, setTutorial] = useState<Tutorial | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -88,8 +90,8 @@ const TutorialMenu: React.FC = () => {
       <button
         className="memory-button tutorial-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        title="Tutorials"
-        aria-label="Tutorials"
+        title={translate('tutorials.title')}
+        aria-label={translate('tutorials.title')}
         aria-haspopup="menu"
       >
         ?
@@ -98,7 +100,7 @@ const TutorialMenu: React.FC = () => {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
-        MenuListProps={{ className: 'tutorial-menu', subheader: <li className="tutorial-menu-header">Tutorials</li> }}
+        MenuListProps={{ className: 'tutorial-menu', subheader: <li className="tutorial-menu-header">{translate('tutorials.title')}</li> }}
       >
         {TUTORIALS.map(t => (
           <MenuItem key={t.id} className="tutorial-menu-item" onClick={() => start(t)}>

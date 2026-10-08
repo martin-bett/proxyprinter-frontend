@@ -105,7 +105,7 @@ const RawDataDialog: React.FC<RawDataDialogProps> = ({ rawData, onClose }) => {
       <DialogActions>
         {parsed?.kind === 'json' && (
           <button className="button" onClick={() => setExpandAll(prev => !prev)}>
-            {expandAll ? 'Alles einklappen' : 'Alles ausklappen'}
+            {expandAll ? 'Collapse all' : 'Expand all'}
           </button>
         )}
         <button className="button" onClick={handleCopy}>

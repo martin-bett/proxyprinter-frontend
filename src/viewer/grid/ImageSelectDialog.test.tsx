@@ -52,11 +52,11 @@ it('blendet Bilder nach Druckschärfe aus', () => {
   );
   expect(shown()).toEqual(['scharf', 'weich', 'matsch', 'neu']);
 
-  fireEvent.click(screen.getByLabelText(/^Schlecht lesbar/));
+  fireEvent.click(screen.getByLabelText(/^Hard to read/));
   expect(shown()).toEqual(['scharf', 'weich', 'neu']);
 
-  fireEvent.click(screen.getByLabelText(/^Etwas weich/));
-  fireEvent.click(screen.getByLabelText(/^Nicht bewertet/));
+  fireEvent.click(screen.getByLabelText(/^Slightly soft/));
+  fireEvent.click(screen.getByLabelText(/^Not rated/));
   expect(shown()).toEqual(['scharf']);
 });
 

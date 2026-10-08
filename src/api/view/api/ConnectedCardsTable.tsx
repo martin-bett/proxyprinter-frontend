@@ -6,10 +6,10 @@ import ActionButton from '../../../container/inputs/ActionButton';
 type LocatorField = keyof ConnectedCardLocator;
 
 const COLUMNS: { name: LocatorField; label: string; title: string; placeholder: string }[] = [
-  { name: 'dataListField', label: 'Data List Field', title: 'Liste im Treffer, z.B. all_parts bei Scryfall', placeholder: 'all_parts' },
+  { name: 'dataListField', label: 'Data List Field', title: 'List inside a match, e.g. all_parts on Scryfall', placeholder: 'all_parts' },
   { name: 'nameField', label: 'Name Field', title: 'Name of each entry, searched across all active APIs', placeholder: 'name' },
   { name: 'linkField', label: 'Link Field', title: 'Optional: link to the exact object (same format as a match)', placeholder: 'uri' },
-  { name: 'typeField', label: 'Type Field', title: 'Optional: Typ je Eintrag, z.B. type_line', placeholder: 'type_line' },
+  { name: 'typeField', label: 'Type Field', title: 'Optional: type of each entry, e.g. type_line', placeholder: 'type_line' },
 ];
 
 const emptyLocator = (): ConnectedCardLocator => ({ dataListField: '', nameField: '', linkField: '', typeField: '' });

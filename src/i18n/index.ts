@@ -1,0 +1,81 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import en from './locales/en.json';
+
+export interface UiLanguage {
+  code: string;
+  /** Name in its own language */
+  name: string;
+  /** Country code for the flag (flag-icons) */
+  country: string;
+}
+
+// A new language = a new locales/<code>.json, one loader and one entry here.
+export const UI_LANGUAGES: UiLanguage[] = [
+  { code: 'en', name: 'English', country: 'gb' },
+];
+
+const LOADERS: Record<string, () => Promise<{ default: Record<string, unknown> }>> = {
+  // de: () => import('./locales/de.json'),
+};
+
+const FALLBACK = 'en';
+const STORAGE_KEY = 'uiLanguage';
+
+const isSupported = (code: string | null | undefined): code is string =>
+  !!code && UI_LANGUAGES.some(l => l.code === code);
+
+const readStored = (): string | null => {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+/** Saved choice, else the first supported browser language, else English. */
+export const detectLanguage = (): string => {
+  const stored = readStored();
+  if (isSupported(stored)) return stored;
+  const browser = (typeof navigator !== 'undefined' ? navigator.languages ?? [] : [])
+    .map(l => l.toLowerCase().split('-')[0])
+    .find(isSupported);
+  return browser ?? FALLBACK;
+};
+
+const loadBundle = async (code: string) => {
+  if (i18n.hasResourceBundle(code, 'translation')) return;
+  const loader = LOADERS[code];
+  if (!loader) return;
+  const module = await loader();
+  i18n.addResourceBundle(code, 'translation', module.default, true, true);
+};
+
+export const changeUiLanguage = async (code: string) => {
+  if (!isSupported(code)) return;
+  await loadBundle(code);
+  await i18n.changeLanguage(code);
+  try {
+    localStorage.setItem(STORAGE_KEY, code);
+  } catch {
+    // storage may be blocked, the choice then only lasts for this visit
+  }
+};
+
+i18n.on('languageChanged', lng => {
+  document.documentElement.lang = lng;
+});
+
+const initial = detectLanguage();
+i18n.use(initReactI18next).init({
+  resources: { en: { translation: en } },
+  lng: FALLBACK,
+  fallbackLng: FALLBACK,
+  interpolation: { escapeValue: false },
+  react: { useSuspense: false },
+}).then(() => {
+  if (initial !== FALLBACK) void changeUiLanguage(initial);
+  else document.documentElement.lang = FALLBACK;
+});
+
+export default i18n;

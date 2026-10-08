@@ -328,7 +328,7 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
       {!preview && !previewError && <p className="wiz-muted">Choose the result list to see results.</p>}
       {preview && preview.all.length > 0 && (
         <table className="table is-narrow is-fullwidth wiz-table">
-          <thead><tr><th>Name</th><th>Image</th><th>Lang</th><th>Set</th><th>Nr</th></tr></thead>
+          <thead><tr><th>Name</th><th>Image</th><th>Lang</th><th>Set</th><th>No.</th></tr></thead>
           <tbody>
             {preview.all.slice(0, PREVIEW_ROWS).map((r, i) => (
               <tr key={i} className={preview.matching.includes(r) ? 'wiz-match' : ''}>

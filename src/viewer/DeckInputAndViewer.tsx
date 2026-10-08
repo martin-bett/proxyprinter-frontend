@@ -43,6 +43,7 @@ import { setLoadingProgressTitle } from '../service/tabTitle';
 import VersionInfo from './info/VersionInfo';
 import ThemeChooser from '../theme/ThemeChooser';
 import TutorialMenu from '../tutorial/TutorialMenu';
+import LanguageChooser from '../i18n/LanguageChooser';
 import { Minus, Plus } from 'lucide-react';
 import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
@@ -1433,6 +1434,7 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="top-left-bubbles">
         <ThemeChooser />
         <TutorialMenu />
+        <LanguageChooser />
       </div>
       <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
       <TitleDiv progress={isLoading ? progress : null} />

@@ -11,9 +11,9 @@ import './SearchLog.css';
 
 // Pfeil hoch auf Boden = aus dem Cache geladen, Pfeil runter = aus dem Netz geholt
 const sourceIcon: Record<LogEntry['source'], { icon: React.ReactNode; title: string }> = {
-  cache: { icon: <UploadIcon fontSize="inherit" />, title: 'Aus dem Cache geladen' },
-  server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'Aus dem gemeinsamen Server-Cache geladen' },
-  network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Aus dem Netz geladen' },
+  cache: { icon: <UploadIcon fontSize="inherit" />, title: 'Loaded from cache' },
+  server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'Loaded from the shared server cache' },
+  network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Loaded from the network' },
   error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Error' },
   running: { icon: <CircularProgress size="0.85em" color="inherit" />, title: 'Searching' },
 };
@@ -46,9 +46,9 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
           <tr>
             <th>API</th>
             <th title="Source: cache, server cache or network">Q</th>
-            <th className="search-log-cell-number" title="Treffer">#</th>
-            <th className="search-log-cell-number" title="Dauer"><TimerOutlinedIcon fontSize="inherit" /></th>
-            <th className="search-log-cell-number" title="Anzahl Requests"><SwapVertIcon fontSize="inherit" /></th>
+            <th className="search-log-cell-number" title="Matches">#</th>
+            <th className="search-log-cell-number" title="Duration"><TimerOutlinedIcon fontSize="inherit" /></th>
+            <th className="search-log-cell-number" title="Number of requests"><SwapVertIcon fontSize="inherit" /></th>
             <th>Name</th>
           </tr>
         </thead>
