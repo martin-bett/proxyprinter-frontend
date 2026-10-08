@@ -1,15 +1,29 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ImageSelectDialog from './ImageSelectDialog';
 import { CardResult } from '../../api/types/types';
 
 jest.mock('./CardImage', () => ({
   __esModule: true,
-  default: ({ cardInput }: { cardInput: CardResult }) => <div data-testid="card">{cardInput.name}</div>,
+  // Kachel meldet "lade..." als laufenden Download, alles andere als fertig
+  default: ({ cardInput, onTileState }: { cardInput: CardResult; onTileState?: (s: string) => void }) => {
+    const { useEffect } = require('react');
+    useEffect(() => {
+      onTileState?.(cardInput.name.startsWith('lade') ? 'loading' : 'done');
+      return () => onTileState?.(null as unknown as string);
+    }, [cardInput.name]);
+    return <div data-testid="card">{cardInput.name}</div>;
+  },
 }));
 jest.mock('../../container/CropImageOverlay', () => ({ __esModule: true, default: () => null }));
 jest.mock('../../service/cache/ImageLoaderService', () => ({
-  imageLoaderService: { stopByCategory: jest.fn() },
+  imageLoaderService: {
+    stopByCategory: jest.fn(),
+    // Keine jest.fn: CRA setzt Mocks vor jedem Test zurück
+    getCacheStatsForCardName: () => Promise.resolve({ count: 0, bytes: 0 }),
+    getDownloadRate: () => 1.5 * 1024 * 1024,
+    clearCacheForCardName: jest.fn(),
+  },
 }));
 
 const card = (name: string, rating?: 'good' | 'ok' | 'poor' | 'unknown', languageCode?: string, apiName = 'scryfall') =>
@@ -78,6 +92,25 @@ it('zeigt an jedem Filterwert, wie viele Bilder dahinter stecken', () => {
   expect(countOf('select-quality-good')).toBe('1');
   // Die eigene Gruppe nicht: mpc zeigt weiter, was beim Einschalten dazukäme
   expect(countOf('select-api-mpc')).toBe('2');
+});
+
+it('zählt Downloads und fertige Kacheln in der Zeile oben', async () => {
+  render(
+    <ImageSelectDialog
+      open={true}
+      onClose={() => {}}
+      groupedResults={{ scryfall: [card('lade1'), card('lade2'), card('fertig'), card('fertig2')] }}
+      initialSelectedImage={null}
+      onImageLoadError={() => {}}
+      initialVisibleLanguages={new Set(['No Language'])}
+      initialVisibleApis={new Set(['scryfall'])}
+    />
+  );
+  await waitFor(() => expect(screen.getByTitle('Loaded').textContent).toContain('2'));
+  expect(screen.getByTitle('Downloading').textContent).toContain('2');
+  expect(screen.getByTitle('Queued').textContent).toContain('0');
+  // Die gebündelte Download-Rate steht immer neben dem Zähler
+  await waitFor(() => expect(screen.getByTitle('Downloading').textContent).toContain('(1.5 MB/s)'));
 });
 
 describe('Blättern zur nächsten/vorherigen Karte im Deck', () => {

@@ -5,7 +5,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import './ImageSelectDialog.css';
 import HoverPreview from './HoverPreview';
-import CardImage, { CardImageError } from './CardImage';
+import ImageSelectStats from './ImageSelectStats';
+import CardImage, { CardImageError, TileState } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
@@ -38,6 +39,7 @@ const FilterCount: React.FC<{ count: number }> = ({ count }) => (
 );
 
 const languageOf = (result: CardResult) => result.languageCode || NO_LANGUAGE;
+
 
 interface ImageSelectDialogProps {
   open: boolean;
@@ -228,6 +230,34 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     setPicked(true);
   };
 
+  // Zustand jeder sichtbaren Kachel, Schlüssel ist die Position im Grid (wie beim Rendern)
+  const [tileStates, setTileStates] = useState<Map<string, TileState>>(() => new Map());
+  const setTileState = useCallback((tileId: string, state: TileState) => {
+    setTileStates(prev => {
+      if (state === null) {
+        if (!prev.has(tileId)) return prev;
+        const next = new Map(prev);
+        next.delete(tileId);
+        return next;
+      }
+      if (prev.get(tileId) === state) return prev;
+      return new Map(prev).set(tileId, state);
+    });
+  }, []);
+
+  const tileCounts = useMemo(() => {
+    const counts: Record<'loading' | 'queued' | 'done', number> = { loading: 0, queued: 0, done: 0 };
+    tileStates.forEach(state => {
+      if (state === 'loading' || state === 'queued' || state === 'done') counts[state]++;
+    });
+    return counts;
+  }, [tileStates]);
+
+  const cardName = useMemo(
+    () => initialSelectedImage?.name ?? Object.values(groupedResults).flat()[0]?.name,
+    [initialSelectedImage, groupedResults]
+  );
+
   const handleClose = () => {
     imageLoaderService.stopByCategory('selectgrid');
     onClose(picked ? selectedImage : null);
@@ -239,6 +269,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     <div className="image-select-dialog">
       <div className="dialog-overlay" onClick={handleClose}>
         <div className="dialog-content" onClick={e => e.stopPropagation()}>
+          <ImageSelectStats open={open} cardName={cardName} counts={tileCounts} />
           <div className="image-selection-container">
             {deckNav && (
               <div className="deck-nav">
@@ -290,6 +321,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                             cardInput={result}
                             onLoad={(imageInfo) => handleImageLoad(result, imageInfo)}
                             onError={handleImageLoadError}
+                            onTileState={(state) => setTileState(`${apiName}:${index}`, state)}
                             showImageSettings={true}
                             onlyDimensions={true}
                           />

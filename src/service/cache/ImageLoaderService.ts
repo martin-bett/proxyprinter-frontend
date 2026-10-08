@@ -183,6 +183,9 @@ export async function fetchImageViaProxy(url: string): Promise<Blob> {
   return response.blob();
 }
 
+/** Fenster, über das die Download-Rate gemittelt wird (Millisekunden) */
+const DOWNLOAD_RATE_WINDOW_MS = 5000;
+
 export interface QueueNumbers {
   queued: number;
   active: number;
@@ -237,6 +240,7 @@ async function getFromIndexedDB(cacheKey: string): Promise<ImageCacheDbEntry | u
 class ImageLoaderService {
   private queue: QueueEntry[] = [];
   private activeLoads = 0;
+  private recentDownloads: { at: number; bytes: number }[] = [];
   private activeProxyLoads = 0;
   private proxyImageApis: Set<string> = new Set();
   private activeCacheLoads = 0;
@@ -430,6 +434,7 @@ class ImageLoaderService {
       const load = proxied ? this._loadViaProxy(url) : this._loadDirect(url);
       load.then(async ({ img, blob }) => {
         const sizeBytes = blob?.size || 0;
+        this._recordDownload(sizeBytes);
         const cacheKey = this._makeCacheKey(cardInput || {});
         const thumb = blob ? await createThumbnail(img) : null;
         const cacheEntry: ImageCacheDbEntry = {
@@ -589,6 +594,14 @@ class ImageLoaderService {
     await this.deleteUnlocked({ cardName });
   }
 
+  /** Anzahl und Größe aller gecachten Bilder einer Karte (über alle APIs) */
+  async getCacheStatsForCardName(cardName: string): Promise<{ count: number; bytes: number }> {
+    const entries = await getAllFromIndexedDB();
+    return entries
+      .filter(value => value.cardInput?.name === cardName)
+      .reduce((stats, value) => ({ count: stats.count + 1, bytes: stats.bytes + value.sizeBytes }), { count: 0, bytes: 0 });
+  }
+
   async clearCacheForApiName(apiName: string): Promise<void> {
     await this.deleteUnlocked({ apiName });
   }
@@ -682,6 +695,23 @@ class ImageLoaderService {
     this.queue = this.queue.filter(entry => entry.cardInput?.languageCode !== languageCode);
     this.notifyAllStatuses();
     this.notifySubscribers();
+  }
+
+  private _recordDownload(bytes: number): void {
+    if (bytes > 0) this.recentDownloads.push({ at: Date.now(), bytes });
+    this._pruneDownloads(Date.now());
+  }
+
+  private _pruneDownloads(now: number): void {
+    const cutoff = now - DOWNLOAD_RATE_WINDOW_MS;
+    while (this.recentDownloads.length > 0 && this.recentDownloads[0].at < cutoff) this.recentDownloads.shift();
+  }
+
+  /** Gebündelte Download-Rate (Bytes pro Sekunde): fertig geladene Bytes aller Downloads der letzten Sekunden */
+  getDownloadRate(): number {
+    this._pruneDownloads(Date.now());
+    const bytes = this.recentDownloads.reduce((sum, download) => sum + download.bytes, 0);
+    return bytes / (DOWNLOAD_RATE_WINDOW_MS / 1000);
   }
 
   // Zähler für die Download-Bubble (wartend, aktive Downloads, Ladevorgänge aus dem Cache)
