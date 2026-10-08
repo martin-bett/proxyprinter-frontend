@@ -58,7 +58,7 @@ import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
-import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, hasConnectedCards } from '../service/ApiFactory';
+import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, PageProgress, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
@@ -95,6 +95,12 @@ const defaultCropSettings: CropSettings = {
   height: 0, // Default value for CropSettings
   isStretch: true
 };
+
+/** Laufender Netzsuch-Eintrag im Search Log */
+interface NetworkLog {
+  onPage: (progress: PageProgress) => void;
+  finish: (entry: LogEntry) => void;
+}
 
 const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
 const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
@@ -234,6 +240,20 @@ const DeckInputAndViewer: React.FC = () => {
   const addToLog = (entry: LogEntry) => {
     setLog((prevLog) => [...prevLog, entry]);
   };
+
+  // Netzsuchen stehen sofort im Log (läuft noch) und werden nach jeder fertigen Seite aktualisiert.
+  // Wurde das Log inzwischen geleert, kommt ein später fertiger Eintrag nicht zurück.
+  const nextLogId = useRef(0);
+  const startNetworkLog = (configName: string, cardName: string, startedAt: number): NetworkLog => {
+    const id = ++nextLogId.current;
+    setLog((prevLog) => [...prevLog, { id, configName, cardName, source: 'running', count: 0, durationMs: 0, requestCount: 0 }]);
+    const replace = (entry: LogEntry) => setLog((prevLog) => prevLog.map(other => (other.id === id ? { ...entry, id } : other)));
+    return {
+      onPage: ({ count, requestCount }) => replace({ configName, cardName, source: 'running', count, requestCount, durationMs: performance.now() - startedAt }),
+      finish: replace,
+    };
+  };
+  const finishLog = (entry: LogEntry, run: NetworkLog | undefined) => (run ? run.finish(entry) : addToLog(entry));
 
   const handleSettingsChange = (newSettings: PdfSettings) => {
     setSettings(newSettings);
@@ -397,6 +417,7 @@ const DeckInputAndViewer: React.FC = () => {
     if (!apiKey || !link || !apiFactory) return [];
     const cacheName = `link:${link}`;
     const startedAt = performance.now();
+    let run: NetworkLog | undefined;
     try {
       if (await SearchCacheService.hasSearchResult(apiKey, cacheName)) {
         const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
@@ -411,14 +432,15 @@ const DeckInputAndViewer: React.FC = () => {
           return fromServer.results;
         }
       }
+      run = startNetworkLog(apiKey, cardName, startedAt);
       const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
       const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
       if (serverCacheActive && config) serverSearchCache.put(config, cacheName, result);
-      addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+      finishLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
       return result.results;
     } catch (error) {
-      addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+      finishLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
       return [];
     }
   };
@@ -490,6 +512,7 @@ const DeckInputAndViewer: React.FC = () => {
         const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
             const startedAt = performance.now();
+            let run: NetworkLog | undefined;
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
@@ -505,18 +528,19 @@ const DeckInputAndViewer: React.FC = () => {
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
                 groupResults[apiKey][entry.name] = fromServer.results;
               } else {
-                result = await api({ cardname: entry.name });
+                run = startNetworkLog(apiKey, entry.name, startedAt);
+                result = await api({ cardname: entry.name }, run.onPage);
                 if (dropConnected) {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
                 if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
                 const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+                finishLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
                 groupResults[apiKey][entry.name] = resultsArr;
               }
             } catch (error) {
-              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+              finishLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -1219,6 +1243,7 @@ const DeckInputAndViewer: React.FC = () => {
         const api = apiFactory!.createApi(apiKey);
 
         const startedAt = performance.now();
+        let run: NetworkLog | undefined;
         try {
           let result: SearchApiResult | undefined;
           if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
@@ -1232,15 +1257,16 @@ const DeckInputAndViewer: React.FC = () => {
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'server', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = result.results;
           } else {
-            result = await api({ cardname: cardEntry.name });
+            run = startNetworkLog(apiKey, cardEntry.name, startedAt);
+            result = await api({ cardname: cardEntry.name }, run.onPage);
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
             if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
             const resultsArr = result?.results || [];
-            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+            finishLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
             groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
-          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+          finishLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
           groupResults[apiKey][cardEntry.name] = [];
         }
 

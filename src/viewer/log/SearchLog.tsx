@@ -5,6 +5,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import CircularProgress from '@mui/material/CircularProgress';
 import { LogEntry } from '../../api/types/types';
 import './SearchLog.css';
 
@@ -14,6 +15,7 @@ const sourceIcon: Record<LogEntry['source'], { icon: React.ReactNode; title: str
   server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'Aus dem gemeinsamen Server-Cache geladen' },
   network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Aus dem Netz geladen' },
   error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Fehler' },
+  running: { icon: <CircularProgress size="0.85em" color="inherit" />, title: 'Suche läuft' },
 };
 
 // Kurz halten, die Spalte ist schmal: 85ms, 1.2s, 12s
@@ -54,8 +56,10 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
           {entries.map((entry, index) => {
             const { icon, title } = sourceIcon[entry.source];
             const raw = entry.source === 'error' ? entry.error : entry.rawResponse;
+            // Laufende Suche ohne fertige Seite: noch keine Werte
+            const pending = entry.source === 'running' && !entry.requestCount;
             return (
-              <tr key={index} className={`search-log-row search-log-${entry.source}`}>
+              <tr key={entry.id ?? `done-${index}`} className={`search-log-row search-log-${entry.source}`}>
                 <td className="search-log-cell-api" title={entry.configName}>{entry.configName}</td>
                 <td>
                   <button
@@ -69,9 +73,9 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
                     {icon}
                   </button>
                 </td>
-                <td className="search-log-cell-number">{entry.source === 'error' ? '–' : entry.count}</td>
-                <td className="search-log-cell-number">{formatDuration(entry.durationMs)}</td>
-                <td className="search-log-cell-number">{entry.requestCount ?? '–'}</td>
+                <td className="search-log-cell-number">{entry.source === 'error' || pending ? '–' : entry.count}</td>
+                <td className="search-log-cell-number">{pending ? '–' : formatDuration(entry.durationMs)}</td>
+                <td className="search-log-cell-number">{pending ? '–' : entry.requestCount ?? '–'}</td>
                 <td className="search-log-cell-name" title={entry.error ? `${entry.cardName}: ${entry.error}` : entry.cardName}>
                   {entry.cardName}
                 </td>
