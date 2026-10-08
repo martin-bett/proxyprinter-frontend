@@ -81,6 +81,7 @@ i18n.use(initReactI18next).init({
   lng: FALLBACK,
   fallbackLng: FALLBACK,
   interpolation: { escapeValue: false },
+  initImmediate: false,
   react: { useSuspense: false },
 }).then(() => {
   if (initial !== FALLBACK) void changeUiLanguage(initial);
