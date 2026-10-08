@@ -26,6 +26,24 @@ interface ImageCacheDbEntry {
   thumb?: Blob;
   width?: number;
   height?: number;
+  // Mit dem Schloss im Bild-Cache-Dialog geschützt: bleibt beim Leeren stehen und wird beim Platzschaffen zuletzt gelöscht
+  locked?: boolean;
+}
+
+/** Filter auf Cache-Einträge: ohne Angabe passt jeder Wert. */
+export interface CacheEntryFilter {
+  apiName?: string;
+  cardName?: string;
+}
+
+function matchesFilter(entry: ImageCacheDbEntry, { apiName, cardName }: CacheEntryFilter): boolean {
+  return (apiName === undefined || entry.cardInput?.apiName === apiName)
+    && (cardName === undefined || entry.cardInput?.name === cardName);
+}
+
+/** Löschreihenfolge beim Platzschaffen: erst ungeschützte, dann geschützte Einträge, jeweils die ältesten zuerst. */
+export function evictionOrder<T extends { locked?: boolean; timestamp?: number }>(entries: T[]): T[] {
+  return [...entries].sort((a, b) => Number(!!a.locked) - Number(!!b.locked) || (a.timestamp || 0) - (b.timestamp || 0));
 }
 
 /** Breite der verkleinerten Kopie, die Kacheln statt des Originals dekodieren. */
@@ -175,6 +193,7 @@ export interface CacheSnapshot {
   byApi: Record<string, ImageCacheDbEntry[]>;
   byCard: Record<string, ImageCacheDbEntry[]>;
   totalSize: number;
+  lockedCount: number;
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -191,12 +210,6 @@ async function deleteFromIndexedDB(cacheKey: string): Promise<void> {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
   tx.objectStore(STORE_NAME).delete(cacheKey);
-}
-
-async function clearIndexedDB(): Promise<void> {
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  tx.objectStore(STORE_NAME).clear();
 }
 
 async function getAllFromIndexedDB(): Promise<ImageCacheDbEntry[]> {
@@ -254,9 +267,8 @@ class ImageLoaderService {
     const entries = await getAllFromIndexedDB();
     let total = entries.reduce((sum, e) => sum + (e.sizeBytes || 0), 0);
     if (total <= this.cacheLimit) return;
-    // Sortiere nach ältestem timestamp
-    entries.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-    for (const entry of entries) {
+    // Geschützte Einträge fallen erst, wenn sie allein das Limit überschreiten
+    for (const entry of evictionOrder(entries)) {
       await deleteFromIndexedDB(entry.cacheKey);
       total -= entry.sizeBytes || 0;
       if (total <= this.cacheLimit) break;
@@ -563,8 +575,9 @@ class ImageLoaderService {
     this.notifyAllStatuses();
   }
 
+  /** Leert den Cache bis auf die geschützten Einträge und stoppt alle Downloads. */
   async clearCache(): Promise<void> {
-    await clearIndexedDB();
+    await this._deleteUnlocked({});
     clearProxyFailures();
     this.queue = [];
     this.activeLoads = 0;
@@ -573,36 +586,41 @@ class ImageLoaderService {
   }
 
   async clearCacheForCardName(cardName: string): Promise<void> {
-    const entries = await getAllFromIndexedDB();
-    for (const value of entries) {
-      if (value.cardInput?.name === cardName) {
-        await deleteFromIndexedDB(value.cacheKey);
-      }
-    }
-    this.notifySubscribers();
+    await this.deleteUnlocked({ cardName });
   }
 
   async clearCacheForApiName(apiName: string): Promise<void> {
+    await this.deleteUnlocked({ apiName });
+  }
+
+  async clearCacheForApiAndCard(apiName: string, cardName: string): Promise<void> {
+    await this.deleteUnlocked({ apiName, cardName });
+  }
+
+  /** Schützt die passenden Einträge vor dem Löschen oder hebt den Schutz auf. */
+  async setLocked(filter: CacheEntryFilter, locked: boolean): Promise<void> {
     const entries = await getAllFromIndexedDB();
-    for (const value of entries) {
-      if (value.cardInput?.apiName === apiName) {
-        await deleteFromIndexedDB(value.cacheKey);
+    for (const entry of entries) {
+      if (matchesFilter(entry, filter) && !!entry.locked !== locked) {
+        await saveToIndexedDB({ ...entry, locked });
       }
     }
     this.notifySubscribers();
   }
 
-  async clearCacheForApiAndCard(apiName: string, cardName: string): Promise<void> {
+  /** Löscht die passenden Einträge, geschützte bleiben stehen. */
+  async deleteUnlocked(filter: CacheEntryFilter): Promise<void> {
+    await this._deleteUnlocked(filter);
+    this.notifySubscribers();
+  }
+
+  private async _deleteUnlocked(filter: CacheEntryFilter): Promise<void> {
     const entries = await getAllFromIndexedDB();
-    for (const value of entries) {
-      if (
-        value.cardInput?.apiName === apiName &&
-        value.cardInput?.name === cardName
-      ) {
-        await deleteFromIndexedDB(value.cacheKey);
+    for (const entry of entries) {
+      if (!entry.locked && matchesFilter(entry, filter)) {
+        await deleteFromIndexedDB(entry.cacheKey);
       }
     }
-    this.notifySubscribers();
   }
 
   notifyAllStatuses(): void {
@@ -617,10 +635,12 @@ class ImageLoaderService {
     const byApi = await this.getCacheGroupedByApiName();
     const byCard = await this.getCacheGroupedByCardName();
     const totalSize = await this.getTotalCacheSize();
-    const snapshot: CacheSnapshot = { byApi, byCard, totalSize };
+    const lockedCount = Object.values(byApi).flat().filter(e => e.locked).length;
+    const snapshot: CacheSnapshot = { byApi, byCard, totalSize, lockedCount };
     if (
       this._lastSnapshot &&
       this._lastSnapshot.totalSize === snapshot.totalSize &&
+      this._lastSnapshot.lockedCount === snapshot.lockedCount &&
       Object.keys(this._lastSnapshot.byApi).length === Object.keys(snapshot.byApi).length &&
       Object.keys(this._lastSnapshot.byCard).length === Object.keys(snapshot.byCard).length
     ) {

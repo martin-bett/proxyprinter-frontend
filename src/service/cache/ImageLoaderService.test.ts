@@ -33,7 +33,7 @@ class FakeImage {
 (window as any).Image = FakeImage;
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { imageLoaderService, isProxyOnlyUrl, loadImageElement } = require("./ImageLoaderService");
+const { imageLoaderService, isProxyOnlyUrl, loadImageElement, evictionOrder } = require("./ImageLoaderService");
 
 describe("ImageLoaderService mit Proxy Images", () => {
   let pending: (() => void)[] = [];
@@ -235,5 +235,56 @@ describe("ImageLoaderService Thumbnails", () => {
     const cached = await imageLoaderService.getCachedBlobs(cardInput);
     expect(cached.thumb).toBeDefined();
     expect(cached.width).toBe(3000);
+  });
+});
+
+describe("ImageLoaderService geschützte Einträge", () => {
+  const put = (api: string, name: string, timestamp: number, sizeBytes = 10, locked?: boolean) => {
+    const cacheKey = `${api}::${name}::`;
+    stores.set(cacheKey, { cacheKey, sizeBytes, timestamp, imageUrl: "", blob: null, cardInput: { apiName: api, name }, locked });
+    return cacheKey;
+  };
+  const flush = () => new Promise(r => setTimeout(r, 20));
+
+  beforeEach(() => stores.clear());
+  afterAll(() => { imageLoaderService.cacheLimit = 1024 * 1024 * 1024; });
+
+  it("löscht beim Platzschaffen erst ungeschützte, dann geschützte Einträge, jeweils die ältesten zuerst", () => {
+    const order = evictionOrder([
+      { id: "a", timestamp: 1, locked: true },
+      { id: "b", timestamp: 3 },
+      { id: "c", timestamp: 2, locked: true },
+      { id: "d", timestamp: 4 },
+    ]).map((e: any) => e.id);
+    expect(order).toEqual(["b", "d", "a", "c"]);
+  });
+
+  it("setLocked schützt nur die passenden Einträge, Löschen und Cache leeren lassen sie stehen", async () => {
+    put("A", "Bolt", 1);
+    put("A", "Opt", 2);
+    put("B", "Bolt", 3);
+    await imageLoaderService.setLocked({ cardName: "Bolt" }, true);
+    expect([...stores.values()].filter(e => e.locked).map(e => e.cacheKey).sort()).toEqual(["A::Bolt::", "B::Bolt::"]);
+
+    await imageLoaderService.clearCacheForApiName("A");
+    expect([...stores.keys()].sort()).toEqual(["A::Bolt::", "B::Bolt::"]);
+
+    await imageLoaderService.setLocked({ apiName: "B", cardName: "Bolt" }, false);
+    await imageLoaderService.clearCache();
+    expect([...stores.keys()]).toEqual(["A::Bolt::"]);
+  });
+
+  it("Limit: geschützte fallen nur, wenn sie allein das Limit überschreiten", async () => {
+    put("A", "old-locked", 1, 10, true);
+    put("A", "old", 2);
+    put("A", "new", 3);
+    imageLoaderService.setCacheLimit(15);
+    await flush();
+    expect([...stores.keys()]).toEqual(["A::old-locked::"]);
+
+    put("A", "locked2", 4, 10, true);
+    imageLoaderService.setCacheLimit(15);
+    await flush();
+    expect([...stores.keys()]).toEqual(["A::locked2::"]);
   });
 });
