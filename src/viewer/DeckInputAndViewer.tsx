@@ -13,6 +13,8 @@ import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlin
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CropIcon from '@mui/icons-material/Crop';
+import FindReplaceIcon from '@mui/icons-material/FindReplace';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
 import RecropDialog from './grid/crop/RecropDialog';
@@ -245,6 +247,20 @@ const DeckInputAndViewer: React.FC = () => {
   const handleAddCustomCard = () => {
     setReplaceTarget(null);
     setCustomCardDialogOpen(true);
+  };
+
+  /** Eintrag ohne Fund ganz aus dem Deck nehmen (alle Exemplare). */
+  const handleDiscardEntry = (cardName: string) => {
+    const drop = <T,>(prev: Record<string, T>) => {
+      if (!(cardName in prev)) return prev;
+      const next = { ...prev };
+      delete next[cardName];
+      return next;
+    };
+    setCardResults(drop);
+    setSelectedCards(drop);
+    setManualPicks(drop);
+    setFreshPicks(new Set());
   };
 
   const handleReplaceCard = (cardName: string) => {
@@ -1604,21 +1620,28 @@ const DeckInputAndViewer: React.FC = () => {
                             // Keine API hat etwas gefunden: Eintrag über Add Single austauschen
                             <div className="no-image no-results">
                               <span>No card art found</span>
-                              <button
-                                type="button"
-                                className="button is-small replace-card-button"
+                              <ActionButton
+                                icon={<FindReplaceIcon />}
                                 title="Search again or add an image for this entry; it replaces the entry in the deck"
                                 onClick={(e) => { e.stopPropagation(); handleReplaceCard(cardName); }}
                               >
-                                Replace card
-                              </button>
+                                Replace
+                              </ActionButton>
+                              <ActionButton
+                                icon={<DeleteOutlineIcon />}
+                                title="Remove this entry from the deck"
+                                onClick={(e) => { e.stopPropagation(); handleDiscardEntry(cardName); }}
+                              >
+                                Discard
+                              </ActionButton>
                             </div>
                           ) : (
                             <div className="no-image">No image available</div>
                           )}
                           <CardTitle name={cardName} />
-                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl */}
-                          <div className="card-count" onClick={(e) => e.stopPropagation()}>
+                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl.
+                              Ohne einen einzigen Fund gibt es stattdessen Replace und Discard. */}
+                          {cardData.results.length > 0 && <div className="card-count" onClick={(e) => e.stopPropagation()}>
                             {!uniquePrints ? (
                               <button
                                 className="count-button remove-card"
@@ -1652,7 +1675,7 @@ const DeckInputAndViewer: React.FC = () => {
                                 <CropIcon fontSize="inherit" />
                               </button>
                             )}
-                          </div>
+                          </div>}
                         </div>
                       </div>
                     );
