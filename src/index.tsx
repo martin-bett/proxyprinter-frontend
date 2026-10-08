@@ -5,6 +5,7 @@ import App from './App';
 import { AppThemeProvider, applyThemeToDocument } from './theme/ThemeContext';
 import { getThemeById } from './theme/themes';
 import reportWebVitals from './reportWebVitals';
+import { detectInstance } from './service/instance';
 
 const container = document.getElementById('root');
 if (!container) {
@@ -19,12 +20,15 @@ try {
 }
 applyThemeToDocument(getThemeById(storedThemeId));
 
-// Lokale Instanz (npm start) im Browser-Tab kenntlich machen; im Produktions-Build entfällt dieser Block
-if (process.env.NODE_ENV === 'development') {
-  document.title = `[LOCAL] ${document.title}`;
+// Test-/PR-/lokale Instanz im Browser-Tab kenntlich machen (Erkennung über den Hostnamen, Produktion bleibt unverändert)
+const instance = detectInstance(window.location.hostname);
+if (instance.label) {
+  document.title = `${instance.label} ${document.title}`;
+}
+if (instance.favicon) {
   const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
   if (icon) {
-    icon.href = `${process.env.PUBLIC_URL}/proxyprinter-favicon-local.svg`;
+    icon.href = `${process.env.PUBLIC_URL}/${instance.favicon}`;
   }
 }
 

@@ -27,6 +27,21 @@
   overflow-y: auto;
 }
 
+.image-select-dialog .deck-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.image-select-dialog .deck-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
 .image-select-dialog .crop-image-overlay {
   display: flex;
   flex-direction: column;
@@ -182,3 +197,14 @@
 .image-select-dialog .filter-count.is-empty {
   opacity: 0.5;
 }
+
+.hover-preview {
+  position: fixed;
+  z-index: 3000;
+  pointer-events: none;
+  background: #000;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.hover-preview img { display: block; }

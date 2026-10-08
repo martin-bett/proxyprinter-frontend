@@ -27,7 +27,8 @@ export type GroupedResults = Record<string, CardResult[]>;
 export interface LogEntry {
   configName: string;
   cardName: string;
-  source: 'cache' | 'network' | 'error';
+  /** cache = lokaler Browser-Cache, server = gemeinsamer Such-Cache im Backend */
+  source: 'cache' | 'server' | 'network' | 'error';
   count: number;
   /** Dauer der Suche in Millisekunden (auch Cache-Lesen) */
   durationMs: number;

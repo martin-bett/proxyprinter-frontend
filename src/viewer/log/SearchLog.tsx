@@ -1,5 +1,6 @@
 import React from 'react';
 import UploadIcon from '@mui/icons-material/Upload';
+import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
@@ -10,6 +11,7 @@ import './SearchLog.css';
 // Pfeil hoch auf Boden = aus dem Cache geladen, Pfeil runter = aus dem Netz geholt
 const sourceIcon: Record<LogEntry['source'], { icon: React.ReactNode; title: string }> = {
   cache: { icon: <UploadIcon fontSize="inherit" />, title: 'Aus dem Cache geladen' },
+  server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'Aus dem gemeinsamen Server-Cache geladen' },
   network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Aus dem Netz geladen' },
   error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Fehler' },
 };
@@ -41,7 +43,7 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
         <thead>
           <tr>
             <th>API</th>
-            <th title="Quelle: Cache oder Netz">Q</th>
+            <th title="Quelle: Cache, Server-Cache oder Netz">Q</th>
             <th className="search-log-cell-number" title="Treffer">#</th>
             <th className="search-log-cell-number" title="Dauer"><TimerOutlinedIcon fontSize="inherit" /></th>
             <th className="search-log-cell-number" title="Anzahl Requests"><SwapVertIcon fontSize="inherit" /></th>

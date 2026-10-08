@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
+import serverSearchCache, { ServerLookup, fetchServerCacheEnabled, lookupKey } from '../service/cache/ServerSearchCache';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
@@ -64,6 +65,7 @@ import SearchLog from './log/SearchLog';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
+import { adjustSelectionForCountChange } from './selectionUtils';
 
 const NO_LANGUAGE = 'No Language';
 const languageOfCard = (card: CardResult) => card.languageCode || NO_LANGUAGE;
@@ -95,6 +97,7 @@ const defaultCropSettings: CropSettings = {
 };
 
 const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
+const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
 const DeckInputAndViewer: React.FC = () => {
   const [decklist, setDecklist] = useState('');
@@ -131,6 +134,20 @@ const DeckInputAndViewer: React.FC = () => {
       return true;
     }
   });
+  // Gemeinsamen Such-Cache im Backend nutzen (lesen und füllen), gemerkt pro Browser
+  const [useServerCache, setUseServerCache] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(USE_SERVER_CACHE_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  // Backend kann den Such-Cache abschalten (searchcache.enabled=false, z. B. in PR-Testumgebungen)
+  const [serverCacheAvailable, setServerCacheAvailable] = useState(true);
+  const serverCacheActive = useServerCache && serverCacheAvailable;
+  useEffect(() => {
+    fetchServerCacheEnabled().then(setServerCacheAvailable);
+  }, []);
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -385,15 +402,36 @@ const DeckInputAndViewer: React.FC = () => {
         const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
         return cached?.results || [];
       }
+      const config = apiConfigs[apiKey];
+      if (serverCacheActive && config) {
+        const fromServer = (await serverSearchCache.lookup([{ apiKey, config, term: cacheName }])).get(lookupKey(apiKey, cacheName));
+        if (fromServer) {
+          await SearchCacheService.setSearchResult(apiKey, cacheName, fromServer);
+          addToLog({ configName: apiKey, cardName, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
+          return fromServer.results;
+        }
+      }
       const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
       const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
+      if (serverCacheActive && config) serverSearchCache.put(config, cacheName, result);
       addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
       return result.results;
     } catch (error) {
       addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
       return [];
     }
+  };
+
+  // Fragt den Server-Cache gesammelt nach allen Suchen, die der lokale Cache nicht hat
+  const lookupServerCache = async (apiKeys: string[], terms: string[]): Promise<Map<string, SearchApiResult>> => {
+    if (!serverCacheActive) return new Map();
+    const pairs = apiKeys.flatMap(apiKey => terms.map(term => ({ apiKey, term })));
+    const locallyCached = await Promise.all(pairs.map(({ apiKey, term }) => SearchCacheService.hasSearchResult(apiKey, term).catch(() => false)));
+    const requests: ServerLookup[] = pairs
+      .filter((pair, index) => !locallyCached[index] && apiConfigs[pair.apiKey])
+      .map(pair => ({ ...pair, config: apiConfigs[pair.apiKey] }));
+    return serverSearchCache.lookup(requests);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -438,7 +476,7 @@ const DeckInputAndViewer: React.FC = () => {
     // Function to process a single API or proxy group
     // dropConnected: Treffer der zweiten Runde (z.B. Treasure) listen bei Scryfall alle Karten, die sie erzeugen.
     // Die brauchen wir nicht, also nicht mit in den Cache schreiben.
-    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected = false) => {
+    const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected: boolean, serverHits: Map<string, SearchApiResult>) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
@@ -446,6 +484,8 @@ const DeckInputAndViewer: React.FC = () => {
         const api = apiFactory!.createApi(apiKey);
         // Cache-Einträge von vor den verbundenen Karten kennen sie noch nicht und werden neu gesucht
         const needsConnected = withConnected && hasConnectedCards(apiConfigs[apiKey]);
+        const lacksConnected = (candidate: SearchApiResult) =>
+          needsConnected && (candidate.results || []).length > 0 && (candidate.results || []).every(card => card.connectedCards === undefined);
 
         const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
@@ -456,15 +496,21 @@ const DeckInputAndViewer: React.FC = () => {
                 result = await SearchCacheService.getSearchResult(apiKey, entry.name);
               }
               const cached = result?.results || [];
-              if (result && !(needsConnected && cached.length > 0 && cached.every(card => card.connectedCards === undefined))) {
+              const fromServer = serverHits.get(lookupKey(apiKey, entry.name));
+              if (result && !lacksConnected(result)) {
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'cache', count: cached.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
                 groupResults[apiKey][entry.name] = cached;
+              } else if (fromServer && !lacksConnected(fromServer)) {
+                await SearchCacheService.setSearchResult(apiKey, entry.name, fromServer);
+                addToLog({ configName: apiKey, cardName: entry.name, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
+                groupResults[apiKey][entry.name] = fromServer.results;
               } else {
                 result = await api({ cardname: entry.name });
                 if (dropConnected) {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
+                if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
                 const resultsArr = result?.results || [];
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
                 groupResults[apiKey][entry.name] = resultsArr;
@@ -483,9 +529,10 @@ const DeckInputAndViewer: React.FC = () => {
 
     // Process all API groups concurrently
     const searchAllGroups = async (entries: DeckEntry[], dropConnected = false) => {
+      const serverHits = await lookupServerCache(enabledApiKeys, entries.map(entry => entry.name));
       const groupResults = await Promise.all([
-        processApiGroup(proxyGroup, entries, dropConnected),
-        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected))
+        processApiGroup(proxyGroup, entries, dropConnected, serverHits),
+        ...nonProxyApis.map(apiKey => processApiGroup([apiKey], entries, dropConnected, serverHits))
       ]);
       const merged: Record<string, Record<string, SearchResult[]>> = {};
       groupResults.forEach(groupResult => Object.assign(merged, groupResult));
@@ -573,7 +620,16 @@ const DeckInputAndViewer: React.FC = () => {
     }));
   };
 
-  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+  // Reihenfolge der Kacheln, wie das Raster sie zeigt. Dient dem Blättern im Bildauswahl-Dialog.
+  const deckTiles = useMemo(() => Object.entries(cardResults).flatMap(([name, data]) =>
+    Array.from({ length: uniquePrints ? data.count : 1 }, (_, index) => ({ name, index }))
+  ), [cardResults, uniquePrints]);
+  const currentTilePosition = currentCardName !== null && currentCardIndex !== null
+    ? deckTiles.findIndex(tile => tile.name === currentCardName && tile.index === currentCardIndex)
+    : -1;
+
+  // Speichert die Wahl für die aktuelle Kachel (null = nichts gewählt, nur neu zeichnen)
+  const applyImageChoice = (selectedImage: CardResult | null) => {
     if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
       setSelectedCards(prev => {
         const currentCards = prev[currentCardName] || [];
@@ -599,9 +655,24 @@ const DeckInputAndViewer: React.FC = () => {
       // Ohne neue Wahl kann sich trotzdem der Zuschnitt des gewählten Bildes geändert haben
       setSelectedCards(prev => ({ ...prev }));
     }
+  };
+
+  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+    applyImageChoice(selectedImage);
     setImageSelectDialogOpen(false);
     setCurrentCardName(null);
     setCurrentCardIndex(null);
+  };
+
+  // Zur vorherigen/nächsten Kachel blättern, der Dialog bleibt offen
+  const handleStepImageSelect = (delta: -1 | 1, selectedImage: CardResult | null) => {
+    if (currentCardName === null || currentCardIndex === null) return;
+    const next = deckTiles[currentTilePosition + delta];
+    if (!next) return;
+    applyImageChoice(selectedImage);
+    imageLoaderService.stopByCategory('selectgrid');
+    setCurrentCardName(next.name);
+    setCurrentCardIndex(next.index);
   };
 
   const handleRemoveCard = (cardName: string, index: number) => {
@@ -767,6 +838,11 @@ const DeckInputAndViewer: React.FC = () => {
     fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
     fetchPdfMailEnabled().then(setPdfMailEnabled);
   }, []);
+  // Seitenvorschau im Einstellungsdialog: nur die ersten Karten, so viele wie auf eine Seite passen
+  const settingsPreviewCards = useMemo(
+    () => pdfImageEntries.slice(0, 40).map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
+    [pdfImageEntries]
+  );
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
 
@@ -1054,13 +1130,29 @@ const DeckInputAndViewer: React.FC = () => {
   }
 
   const updateCardCount = (cardName: string, increment: number) => {
+    const prevCount = cardResults[cardName]?.count ?? 0;
+    const newCount = Math.max(0, prevCount + increment);
+
     setCardResults(prevResults => ({
       ...prevResults,
       [cardName]: {
         ...prevResults[cardName],
-        count: Math.max(0, prevResults[cardName].count + increment)
+        count: newCount
       }
     }));
+
+    // Inherit selection from first copy when count changes
+    if (increment !== 0) {
+      setSelectedCards(prevSelected => ({
+        ...prevSelected,
+        [cardName]: adjustSelectionForCountChange(prevSelected[cardName], prevCount, newCount)
+      }));
+
+      setManualPicks(prevPicks => ({
+        ...prevPicks,
+        [cardName]: adjustSelectionForCountChange(prevPicks[cardName], prevCount, newCount)
+      }));
+    }
   };
 
   const getLanguageLabel = (lang: string) => (
@@ -1117,6 +1209,8 @@ const DeckInputAndViewer: React.FC = () => {
     const proxyGroup = enabledApiKeys.filter(key => apiConfigs[key]?.useBackendProxy);
     const nonProxyApis = enabledApiKeys.filter(key => !apiConfigs[key]?.useBackendProxy);
 
+    const serverHits = await lookupServerCache(enabledApiKeys, [cardEntry.name]);
+
     // Function to process a single API or proxy group
     const processApiGroup = async (apiKeys: string[]) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
@@ -1132,9 +1226,15 @@ const DeckInputAndViewer: React.FC = () => {
             const resultsArr = result?.results || [];
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'cache', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result?.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
+          } else if (serverHits.has(lookupKey(apiKey, cardEntry.name))) {
+            result = serverHits.get(lookupKey(apiKey, cardEntry.name))!;
+            await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
+            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'server', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result.rawResponse });
+            groupResults[apiKey][cardEntry.name] = result.results;
           } else {
             result = await api({ cardname: cardEntry.name });
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
+            if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
             const resultsArr = result?.results || [];
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = resultsArr;
@@ -1348,6 +1448,22 @@ const DeckInputAndViewer: React.FC = () => {
                   </div>
                 );
               })()}
+              <div
+                className="connected-cards-toggle"
+                title={serverCacheAvailable ?
+                  'Use search results other users already found (shared server cache). Uncheck to always search the sources yourself.' :
+                  'The shared search cache is turned off on this server'}
+              >
+                {renderCheckbox('useServerCache', 'Shared Search Cache', serverCacheActive, (event) => {
+                  if (!serverCacheAvailable) return;
+                  setUseServerCache(event.target.checked);
+                  try {
+                    localStorage.setItem(USE_SERVER_CACHE_KEY, String(event.target.checked));
+                  } catch {
+                    // Ohne localStorage gilt die Wahl nur bis zum Neuladen
+                  }
+                }, false, serverCacheAvailable ? undefined : 'is-disabled')}
+              </div>
               <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
@@ -1608,7 +1724,7 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={settingsDialogOpen}
         onClose={handleCloseSettingsDialog}
-        maxWidth='md'
+        maxWidth='lg'
         children={
           <SettingsDialog
             open={settingsDialogOpen}
@@ -1616,6 +1732,7 @@ const DeckInputAndViewer: React.FC = () => {
             settings={settings}
             onSettingsChange={handleSettingsChange}
             mailEnabled={pdfMailEnabled}
+            previewCards={settingsPreviewCards}
           />
         }
       />
@@ -1641,6 +1758,17 @@ const DeckInputAndViewer: React.FC = () => {
             : {}
         }
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
+        deckNav={
+          currentCardName !== null && currentTilePosition !== -1
+            ? {
+              key: `${currentCardName}#${currentCardIndex}`,
+              cardName: currentCardName,
+              position: currentTilePosition + 1,
+              total: deckTiles.length,
+              onStep: handleStepImageSelect,
+            }
+            : undefined
+        }
       />
 
       <RecropDialog

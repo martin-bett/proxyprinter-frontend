@@ -22,23 +22,57 @@ interface ImageCacheDbEntry {
   blob: Blob | null;
   // Druckschärfe je Crop-Ausschnitt, Schlüssel aus qualityCacheKey()
   quality?: Record<string, ImageQuality>;
+  // Verkleinerte Kopie für Kachelansichten (ganzes Bild, THUMB_MAX_WIDTH breit) und Originalmaße
+  thumb?: Blob;
+  width?: number;
+  height?: number;
+}
+
+/** Breite der verkleinerten Kopie, die Kacheln statt des Originals dekodieren. */
+export const THUMB_MAX_WIDTH = 512;
+
+/** Maße des Originals, wenn onLoad nur die verkleinerte Kopie liefert. */
+export interface ImageLoadMeta {
+  fullWidth: number;
+  fullHeight: number;
+  thumbnail: boolean;
+}
+
+/** Verkleinert ein Bild auf höchstens THUMB_MAX_WIDTH Pixel Breite. null, wenn nichts zu verkleinern ist oder Canvas fehlt. */
+export async function createThumbnail(img: HTMLImageElement): Promise<Blob | null> {
+  try {
+    const { naturalWidth: w, naturalHeight: h } = img;
+    if (!w || !h || w <= THUMB_MAX_WIDTH) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = THUMB_MAX_WIDTH;
+    canvas.height = Math.max(1, Math.round((h * THUMB_MAX_WIDTH) / w));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.85));
+  } catch (e) {
+    return null;
+  }
 }
 
 export interface AddToQueueParams {
   url: string;
   priority: number;
-  onLoad: (img: HTMLImageElement, sizeBytes?: number) => void;
+  onLoad: (img: HTMLImageElement, sizeBytes?: number, meta?: ImageLoadMeta) => void;
   onError?: (error: unknown) => void;
   onProcessListChange?: (status: string) => void;
   category?: string;
   cardInput?: CacheCardInput;
+  /** Liegt im Cache eine verkleinerte Kopie, liefert onLoad diese (meta.thumbnail) statt des Originals. */
+  preferThumbnail?: boolean;
   /** Abbruch durch den Aufrufer: wartender Eintrag fliegt raus, laufender Download wird fertig, Callbacks werden nicht mehr gerufen. */
   signal?: AbortSignal;
 }
 
 // Ein Interessent an einem Bild; mehrere Karten mit gleichem Bild teilen sich einen Queue-Eintrag
 interface QueueListener {
-  onLoad: (img: HTMLImageElement, sizeBytes?: number) => void;
+  onLoad: (img: HTMLImageElement, sizeBytes?: number, meta?: ImageLoadMeta) => void;
   onError?: (error: unknown) => void;
   onProcessListChange?: (status: string) => void;
   signal?: AbortSignal;
@@ -262,12 +296,26 @@ class ImageLoaderService {
     return `${cardInput.apiName || "NOAPI"}::${cardInput.name || "NONAME"}::${cardInput.imageUrl || ""}`;
   }
 
-  async addToQueue({ url, priority, onLoad, onError, onProcessListChange, category, cardInput, signal }: AddToQueueParams): Promise<void> {
+  async addToQueue({ url, priority, onLoad, onError, onProcessListChange, category, cardInput, signal, preferThumbnail }: AddToQueueParams): Promise<void> {
     if (signal?.aborted) return;
     const cacheKey = this._makeCacheKey(cardInput || {});
     const cached = await getFromIndexedDB(cacheKey);
     // Während des Cache-Lookups abgebrochen (z.B. Karte weggefiltert): gar nicht erst einreihen
     if (signal?.aborted) return;
+    if (cached && preferThumbnail && cached.thumb && cached.width && cached.height) {
+      // Kachelansicht: nur die kleine Kopie dekodieren
+      const meta: ImageLoadMeta = { fullWidth: cached.width, fullHeight: cached.height, thumbnail: true };
+      this.activeCacheLoads++;
+      this._createImageFromBlob(cached.thumb, true).then(img => {
+        if (signal?.aborted) return;
+        if (img) onLoad(img, cached.sizeBytes, meta);
+        else onError?.(new Error("Thumbnail could not be created from blob"));
+      }).finally(() => {
+        this.activeCacheLoads--;
+      });
+      onProcessListChange?.("LOADING");
+      return;
+    }
     if (cached) {
       // Wenn img noch nicht geladen, aus Blob erzeugen, sonst Fallback: Bild-URL laden
       this.activeCacheLoads++;
@@ -278,6 +326,8 @@ class ImageLoaderService {
         if (signal?.aborted) return;
         if (img) {
           onLoad(img, cached.sizeBytes);
+          // Eintrag aus älteren Versionen ohne kleine Kopie: nachreichen
+          if (cached.blob && !cached.thumb) void this._addThumbnail(cacheKey, img);
         } else {
           onError?.(new Error(cached.blob ? "Image could not be created from blob" : "Image could not be loaded from url"));
         }
@@ -369,7 +419,11 @@ class ImageLoaderService {
       load.then(async ({ img, blob }) => {
         const sizeBytes = blob?.size || 0;
         const cacheKey = this._makeCacheKey(cardInput || {});
-        const cacheEntry: ImageCacheDbEntry = { sizeBytes, cardInput, timestamp: Date.now(), cacheKey, imageUrl: url, blob };
+        const thumb = blob ? await createThumbnail(img) : null;
+        const cacheEntry: ImageCacheDbEntry = {
+          sizeBytes: sizeBytes + (thumb?.size || 0), cardInput, timestamp: Date.now(), cacheKey, imageUrl: url, blob,
+          ...(thumb ? { thumb, width: img.naturalWidth, height: img.naturalHeight } : {}),
+        };
         await saveToIndexedDB(cacheEntry);
         await this._enforceCacheLimit();
         this._liveListeners(entry).forEach(l => l.onLoad(img, sizeBytes));
@@ -406,12 +460,45 @@ class ImageLoaderService {
     return { img, blob };
   }
 
-  private _createImageFromBlob(blob: Blob): Promise<HTMLImageElement | null> {
+  /** Kleine Kopie für einen vorhandenen Cache-Eintrag nachreichen (ohne Quality-Daten zu überschreiben). */
+  private async _addThumbnail(cacheKey: string, img: HTMLImageElement): Promise<void> {
+    try {
+      const thumb = await createThumbnail(img);
+      if (!thumb) return;
+      const entry = await getFromIndexedDB(cacheKey);
+      if (!entry || entry.thumb) return;
+      await saveToIndexedDB({
+        ...entry, thumb, width: img.naturalWidth, height: img.naturalHeight, sizeBytes: (entry.sizeBytes || 0) + thumb.size,
+      });
+    } catch (e) { }
+  }
+
+  /** Gecachte Blobs eines Bildes (Original und kleine Kopie), ohne Netzwerk. */
+  async getCachedBlobs(cardInput: CacheCardInput): Promise<{ blob?: Blob; thumb?: Blob; width?: number; height?: number } | undefined> {
+    try {
+      const entry = await getFromIndexedDB(this._makeCacheKey(cardInput));
+      if (!entry || (!entry.blob && !entry.thumb)) return undefined;
+      return { blob: entry.blob || undefined, thumb: entry.thumb, width: entry.width, height: entry.height };
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  /** Original aus dem Cache dekodieren (z.B. für die Schärfemessung, wenn die Kachel nur die kleine Kopie hält). */
+  loadFullFromCache(cardInput: CacheCardInput): Promise<HTMLImageElement | null> {
+    return this.loadImageFromPersistentCache(this._makeCacheKey(cardInput));
+  }
+
+  private _createImageFromBlob(blob: Blob, revokeAfterLoad = false): Promise<HTMLImageElement | null> {
     return new Promise((resolve) => {
       const img = new window.Image();
       img.crossOrigin = "Anonymous";
-      img.src = URL.createObjectURL(blob);
-      img.onload = () => resolve(img);
+      const objectUrl = URL.createObjectURL(blob);
+      img.src = objectUrl;
+      img.onload = () => {
+        if (revokeAfterLoad) URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
       img.onerror = () => resolve(null);
     });
   }

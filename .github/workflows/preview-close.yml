@@ -1,0 +1,42 @@
+name: Testumgebung entfernen
+
+# Wenn ein PR nach develop gemergt oder geschlossen wird: Frontend-Teil seiner Testumgebung entfernen.
+# Ist der Backend-PR mit gleichem Branch-Namen auch zu, wird die ganze Umgebung abgebaut (deploy/PREVIEW.md).
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+concurrency:
+  group: preview-close-${{ github.head_ref }}
+  cancel-in-progress: false
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Testumgebung abbauen
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          slug=$(printf '%s' "$BRANCH" | sha256sum | cut -c1-6)
+          legacy=$(printf '%s' "$BRANCH" | sed 's#^claude/##' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-40 | sed -E 's/-+$//')
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          {
+            printf 'export ACTION=close SIDE=frontend SLUG=%q\n' "$slug"
+            printf 'export LEGACY_SLUG=%q\n' "$legacy"
+            cat .github/deploy/preview.sh
+          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
+                "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc'
