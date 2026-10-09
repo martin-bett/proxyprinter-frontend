@@ -985,5 +985,9 @@
       "deleteFailed": "No se pudo eliminar la cuenta, volver a intentarlo.",
       "wrongCode": "El código es incorrecto o ha caducado."
     }
+  },
+  "version": {
+    "build": "Build {{number}}",
+    "backendBuild": "Backend {{number}}"
   }
 }
