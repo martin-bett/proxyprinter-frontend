@@ -25,14 +25,12 @@ export type GroupedResults = Record<string, CardResult[]>;
 
 /** One row of the search log: where a search result came from and how many hits it had. */
 export interface LogEntry {
-  /** Gesetzt bei Netzsuchen: der laufende Eintrag wird über die id aktualisiert */
-  id?: number;
   configName: string;
   cardName: string;
-  /** cache = lokaler Browser-Cache, server = gemeinsamer Such-Cache im Backend, running = Netzsuche läuft noch */
-  source: 'cache' | 'server' | 'network' | 'error' | 'running';
+  /** cache = lokaler Browser-Cache, server = gemeinsamer Such-Cache im Backend */
+  source: 'cache' | 'server' | 'network' | 'error';
   count: number;
-  /** Dauer der Suche in Millisekunden (auch Cache-Lesen); bei running bis zur letzten fertigen Seite */
+  /** Dauer der Suche in Millisekunden (auch Cache-Lesen) */
   durationMs: number;
   /** HTTP-Requests dieser Suche; 0 bei Cache-Treffern, undefined bei Fehlern */
   requestCount?: number;

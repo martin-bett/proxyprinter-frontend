@@ -7,23 +7,23 @@
 }
 
 .search-log-table .search-log-api {
-  width: 22%;
+  width: 20%;
 }
 
 .search-log-table .search-log-source {
-  width: 2.25rem;
+  width: 5.5rem;
 }
 
 .search-log-table .search-log-count {
-  width: 2.75rem;
+  width: 6.5rem;
 }
 
 .search-log-table .search-log-duration {
-  width: 4rem;
+  width: 6.5rem;
 }
 
 .search-log-table .search-log-requests {
-  width: 2.25rem;
+  width: 7rem;
 }
 
 .search-log .search-log-table th {
@@ -34,6 +34,7 @@
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -88,9 +89,6 @@
   color: #d32f2f;
 }
 
-.search-log-running .search-log-source-button:disabled {
-  opacity: 1;
-}
 
 /* Nicht-modaler Dialog oben über der Kartenansicht */
 .search-log-panel {
@@ -138,4 +136,20 @@
   min-height: 0;
   overflow-y: auto;
   padding: 0 0.5rem 0.5rem;
+}
+
+/* Laufende Suchen: fest über dem Log, eine Zeile je API */
+.search-log-running-searches {
+  padding: 0.25rem 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-log-section-title {
+  font-weight: 600;
+  padding: 0.25rem 6px;
+  color: var(--accent);
+}
+
+.search-log-more {
+  opacity: 0.7;
 }

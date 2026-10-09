@@ -356,7 +356,18 @@
       "duration": "耗时",
       "requests": "请求数"
     },
-    "showRaw": "{{title}}：显示原始数据"
+    "showRaw": "{{title}}：显示原始数据",
+    "headers": {
+      "api": "API",
+      "source": "来源",
+      "requests": "请求",
+      "duration": "耗时",
+      "matches": "结果"
+    },
+    "running": {
+      "title": "正在进行的搜索",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "未找到牌组。",

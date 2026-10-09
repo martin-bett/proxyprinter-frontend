@@ -1,22 +1,35 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { LogEntry } from '../../api/types/types';
 import SearchLog from './SearchLog';
+import RunningSearches from './RunningSearches';
+import { RunningSearch } from './useSearchActivity';
 import './SearchLog.css';
 
 interface SearchLogPanelProps {
   open: boolean;
   entries: LogEntry[];
+  running: RunningSearch[];
+  pendingByApi: Record<string, number>;
   onShowRaw: (raw: string) => void;
   onClose: () => void;
 }
 
 // Nicht-modaler Dialog über der Kartenansicht: die Karten darunter bleiben bedienbar
 // und man sieht neue Karten dazukommen, während die Suche läuft.
-export default function SearchLogPanel({ open, entries, onShowRaw, onClose }: SearchLogPanelProps) {
+export default function SearchLogPanel({ open, entries, running, pendingByApi, onShowRaw, onClose }: SearchLogPanelProps) {
   const { t } = useTranslation();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const atBottom = useRef(true);
+
+  // Neue Einträge kommen unten dazu; wer unten steht, bleibt unten
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (body && atBottom.current) body.scrollTop = body.scrollHeight;
+  }, [entries.length, open]);
+
   if (!open) return null;
   const title = t('deckInput.searchLog.title');
   return (
@@ -33,7 +46,15 @@ export default function SearchLogPanel({ open, entries, onShowRaw, onClose }: Se
           <CloseIcon fontSize="small" />
         </IconButton>
       </div>
-      <div className="search-log-panel-body">
+      <RunningSearches running={running} pendingByApi={pendingByApi} />
+      <div
+        ref={bodyRef}
+        className="search-log-panel-body"
+        onScroll={(event) => {
+          const body = event.currentTarget;
+          atBottom.current = body.scrollHeight - body.scrollTop - body.clientHeight < 8;
+        }}
+      >
         <SearchLog entries={entries} onShowRaw={onShowRaw} />
       </div>
     </div>

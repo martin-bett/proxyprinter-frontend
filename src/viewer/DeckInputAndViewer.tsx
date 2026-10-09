@@ -65,15 +65,16 @@ import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
-import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, PageProgress, SearchResult, hasConnectedCards } from '../service/ApiFactory';
+import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLogPanel from './log/SearchLogPanel';
+import { NetworkLog, useSearchActivity } from './log/useSearchActivity';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { replaceDeckEntry } from './replaceDeckEntry';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
-import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
+import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, SelectedCardsMap } from '../api/types/types';
 import { adjustSelectionForCountChange } from './selectionUtils';
 
 const NO_LANGUAGE = 'No Language';
@@ -105,12 +106,6 @@ const defaultCropSettings: CropSettings = {
   isStretch: true
 };
 
-/** Laufender Netzsuch-Eintrag im Search Log */
-interface NetworkLog {
-  onPage: (progress: PageProgress) => void;
-  finish: (entry: LogEntry) => void;
-}
-
 const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
 const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
@@ -120,7 +115,8 @@ const DeckInputAndViewer: React.FC = () => {
   const [appendMode, setAppendMode] = useState(false);
   const [cardResults, setCardResults] = useState<CardResultsMap>({});
   const [settings, setSettings] = useState<PdfSettings>(defaultSettings);
-  const [log, setLog] = useState<LogEntry[]>([]);
+  const searchActivity = useSearchActivity();
+  const { log, addToLog, startNetworkLog, finishLog, beginApi, clear: clearSearchActivity } = searchActivity;
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -269,23 +265,6 @@ const DeckInputAndViewer: React.FC = () => {
     setCategoryStates(initialCategoryStates);
   }, [apiConfigs]);
 
-  const addToLog = (entry: LogEntry) => {
-    setLog((prevLog) => [...prevLog, entry]);
-  };
-
-  // Netzsuchen stehen sofort im Log (läuft noch) und werden nach jeder fertigen Seite aktualisiert.
-  // Wurde das Log inzwischen geleert, kommt ein später fertiger Eintrag nicht zurück.
-  const nextLogId = useRef(0);
-  const startNetworkLog = (configName: string, cardName: string, startedAt: number): NetworkLog => {
-    const id = ++nextLogId.current;
-    setLog((prevLog) => [...prevLog, { id, configName, cardName, source: 'running', count: 0, durationMs: 0, requestCount: 0 }]);
-    const replace = (entry: LogEntry) => setLog((prevLog) => prevLog.map(other => (other.id === id ? { ...entry, id } : other)));
-    return {
-      onPage: ({ count, requestCount }) => replace({ configName, cardName, source: 'running', count, requestCount, durationMs: performance.now() - startedAt }),
-      finish: replace,
-    };
-  };
-  const finishLog = (entry: LogEntry, run: NetworkLog | undefined) => (run ? run.finish(entry) : addToLog(entry));
 
   const handleSettingsChange = (newSettings: PdfSettings) => {
     setSettings(newSettings);
@@ -532,7 +511,7 @@ const DeckInputAndViewer: React.FC = () => {
     if (!appendMode) {
       setCardResults({});
     }
-    setLog([]);
+    clearSearchActivity();
     // Jede Suche öffnet den Search Log, damit man sieht, was gerade gesucht wird
     setSearchLogOpen(true);
     setProgress(0);
@@ -574,6 +553,8 @@ const DeckInputAndViewer: React.FC = () => {
     // Die brauchen wir nicht, also nicht mit in den Cache schreiben.
     const processApiGroup = async (apiKeys: string[], entries: DeckEntry[], dropConnected: boolean, serverHits: Map<string, SearchApiResult>) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
+      // Alle APIs der Gruppe gleich anmelden: wartende stehen schon in den laufenden Suchen
+      const doneByApi = Object.fromEntries(apiKeys.map(apiKey => [apiKey, beginApi(apiKey, entries.length)]));
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
         const limit = (apiConfigs[apiKey] as ApiConfig)?.concurrentLimit || Infinity;
@@ -618,6 +599,7 @@ const DeckInputAndViewer: React.FC = () => {
               groupResults[apiKey][entry.name] = [];
             }
           }
+          doneByApi[apiKey]();
           updateProgress(entry.count);
         });
         await limitConcurrency(tasks, limit);
@@ -972,8 +954,8 @@ const DeckInputAndViewer: React.FC = () => {
       wanted.forEach(name => { if (!(name in updated)) updated[name] = true; });
       return updated;
     });
-    setLog([]);
-  }, []);
+    clearSearchActivity();
+  }, [clearSearchActivity]);
 
   const snapshots = useSnapshots({ state: workState, isBusy: isLoading, apply: applySnapshot });
 
@@ -989,9 +971,9 @@ const DeckInputAndViewer: React.FC = () => {
     setFreshPicks(new Set());
     setCurrentCardName(null);
     setCurrentCardIndex(null);
-    setLog([]);
+    clearSearchActivity();
     setProgress(0);
-  }, [saveSnapshot]);
+  }, [saveSnapshot, clearSearchActivity]);
   const pdfDownloadNameRef = useRef('deck');
 
   const reloadDeckFinderConfigs = useCallback(async () => {
@@ -1318,6 +1300,7 @@ const DeckInputAndViewer: React.FC = () => {
     // Function to process a single API or proxy group
     const processApiGroup = async (apiKeys: string[]) => {
       const groupResults: Record<string, Record<string, SearchResult[]>> = {};
+      const doneByApi = Object.fromEntries(apiKeys.map(apiKey => [apiKey, beginApi(apiKey, 1)]));
       for (const apiKey of apiKeys) {
         groupResults[apiKey] = {};
         const api = apiFactory!.createApi(apiKey);
@@ -1350,6 +1333,7 @@ const DeckInputAndViewer: React.FC = () => {
           groupResults[apiKey][cardEntry.name] = [];
         }
 
+        doneByApi[apiKey]();
         completedCards++;
         setProgress(Math.round((completedCards / enabledApiKeys.length) * 100));
       }
@@ -1651,6 +1635,8 @@ const DeckInputAndViewer: React.FC = () => {
         <SearchLogPanel
           open={searchLogOpen}
           entries={log}
+          running={searchActivity.running}
+          pendingByApi={searchActivity.pendingByApi}
           onShowRaw={setRawDataDialog}
           onClose={() => setSearchLogOpen(false)}
         />
