@@ -1415,14 +1415,13 @@ const DeckInputAndViewer: React.FC = () => {
                   }
                 })}
               </div>
-              <div className="decklist-input-buttons">
-                <div className="decklist-append-checkbox">
-                  {renderCheckbox('appendMode', 'Append', appendMode, (event) => {
-                    setAppendMode(event.target.checked);
-                  })}
-                </div>
-                <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
+              <div
+                className="connected-cards-toggle"
+                title="Add the analyzed cards to the current selection instead of replacing it."
+              >
+                {renderCheckbox('appendMode', 'Append', appendMode, (event) => setAppendMode(event.target.checked))}
               </div>
+              <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
           <CollapsibleSection
