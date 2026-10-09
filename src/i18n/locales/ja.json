@@ -982,5 +982,9 @@
       "deleteFailed": "アカウントを削除できませんでした。再試行してください。",
       "wrongCode": "コードが間違っているか、期限切れです。"
     }
+  },
+  "version": {
+    "build": "ビルド {{number}}",
+    "backendBuild": "バックエンド {{number}}"
   }
 }

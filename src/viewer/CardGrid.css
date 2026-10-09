@@ -640,3 +640,8 @@
 .search-log-toggle.is-active {
   border-color: var(--accent);
 }
+
+.version-build {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

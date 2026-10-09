@@ -996,5 +996,9 @@
       "deleteFailed": "Das Konto konnte nicht gelöscht werden, bitte erneut versuchen.",
       "wrongCode": "Der Code ist falsch oder abgelaufen."
     }
+  },
+  "version": {
+    "build": "Build {{number}}",
+    "backendBuild": "Backend {{number}}"
   }
 }

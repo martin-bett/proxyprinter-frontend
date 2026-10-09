@@ -996,5 +996,9 @@
       "deleteFailed": "Le compte n'a pas pu être supprimé, réessayer.",
       "wrongCode": "Le code est incorrect ou a expiré."
     }
+  },
+  "version": {
+    "build": "Build {{number}}",
+    "backendBuild": "Backend {{number}}"
   }
 }
