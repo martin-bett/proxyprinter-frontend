@@ -46,7 +46,7 @@ function setup(initial: WorkState) {
       current = {
         ...restored,
         enabledApis: Object.fromEntries(restored.enabledApis.map(name => [name, true])),
-        settings: { ...restored.settings, email: current.settings.email },
+        settings: { ...restored.settings, sendMail: current.settings.sendMail },
       };
       hook.rerender({ state: current });
     },

@@ -16,7 +16,7 @@ export const SNAPSHOT_VERSION = 1;
 export type SnapshotKind = 'session' | 'generate' | 'manual';
 
 /** PDF-Einstellungen ohne E-Mail-Adresse, die gehört nicht zum Arbeitsstand. */
-export type SnapshotPdfSettings = Omit<PdfSettings, 'email'>;
+export type SnapshotPdfSettings = Omit<PdfSettings, 'sendMail'>;
 
 export interface SnapshotSelection {
   /** Index in results */
@@ -166,7 +166,7 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
     };
   });
 
-  const { email, ...pdfSettings } = state.settings;
+  const { sendMail, ...pdfSettings } = state.settings;
   const search: Snapshot['search'] = {
     decklist: state.decklist,
     enabledApis: Object.keys(state.enabledApis).filter(name => state.enabledApis[name]).sort(),
@@ -285,7 +285,7 @@ export function migrateSnapshot(raw: any): Snapshot {
 }
 
 function withoutEmail(settings: PdfSettings): SnapshotPdfSettings {
-  const { email, ...rest } = settings;
+  const { sendMail, ...rest } = settings;
   return rest;
 }
 

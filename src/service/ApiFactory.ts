@@ -124,6 +124,12 @@ export function usesBackendFetch(config: Config): config is GalleryConfig {
 
 export type Config = GalleryConfig | ApiConfig;
 
+/** Eingabe, die selbst die Quellantwort ist (JSON oder HTML eingefügt) statt eines Links, sonst undefined. */
+export function pastedSource(input: string): string | undefined {
+  const text = input.trim();
+  return /^[\[{<]/.test(text) ? text : undefined;
+}
+
 
 export function isApiConfig(config: Config): config is ApiConfig {
   return (
@@ -324,6 +330,11 @@ export default class ApiFactory {
     currentUrl: string
   ): Promise<{ response: Response, requestUrl: URL }> {
     const processedParams = await this.processRequestParameters(config, params);
+    // Eingefügter Quelltext statt Link: nichts abrufen, der Text ist die Antwort (z.B. Reddit-JSON aus dem eigenen Browser)
+    const pasted = usesBackendFetch(config) ? pastedSource(this.galleryInput(config, processedParams)) : undefined;
+    if (pasted) {
+      return { response: new Response(pasted), requestUrl: new URL(config.baseUrl, window.location.origin) };
+    }
     const { requestUrl, fetchOptions } = usesBackendFetch(config)
       ? this.buildBackendFetch(config, processedParams)
       : this.buildRequest(config, processedParams, currentUrl);
@@ -418,10 +429,14 @@ export default class ApiFactory {
   }
 
   // Das Backend löst den Link per Link-Pattern auf, ruft die Quelle (ggf. mit Zugang) ab und gibt die Rohantwort zurück
-  private buildBackendFetch(config: GalleryConfig, processedParams: Record<string, string>): { requestUrl: URL, fetchOptions: RequestInit } {
-    const input = [...Object.values(processedParams), ...Object.values(config.parameterMap?.url ?? {})]
+  private galleryInput(config: GalleryConfig, processedParams: Record<string, string>): string {
+    return [...Object.values(processedParams), ...Object.values(config.parameterMap?.url ?? {})]
       .map(value => String(value ?? '').trim())
       .find(value => value && value !== '$GALLERY_INPUT$') ?? '';
+  }
+
+  private buildBackendFetch(config: GalleryConfig, processedParams: Record<string, string>): { requestUrl: URL, fetchOptions: RequestInit } {
+    const input = this.galleryInput(config, processedParams);
     const requestUrl = new URL(`/api/gallery/${config.id}/fetch`, window.location.origin);
     if (input) {
       requestUrl.searchParams.set('input', input);

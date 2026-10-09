@@ -9,6 +9,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useTranslation } from 'react-i18next';
 import ActionButton from '../../container/inputs/ActionButton';
 import ClosableDialog from '../../container/ClosableDialog';
+import AccountButton from '../account/AccountButton';
 import SearchCacheService from '../../service/cache/SearchCacheService';
 import { useImageLoaderNumbers } from '../../service/cache/hooks/useImageLoaderNumbers';
 import { formatRate, useDownloadRate } from '../../service/cache/hooks/useDownloadRate';
@@ -96,6 +97,7 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
         >
           <DeleteIcon />
         </button>
+        <AccountButton />
       </div>
 
       <ClosableDialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)} maxWidth="md">

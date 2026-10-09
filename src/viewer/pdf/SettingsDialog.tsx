@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
-import { isValidOptionalEmail } from './pdfEmail';
+import { useAuth } from '../../service/auth/auth';
 import { PdfPagePreview, PreviewCard } from './PdfPagePreview';
 
 export interface PdfSettings {
@@ -18,8 +18,8 @@ export interface PdfSettings {
   cornerColor: string;
   cornerColorAuto: boolean;
   maxDpi: number;
-  /** Optional, geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. */
-  email: string;
+  /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */
+  sendMail: boolean;
 }
 
 const defaultSettings: PdfSettings = {
@@ -34,7 +34,7 @@ const defaultSettings: PdfSettings = {
   cornerColor: '#000000',
   cornerColorAuto: true,
   maxDpi: 300,
-  email: ''
+  sendMail: false
 };
 
 interface SettingsDialogProps {
@@ -42,7 +42,7 @@ interface SettingsDialogProps {
   onClose: () => void;
   settings: PdfSettings;
   onSettingsChange: (settings: PdfSettings) => void;
-  /** Kann der Server Mails verschicken? Sonst ist das Feld ausgegraut. */
+  /** Kann der Server Mails verschicken? Sonst ist die Option ausgegraut. */
   mailEnabled?: boolean;
   /** Die ersten Karten des Decks für die Seitenvorschau; leer = graue Platzhalter. */
   previewCards?: PreviewCard[];
@@ -51,7 +51,7 @@ interface SettingsDialogProps {
 function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = false, previewCards = [] }: SettingsDialogProps) {
   const { t } = useTranslation();
   const [localSettings, setLocalSettings] = useState<PdfSettings>(settings);
-  const emailValid = isValidOptionalEmail(localSettings.email);
+  const auth = useAuth();
 
   const handleChange = <K extends keyof PdfSettings>(key: K, value: PdfSettings[K]) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
@@ -62,14 +62,13 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
   };
 
   const handleSave = () => {
-    if (!emailValid) return;
-    onSettingsChange({ ...localSettings, email: localSettings.email.trim() });
+    onSettingsChange(localSettings);
     onClose();
   };
 
   const handleReset = () => {
-    // Die Adresse ist keine Druckeinstellung, Reset lässt sie stehen
-    setLocalSettings({ ...defaultSettings, email: localSettings.email });
+    // Der Mailversand ist keine Druckeinstellung, Reset lässt ihn stehen
+    setLocalSettings({ ...defaultSettings, sendMail: localSettings.sendMail });
   };
 
   return (
@@ -170,27 +169,26 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
       </div>
       </div>
       <div className="settings-category settings-email">
-        <h3 className="title is-4">{t('pdf.settings.email.title')}</h3>
-        <label htmlFor="pdf-settings-email">{t('pdf.settings.email.label')}</label>
-        <input
-          id="pdf-settings-email"
-          className={`input${emailValid ? '' : ' is-danger'}`}
-          type="email"
-          placeholder={t('pdf.settings.email.placeholder')}
-          autoComplete="email"
-          maxLength={254}
-          disabled={!mailEnabled}
-          value={localSettings.email}
-          onChange={(e) => handleChange('email', e.target.value)}
+        <h3 className="title is-4">Email delivery</h3>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={localSettings.sendMail && !!auth.email}
+              disabled={!mailEnabled || !auth.email}
+              onChange={(e) => handleChange('sendMail', e.target.checked)}
+            />
+          }
+          label={auth.email ? `Send the download link to ${auth.email}` : 'Send the download link to my email address'}
         />
-        {!emailValid && <p className="help is-danger">{t('pdf.settings.email.invalid')}</p>}
-        {mailEnabled
-          ? <p className="help">{t('pdf.settings.email.hint')}</p>
-          : <p className="help">{t('pdf.settings.email.notAvailable')}</p>}
+        {!mailEnabled
+          ? <p className="help">Email delivery is not set up on this server.</p>
+          : !auth.email
+            ? <p className="help">Log in (bubble at the top right) to get the PDF by mail. Your address is confirmed by the login.</p>
+            : <p className="help">Useful for large decks: you can close the page, the link arrives when the PDF is ready.</p>}
       </div>
       <div className='dialog-footer'>
-        <button className='button' onClick={handleReset}>{t('common.reset')}</button>
-        <button className='button' onClick={handleSave} disabled={!emailValid}>{t('pdf.settings.ok')}</button>
+        <button className='button' onClick={handleReset}>Reset</button>
+        <button className='button' onClick={handleSave}>Ok</button>
       </div>
     </div>
   );

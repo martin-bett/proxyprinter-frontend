@@ -39,3 +39,6 @@ pick and crop images, generate a printable proxy PDF. Backend lives in `martin-b
 - Prefer generic solutions driven by API/gallery configs over source-specific special cases in code;
   keep UX simple.
 - `TODO` is martin's feature backlog (German). `archive/` holds old recovered code; don't edit it.
+- Skip labels: PR labels `skip-preview` (no test deployment) and `skip-tests` (skip the `test` job) are evaluated by `ci.yml`
+  for PRs to `develop` only. If a change is tiny or has no functional effect, propose them in the PR description with a one-line
+  reason; apply a label only after martin agrees (see `deploy/PREVIEW.md` in the backend repo).

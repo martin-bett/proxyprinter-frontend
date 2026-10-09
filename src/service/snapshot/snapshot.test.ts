@@ -25,7 +25,7 @@ function workState(): WorkState {
     visibleLanguages: new Set(['en']),
     visibleApis: new Set(['scryfall']),
     uniquePrints: true,
-    settings: { ...defaultSettings, width: 70, email: 'me@example.com' },
+    settings: { ...defaultSettings, width: 70, sendMail: true },
   };
 }
 
@@ -60,7 +60,7 @@ describe('snapshot', () => {
     expect(Array.from(state.visibleLanguages)).toEqual(['en']);
     expect(Array.from(state.visibleApis)).toEqual(['scryfall']);
     expect(state.settings.width).toBe(70);
-    expect((state.settings as any).email).toBeUndefined();
+    expect((state.settings as any).sendMail).toBeUndefined();
 
     const bolts = state.cardResults['Lightning Bolt'];
     expect(bolts.count).toBe(2);
