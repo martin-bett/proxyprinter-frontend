@@ -46,10 +46,14 @@ const readStored = (): string | null => {
   }
 };
 
-/** Saved choice, else English. Browser language is not used yet: only a few texts are translated so far. */
+/** Saved choice, else the first supported browser language, else English. */
 export const detectLanguage = (): string => {
   const stored = readStored();
-  return isSupported(stored) ? stored : FALLBACK;
+  if (isSupported(stored)) return stored;
+  const browser = (typeof navigator !== 'undefined' ? navigator.languages ?? [] : [])
+    .map(l => l.toLowerCase().split('-')[0])
+    .find(isSupported);
+  return browser ?? FALLBACK;
 };
 
 const loadBundle = async (code: string) => {

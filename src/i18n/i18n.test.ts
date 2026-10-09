@@ -35,3 +35,20 @@ describe('locales', () => {
     });
   });
 });
+
+describe('detectLanguage', () => {
+  const setBrowser = (languages: string[]) =>
+    Object.defineProperty(window.navigator, 'languages', { value: languages, configurable: true });
+  afterEach(() => localStorage.clear());
+
+  it('uses the saved choice first, then the browser language, then English', async () => {
+    const { detectLanguage } = await import('./index');
+    setBrowser(['xx-XX', 'de-AT', 'fr']);
+    expect(detectLanguage()).toBe('de');
+    localStorage.setItem('uiLanguage', 'ja');
+    expect(detectLanguage()).toBe('ja');
+    localStorage.clear();
+    setBrowser(['xx']);
+    expect(detectLanguage()).toBe('en');
+  });
+});

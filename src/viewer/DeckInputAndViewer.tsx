@@ -113,7 +113,7 @@ const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
 const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
 const DeckInputAndViewer: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [decklist, setDecklist] = useState('');
   const [cardResults, setCardResults] = useState<CardResultsMap>({});
   const [settings, setSettings] = useState<PdfSettings>(defaultSettings);
@@ -1024,7 +1024,7 @@ const DeckInputAndViewer: React.FC = () => {
     const createPdfDto = {
       images: pdfImageEntries.map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
       settings: pdfSettings,
-      ...(pdfEmail ? { email: pdfEmail } : {})
+      ...(pdfEmail ? { email: pdfEmail, language: i18n.language } : {})
     };
     try {
       const response = await fetch('/api/pdf', {
