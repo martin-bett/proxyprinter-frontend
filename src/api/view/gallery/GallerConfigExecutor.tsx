@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { GalleryConfig } from "../../../service/ApiFactory";
 
 type ParameterMapSection = Record<string, string>;
@@ -14,6 +15,7 @@ interface GalleryConfigExecutorProps {
 }
 
 const GalleryConfigExecutor: React.FC<GalleryConfigExecutorProps> = ({ config, handleExecute }) => {
+    const { t } = useTranslation();
     const [initialInputs, setInitialInputs] = useState<string[]>([]);
     const [parameterMap, setParameterMap] = useState<ParameterMapState>({
         url: {},
@@ -75,7 +77,7 @@ const GalleryConfigExecutor: React.FC<GalleryConfigExecutorProps> = ({ config, h
                                 <strong>{key}:</strong>
                                 <input
                                     type="text"
-                                    placeholder={key === "url" ? "Paste link (or the whole page source)" : undefined}
+                                    placeholder={key === "url" ? t('galleryConfig.executor.pasteLink') : undefined}
                                     value={parameterMap[type][key] || ""}
                                     onChange={(e) =>
                                         handleInputChange(type, key, e.target.value)
@@ -93,7 +95,7 @@ const GalleryConfigExecutor: React.FC<GalleryConfigExecutorProps> = ({ config, h
         <div>
             {renderParameterInputs("url", Object.entries(parameterMap.url))}
             {renderParameterInputs("request", Object.entries(parameterMap.request))}
-            <button onClick={handleSubmit}>Execute</button>
+            <button onClick={handleSubmit}>{t('galleryConfig.executor.execute')}</button>
         </div>
     );
 };

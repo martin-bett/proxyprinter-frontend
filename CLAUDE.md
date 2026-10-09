@@ -17,6 +17,7 @@ pick and crop images, generate a printable proxy PDF. Backend lives in `martin-b
 - `api/view/` – config dialogs and wizards for API, gallery and deckfinder configs
 - `container/` – shared UI pieces (`inputs/` with `CollapsibleSection`, `ActionButton`, …)
 - `theme/` – theme chooser and theme definitions
+- `i18n/` – i18next setup, `locales/en.json`, language chooser (flag bubble next to the `?` bubble). New UI texts go in `en.json` and are used via `useTranslation`; the UI language never changes card language filters. Concept: `concepts/mehrsprachigkeit.md` in the project files.
 - Configs are loaded from the backend (`/api/configs`). `src/api/configs/*.ts` is not imported anywhere.
 - Tests sit next to the code as `*.test.ts(x)`; tests touching IndexedDB import `fake-indexeddb/auto` themselves.
 
@@ -34,6 +35,7 @@ pick and crop images, generate a printable proxy PDF. Backend lives in `martin-b
 
 ## Working conventions
 - Answer martin in German. UI texts are English.
+- No visible text hardcoded in components or services: every user-visible string (labels, tooltips, errors, tutorials, aria-labels) is a key in `src/i18n/locales/en.json`, used via `useTranslation`/`i18n.t`. Add the key to all 8 locale files (`i18n.test.ts` checks key/placeholder parity), no direct address of the reader (see `src/i18n/glossary.md`). Backend errors are shown via their `code` (`backendErrors.<code>`).
 - Commit and push early and often; open a draft PR early (unpushed work has been lost before).
 - Prefer generic solutions driven by API/gallery configs over source-specific special cases in code;
   keep UX simple.

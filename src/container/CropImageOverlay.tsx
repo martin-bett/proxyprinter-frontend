@@ -6,6 +6,7 @@ import { CropSettings } from "../service/ApiFactory";
 import { CardResult } from "../api/types/types";
 import CropMask from "../viewer/grid/crop/CropMask";
 import { fetchImageViaProxy, imageLoaderService } from "../service/cache/ImageLoaderService";
+import { useTranslation } from 'react-i18next';
 
 interface CropImageOverlayProps {
   selectedImage: CardResult | null;
@@ -50,7 +51,7 @@ export const useProxiedImage = (card: CardResult | null | undefined) => {
         if (cancelled) return;
         setImageSrc(toUrl(blob));
       } catch (error) {
-        console.error("Bild konnte nicht geladen werden:", error);
+        console.error("Image could not be loaded:", error);
         // Ohne Proxy direkt versuchen
         if (!cancelled) setImageSrc(imageUrl);
       }
@@ -66,6 +67,7 @@ export const useProxiedImage = (card: CardResult | null | undefined) => {
 };
 
 const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, cardAspect = 63 / 88 }) => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<OverlayTab>('info');
   const { imageSrc, previewSrc, loading } = useProxiedImage(selectedImage);
   // Zuschnitt direkt am gewählten Bild ablegen, der Dialog übernimmt es beim Schließen
@@ -82,8 +84,8 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
     <div className="crop-image-overlay">
       <div style={{ fontSize: "small", wordBreak: "break-all" }}>{selectedImage?.imageUrl}</div>
       <Tabs value={tab} onChange={(_, value: OverlayTab) => setTab(value)} variant="fullWidth" className="crop-image-tabs">
-        <Tab value="info" icon={<InfoOutlinedIcon fontSize="small" />} iconPosition="start" label="Info" />
-        <Tab value="crop" icon={<CropIcon fontSize="small" />} iconPosition="start" label="Crop" disabled={!selectedImage} />
+        <Tab value="info" icon={<InfoOutlinedIcon fontSize="small" />} iconPosition="start" label={t('common.info')} />
+        <Tab value="crop" icon={<CropIcon fontSize="small" />} iconPosition="start" label={t('container.cropOverlay.tabCrop')} disabled={!selectedImage} />
       </Tabs>
 
       {loading && !(tab === 'info' && previewSrc) && (
@@ -99,16 +101,16 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
           </div>
           <table className="crop-image-info">
             <tbody>
-              <tr><td>Name:</td><td>{selectedImage.name}</td></tr>
+              <tr><td>{t('container.cropOverlay.name')}</td><td>{selectedImage.name}</td></tr>
               <tr>
-                <td>Set:</td>
+                <td>{t('container.cropOverlay.set')}</td>
                 <td>{selectedImage.set}{selectedImage.setNumber ? ` (${selectedImage.setNumber})` : ""}</td>
               </tr>
-              <tr><td>API:</td><td>{selectedImage.apiName}</td></tr>
-              <tr><td>Sprache:</td><td>{selectedImage.languageCode || "—"}</td></tr>
+              <tr><td>{t('container.cropOverlay.api')}</td><td>{selectedImage.apiName}</td></tr>
+              <tr><td>{t('container.cropOverlay.language')}</td><td>{selectedImage.languageCode || "—"}</td></tr>
               {selectedImage.imageInfo && (
                 <tr>
-                  <td>Bildgröße:</td>
+                  <td>{t('container.cropOverlay.imageSize')}</td>
                   <td>
                     {selectedImage.imageInfo.width} × {selectedImage.imageInfo.height}
                     {selectedImage.imageInfo.fileType ? ` (${selectedImage.imageInfo.fileType})` : ""}
@@ -117,8 +119,8 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
               )}
               {hasCrop && (
                 <tr>
-                  <td>Zuschnitt:</td>
-                  <td>{crop!.width} × {crop!.height} ab {crop!.offSetX || 0}, {crop!.offSetY || 0}</td>
+                  <td>{t('container.cropOverlay.crop')}</td>
+                  <td>{t('container.cropOverlay.cropValue', { width: crop!.width, height: crop!.height, x: crop!.offSetX || 0, y: crop!.offSetY || 0 })}</td>
                 </tr>
               )}
             </tbody>

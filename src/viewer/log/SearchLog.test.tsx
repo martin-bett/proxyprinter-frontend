@@ -12,7 +12,7 @@ describe('SearchLog', () => {
   it('zeigt eine laufende Suche ohne fertige Seite mit Fortschrittssymbol und ohne Werte', () => {
     render(<SearchLog entries={[running({})]} onShowRaw={() => {}} />);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.getByLabelText('Suche läuft')).toBeInTheDocument();
+    expect(screen.getByLabelText('Searching')).toBeInTheDocument();
     expect(cells()).toEqual(['Scryfall', '', '–', '–', '–', 'Sol Ring']);
   });
 

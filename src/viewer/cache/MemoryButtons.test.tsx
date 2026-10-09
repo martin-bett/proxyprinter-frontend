@@ -29,27 +29,27 @@ describe('MemoryButtons Download-Bubbles', () => {
     mockNumbers.mockReturnValue({ queued: 0, active: 0, cacheLoading: 0 });
     render(<MemoryButtons onResetDeck={() => {}} />);
 
-    expect(screen.queryByTitle('Wartende Downloads')).toBeNull();
-    expect(screen.queryByTitle('Aktive Downloads')).toBeNull();
-    expect(screen.getByTitle('Cache-Ladevorgänge')).toBeTruthy();
+    expect(screen.queryByTitle('Waiting downloads')).toBeNull();
+    expect(screen.queryByTitle('Active downloads')).toBeNull();
+    expect(screen.getByTitle('Cache loading queue')).toBeTruthy();
   });
 
   it('zeigt die Bubbles, sobald etwas wartet oder lädt', () => {
     mockNumbers.mockReturnValue({ queued: 3, active: 0, cacheLoading: 0 });
     render(<MemoryButtons onResetDeck={() => {}} />);
 
-    expect(screen.getByTitle('Wartende Downloads').textContent).toContain('3');
-    expect(screen.getByTitle('Aktive Downloads').textContent).toContain('0');
+    expect(screen.getByTitle('Waiting downloads').textContent).toContain('3');
+    expect(screen.getByTitle('Active downloads').textContent).toContain('0');
   });
 
   it('blendet die Bubbles nach dem Fade aus, wenn nichts mehr läuft', async () => {
     mockNumbers.mockReturnValue({ queued: 1, active: 0, cacheLoading: 0 });
     const { rerender } = render(<MemoryButtons onResetDeck={() => {}} />);
-    expect(screen.getByTitle('Wartende Downloads')).toBeTruthy();
+    expect(screen.getByTitle('Waiting downloads')).toBeTruthy();
 
     mockNumbers.mockReturnValue({ queued: 0, active: 0, cacheLoading: 0 });
     rerender(<MemoryButtons onResetDeck={() => {}} />);
     // Noch im Fade: das Element bleibt kurz im DOM, ist dann aber weg
-    await waitFor(() => expect(screen.queryByTitle('Wartende Downloads')).toBeNull(), { timeout: 2000 });
+    await waitFor(() => expect(screen.queryByTitle('Waiting downloads')).toBeNull(), { timeout: 2000 });
   });
 });

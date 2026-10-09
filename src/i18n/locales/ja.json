@@ -1,0 +1,972 @@
+{
+  "themeChooser": {
+    "title": "カラーテーマ: {{name}}",
+    "aria": "カラーテーマを選択（現在: {{name}}）"
+  },
+  "tutorials": {
+    "title": "チュートリアル"
+  },
+  "language": {
+    "title": "表示言語: {{name}}",
+    "aria": "表示言語を選択（現在: {{name}}）",
+    "hint": "カードの言語と画像フィルターは別に設定します。"
+  },
+  "common": {
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "apply": "適用",
+    "back": "戻る",
+    "next": "次へ",
+    "done": "完了",
+    "search": "検索",
+    "loading": "読み込み中…",
+    "error": "エラー",
+    "replace": "置換",
+    "reset": "リセット",
+    "copy": "コピー",
+    "download": "ダウンロード",
+    "add": "追加",
+    "remove": "削除",
+    "rename": "名前を変更",
+    "preview": "プレビュー",
+    "settings": "設定",
+    "name": "名前",
+    "language": "言語",
+    "set": "セット",
+    "url": "URL",
+    "none": "なし",
+    "info": "情報",
+    "test": "テスト",
+    "overwrite": "上書き",
+    "load": "読み込み",
+    "retry": "再実行"
+  },
+  "configCommon": {
+    "groups": {
+      "baseInfo": "基本情報",
+      "request": "リクエスト",
+      "locator": "ロケーター",
+      "search": "検索",
+      "followLink": "リンク追跡",
+      "nestedLanguage": "ネストされた言語",
+      "cardFaces": "カード面"
+    },
+    "fields": {
+      "name": "名前",
+      "category": "カテゴリ",
+      "officialWebsite": "公式サイト",
+      "method": "メソッド",
+      "dataFormat": "データ形式",
+      "baseUrl": "ベースURL",
+      "parameterMap": "パラメーターマップ",
+      "paginationField": "ページネーションフィールド",
+      "dataListField": "データリストフィールド",
+      "nameField": "名前フィールド",
+      "imageUrlField": "画像URLフィールド",
+      "languageField": "言語フィールド",
+      "defaultLanguage": "デフォルト言語",
+      "setField": "セットフィールド",
+      "linkPattern": "リンクパターン"
+    },
+    "options": {
+      "get": "GET",
+      "post": "POST",
+      "json": "JSON",
+      "html": "HTML",
+      "text": "テキスト",
+      "urlEncoded": "URLエンコード",
+      "multipart": "マルチパート"
+    },
+    "titles": {
+      "defaultLanguage": "ソースが言語を提供しないカードに使う言語"
+    },
+    "categories": {
+      "mtg": "MTG",
+      "poke": "ポケモン",
+      "yugi": "遊戯王",
+      "misc": "その他"
+    },
+    "categoryIcons": {
+      "mtg": "MTGアイコン",
+      "poke": "ポケモンアイコン",
+      "yugi": "遊戯王アイコン",
+      "misc": "その他アイコン"
+    },
+    "languages": {
+      "en": "英語",
+      "de": "ドイツ語",
+      "fr": "フランス語",
+      "it": "イタリア語",
+      "es": "スペイン語",
+      "pt": "ポルトガル語",
+      "ja": "日本語",
+      "ko": "韓国語",
+      "ru": "ロシア語",
+      "zh": "中国語",
+      "ph": "ファイレクシア語"
+    },
+    "noProperties": "プロパティなし。",
+    "setProperties": "SETプロパティ",
+    "unsetProperties": "UNSETプロパティ",
+    "configSettings": "コンフィグ設定",
+    "publish": "公開",
+    "unpublish": "非公開にする",
+    "copyConfig": "コンフィグをコピー"
+  },
+  "apiConfig": {
+    "fields": {
+      "customArts": "カスタムアート",
+      "concurrentLimit": "同時実行数の上限",
+      "requestFormat": "リクエスト形式",
+      "csrfTokenVariableName": "CSRFトークン変数名",
+      "requiresCsrfToken": "CSRFトークンが必要",
+      "useBackendProxy": "バックエンドプロキシを使用",
+      "proxyImages": "画像をプロキシ経由にする",
+      "nameSplitCharacter": "名前の区切り文字",
+      "setNumberField": "セット番号フィールド",
+      "followLinkField": "リンク追跡フィールド",
+      "followLinkImageField": "画像フィールド"
+    },
+    "titles": {
+      "proxyImages": "このAPIの画像をバックエンド経由で読み込む（CORSヘッダーのないホスト向け）",
+      "cardFacesDataListField": "カード面のリスト（Scryfallではcard_faces）。画像のある面はそれぞれ別のヒットになります。"
+    },
+    "connectedCards": {
+      "dataListFieldTitle": "ヒット内のリスト（Scryfallではall_parts）",
+      "nameFieldTitle": "各項目の名前。有効なすべてのAPIで検索されます",
+      "linkField": "リンクフィールド",
+      "linkFieldTitle": "任意: 該当オブジェクトへのリンク（ヒットと同じ形式）",
+      "typeField": "タイプフィールド",
+      "typeFieldTitle": "任意: 各項目のタイプ（例: type_line）",
+      "title": "関連カード",
+      "titleTooltip": "リストの各項目が個別のカード（枚数1）となり、有効なすべてのAPIで検索されます",
+      "removeList": "リストを削除",
+      "addList": "リストを追加"
+    },
+    "dialog": {
+      "title": "コンフィグを選択",
+      "createConfig": "コンフィグを作成",
+      "controls": "操作"
+    }
+  },
+  "galleryConfig": {
+    "fields": {
+      "followInputRedirects": "リンクのリダイレクトを追跡",
+      "credential": "認証情報",
+      "imageUrlPattern": "画像URLパターン",
+      "imageUrlReplacement": "画像URLの置換",
+      "namePattern": "名前パターン",
+      "nameReplacement": "名前の置換"
+    },
+    "titles": {
+      "parameterMap": "各項目が入力欄になります。ソースに入力が不要なら空のままにします",
+      "linkPattern": "名前付きグループを持つ正規表現（例: (?<id>\\d+)）。グループはベースURLの{id}などに入ります。リンクパターンまたは認証情報がある場合、バックエンドがソースを取得します",
+      "followInputRedirects": "リンクがパターンに一致しない場合、先にリダイレクトを追跡します（短縮リンクや共有リンク）",
+      "credential": "サーバー管理者が保存した認証情報の名前（例: reddit）。Cookieやトークンはサーバーに残り、一致するホストにのみ送信されます",
+      "imageUrlPattern": "読み取った画像URLに対する正規表現。一致しない場合、その項目は除外されます（例: 動画、サブフォルダー）",
+      "imageUrlReplacement": "パターンの置換先。グループは$1の形式（例: https://i.redd.it/$1）",
+      "namePattern": "読み取った名前に対する正規表現（例: 拡張子なら \\.\\w+$）",
+      "nameReplacement": "パターンの置換先。空 = 削除"
+    },
+    "executor": {
+      "pasteLink": "リンクを貼り付け（またはページのソース全体）",
+      "execute": "実行"
+    },
+    "noImages": "画像が見つかりません。"
+  },
+  "deckFinderConfig": {
+    "fields": {
+      "fetchUrl": "取得URL",
+      "deckNameField": "デッキ名フィールド",
+      "entryListFields": "エントリーリストフィールド",
+      "quantityField": "枚数フィールド",
+      "numberField": "番号フィールド",
+      "boardField": "ボードフィールド",
+      "optionalBoards": "任意のボード",
+      "searchUrl": "検索URL",
+      "searchListField": "結果リストフィールド",
+      "searchIdField": "デッキIDフィールド",
+      "searchNameField": "デッキ名フィールド",
+      "searchOwnerField": "作成者フィールド",
+      "searchImageField": "画像フィールド",
+      "searchInfoField": "情報フィールド"
+    },
+    "titles": {
+      "linkPattern": "デッキリンク用の正規表現。グループ(?<id>...)がデッキIDになります",
+      "fetchUrl": "{id}を含む取得URL",
+      "entryListFields": "カードリストへのパス（カンマ区切り）。\"*\" = オブジェクトのすべての値、\"Sideboard=path\" = リストをボードに割り当て",
+      "numberField": "コレクター番号。セットと併用時のみ",
+      "boardField": "エントリーのカテゴリ（テキストまたはリスト）",
+      "optionalBoards": "要求時のみ読み込むボード（カンマ区切り。テキストの場合はセクション見出し）",
+      "searchUrl": "{query}と任意の{page}を含む検索URL",
+      "searchInfoField": "例: カード枚数"
+    },
+    "new": "新規"
+  },
+  "rating": {
+    "title": "評価",
+    "availability": "入手性",
+    "quality": "品質"
+  },
+  "pdf": {
+    "preview": {
+      "ariaLabel": "ページプレビュー",
+      "doesNotFit": "A4に収まりません"
+    },
+    "progress": {
+      "title": "PDFを生成中",
+      "category": {
+        "queued": "待機",
+        "download": "ダウンロード",
+        "build": "作成",
+        "finishing": "仕上げ"
+      },
+      "queuePosition": "{{total}}件中{{current}}番目",
+      "pageCount_other": "{{count}}ページ",
+      "starting": "PDF生成を開始しています...",
+      "emailNotice": "ダウンロードリンクは{{email}}にも送信されます。"
+    },
+    "settings": {
+      "dimensions": "サイズ",
+      "width": "幅: ",
+      "height": "高さ: ",
+      "verticalMargin": "上下の余白: ",
+      "horizontalMargin": "左右の余白: ",
+      "maxDpi": "最大DPI: ",
+      "cutlines": "カットライン",
+      "lineThickness": "線の太さ: ",
+      "cutLineColor": "カットラインの色: ",
+      "corners": "角",
+      "detectBorderColor": "枠の色を検出",
+      "cornerColor": "角の色: ",
+      "ok": "OK",
+      "email": {
+        "title": "メール送信",
+        "hint": "大きなデッキ向け: ページを閉じても、PDFの完成時にリンクが届きます。",
+        "notAvailable": "このサーバーではメール送信が設定されていません。",
+        "sendTo": "ダウンロードリンクを {{email}} に送信",
+        "sendToMine": "ダウンロードリンクを自分のメールアドレスに送信",
+        "loginHint": "ログイン（右上のバブル）するとPDFをメールで受け取れます。アドレスはログインで確認されます。"
+      }
+    }
+  },
+  "snapshot": {
+    "cardsCount_other": "{{count}}枚",
+    "pdfExpired": "PDFの期限切れ",
+    "pdfAvailable": "PDF {{size}}、{{date}}まで利用可能",
+    "restoreLastSession": "前回のセッションを復元",
+    "save": "スナップショットを保存",
+    "activeTitle": "{{label}}が有効: 変更はここに保存されます",
+    "loadTitle": "{{label}}を読み込む",
+    "downloadPdf": "PDFをダウンロード",
+    "downloadPdfOf": "{{label}}のPDFをダウンロード",
+    "overwriteTitle": "現在の状態で上書き",
+    "overwriteAria": "{{label}}を現在の状態で上書き",
+    "renameAria": "{{label}}の名前を変更",
+    "deleteAria": "{{label}}を削除",
+    "storedInBrowser": "このブラウザーに保存済み · {{size}}",
+    "deleteAll": "すべて削除",
+    "saveFailed": "スナップショットを保存できませんでした。",
+    "customCardsGone_other": "カスタムカード{{count}}枚がサーバー上に存在しません。再度アップロードしてください。",
+    "pdfLinkRemoved": "このPDFへのリンクは削除されます。",
+    "confirmOverwrite": "「{{label}}」を現在の状態で上書きしますか？",
+    "namePrompt": "スナップショット名",
+    "confirmDelete": "スナップショット「{{label}}」を削除しますか？",
+    "confirmDeleteAll": "このブラウザーに保存されたすべてのスナップショットを削除しますか？"
+  },
+  "cache": {
+    "progressTitle": "キャッシュ: {{used}} MB / {{limit}} MB",
+    "manager": {
+      "title": "画像キャッシュ",
+      "clickToDelete": "クリックで削除",
+      "groupProtected": "保護済み",
+      "deleteKeepProtected": "クリックで削除（保護済み{{count}}件は残る）",
+      "lock": {
+        "protected": "保護済み。クリックで保護を解除",
+        "partial": "{{total}}件中{{locked}}件が保護済み。クリックですべて保護",
+        "unprotected": "クリックで削除から保護"
+      },
+      "protectFromDeletion": "削除から保護",
+      "apiTotal": "API合計",
+      "usage": "{{limit}} MB中{{used}} MB使用",
+      "protectedCount": "{{count}}件保護済み",
+      "limitLabel": "上限（MB）",
+      "setLimit": "上限を設定",
+      "clearCache": "キャッシュを消去",
+      "hint": "セルをクリックすると、その画像が削除されます。赤い表示が削除対象です。鍵アイコンは画像を保護します。保護された画像はキャッシュを消去しても残り、保護画像だけで上限を超えた場合にのみ、空きを作るため削除されます。",
+      "count": "件数",
+      "allApis": "すべてのAPI",
+      "empty": "キャッシュは空です"
+    },
+    "buttons": {
+      "waitingDownloads": "待機中のダウンロード",
+      "activeDownloads": "実行中のダウンロード",
+      "activeDownloadsRate": "実行中のダウンロード · {{rate}}",
+      "cacheLoadingQueue": "キャッシュ読み込みキュー",
+      "showSearchCache": "検索キャッシュを表示",
+      "showImageCache": "画像キャッシュを表示",
+      "resetDeck": "デッキをリセット",
+      "resetDialog": {
+        "title": "デッキをリセットしますか？",
+        "text": "デッキリスト、検索結果、画像の選択が消去されます。現在の状態は先にスナップショットとして保存されます。"
+      }
+    },
+    "queue": {
+      "title": "キュー管理",
+      "cancelApi": "APIをキャンセル:",
+      "cancelLanguage": "言語をキャンセル:",
+      "columns": {
+        "api": "API",
+        "cardName": "カード名",
+        "priority": "優先度",
+        "category": "カテゴリ",
+        "action": "操作"
+      },
+      "empty": "キューにエントリーはありません",
+      "cancelEntry": "エントリーをキャンセル"
+    },
+    "search": {
+      "title": "検索キャッシュ",
+      "savedCount_other": "保存済みの検索{{count}}件",
+      "deleteAll": "すべての検索を削除",
+      "hint": "数字はヒット件数です。セルをクリックすると、その検索が削除されます。赤い表示が削除対象です。",
+      "allForCard": "このカードのすべて",
+      "empty": "保存済みの検索はありません"
+    }
+  },
+  "log": {
+    "raw": {
+      "title": "APIの生レスポンス",
+      "collapseAll": "すべて折りたたむ",
+      "expandAll": "すべて展開",
+      "copied": "コピーしました ✓",
+      "copy": "クリップボードにコピー"
+    },
+    "source": {
+      "cache": "キャッシュから読み込み",
+      "server": "共有サーバーキャッシュから読み込み",
+      "network": "ネットワークから読み込み",
+      "error": "エラー",
+      "running": "検索中"
+    },
+    "columns": {
+      "source": "取得元: キャッシュ、サーバーキャッシュ、ネットワーク",
+      "matches": "ヒット数",
+      "duration": "所要時間",
+      "requests": "リクエスト数"
+    },
+    "showRaw": "{{title}}: 生データを表示"
+  },
+  "deckImport": {
+    "noDecks": "デッキが見つかりません。",
+    "sourcesTitle": "Deckfinderソース",
+    "backToImport": "インポートに戻る",
+    "title": "デッキをインポート",
+    "sources": "ソース",
+    "source": "ソース",
+    "privateSource": "{{name}}（非公開）",
+    "inputLabelSearch": "デッキのリンク、ID、またはデッキ名",
+    "inputLabel": "デッキのリンクまたはID",
+    "linkRecognized": "{{name}}のリンクを認識しました",
+    "alsoLoad": "あわせて読み込む:",
+    "loadDeck": "デッキを読み込む",
+    "searchByName": "名前で検索",
+    "loadHit": "{{name}}を読み込む",
+    "hitCards": "{{info}}枚",
+    "moreResults": "さらに表示"
+  },
+  "cacheService": {
+    "proxyDecodeFailed": "プロキシ画像をデコードできませんでした",
+    "imageLoadFailed": "画像を読み込めませんでした",
+    "imageLoadFailedReason": "画像を読み込めませんでした: {{reason}}",
+    "proxyError": "プロキシエラー {{status}}",
+    "thumbnailFailed": "Blobからサムネイルを作成できませんでした",
+    "blobFailed": "Blobから画像を作成できませんでした",
+    "urlFailed": "URLから画像を読み込めませんでした"
+  },
+  "grid": {
+    "proxyImageLoadError": "プロキシ画像の読み込みエラー",
+    "printSharpness": "印刷の鮮明さ: {{rating}}（鮮明度 {{sharpness}}、{{dpi}} DPI）",
+    "unknownResolution": "解像度不明",
+    "sharpnessLine": "鮮明度 {{sharpness}} · {{dpi}} DPI · {{rating}}",
+    "noLanguage": "言語なし",
+    "noSetInfo": "セット情報なし",
+    "linkList": {
+      "title": "リンクを追加",
+      "label": "画像URL（カンマ、セミコロン、改行区切り）",
+      "add_other": "画像{{count}}枚を追加"
+    }
+  },
+  "quality": {
+    "rating": {
+      "good": "はっきり読める",
+      "ok": "読めるが、やや不鮮明",
+      "poor": "文字が読みにくい可能性あり",
+      "unknown": "文字を検出できません"
+    }
+  },
+  "crop": {
+    "imageAlt": "トリミング",
+    "cardTitle": "カード {{number}}",
+    "loadError": "画像を読み込めませんでした。URLを確認してください。",
+    "modeCrop": "トリミング",
+    "modeCut": "ギャラリーを分割",
+    "keepAspect": "縦横比を維持",
+    "keepAspectHint": "PDF設定のカード形式でトリミングし、印刷時に画像が歪まないようにします",
+    "wholeImage": "画像全体",
+    "offsetX": "オフセットX",
+    "offsetY": "オフセットY",
+    "width": "幅",
+    "height": "高さ",
+    "hint": "枠はマウスで移動、角はドラッグで調整、またはピクセル値を入力します。",
+    "rows": "行数",
+    "columns": "列数",
+    "outerBorder": "外側の余白（px）",
+    "gap": "カード間の間隔（px）",
+    "info": {
+      "tooLarge": "余白と間隔が画像より大きくなっています。",
+      "summary_other": "{{count}}枚、各 {{tileWidth}} × {{tileHeight}} px（画像 {{imageWidth}} × {{imageHeight}}）",
+      "summaryStretched_other": "{{count}}枚、各 {{tileWidth}} × {{tileHeight}} px（画像 {{imageWidth}} × {{imageHeight}}）、カード形式と異なるため印刷時に引き伸ばされます"
+    },
+    "addCards_other": "カード{{count}}枚を追加",
+    "title": "画像をトリミング",
+    "applyCards": "適用（{{count}}枚）"
+  },
+  "imageSelect": {
+    "quality": {
+      "good": "はっきり読める",
+      "ok": "やや不鮮明",
+      "poor": "読みにくい",
+      "unrated": "未評価"
+    },
+    "imageCount_other": "画像{{count}}枚",
+    "previousCard": "前のカード",
+    "previousCardHint": "前のカード（←）",
+    "nextCard": "次のカード",
+    "nextCardHint": "次のカード（→）",
+    "filterLanguage": "言語で絞り込み",
+    "filterApi": "APIで絞り込み",
+    "filterSharpness": "鮮明度で絞り込み",
+    "noLanguage": "言語なし",
+    "stats": {
+      "downloading": "ダウンロード中",
+      "queued": "待機中",
+      "loaded": "読み込み済み",
+      "cached": "このカードのキャッシュ済み画像",
+      "removeCached": "このカードのキャッシュ済み画像を削除"
+    }
+  },
+  "addCard": {
+    "uploadError": "アップロード中にエラーが発生しました。",
+    "uploadFileError": "ファイルのアップロード中にエラーが発生しました。",
+    "title": "カスタムカードを追加",
+    "titleReplace": "「{{name}}」を置換",
+    "searchApis": "APIを検索",
+    "cardName": "カード名",
+    "searching": "検索中…",
+    "searchAgain": "再検索",
+    "foundNone": "「{{name}}」のカードアートは見つかりません",
+    "found_other": "「{{name}}」のカードアートが{{count}}件見つかりました",
+    "replaceInDeck": "デッキ内で置換",
+    "addToDeck": "デッキに追加",
+    "insertImageUrl": "画像URLを入力",
+    "imageUrl": "画像URL",
+    "nextCrop": "次へ: トリミング",
+    "uploadFile": "ファイルをアップロード",
+    "chooseFile": "ファイルを選択...",
+    "noFileChosen": "ファイル未選択"
+  },
+  "container": {
+    "onlyThisHint": "2秒間長押しで、これだけを表示",
+    "cropOverlay": {
+      "tabCrop": "トリミング",
+      "name": "名前:",
+      "set": "セット:",
+      "api": "API:",
+      "language": "言語:",
+      "imageSize": "画像サイズ:",
+      "crop": "トリミング:",
+      "cropValue": "{{x}}, {{y}}から {{width}} × {{height}}"
+    },
+    "iconBar": {
+      "viewFiltering": "表示フィルター"
+    },
+    "sortable": {
+      "priorityHint": "ドラッグで優先度を設定: 上のものが優先され、下のものは予備になります",
+      "handleAria": "{{hint}}（{{total}}件中{{position}}番目）",
+      "preferred": "優先",
+      "fallback": "予備 {{rank}}"
+    }
+  },
+  "deckInput": {
+    "pdfError": {
+      "lostConnection": "PDF生成との接続が切れました。もう一度お試しください。",
+      "startFailed": "PDF生成を開始できませんでした。もう一度お試しください。",
+      "downloadFailed": "PDFをダウンロードできませんでした。もう一度お試しください。"
+    },
+    "categoryIcon": {
+      "mtg": "MTGアイコン",
+      "poke": "ポケモンアイコン",
+      "misc": "その他アイコン"
+    },
+    "noLanguage": "言語なし",
+    "ratio": {
+      "active": "{{total}}件中{{selected}}件が有効",
+      "shown": "{{total}}件中{{selected}}件を表示"
+    },
+    "snapshots": {
+      "title": "スナップショット",
+      "saved": "{{count}}件保存済み",
+      "noneSaved": "保存なし"
+    },
+    "apiSelection": {
+      "title": "API選択",
+      "manage": "APIを管理",
+      "categoryRatio": "{{category}}: {{selected}} / {{total}}"
+    },
+    "decklist": {
+      "title": "デッキリストを入力",
+      "cards_other": "{{count}}枚",
+      "empty": "空",
+      "analyze": "デッキを解析"
+    },
+    "tokens": {
+      "label": "トークンとその他",
+      "tooltip": "トークン、紋章などを別のカードとして追加します。提供元: {{apis}}",
+      "none": "トークンやその他を提供する有効なAPIがありません"
+    },
+    "serverCache": {
+      "label": "共有検索キャッシュ",
+      "tooltip": "他のユーザーが見つけた検索結果（共有サーバーキャッシュ）を使用します。チェックを外すと、常にソースを自分で検索します。",
+      "disabled": "このサーバーでは共有検索キャッシュが無効です"
+    },
+    "import": {
+      "title": "デッキをインポート",
+      "sources": "Deckfinderソース",
+      "placeholder": "デッキのリンク、ID、または名前",
+      "detected": "{{name}}のリンク",
+      "load": "デッキを読み込む",
+      "searchByName": "名前で検索",
+      "options": "オプション"
+    },
+    "addSingle": {
+      "title": "単品を追加",
+      "gallery": "ギャラリー検索",
+      "links": "リンクを追加"
+    },
+    "searchLog": {
+      "title": "検索ログ",
+      "entries_other": "{{count}}件"
+    },
+    "card": {
+      "cropImage": "画像をトリミング",
+      "neededBy": "必要とするカード: {{names}}",
+      "noArt": "カードアートが見つかりません",
+      "replaceTooltip": "このエントリーを再検索するか画像を追加します。デッキ内のエントリーが置き換わります",
+      "discardTooltip": "このエントリーをデッキから削除",
+      "discard": "破棄",
+      "noImage": "利用可能な画像なし",
+      "removeCard": "カードを削除",
+      "oneLess": "1枚減らす",
+      "oneMore": "1枚増やす"
+    },
+    "view": {
+      "title": "表示の選択",
+      "uniquePrints": "個別の版",
+      "showImageInfo": "画像情報を表示",
+      "gridSize": "グリッドサイズ {{size}}",
+      "languageFilter": "言語フィルター",
+      "apiFilter": "APIフィルター"
+    },
+    "pdf": {
+      "title": "PDF生成",
+      "create": "PDFを作成",
+      "tooLarge": "PDFは約{{size}}となり、上限は{{limit}} MBです。デッキを複数のPDFに分けるか、設定で最大DPIを下げてください。",
+      "estimate": "推定サイズ: 約{{size}}",
+      "estimateWithLimit": "推定サイズ: 約{{size}}（最大{{limit}} MB）"
+    },
+    "replaceDeck": {
+      "title": "デッキリストを置き換えますか？",
+      "messageNamed_other": "「{{name}}」（{{count}}枚）が現在のリストを置き換えます。現在の状態は先にスナップショットとして保存されます。",
+      "messageUnnamed_other": "読み込んだデッキ（{{count}}枚）が現在のリストを置き換えます。現在の状態は先にスナップショットとして保存されます。"
+    }
+  },
+  "info": {
+    "disclaimer": {
+      "title": "免責事項",
+      "sources": "このサイトは、公開ソースおよびサードパーティAPIからカード画像と情報を読み込みます。これらのソースが提供する内容について、運営者は責任を負いません。アートワークの著作権や所有権を主張するものではなく、すべての権利はそれぞれの権利者に帰属します。",
+      "noncommercial": "このプロジェクトは非営利であり、個人的、教育的、または研究目的のみを対象としています。このサイトの利用による利益は得られていません。",
+      "accept": "続行することで、この免責事項を理解し、同意したものとみなされます。",
+      "understand": "理解しました"
+    },
+    "participate": "参加する",
+    "donate": "寄付する"
+  },
+  "tour": {
+    "createDeck": {
+      "title": "デッキの作り方",
+      "steps": {
+        "s1": {
+          "title": "デッキリストを入力",
+          "content": "ここにデッキを貼り付けるか入力します。1行に1枚、先頭に枚数（例: \"4 Lightning Bolt\"）。一般的なデッキビルダーのエクスポートはそのまま使えます。"
+        },
+        "s2": {
+          "title": "トークンとその他",
+          "content": "チェックすると、カードが生成するトークン、紋章などが別のカードとして追加されます。"
+        },
+        "s3": {
+          "title": "画像を検索",
+          "content": "「デッキを解析」で、有効なすべてのソースから各カードを検索します。結果は届いた順にグリッドへ表示されます。"
+        },
+        "s4": {
+          "title": "デッキをインポート",
+          "content": "デッキのリンクまたはIDを貼り付けて「デッキを読み込む」を押すか、デッキ名を入力して「名前で検索」を使います。インポートしたデッキがリストを置き換える前に、現在の状態がスナップショットとして保存されます。"
+        },
+        "s5": {
+          "title": "単品を追加",
+          "content": "独自の画像の追加、ギャラリー検索、画像リンクのリスト貼り付けで、カードを1枚ずつ追加できます。"
+        },
+        "s6": {
+          "title": "デッキ",
+          "content": "カードごとにタイルが表示されます。タイルをクリックすると別の画像を選べます。+と−で枚数を変更します。"
+        },
+        "s7": {
+          "title": "印刷",
+          "content": "選択に問題がなければ、「PDFを作成」で全カードの印刷用シートが作られます。"
+        }
+      }
+    },
+    "changeSources": {
+      "title": "ソースの変更方法",
+      "steps": {
+        "s1": {
+          "title": "ソースを選択",
+          "content": "各項目は、検索がカード画像を問い合わせるソースです。ソースを個別にオン・オフするか、カテゴリをクリックしてそのソースをまとめて切り替えます。"
+        },
+        "s2": {
+          "title": "ソースを管理",
+          "content": "歯車でソース管理を開きます。新しいソースの追加、既存ソースの編集、テストができます。"
+        },
+        "s3": {
+          "title": "共有検索キャッシュ",
+          "content": "他のユーザーが見つけた検索結果を再利用するため、大幅に高速です。ソースを変更した後など、常にソースへ直接問い合わせたい場合はチェックを外します。"
+        },
+        "s4": {
+          "title": "ギャラリー",
+          "content": "ギャラリー検索では、通常のカード検索に含まれない画像ギャラリーを閲覧できます。"
+        },
+        "s5": {
+          "title": "デッキソース",
+          "content": "この歯車で、デッキをインポートできるデッキビルダーサイトを管理します。"
+        }
+      }
+    },
+    "cardAppearance": {
+      "title": "カードの見た目の編集",
+      "steps": {
+        "s1": {
+          "title": "表示設定",
+          "content": "「個別の版」は1枚ごとに1タイルを表示するため、1枚ずつ別の画像を割り当てられます。「画像情報を表示」は各タイルにサイズと品質の詳細を追加します。"
+        },
+        "s2": {
+          "title": "グリッドサイズ",
+          "content": "グリッド内のタイルを大きくまたは小さくします。変わるのは表示のみで、PDFには影響しません。"
+        },
+        "s3": {
+          "title": "画像の選択とトリミング",
+          "content": "タイルをクリックすると、そのカードで見つかったすべての画像から別のものを選べます。独自の画像は、タイルのトリミングボタンで再度トリミングできます。"
+        },
+        "s4": {
+          "title": "印刷設定",
+          "content": "カードサイズ、余白、カットライン、角丸、最大画像解像度をここで設定します。プレビューでページの仕上がりを確認できます。"
+        }
+      }
+    },
+    "storage": {
+      "title": "ストレージ管理",
+      "steps": {
+        "s1": {
+          "title": "ダウンロードとキャッシュ",
+          "content": "これらのバブルは、バックグラウンドの状況（待機中・実行中のダウンロード、キャッシュからの画像読み込み）を示します。クリックするとキューが表示されます。"
+        },
+        "s2": {
+          "title": "検索キャッシュ",
+          "content": "検索結果はブラウザーに保存されるため、同じカードの再検索は即座に完了します。クリックすると保存済みの検索を表示・削除できます。"
+        },
+        "s3": {
+          "title": "画像キャッシュ",
+          "content": "ダウンロードした画像もブラウザーに保存されます。バーは画像キャッシュの使用量を示し、クリックすると整理できます。"
+        },
+        "s4": {
+          "title": "デッキをリセット",
+          "content": "デッキリスト、結果、選択を消去します。削除の前に確認が表示されます。"
+        },
+        "s5": {
+          "title": "スナップショット",
+          "content": "スナップショットもこのブラウザーに保存されます。古いものはここで削除して空き容量を確保します。"
+        }
+      }
+    },
+    "filters": {
+      "title": "フィルターの使い方",
+      "steps": {
+        "s1": {
+          "title": "言語フィルター",
+          "content": "言語のチェックを外すと、その言語の画像が非表示になります。項目を2秒間長押しすると、その言語だけを表示します。"
+        },
+        "s2": {
+          "title": "優先度",
+          "content": "項目をドラッグして並べ替えます。この順序で自動選択される画像が決まり、上の項目が優先、その他は予備になります。番号は各項目の順位を示します。"
+        },
+        "s3": {
+          "title": "ソースフィルター",
+          "content": "ソースでも同様に操作できます。ソースの非表示、長押しで1つだけ表示、ドラッグで優先ソースの設定ができます。"
+        },
+        "s4": {
+          "title": "デッキへの影響",
+          "content": "手動で選んだカードは、フィルターに一致する限り選択されたままです。一致する画像がないタイルには目印が付きます。画像選択ダイアログにも同じフィルターがあります。"
+        }
+      }
+    },
+    "snapshots": {
+      "title": "スナップショットとは",
+      "steps": {
+        "s1": {
+          "title": "スナップショット",
+          "content": "スナップショットには作業全体が保存されます。デッキリスト、選択した画像、有効なソース、フィルター、印刷設定です。スナップショットはこのブラウザーに保持されます。再読み込み後は「前回のセッションを復元」で作業の続きに戻れます。"
+        },
+        "s2": {
+          "title": "保存",
+          "content": "現在の状態を保存します。PDFの作成時と、インポートしたデッキがリストを置き換える前にも、スナップショットが自動で作られます。"
+        },
+        "s3": {
+          "title": "読み込みと管理",
+          "content": "スナップショットをクリックすると読み込まれます。横のボタンで、現在の状態での上書き、名前の変更、削除ができます。PDFを作成した際のスナップショットからは、PDFが有効な間は再ダウンロードできます。"
+        }
+      }
+    },
+    "locale": {
+      "skip": "スキップ",
+      "nextWithProgress": "次へ（{step}/{steps}）"
+    }
+  },
+  "themes": {
+    "plains": "平地",
+    "island": "島",
+    "swamp": "沼",
+    "mountain": "山",
+    "forest": "森",
+    "midnight": "ミッドナイト"
+  },
+  "errors": {
+    "deckFinder": {
+      "notJson": "レスポンスがJSONではありません。コンフィグのデータ形式は合っていますか？",
+      "noEntryListFields": "コンフィグにエントリーリストフィールドがありません。",
+      "noCards": "レスポンスにカードが見つかりません。コンフィグのフィールドは合っていますか？",
+      "searchNotJson": "検索レスポンスがJSONではありません。"
+    }
+  },
+  "wizard": {
+    "title": "APIを作成",
+    "steps": {
+      "request": "リクエスト",
+      "searchTerm": "検索語",
+      "fields": "フィールド"
+    },
+    "request": {
+      "help": "すでに結果を返す検索リクエストを貼り付けます。例: <0>https://api.scryfall.com/cards/search?q=Lightning+Bolt</0>",
+      "method": "メソッド",
+      "restUrl": "REST URL",
+      "bodyFormat": "ボディ形式",
+      "formatForm": "フォーム（a=1&b=2）",
+      "body": "ボディ",
+      "expert": "ソースにリンク追跡、CSRFトークン、ネストされた言語が必要ですか？",
+      "createEmpty": "空のコンフィグを作成して手動で入力"
+    },
+    "searchTerm": {
+      "help": "このリクエストで検索したカード名はどれですか？ その部分が<0>{cardname}</0>に置き換えられ、デッキリストの各カードで検索が行われます。",
+      "cardName": "カード名",
+      "baseUrl": "ベースURL",
+      "query": "クエリ"
+    },
+    "test": {
+      "help": "リクエストはまずブラウザーから直接実行されます。ソースがこれをブロックする場合（CORS）は、バックエンド経由で実行され、コンフィグはバックエンドプロキシを使う設定になります。",
+      "running": "実行中…",
+      "run": "テストリクエストを実行",
+      "status": "ステータス",
+      "httpStatus": "HTTP {{status}}",
+      "route": "経路",
+      "routeDirect": "ブラウザーから直接",
+      "routeProxy": "バックエンドプロキシ経由",
+      "useBackendProxy": "バックエンドプロキシを使用",
+      "directFailed": "（直接呼び出しに失敗: {{error}}）",
+      "format": "形式",
+      "detected": "レスポンスから検出（{{contentType}}）",
+      "noContentType": "コンテンツタイプなし",
+      "truncated": "レスポンスは3 MBで切り捨てられました。",
+      "parseError": "レスポンスを{{format}}として読み取れませんでした: {{error}}"
+    },
+    "preview": {
+      "summary": "{{all}}件の結果、「{{name}}」に一致{{matching}}件",
+      "chooseList": "結果を表示するには結果リストを選択します。",
+      "image": "画像",
+      "lang": "言語",
+      "number": "番号",
+      "more": "… 他{{count}}件",
+      "noMatch": "名前が「{{name}}」と完全に一致する結果はありません。検索では名前の完全一致のみが残るため、名前フィールドを確認するか、区切り文字を設定します（例: 両面カードの名前なら<0>//</0>）。"
+    },
+    "fields": {
+      "helpJson": "フィールドを選び、生データ内の該当する値をクリックします。フィールドはリストの1項目からの相対位置で読み取られます。",
+      "helpHtml": "フィールドを選び、生データ内の該当する値をクリックします。値は \"css-selector | innerText\" または \"css-selector | attr:src\" の構文です。",
+      "wholeAnswer": "（レスポンス全体）",
+      "splitChar": "区切り文字",
+      "splitCharHint": "複数パートのカード名の間の文字（Scryfallでは//）",
+      "splitCharPlaceholder": "例: //",
+      "followPages": "<0>{{field}}</0>で次のページを追跡",
+      "guessAgain": "フィールドを再推定"
+    },
+    "roles": {
+      "dataListField": {
+        "label": "結果リスト",
+        "hint": "カード1枚につき1項目を持つリスト"
+      },
+      "nameField": {
+        "hint": "カード名。検索した名前と一致している必要があります"
+      },
+      "imageUrlField": {
+        "label": "画像",
+        "hint": "カード画像のURL"
+      },
+      "languageField": {
+        "hint": "カードの言語（任意）"
+      },
+      "setField": {
+        "hint": "セット / エディション（任意）"
+      },
+      "setNumberField": {
+        "label": "セット番号",
+        "hint": "コレクター番号（任意）"
+      }
+    },
+    "save": {
+      "category": "カテゴリ",
+      "categoryMisc": "その他",
+      "officialWebsite": "公式サイト",
+      "defaultLanguage": "デフォルト言語",
+      "defaultLanguageHint": "ソースが言語を付けていないカードに使う言語",
+      "proxyImages": "画像をプロキシ経由にする",
+      "imageChecking": "画像を直接読み込めるか確認中…",
+      "imageDirect": "画像は直接読み込めるため、プロキシは不要です",
+      "imageProxy": "画像の直接読み込みはブロックされるため、バックエンド経由で読み込みます",
+      "imageIdle": "画像をバックエンド経由で読み込む",
+      "nameTaken": "この名前のコンフィグはすでに存在します。",
+      "configPreview": "保存されるコンフィグ",
+      "help": "コンフィグは非公開で保存されます。ページネーション、リンク追跡などの詳細フィールドは、後からコンフィグ設定で編集できます。",
+      "saving": "保存中…",
+      "saveConfig": "コンフィグを保存",
+      "createFailed": "作成に失敗（HTTP {{status}}）",
+      "createNoId": "作成結果にIDがありません",
+      "saveFailed": "保存に失敗（HTTP {{status}}）"
+    },
+    "tree": {
+      "collapse": "折りたたむ",
+      "expand": "展開",
+      "root": "（ルート）",
+      "more": "… 他{{count}}件"
+    },
+    "template": {
+      "urlInvalid": "http://またはhttps://で始まる完全なURLを入力してください",
+      "jsonBodyObject": "JSONボディは {\"q\": \"Lightning Bolt\"} のようなオブジェクトにする必要があります",
+      "jsonBodyInvalid": "ボディが有効なJSONではありません",
+      "needCardName": "クエリで使用したカード名を入力してください",
+      "nameInPath": "カード名がURLパスに含まれています。検索に使えるのはクエリパラメーター（…?q=Name）のみです。",
+      "notInQuery": "「{{name}}」がURLのクエリパラメーターに見つかりません。",
+      "repeatedParam": "URLでパラメーターが重複しています。最後の値のみが使われます。",
+      "nestedJson": "「{{key}}」はネストされたJSONです。テキストとして保存されます。",
+      "sentAsText": "「{{key}}」は{{type}}ではなくテキスト（\"{{value}}\"）として送信されます。",
+      "postNameInUrl": "POSTではカード名をURLではなくボディに入れる必要があります。",
+      "notInBody": "「{{name}}」がリクエストボディに見つかりません。"
+    },
+    "pick": {
+      "clickList": "リスト（項目の配列）をクリックします。",
+      "chooseListFirst": "先に結果リストを選択します。",
+      "clickInsideEntry": "結果リストの1項目内の値をクリックします。",
+      "clickElement": "要素をクリックします。",
+      "clickInsideMarked": "マークされたリスト項目のいずれか内の要素をクリックします。"
+    },
+    "testRequest": {
+      "backendFailed": "バックエンドのテストリクエストに失敗（HTTP {{status}}）"
+    }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Deckfinder の設定が見つかりません。",
+      "noFetchUrl": "設定に取得 URL がありません。",
+      "noNameSearch": "このソースは名前での検索に対応していません。",
+      "nameRequired": "名前を入力してください。",
+      "deckRequired": "デッキのリンクまたは ID を入力してください。",
+      "invalidLinkPattern": "Link Pattern は有効な正規表現ではありません: {{description}}",
+      "linkPatternNoGroup": "Link Pattern にはグループ (?<id>...) が必要です。",
+      "linkMismatch": "リンクがこのソースと一致しません。",
+      "deckNotFound": "デッキが見つかりません（非公開または削除済み？）。",
+      "searchNotFound": "検索結果が見つかりません（非公開または削除済み？）。",
+      "blocked": "{{host}} がリクエストをブロックしました（HTTP {{status}}）。",
+      "httpError": "{{host}} が HTTP {{status}} を返しました。",
+      "invalidUrl": "無効な URL: {{url}}",
+      "httpOnly": "http(s) の URL のみ使用できます: {{url}}",
+      "internalAddress": "内部アドレスは使用できません。",
+      "hostNotFound": "{{host}} が見つかりません。",
+      "unreachable": "{{host}} に接続できません: {{detail}}",
+      "cancelled": "キャンセルされました"
+    },
+    "gallery": {
+      "configNotFound": "ギャラリーの設定が見つかりません。",
+      "baseUrlInvalid": "設定には絶対パスのベース URL（http/https）が必要です。",
+      "credentialMissing": "認証情報「{{credential}}」がサーバーに設定されていません。",
+      "notFound": "何も見つかりません（非公開または削除済み？）。",
+      "blocked": "{{host}} がリクエストをブロックしました（HTTP {{status}}）。",
+      "blockedCredential": "{{host}} がリクエストをブロックしました（HTTP {{status}}）。認証情報「{{credential}}」の期限が切れている可能性があります。",
+      "httpError": "{{host}} が HTTP {{status}} を返しました。",
+      "linkRequired": "リンクを入力してください。",
+      "invalidLinkPattern": "Link Pattern は有効な正規表現ではありません: {{description}}",
+      "tooManyRedirects": "リダイレクトが多すぎます。",
+      "unreachable": "{{host}} に接続できません: {{detail}}",
+      "cancelled": "キャンセルされました"
+    }
+  },
+  "account": {
+    "title": "アカウント",
+    "loggedInAs": "{{email}} としてログイン中",
+    "loggedInAsBold": "<1>{{email}}</1> としてログイン中。",
+    "logIn": "ログイン",
+    "loginNotSetUp": "このサーバーではログインが設定されていません",
+    "pdfHint": "完成したPDFをこのアドレスに送信できます。",
+    "logOut": "ログアウト",
+    "logOutEverywhere": "すべての端末でログアウト",
+    "deleteWarning": "アカウントを削除します。このブラウザ内のデッキとスナップショットは影響を受けません。",
+    "deleteNow": "今すぐアカウントを削除",
+    "delete": "アカウントを削除",
+    "privacyPolicy": "プライバシーポリシー",
+    "intro": "パスワードは不要です。ログインリンクとコードが入力したアドレスにメールで届きます。これでアドレスが確認され、完成したPDFもそのアドレスに送信できます。",
+    "emailPlaceholder": "name@example.com",
+    "emailAriaLabel": "メールアドレス",
+    "sendLink": "ログインリンクを送信",
+    "storageNotice": "アドレスとログインした端末は、アカウントを削除するまで保存されます。",
+    "testEnvironment": "<1>テスト環境：</1>メールは送信されず、コードは入力済みです。ログインを押してください。",
+    "sentMail": "<1>{{email}}</1> にメールを送信しました。メール内のリンクを開くか、6桁のコードをここに入力してください。",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "ログインコード",
+    "useAnotherAddress": "別のアドレスを使う",
+    "errors": {
+      "invalid": "有効なメールアドレスを入力してください。",
+      "rateLimited": "このアドレスへのログインメールが多すぎます。しばらくしてから再試行してください。",
+      "disabled": "このサーバーではログインが設定されていません。",
+      "sendFailed": "ログインメールを送信できませんでした。再試行してください。",
+      "linkExpired": "このログインリンクは期限切れか、すでに使用されています。新しいリンクをリクエストしてください。",
+      "deleteFailed": "アカウントを削除できませんでした。再試行してください。",
+      "wrongCode": "コードが間違っているか、期限切れです。"
+    }
+  }
+}

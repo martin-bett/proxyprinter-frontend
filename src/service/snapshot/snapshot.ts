@@ -8,6 +8,8 @@ import { CropSettings } from '../ApiFactory';
 import { ManualPicksMap } from '../../viewer/filterPriority';
 import { PdfSettings, defaultSettings } from '../../viewer/pdf/SettingsDialog';
 
+import i18n from '../../i18n';
+
 export const SNAPSHOT_FORMAT = 'proxyprinter-snapshot';
 export const SNAPSHOT_VERSION = 1;
 
@@ -250,7 +252,7 @@ export function snapshotLabel(snapshot: Snapshot): string {
 /** Kartenzahl für die Infozeile, z. B. „60 cards“. */
 export function snapshotCardsText(snapshot: Snapshot): string {
   const { cardCount } = snapshot.label;
-  return `${cardCount} ${cardCount === 1 ? 'card' : 'cards'}`;
+  return i18n.t('snapshot.cardsCount', { count: cardCount });
 }
 
 /** Bringt ältere Snapshots auf die aktuelle Version. Wirft bei unbekanntem Format oder neuerer Version. */

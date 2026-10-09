@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useCallback, useEffect, useState } from 'react';
 import DownloadIcon from '@mui/icons-material/Download';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -21,6 +22,7 @@ interface ImageSelectStatsProps {
 // Zeile oben im Bildauswahl-Dialog: Download-Zähler der Kacheln und Cache der Karte.
 // Eigene Komponente, damit die Rate jede Sekunde nur diese Zeile neu rendert, nicht das ganze Grid.
 const ImageSelectStats: React.FC<ImageSelectStatsProps> = ({ open, cardName, counts }) => {
+  const { t } = useTranslation();
   const rate = useDownloadRate(open && counts.loading > 0);
   const [cache, setCache] = useState({ count: 0, bytes: 0 });
 
@@ -45,24 +47,24 @@ const ImageSelectStats: React.FC<ImageSelectStatsProps> = ({ open, cardName, cou
 
   return (
     <div className="image-select-stats">
-      <span className="image-select-stat" title="Downloading">
+      <span className="image-select-stat" title={t('imageSelect.stats.downloading')}>
         <DownloadIcon fontSize="small" /> <b>{counts.loading}</b>
         <span className="image-select-stat-value">({formatRate(rate)})</span>
       </span>
-      <span className="image-select-stat" title="Queued">
+      <span className="image-select-stat" title={t('imageSelect.stats.queued')}>
         <AccessTimeIcon fontSize="small" /> <b>{counts.queued}</b>
       </span>
-      <span className="image-select-stat" title="Loaded">
+      <span className="image-select-stat" title={t('imageSelect.stats.loaded')}>
         <CheckCircleOutlineIcon fontSize="small" /> <b>{counts.done}</b>
       </span>
-      <span className="image-select-stat" title="Cached images of this card">
+      <span className="image-select-stat" title={t('imageSelect.stats.cached')}>
         <StorageIcon fontSize="small" /> <b>{cache.count}</b>
         <span className="image-select-stat-value">({formatMegabytes(cache.bytes)})</span>
       </span>
       <button
         type="button"
         className="image-select-stat-action"
-        title="Remove cached images of this card"
+        title={t('imageSelect.stats.removeCached')}
         onClick={clearCache}
         disabled={cache.count === 0}
       >

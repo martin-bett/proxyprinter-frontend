@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import PersonIcon from '@mui/icons-material/Person';
 import { handleLoginLink, refreshAuth, useAuth } from '../../service/auth/auth';
 import ClosableDialog from '../../container/ClosableDialog';
@@ -7,6 +8,7 @@ import './AccountDialog.css';
 
 /** Bubble für Login und Konto-Menü. Löst beim Start auch einen Login-Link (?login=) ein. */
 export default function AccountButton() {
+  const { t } = useTranslation();
   const auth = useAuth();
   const [open, setOpen] = useState(false);
   const [linkFailed, setLinkFailed] = useState(false);
@@ -25,8 +27,8 @@ export default function AccountButton() {
 
   const letter = auth.email ? auth.email.charAt(0).toUpperCase() : null;
   const title = auth.email
-    ? `Logged in as ${auth.email}`
-    : auth.loginEnabled ? 'Log in' : 'Login is not set up on this server';
+    ? t('account.loggedInAs', { email: auth.email })
+    : auth.loginEnabled ? t('account.logIn') : t('account.loginNotSetUp');
 
   return (
     <>

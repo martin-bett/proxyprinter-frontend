@@ -1,6 +1,7 @@
 // Hilfen für HTML-Antworten im API-Wizard. Die Feld-Syntax ist die von
 // ApiFactory.parseHtmlValue: "css-selektor | innerText" oder "css-selektor | attr:src".
 import { HTMLElement, parse } from 'node-html-parser';
+import i18n from '../../../../i18n';
 import type { FieldAssignment, FieldRole } from './jsonFields';
 
 export function parseHtml(text: string): HTMLElement {
@@ -86,13 +87,13 @@ export function htmlFieldForRole(
 ): { path: string } | { error: string } {
   if (role === 'dataListField') {
     const sel = elementSelector(clicked);
-    if (!sel) return { error: 'Click on an element.' };
+    if (!sel) return { error: i18n.t('wizard.pick.clickElement') };
     return { path: sel };
   }
   const items = listItems(root, listSelector);
-  if (items.length === 0) return { error: 'Choose the result list first.' };
+  if (items.length === 0) return { error: i18n.t('wizard.pick.chooseListFirst') };
   const item = items.find(i => isAncestor(i, clicked) && i !== clicked);
-  if (!item) return { error: 'Click on an element inside one of the marked list entries.' };
+  if (!item) return { error: i18n.t('wizard.pick.clickInsideMarked') };
 
   let css = elementSelector(clicked);
   // Findet der einfache Selektor ein anderes Element zuerst, den Elternteil davorhängen

@@ -1,5 +1,6 @@
 import { parse } from 'node-html-parser';
 import ISO6391 from 'iso-639-1';
+import { backendErrorText } from '../i18n/backendError';
 import { throttledFetch } from './RequestThrottle';
 import { ImageQuality } from "./quality/ImageQuality";
 
@@ -343,7 +344,7 @@ export default class ApiFactory {
     if (!response.ok) {
       // Galerie-Endpunkte des Backends schicken {error: "..."} mit, das hilft mehr als nur der Status
       const detail = await response.text()
-        .then(text => { try { return JSON.parse(text)?.error || ''; } catch { return ''; } })
+        .then(text => { try { return backendErrorText(JSON.parse(text)); } catch { return ''; } })
         .catch(() => '');
       throw new Error(detail ? `HTTP error! status: ${response.status}: ${detail}` : `HTTP error! status: ${response.status}`);
     }
@@ -586,7 +587,7 @@ export default class ApiFactory {
       if (kind === 'imageUrl' && !regex.test(text)) return '';
       return text.replace(regex, replacement);
     } catch {
-      console.warn(`Ungültiges Regex-Muster in Config ${config.name}: ${pattern}`);
+      console.warn(`Invalid regex pattern in config ${config.name}: ${pattern}`);
       return value;
     }
   }
@@ -864,7 +865,7 @@ export default class ApiFactory {
       return 'Phyrexian';
     }
     // Wenn kein passender Code gefunden wurde
-    console.warn(`Konnte keinen gültigen Sprachcode für "${input}" finden.`);
+    console.warn(`Could not find a valid language code for "${input}".`);
     return input; // Geben Sie den Originalinput zurück
   }
 

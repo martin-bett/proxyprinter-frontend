@@ -1,4 +1,5 @@
 import type { WizardRequest } from './requestTemplate';
+import i18n from '../../../../i18n';
 
 export interface TestResult {
   via: 'direct' | 'proxy';
@@ -58,7 +59,7 @@ export async function runTestRequest(req: WizardRequest): Promise<TestResult> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: req.url.trim(), method: req.method, body: req.body, requestFormat: req.requestFormat }),
   });
-  if (!res.ok) throw new Error(`Backend test request failed (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(i18n.t('wizard.testRequest.backendFailed', { status: res.status }));
   const probe = await res.json();
   if (probe.error) throw new Error(probe.error);
   return {

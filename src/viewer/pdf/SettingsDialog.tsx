@@ -1,5 +1,6 @@
 // SettingsDialog.tsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
 import { useAuth } from '../../service/auth/auth';
@@ -48,6 +49,7 @@ interface SettingsDialogProps {
 }
 
 function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = false, previewCards = [] }: SettingsDialogProps) {
+  const { t } = useTranslation();
   const [localSettings, setLocalSettings] = useState<PdfSettings>(settings);
   const auth = useAuth();
 
@@ -73,29 +75,29 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     <div className="settings-dialog">
       <div className="settings-row">
       <div className="settings-category settings-preview">
-        <h3 className="title is-4">Preview</h3>
+        <h3 className="title is-4">{t('common.preview')}</h3>
         <PdfPagePreview settings={localSettings} cards={previewCards} />
       </div>
       <div className="settings-category">
-        <h3 className="title is-4">Dimensions</h3>
+        <h3 className="title is-4">{t('pdf.settings.dimensions')}</h3>
         <div>
-          <label>Width: </label>
+          <label>{t('pdf.settings.width')}</label>
           <input className="input" type="number" min="31" max="189" value={localSettings.width} onChange={(e) => handleChange('width', Number(e.target.value))} />
         </div>
         <div>
-          <label>Height: </label>
+          <label>{t('pdf.settings.height')}</label>
           <input className="input" type="number" min="44" max="264" value={localSettings.height} onChange={(e) => handleChange('height', Number(e.target.value))} />
         </div>
         <div>
-          <label>Vertical Margin: </label>
+          <label>{t('pdf.settings.verticalMargin')}</label>
           <input className="input" type="number" min="0" max="15" value={localSettings.vmargin} onChange={(e) => handleChange('vmargin', Number(e.target.value))} />
         </div>
         <div>
-          <label>Horizontal Margin: </label>
+          <label>{t('pdf.settings.horizontalMargin')}</label>
           <input className="input" type="number" min="0" max="15" value={localSettings.hmargin} onChange={(e) => handleChange('hmargin', Number(e.target.value))} />
         </div>
         <div>
-          <label>Max Dpi: </label>
+          <label>{t('pdf.settings.maxDpi')}</label>
           <input className="input" type="number" min="0" max="1000" value={localSettings.maxDpi} onChange={(e) => handleChange('maxDpi', Number(e.target.value))} />
         </div>
       </div>
@@ -103,16 +105,16 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
         <FormControlLabel
           className="title is-4"
           control={<Checkbox checked={localSettings.cutlines} onChange={(e) => handleChange('cutlines', e.target.checked)} />}
-          label="Cutlines"
+          label={t('pdf.settings.cutlines')}
         />
 
         <div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <div>
-              <label>Line Thickness: </label>
+              <label>{t('pdf.settings.lineThickness')}</label>
               <input className="input" type="number" min="1" max="10" value={localSettings.cutlineThickness} onChange={(e) => handleChange('cutlineThickness', Number(e.target.value))} />
             </div>
-            <label>Cut Line Color: </label>
+            <label>{t('pdf.settings.cutLineColor')}</label>
             <ChromePicker color={localSettings.cutlineColor} onChange={(color) => handleColorChange('cutlineColor', color)} />
             {!localSettings.cutlines && (
               <div
@@ -136,13 +138,13 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
           <FormControlLabel
             className="title is-4"
             control={<Checkbox checked={localSettings.corners} onChange={(e) => handleChange('corners', e.target.checked)} />}
-            label="Corners"
+            label={t('pdf.settings.corners')}
           />
           <div><FormControlLabel
             control={<Checkbox disabled={!localSettings.corners} checked={localSettings.cornerColorAuto} onChange={(e) => handleChange('cornerColorAuto', e.target.checked)} />}
-            label="Detect BorderColor"
+            label={t('pdf.settings.detectBorderColor')}
           /></div>
-          <div> <label>Corner Color: </label></div>
+          <div> <label>{t('pdf.settings.cornerColor')}</label></div>
         </div>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <ChromePicker
@@ -167,7 +169,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
       </div>
       </div>
       <div className="settings-category settings-email">
-        <h3 className="title is-4">Email delivery</h3>
+        <h3 className="title is-4">{t('pdf.settings.email.title')}</h3>
         <FormControlLabel
           control={
             <Checkbox
@@ -176,17 +178,17 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
               onChange={(e) => handleChange('sendMail', e.target.checked)}
             />
           }
-          label={auth.email ? `Send the download link to ${auth.email}` : 'Send the download link to my email address'}
+          label={auth.email ? t('pdf.settings.email.sendTo', { email: auth.email }) : t('pdf.settings.email.sendToMine')}
         />
         {!mailEnabled
-          ? <p className="help">Email delivery is not set up on this server.</p>
+          ? <p className="help">{t('pdf.settings.email.notAvailable')}</p>
           : !auth.email
-            ? <p className="help">Log in (bubble at the top right) to get the PDF by mail. Your address is confirmed by the login.</p>
-            : <p className="help">Useful for large decks: you can close the page, the link arrives when the PDF is ready.</p>}
+            ? <p className="help">{t('pdf.settings.email.loginHint')}</p>
+            : <p className="help">{t('pdf.settings.email.hint')}</p>}
       </div>
       <div className='dialog-footer'>
-        <button className='button' onClick={handleReset}>Reset</button>
-        <button className='button' onClick={handleSave}>Ok</button>
+        <button className='button' onClick={handleReset}>{t('common.reset')}</button>
+        <button className='button' onClick={handleSave}>{t('pdf.settings.ok')}</button>
       </div>
     </div>
   );

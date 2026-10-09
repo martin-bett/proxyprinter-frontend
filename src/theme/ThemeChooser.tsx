@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, MenuItem } from '@mui/material';
 import PaletteIcon from '@mui/icons-material/Palette';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme } from './ThemeContext';
 import { AppTheme } from './themes';
 import ManaSymbol from './ManaSymbol';
@@ -27,16 +28,18 @@ const ThemeIcon: React.FC<{ theme: AppTheme; size: 'button' | 'menu' }> = ({ the
 
 // Bubble oben links, im selben Stil wie die Cache-Bubbles oben rechts; nur Symbole, Namen als Tooltip
 const ThemeChooser: React.FC = () => {
+  const { t } = useTranslation();
   const { theme, themes, setThemeId } = useAppTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const themeName = (th: AppTheme) => t(`themes.${th.id}` as 'themes.plains', { defaultValue: th.name });
 
   return (
     <div className="theme-chooser-bar">
       <button
         className="memory-button theme-chooser-button"
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        title={`Farbschema: ${theme.name}`}
-        aria-label={`Farbschema wählen (aktuell ${theme.name})`}
+        title={t('themeChooser.title', { name: themeName(theme) })}
+        aria-label={t('themeChooser.aria', { name: themeName(theme) })}
         aria-haspopup="menu"
       >
         <ThemeIcon theme={theme} size="button" />
@@ -47,16 +50,16 @@ const ThemeChooser: React.FC = () => {
         onClose={() => setAnchorEl(null)}
         MenuListProps={{ className: 'theme-chooser-menu' }}
       >
-        {themes.map(t => (
+        {themes.map(th => (
           <MenuItem
-            key={t.id}
-            selected={t.id === theme.id}
+            key={th.id}
+            selected={th.id === theme.id}
             className="theme-chooser-item"
-            title={t.name}
-            aria-label={t.name}
-            onClick={() => { setThemeId(t.id); setAnchorEl(null); }}
+            title={themeName(th)}
+            aria-label={themeName(th)}
+            onClick={() => { setThemeId(th.id); setAnchorEl(null); }}
           >
-            <ThemeIcon theme={t} size="menu" />
+            <ThemeIcon theme={th} size="menu" />
           </MenuItem>
         ))}
       </Menu>

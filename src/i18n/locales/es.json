@@ -1,0 +1,986 @@
+{
+  "themeChooser": {
+    "title": "Tema de color: {{name}}",
+    "aria": "Elegir tema de color (actual: {{name}})"
+  },
+  "tutorials": {
+    "title": "Tutoriales"
+  },
+  "language": {
+    "title": "Idioma de la interfaz: {{name}}",
+    "aria": "Elegir idioma de la interfaz (actual: {{name}})",
+    "hint": "Los idiomas de las cartas y los filtros de imágenes se configuran por separado."
+  },
+  "common": {
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "apply": "Aplicar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "done": "Listo",
+    "search": "Buscar",
+    "loading": "Cargando…",
+    "error": "Error",
+    "replace": "Reemplazar",
+    "reset": "Restablecer",
+    "copy": "Copiar",
+    "download": "Descargar",
+    "add": "Añadir",
+    "remove": "Quitar",
+    "rename": "Renombrar",
+    "preview": "Vista previa",
+    "settings": "Ajustes",
+    "name": "Nombre",
+    "language": "Idioma",
+    "set": "Edición",
+    "url": "URL",
+    "none": "Ninguno",
+    "info": "Info",
+    "test": "Probar",
+    "overwrite": "Sobrescribir",
+    "load": "Cargar",
+    "retry": "Repetir"
+  },
+  "configCommon": {
+    "groups": {
+      "baseInfo": "Datos básicos",
+      "request": "Solicitud",
+      "locator": "Localizador",
+      "search": "Búsqueda",
+      "followLink": "Seguir enlace",
+      "nestedLanguage": "Idioma anidado",
+      "cardFaces": "Caras de la carta"
+    },
+    "fields": {
+      "name": "Nombre",
+      "category": "Categoría",
+      "officialWebsite": "Sitio web oficial",
+      "method": "Método",
+      "dataFormat": "Formato de datos",
+      "baseUrl": "URL base",
+      "parameterMap": "Mapa de parámetros",
+      "paginationField": "Campo de paginación",
+      "dataListField": "Campo de lista de datos",
+      "nameField": "Campo de nombre",
+      "imageUrlField": "Campo de URL de imagen",
+      "languageField": "Campo de idioma",
+      "defaultLanguage": "Idioma predeterminado",
+      "setField": "Campo de edición",
+      "linkPattern": "Patrón de enlace"
+    },
+    "options": {
+      "get": "GET",
+      "post": "POST",
+      "json": "JSON",
+      "html": "HTML",
+      "text": "Texto",
+      "urlEncoded": "URL codificada",
+      "multipart": "Multipart"
+    },
+    "titles": {
+      "defaultLanguage": "Idioma para las cartas cuyo origen no indica idioma"
+    },
+    "categories": {
+      "mtg": "MTG",
+      "poke": "Poke",
+      "yugi": "Yugi",
+      "misc": "Varios"
+    },
+    "categoryIcons": {
+      "mtg": "Icono de MTG",
+      "poke": "Icono de Pokémon",
+      "yugi": "Icono de Yugi",
+      "misc": "Icono de Varios"
+    },
+    "languages": {
+      "en": "Inglés",
+      "de": "Alemán",
+      "fr": "Francés",
+      "it": "Italiano",
+      "es": "Español",
+      "pt": "Portugués",
+      "ja": "Japonés",
+      "ko": "Coreano",
+      "ru": "Ruso",
+      "zh": "Chino",
+      "ph": "Phyrexiano"
+    },
+    "noProperties": "Sin propiedades.",
+    "setProperties": "Propiedades SET",
+    "unsetProperties": "Propiedades UNSET",
+    "configSettings": "Ajustes de la configuración",
+    "publish": "Publicar",
+    "unpublish": "Despublicar",
+    "copyConfig": "Copiar configuración"
+  },
+  "apiConfig": {
+    "fields": {
+      "customArts": "Ilustraciones propias",
+      "concurrentLimit": "Límite de concurrencia",
+      "requestFormat": "Formato de solicitud",
+      "csrfTokenVariableName": "Nombre de variable del token CSRF",
+      "requiresCsrfToken": "Requiere token CSRF",
+      "useBackendProxy": "Usar proxy del backend",
+      "proxyImages": "Imágenes por proxy",
+      "nameSplitCharacter": "Carácter separador de nombre",
+      "setNumberField": "Campo de número de edición",
+      "followLinkField": "Campo de enlace a seguir",
+      "followLinkImageField": "Campo de imagen"
+    },
+    "titles": {
+      "proxyImages": "Cargar las imágenes de esta API a través del backend (para servidores sin cabeceras CORS)",
+      "cardFacesDataListField": "Lista de caras de la carta, p. ej. card_faces en Scryfall. Cada cara con imagen se convierte en un resultado propio."
+    },
+    "connectedCards": {
+      "dataListFieldTitle": "Lista dentro de un resultado, p. ej. all_parts en Scryfall",
+      "nameFieldTitle": "Nombre de cada entrada, buscado en todas las API activas",
+      "linkField": "Campo de enlace",
+      "linkFieldTitle": "Opcional: enlace al objeto exacto (mismo formato que un resultado)",
+      "typeField": "Campo de tipo",
+      "typeFieldTitle": "Opcional: tipo de cada entrada, p. ej. type_line",
+      "title": "Cartas relacionadas",
+      "titleTooltip": "Cada entrada de una lista se convierte en una carta propia (cantidad 1), buscada en todas las API activas",
+      "removeList": "Quitar lista",
+      "addList": "Añadir lista"
+    },
+    "dialog": {
+      "title": "Seleccionar configuraciones",
+      "createConfig": "Crear configuración",
+      "controls": "Controles"
+    }
+  },
+  "galleryConfig": {
+    "fields": {
+      "followInputRedirects": "Seguir redirecciones del enlace",
+      "credential": "Credencial",
+      "imageUrlPattern": "Patrón de URL de imagen",
+      "imageUrlReplacement": "Reemplazo de URL de imagen",
+      "namePattern": "Patrón de nombre",
+      "nameReplacement": "Reemplazo de nombre"
+    },
+    "titles": {
+      "parameterMap": "Cada entrada se convierte en un campo de entrada. Dejar vacío si el origen no necesita datos",
+      "linkPattern": "Regex con grupos con nombre, p. ej. (?<id>\\d+). Los grupos rellenan {id} etc. en la URL base; con patrón de enlace o credencial, el backend obtiene el origen",
+      "followInputRedirects": "Si el enlace no coincide con el patrón, seguir antes sus redirecciones (enlaces cortos y compartidos)",
+      "credential": "Nombre de una credencial guardada por el operador del servidor (p. ej. reddit). La cookie o el token permanecen en el servidor y solo se envían al host correspondiente",
+      "imageUrlPattern": "Regex sobre la URL de imagen leída. Si no coincide, la entrada se descarta (p. ej. vídeos, subcarpetas)",
+      "imageUrlReplacement": "Reemplazo para el patrón, grupos como $1, p. ej. https://i.redd.it/$1",
+      "namePattern": "Regex sobre el nombre leído, p. ej. \\.\\w+$ para la extensión del archivo",
+      "nameReplacement": "Reemplazo para el patrón, vacío = quitar"
+    },
+    "executor": {
+      "pasteLink": "Pegar el enlace (o todo el código fuente de la página)",
+      "execute": "Ejecutar"
+    },
+    "noImages": "No se encontraron imágenes."
+  },
+  "deckFinderConfig": {
+    "fields": {
+      "fetchUrl": "URL de obtención",
+      "deckNameField": "Campo de nombre del mazo",
+      "entryListFields": "Campos de lista de entradas",
+      "quantityField": "Campo de cantidad",
+      "numberField": "Campo de número",
+      "boardField": "Campo de zona",
+      "optionalBoards": "Zonas opcionales",
+      "searchUrl": "URL de búsqueda",
+      "searchListField": "Campo de lista de resultados",
+      "searchIdField": "Campo de ID del mazo",
+      "searchNameField": "Campo de nombre del mazo",
+      "searchOwnerField": "Campo de propietario",
+      "searchImageField": "Campo de imagen",
+      "searchInfoField": "Campo de info"
+    },
+    "titles": {
+      "linkPattern": "Regex para enlaces de mazos; el grupo (?<id>...) aporta el ID del mazo",
+      "fetchUrl": "URL de obtención con {id}",
+      "entryListFields": "Rutas a las listas de cartas, separadas por comas. \"*\" = todos los valores de un objeto, \"Sideboard=ruta\" asigna la lista a una zona",
+      "numberField": "Número de coleccionista, solo junto con la edición",
+      "boardField": "Categoría o categorías de una entrada, texto o lista",
+      "optionalBoards": "Zonas que solo se cargan bajo demanda, separadas por comas (en texto: encabezados de sección)",
+      "searchUrl": "URL de búsqueda con {query} y opcionalmente {page}",
+      "searchInfoField": "p. ej. número de cartas"
+    },
+    "new": "Nuevo"
+  },
+  "rating": {
+    "title": "Valoración",
+    "availability": "Disponibilidad",
+    "quality": "Calidad"
+  },
+  "pdf": {
+    "preview": {
+      "ariaLabel": "Vista previa de la página",
+      "doesNotFit": "No cabe en A4"
+    },
+    "progress": {
+      "title": "Generando PDF",
+      "category": {
+        "queued": "Cola",
+        "download": "Descarga",
+        "build": "Montaje",
+        "finishing": "Finalizando"
+      },
+      "queuePosition": "Posición {{current}} de {{total}}",
+      "pageCount_one": "{{count}} página",
+      "pageCount_other": "{{count}} páginas",
+      "starting": "Iniciando la generación del PDF...",
+      "emailNotice": "El enlace de descarga también se enviará a {{email}}."
+    },
+    "settings": {
+      "dimensions": "Dimensiones",
+      "width": "Ancho: ",
+      "height": "Alto: ",
+      "verticalMargin": "Margen vertical: ",
+      "horizontalMargin": "Margen horizontal: ",
+      "maxDpi": "DPI máx.: ",
+      "cutlines": "Líneas de corte",
+      "lineThickness": "Grosor de línea: ",
+      "cutLineColor": "Color de línea de corte: ",
+      "corners": "Esquinas",
+      "detectBorderColor": "Detectar color del borde",
+      "cornerColor": "Color de esquina: ",
+      "ok": "Ok",
+      "email": {
+        "title": "Envío por correo",
+        "hint": "Útil para mazos grandes: se puede cerrar la página, el enlace llega cuando el PDF esté listo.",
+        "notAvailable": "El envío por correo no está configurado en este servidor.",
+        "sendTo": "Enviar el enlace de descarga a {{email}}",
+        "sendToMine": "Enviar el enlace de descarga a la propia dirección de correo",
+        "loginHint": "Inicio de sesión (burbuja arriba a la derecha) para recibir el PDF por correo. El inicio de sesión confirma la dirección."
+      }
+    }
+  },
+  "snapshot": {
+    "cardsCount_one": "{{count}} carta",
+    "cardsCount_other": "{{count}} cartas",
+    "pdfExpired": "PDF caducado",
+    "pdfAvailable": "PDF {{size}}, disponible hasta {{date}}",
+    "restoreLastSession": "Restaurar última sesión",
+    "save": "Guardar Snapshot",
+    "activeTitle": "{{label}} está activo: los cambios se guardan aquí",
+    "loadTitle": "Cargar {{label}}",
+    "downloadPdf": "Descargar PDF",
+    "downloadPdfOf": "Descargar PDF de {{label}}",
+    "overwriteTitle": "Sobrescribir con el estado actual",
+    "overwriteAria": "Sobrescribir {{label}} con el estado actual",
+    "renameAria": "Renombrar {{label}}",
+    "deleteAria": "Eliminar {{label}}",
+    "storedInBrowser": "Guardado en este navegador · {{size}}",
+    "deleteAll": "Eliminar todo",
+    "saveFailed": "No se pudo guardar el Snapshot.",
+    "customCardsGone_one": "{{count}} carta propia ya no está disponible en el servidor, volver a subirla.",
+    "customCardsGone_other": "{{count}} cartas propias ya no están disponibles en el servidor, volver a subirlas.",
+    "pdfLinkRemoved": "Se quitará el enlace a su PDF.",
+    "confirmOverwrite": "¿Sobrescribir \"{{label}}\" con el estado actual?",
+    "namePrompt": "Nombre del Snapshot",
+    "confirmDelete": "¿Eliminar el Snapshot \"{{label}}\"?",
+    "confirmDeleteAll": "¿Eliminar todos los Snapshots guardados en este navegador?"
+  },
+  "cache": {
+    "progressTitle": "Caché: {{used}} MB / {{limit}} MB",
+    "manager": {
+      "title": "Caché de imágenes",
+      "clickToDelete": "Clic para eliminar",
+      "groupProtected": "Protegidas",
+      "deleteKeepProtected": "Clic para eliminar (se mantienen {{count}} protegidas)",
+      "lock": {
+        "protected": "Protegidas. Clic para quitar la protección",
+        "partial": "{{locked}} de {{total}} protegidas. Clic para proteger todas",
+        "unprotected": "Clic para proteger de la eliminación"
+      },
+      "protectFromDeletion": "Proteger de la eliminación",
+      "apiTotal": "Total de la API",
+      "usage": "{{used}} MB de {{limit}} MB usados",
+      "protectedCount": "{{count}} protegidas",
+      "limitLabel": "Límite (MB)",
+      "setLimit": "Fijar límite",
+      "clearCache": "Vaciar caché",
+      "hint": "Un clic en una celda elimina las imágenes correspondientes; el resaltado rojo muestra lo que se eliminará. El candado protege las imágenes: se mantienen al vaciar la caché y solo se quitan para hacer sitio cuando las imágenes protegidas por sí solas superan el límite.",
+      "count": "Cantidad",
+      "allApis": "Todas las API",
+      "empty": "La caché está vacía"
+    },
+    "buttons": {
+      "waitingDownloads": "Descargas en espera",
+      "activeDownloads": "Descargas activas",
+      "activeDownloadsRate": "Descargas activas · {{rate}}",
+      "cacheLoadingQueue": "Cola de carga de caché",
+      "showSearchCache": "Mostrar caché de búsqueda",
+      "showImageCache": "Mostrar caché de imágenes",
+      "resetDeck": "Reiniciar mazo",
+      "resetDialog": {
+        "title": "¿Reiniciar el mazo?",
+        "text": "Se borran la lista de mazo, los resultados de búsqueda y la selección de imágenes. Antes se guarda el estado actual como Snapshot."
+      }
+    },
+    "queue": {
+      "title": "Gestor de cola",
+      "cancelApi": "Cancelar API:",
+      "cancelLanguage": "Cancelar idioma:",
+      "columns": {
+        "api": "API",
+        "cardName": "Nombre de carta",
+        "priority": "Prioridad",
+        "category": "Categoría",
+        "action": "Acción"
+      },
+      "empty": "No hay entradas en la cola",
+      "cancelEntry": "Cancelar entrada"
+    },
+    "search": {
+      "title": "Caché de búsqueda",
+      "savedCount_one": "{{count}} búsqueda guardada",
+      "savedCount_other": "{{count}} búsquedas guardadas",
+      "deleteAll": "Eliminar todas las búsquedas",
+      "hint": "Los números son resultados encontrados. Un clic en una celda elimina las búsquedas correspondientes; el resaltado rojo muestra lo que se eliminará.",
+      "allForCard": "Todas de la carta",
+      "empty": "No hay búsquedas guardadas"
+    }
+  },
+  "log": {
+    "raw": {
+      "title": "Respuesta bruta de la API",
+      "collapseAll": "Contraer todo",
+      "expandAll": "Expandir todo",
+      "copied": "Copiado ✓",
+      "copy": "Copiar al portapapeles"
+    },
+    "source": {
+      "cache": "Cargado desde la caché",
+      "server": "Cargado desde la caché compartida del servidor",
+      "network": "Cargado desde la red",
+      "error": "Error",
+      "running": "Buscando"
+    },
+    "columns": {
+      "source": "Origen: caché, caché del servidor o red",
+      "matches": "Resultados",
+      "duration": "Duración",
+      "requests": "Número de solicitudes"
+    },
+    "showRaw": "{{title}}: mostrar datos brutos"
+  },
+  "deckImport": {
+    "noDecks": "No se encontraron mazos.",
+    "sourcesTitle": "Orígenes de Deckfinder",
+    "backToImport": "Volver a importar",
+    "title": "Importar mazo",
+    "sources": "Orígenes",
+    "source": "Origen",
+    "privateSource": "{{name}} (privado)",
+    "inputLabelSearch": "Enlace, ID o nombre del mazo",
+    "inputLabel": "Enlace o ID del mazo",
+    "linkRecognized": "Enlace de {{name}} reconocido",
+    "alsoLoad": "Cargar también:",
+    "loadDeck": "Cargar mazo",
+    "searchByName": "Buscar por nombre",
+    "loadHit": "Cargar {{name}}",
+    "hitCards": "{{info}} cartas",
+    "moreResults": "Más resultados"
+  },
+  "cacheService": {
+    "proxyDecodeFailed": "No se pudo decodificar la imagen del proxy",
+    "imageLoadFailed": "No se pudo cargar la imagen",
+    "imageLoadFailedReason": "No se pudo cargar la imagen: {{reason}}",
+    "proxyError": "Error de proxy {{status}}",
+    "thumbnailFailed": "No se pudo crear la miniatura a partir del blob",
+    "blobFailed": "No se pudo crear la imagen a partir del blob",
+    "urlFailed": "No se pudo cargar la imagen desde la URL"
+  },
+  "grid": {
+    "proxyImageLoadError": "Error al cargar la imagen del proxy",
+    "printSharpness": "Nitidez de impresión: {{rating}} (nitidez {{sharpness}}, {{dpi}} DPI)",
+    "unknownResolution": "Resolución desconocida",
+    "sharpnessLine": "Nitidez {{sharpness}} · {{dpi}} DPI · {{rating}}",
+    "noLanguage": "SIN IDIOMA",
+    "noSetInfo": "SIN DATOS DE EDICIÓN",
+    "linkList": {
+      "title": "Añadir enlaces",
+      "label": "URL de imágenes (separadas por coma, punto y coma o salto de línea)",
+      "add_one": "Añadir 1 imagen",
+      "add_other": "Añadir {{count}} imágenes"
+    }
+  },
+  "quality": {
+    "rating": {
+      "good": "se lee con claridad",
+      "ok": "legible, algo borroso",
+      "poor": "texto probablemente difícil de leer",
+      "unknown": "no se detectó texto"
+    }
+  },
+  "crop": {
+    "imageAlt": "Recorte",
+    "cardTitle": "Carta {{number}}",
+    "loadError": "No se pudo cargar la imagen. Comprobar la URL.",
+    "modeCrop": "Recortar",
+    "modeCut": "Cortar galería",
+    "keepAspect": "Mantener proporción",
+    "keepAspectHint": "Mantiene el recorte en el formato de carta de los ajustes del PDF para que la imagen no se deforme al imprimir",
+    "wholeImage": "Imagen completa",
+    "offsetX": "Desplazamiento X",
+    "offsetY": "Desplazamiento Y",
+    "width": "Ancho",
+    "height": "Alto",
+    "hint": "Mover el marco con el ratón, arrastrar las esquinas o introducir valores en píxeles.",
+    "rows": "Filas",
+    "columns": "Columnas",
+    "outerBorder": "Borde exterior (px)",
+    "gap": "Espacio entre cartas (px)",
+    "info": {
+      "tooLarge": "El margen y los espacios son mayores que la imagen.",
+      "summary_one": "{{count}} carta, de {{tileWidth}} × {{tileHeight}} px cada una (imagen {{imageWidth}} × {{imageHeight}})",
+      "summary_other": "{{count}} cartas, de {{tileWidth}} × {{tileHeight}} px cada una (imagen {{imageWidth}} × {{imageHeight}})",
+      "summaryStretched_one": "{{count}} carta, de {{tileWidth}} × {{tileHeight}} px cada una (imagen {{imageWidth}} × {{imageHeight}}), difiere del formato de carta y se estira al imprimir",
+      "summaryStretched_other": "{{count}} cartas, de {{tileWidth}} × {{tileHeight}} px cada una (imagen {{imageWidth}} × {{imageHeight}}), difiere del formato de carta y se estira al imprimir"
+    },
+    "addCards_one": "Añadir carta",
+    "addCards_other": "Añadir {{count}} cartas",
+    "title": "Recortar imagen",
+    "applyCards": "Aplicar ({{count}} cartas)"
+  },
+  "imageSelect": {
+    "quality": {
+      "good": "Se lee con claridad",
+      "ok": "Algo borrosa",
+      "poor": "Difícil de leer",
+      "unrated": "Sin valorar"
+    },
+    "imageCount_one": "{{count}} imagen",
+    "imageCount_other": "{{count}} imágenes",
+    "previousCard": "Carta anterior",
+    "previousCardHint": "Carta anterior (←)",
+    "nextCard": "Carta siguiente",
+    "nextCardHint": "Carta siguiente (→)",
+    "filterLanguage": "Filtrar por idioma",
+    "filterApi": "Filtrar por API",
+    "filterSharpness": "Filtrar por nitidez",
+    "noLanguage": "Sin idioma",
+    "stats": {
+      "downloading": "Descargando",
+      "queued": "En cola",
+      "loaded": "Cargadas",
+      "cached": "Imágenes en caché de esta carta",
+      "removeCached": "Quitar imágenes en caché de esta carta"
+    }
+  },
+  "addCard": {
+    "uploadError": "Se produjo un error durante la subida.",
+    "uploadFileError": "Se produjo un error al subir el archivo.",
+    "title": "Añadir carta propia",
+    "titleReplace": "Reemplazar “{{name}}”",
+    "searchApis": "Buscar en las API",
+    "cardName": "nombre de carta",
+    "searching": "Buscando…",
+    "searchAgain": "Buscar de nuevo",
+    "foundNone": "No se encontraron ilustraciones para “{{name}}”",
+    "found_one": "Se encontró {{count}} ilustración para “{{name}}”",
+    "found_other": "Se encontraron {{count}} ilustraciones para “{{name}}”",
+    "replaceInDeck": "Reemplazar en el mazo",
+    "addToDeck": "Añadir al mazo",
+    "insertImageUrl": "Insertar URL de imagen",
+    "imageUrl": "URL de imagen",
+    "nextCrop": "Siguiente: recortar",
+    "uploadFile": "subir archivo",
+    "chooseFile": "elegir archivo...",
+    "noFileChosen": "ningún archivo elegido"
+  },
+  "container": {
+    "onlyThisHint": "Mantener 2 segundos para mostrar solo este",
+    "cropOverlay": {
+      "tabCrop": "Recorte",
+      "name": "Nombre:",
+      "set": "Edición:",
+      "api": "API:",
+      "language": "Idioma:",
+      "imageSize": "Tamaño de imagen:",
+      "crop": "Recorte:",
+      "cropValue": "{{width}} × {{height}} desde {{x}}, {{y}}"
+    },
+    "iconBar": {
+      "viewFiltering": "Filtros de vista"
+    },
+    "sortable": {
+      "priorityHint": "Arrastrar para fijar la prioridad: la entrada superior gana, las de debajo son alternativas",
+      "handleAria": "{{hint}} (posición {{position}} de {{total}})",
+      "preferred": "Preferido",
+      "fallback": "Alternativa {{rank}}"
+    }
+  },
+  "deckInput": {
+    "pdfError": {
+      "lostConnection": "Se perdió la conexión con la generación del PDF. Intentar de nuevo.",
+      "startFailed": "No se pudo iniciar la generación del PDF. Intentar de nuevo.",
+      "downloadFailed": "No se pudo descargar el PDF. Intentar de nuevo."
+    },
+    "categoryIcon": {
+      "mtg": "Icono de MTG",
+      "poke": "Icono de Pokémon",
+      "misc": "Icono de Varios"
+    },
+    "noLanguage": "Sin idioma",
+    "ratio": {
+      "active": "{{selected}} / {{total}} activas",
+      "shown": "{{selected}} / {{total}} mostradas"
+    },
+    "snapshots": {
+      "title": "Snapshots",
+      "saved": "{{count}} guardados",
+      "noneSaved": "ninguno guardado"
+    },
+    "apiSelection": {
+      "title": "Selección de API",
+      "manage": "Gestionar API",
+      "categoryRatio": "{{category}}: {{selected}} / {{total}}"
+    },
+    "decklist": {
+      "title": "Introducir lista de mazo",
+      "cards_one": "{{count}} carta",
+      "cards_other": "{{count}} cartas",
+      "empty": "vacía",
+      "analyze": "Analizar mazo"
+    },
+    "tokens": {
+      "label": "Tokens y extras",
+      "tooltip": "Añadir tokens, emblemas, etc. como cartas aparte. Proporcionado por: {{apis}}",
+      "none": "Ninguna API activa proporciona tokens ni extras"
+    },
+    "serverCache": {
+      "label": "Caché de búsqueda compartida",
+      "tooltip": "Usar resultados de búsqueda que otros usuarios ya encontraron (caché compartida del servidor). Desmarcar para buscar siempre directamente en los orígenes.",
+      "disabled": "La caché de búsqueda compartida está desactivada en este servidor"
+    },
+    "import": {
+      "title": "Importar mazo",
+      "sources": "Orígenes de Deckfinder",
+      "placeholder": "Enlace, ID o nombre del mazo",
+      "detected": "Enlace de {{name}}",
+      "load": "Cargar mazo",
+      "searchByName": "Buscar por nombre",
+      "options": "Opciones"
+    },
+    "addSingle": {
+      "title": "Añadir carta suelta",
+      "gallery": "Búsqueda en galería",
+      "links": "Añadir enlaces"
+    },
+    "searchLog": {
+      "title": "Registro de búsqueda",
+      "entries_one": "{{count}} entrada",
+      "entries_other": "{{count}} entradas"
+    },
+    "card": {
+      "cropImage": "Recortar imagen",
+      "neededBy": "Necesaria para: {{names}}",
+      "noArt": "No se encontró ilustración",
+      "replaceTooltip": "Buscar de nuevo o añadir una imagen para esta entrada; reemplaza la entrada en el mazo",
+      "discardTooltip": "Quitar esta entrada del mazo",
+      "discard": "Descartar",
+      "noImage": "No hay imagen disponible",
+      "removeCard": "Quitar carta",
+      "oneLess": "Una menos",
+      "oneMore": "Una más"
+    },
+    "view": {
+      "title": "Selección de vista",
+      "uniquePrints": "Impresiones únicas",
+      "showImageInfo": "Mostrar info de imagen",
+      "gridSize": "Tamaño de cuadrícula {{size}}",
+      "languageFilter": "Filtro de idioma",
+      "apiFilter": "Filtro de API"
+    },
+    "pdf": {
+      "title": "Generación de PDF",
+      "create": "Crear PDF",
+      "tooLarge": "El PDF pesaría unos {{size}}, el límite es {{limit}} MB. Dividir el mazo en varios PDF o reducir los DPI máx. en los ajustes.",
+      "estimate": "Tamaño estimado: unos {{size}}",
+      "estimateWithLimit": "Tamaño estimado: unos {{size}} de un máx. de {{limit}} MB"
+    },
+    "replaceDeck": {
+      "title": "¿Reemplazar la lista de mazo?",
+      "messageNamed_one": "“{{name}}” ({{count}} carta) reemplaza la lista actual. Antes se guarda el estado actual como Snapshot.",
+      "messageNamed_other": "“{{name}}” ({{count}} cartas) reemplaza la lista actual. Antes se guarda el estado actual como Snapshot.",
+      "messageUnnamed_one": "El mazo cargado ({{count}} carta) reemplaza la lista actual. Antes se guarda el estado actual como Snapshot.",
+      "messageUnnamed_other": "El mazo cargado ({{count}} cartas) reemplaza la lista actual. Antes se guarda el estado actual como Snapshot."
+    }
+  },
+  "info": {
+    "disclaimer": {
+      "title": "Aviso legal",
+      "sources": "Este sitio web carga imágenes e información de cartas desde fuentes públicas y API de terceros. No me hago responsable del contenido que ofrecen estas fuentes. No se reclama ningún derecho de autor ni de propiedad sobre las ilustraciones, y todos los derechos permanecen con sus respectivos titulares.",
+      "noncommercial": "Este proyecto no tiene fines comerciales y está pensado solo para uso personal, educativo o de investigación. No se obtiene ningún beneficio del uso de este sitio.",
+      "accept": "Al continuar, se reconoce y se acepta este aviso legal.",
+      "understand": "Entendido"
+    },
+    "participate": "Participar",
+    "donate": "Donar"
+  },
+  "tour": {
+    "createDeck": {
+      "title": "Cómo crear un mazo",
+      "steps": {
+        "s1": {
+          "title": "Introducir la lista de mazo",
+          "content": "Pegar o escribir aquí el mazo, una carta por línea y con la cantidad primero, por ejemplo \"4 Lightning Bolt\". Las exportaciones de los constructores de mazos habituales funcionan tal cual."
+        },
+        "s2": {
+          "title": "Tokens y extras",
+          "content": "Con esta casilla marcada, los tokens, emblemas y otros extras que crean las cartas se añaden como cartas aparte."
+        },
+        "s3": {
+          "title": "Buscar las imágenes",
+          "content": "Analizar mazo busca cada carta en todos los orígenes activos. Los resultados aparecen en la cuadrícula según van llegando."
+        },
+        "s4": {
+          "title": "O importar un mazo",
+          "content": "Pegar el enlace o ID de un mazo y pulsar Cargar mazo, o escribir el nombre de un mazo y usar Buscar por nombre. Antes de que un mazo importado reemplace la lista, el estado actual se guarda como Snapshot."
+        },
+        "s5": {
+          "title": "Añadir cartas sueltas",
+          "content": "Añadir una imagen propia, buscar en una galería o pegar una lista de enlaces de imágenes para añadir cartas una a una."
+        },
+        "s6": {
+          "title": "El mazo",
+          "content": "Cada carta tiene su casilla. Un clic en una casilla permite elegir otra imagen; con + y − se cambia la cantidad."
+        },
+        "s7": {
+          "title": "Imprimir",
+          "content": "Cuando la selección esté lista, Crear PDF genera una hoja imprimible con todas las cartas."
+        }
+      }
+    },
+    "changeSources": {
+      "title": "Cómo cambiar los orígenes",
+      "steps": {
+        "s1": {
+          "title": "Elegir los orígenes",
+          "content": "Cada entrada es un origen en el que la búsqueda pide imágenes de cartas. Se pueden marcar o desmarcar orígenes sueltos, o hacer clic en una categoría para cambiar todos sus orígenes a la vez."
+        },
+        "s2": {
+          "title": "Gestionar orígenes",
+          "content": "El engranaje abre el gestor de orígenes. Allí se pueden añadir orígenes nuevos, editar los existentes o probarlos."
+        },
+        "s3": {
+          "title": "Caché de búsqueda compartida",
+          "content": "Reutiliza resultados que otros usuarios ya encontraron, lo que es mucho más rápido. Desmarcar para consultar siempre los orígenes directamente, por ejemplo tras cambiar un origen."
+        },
+        "s4": {
+          "title": "Galerías",
+          "content": "La búsqueda en galería explora galerías de imágenes que no forman parte de la búsqueda normal de cartas."
+        },
+        "s5": {
+          "title": "Orígenes de mazos",
+          "content": "Este engranaje gestiona los sitios de construcción de mazos desde los que se pueden importar mazos."
+        }
+      }
+    },
+    "cardAppearance": {
+      "title": "Cómo editar el aspecto de las cartas",
+      "steps": {
+        "s1": {
+          "title": "Ajustes de vista",
+          "content": "Impresiones únicas muestra una casilla por copia, de modo que cada copia puede tener su propia imagen. Mostrar info de imagen añade detalles de tamaño y calidad a cada casilla."
+        },
+        "s2": {
+          "title": "Tamaño de cuadrícula",
+          "content": "Hace las casillas de la cuadrícula más grandes o más pequeñas. Solo cambia la vista, no el PDF."
+        },
+        "s3": {
+          "title": "Elegir y recortar imágenes",
+          "content": "Un clic en una casilla muestra todas las imágenes encontradas para esa carta y permite elegir otra. Las imágenes propias se pueden volver a recortar con el botón de recorte de su casilla."
+        },
+        "s4": {
+          "title": "Ajustes de impresión",
+          "content": "Aquí se definen el tamaño de carta, los márgenes, las líneas de corte, las esquinas redondeadas y la resolución máxima de imagen. La vista previa muestra cómo quedará una página."
+        }
+      }
+    },
+    "storage": {
+      "title": "Gestión del almacenamiento",
+      "steps": {
+        "s1": {
+          "title": "Descargas y cachés",
+          "content": "Estas burbujas muestran lo que ocurre en segundo plano: descargas en espera y activas e imágenes que se cargan desde la caché. Un clic en una muestra la cola."
+        },
+        "s2": {
+          "title": "Caché de búsqueda",
+          "content": "Los resultados de búsqueda se guardan en el navegador, así que repetir la búsqueda de la misma carta es instantáneo. Un clic permite ver o eliminar las búsquedas guardadas."
+        },
+        "s3": {
+          "title": "Caché de imágenes",
+          "content": "Las imágenes descargadas también se guardan en el navegador. La barra muestra lo llena que está la caché de imágenes; un clic en ella permite limpiarla."
+        },
+        "s4": {
+          "title": "Reiniciar mazo",
+          "content": "Borra la lista de mazo, los resultados y la selección. Se pide confirmación antes de quitar nada."
+        },
+        "s5": {
+          "title": "Snapshots",
+          "content": "Los Snapshots también se guardan en este navegador. Eliminar aquí los antiguos para liberar espacio."
+        }
+      }
+    },
+    "filters": {
+      "title": "Trabajar con filtros",
+      "steps": {
+        "s1": {
+          "title": "Filtro de idioma",
+          "content": "Desmarcar un idioma para ocultar sus imágenes. Mantener una entrada 2 segundos para mostrar solo ese idioma."
+        },
+        "s2": {
+          "title": "Prioridad",
+          "content": "Arrastrar las entradas para reordenarlas. El orden decide qué imagen se elige automáticamente: la entrada superior gana, las demás son alternativas. El número indica el rango de cada entrada."
+        },
+        "s3": {
+          "title": "Filtro de orígenes",
+          "content": "Funciona igual para los orígenes: ocultar orígenes, mantener para mostrar solo uno, arrastrar para fijar cuál es el preferido."
+        },
+        "s4": {
+          "title": "Efecto en el mazo",
+          "content": "Una carta elegida a mano sigue elegida mientras cumpla los filtros. Las casillas sin ninguna imagen coincidente quedan marcadas. El diálogo de selección de imagen tiene los mismos filtros."
+        }
+      }
+    },
+    "snapshots": {
+      "title": "Qué son los Snapshots",
+      "steps": {
+        "s1": {
+          "title": "Snapshots",
+          "content": "Un Snapshot guarda todo el trabajo: la lista de mazo, las imágenes elegidas, los orígenes activos, los filtros y los ajustes de impresión. Los Snapshots se guardan en este navegador. Tras recargar, \"Restaurar última sesión\" recupera el punto donde se quedó."
+        },
+        "s2": {
+          "title": "Guardar",
+          "content": "Guarda el estado actual. También se crea un Snapshot automáticamente al crear un PDF y antes de que un mazo importado reemplace la lista."
+        },
+        "s3": {
+          "title": "Cargar y gestionar",
+          "content": "Un clic en un Snapshot lo carga. Los botones junto a él lo sobrescriben con el estado actual, lo renombran o lo eliminan. Los Snapshots de un PDF creado pueden volver a descargarlo mientras esté disponible."
+        }
+      }
+    },
+    "locale": {
+      "skip": "Omitir",
+      "nextWithProgress": "Siguiente ({step} de {steps})"
+    }
+  },
+  "themes": {
+    "plains": "Llanura",
+    "island": "Isla",
+    "swamp": "Pantano",
+    "mountain": "Montaña",
+    "forest": "Bosque",
+    "midnight": "Medianoche"
+  },
+  "errors": {
+    "deckFinder": {
+      "notJson": "La respuesta no es JSON. ¿Coincide el formato de datos de la configuración?",
+      "noEntryListFields": "La configuración no tiene campos de lista de entradas.",
+      "noCards": "No se encontraron cartas en la respuesta. ¿Coinciden los campos de la configuración?",
+      "searchNotJson": "La respuesta de búsqueda no es JSON."
+    }
+  },
+  "wizard": {
+    "title": "Crear API",
+    "steps": {
+      "request": "Solicitud",
+      "searchTerm": "Término de búsqueda",
+      "fields": "Campos"
+    },
+    "request": {
+      "help": "Pegar una solicitud de búsqueda que ya devuelva resultados, p. ej. <0>https://api.scryfall.com/cards/search?q=Lightning+Bolt</0>.",
+      "method": "Método",
+      "restUrl": "URL REST",
+      "bodyFormat": "Formato del cuerpo",
+      "formatForm": "Formulario (a=1&b=2)",
+      "body": "Cuerpo",
+      "expert": "¿El origen necesita seguir enlaces, tokens CSRF o idiomas anidados?",
+      "createEmpty": "Crear una configuración vacía y rellenarla a mano"
+    },
+    "searchTerm": {
+      "help": "¿Qué nombre de carta se buscó en esta solicitud? Se reemplaza por <0>{cardname}</0>, de modo que cada búsqueda rellena la carta de la lista de mazo.",
+      "cardName": "Nombre de carta",
+      "baseUrl": "URL base",
+      "query": "Consulta"
+    },
+    "test": {
+      "help": "La solicitud se ejecuta primero directamente en el navegador. Si el origen lo bloquea (CORS), se ejecuta a través de nuestro backend y la configuración pasa a usar el proxy del backend.",
+      "running": "Ejecutando…",
+      "run": "Ejecutar solicitud de prueba",
+      "status": "Estado",
+      "httpStatus": "HTTP {{status}}",
+      "route": "Ruta",
+      "routeDirect": "directa desde el navegador",
+      "routeProxy": "mediante proxy del backend",
+      "useBackendProxy": "Usar proxy del backend",
+      "directFailed": "(falló la llamada directa: {{error}})",
+      "format": "Formato",
+      "detected": "detectado a partir de la respuesta ({{contentType}})",
+      "noContentType": "sin tipo de contenido",
+      "truncated": "La respuesta se cortó a los 3 MB.",
+      "parseError": "No se pudo leer la respuesta como {{format}}: {{error}}"
+    },
+    "preview": {
+      "summary": "{{all}} resultados, {{matching}} coinciden con \"{{name}}\"",
+      "chooseList": "Elegir la lista de resultados para ver los resultados.",
+      "image": "Imagen",
+      "lang": "Idioma",
+      "number": "N.º",
+      "more": "… y {{count}} más",
+      "noMatch": "Ningún resultado tiene exactamente el nombre \"{{name}}\". Las búsquedas solo conservan coincidencias exactas de nombre, así que revisar el campo de nombre o fijar un carácter separador (p. ej. <0>//</0> para nombres de cartas de dos caras)."
+    },
+    "fields": {
+      "helpJson": "Elegir un campo y hacer clic en el valor correspondiente en los datos brutos. Los campos se leen relativos a una entrada de la lista.",
+      "helpHtml": "Elegir un campo y hacer clic en el valor correspondiente en los datos brutos. Los valores usan la sintaxis \"css-selector | innerText\" o \"css-selector | attr:src\".",
+      "wholeAnswer": "(respuesta completa)",
+      "splitChar": "Separador",
+      "splitCharHint": "Carácter entre los nombres de las cartas de varias partes, p. ej. // en Scryfall",
+      "splitCharPlaceholder": "p. ej. //",
+      "followPages": "Seguir páginas siguientes mediante <0>{{field}}</0>",
+      "guessAgain": "Volver a deducir campos"
+    },
+    "roles": {
+      "dataListField": {
+        "label": "Lista de resultados",
+        "hint": "La lista que contiene una entrada por carta"
+      },
+      "nameField": {
+        "hint": "Nombre de la carta, debe coincidir con el nombre buscado"
+      },
+      "imageUrlField": {
+        "label": "Imagen",
+        "hint": "URL de la imagen de la carta"
+      },
+      "languageField": {
+        "hint": "Idioma de la carta (opcional)"
+      },
+      "setField": {
+        "hint": "Edición / colección (opcional)"
+      },
+      "setNumberField": {
+        "label": "Número de edición",
+        "hint": "Número de coleccionista (opcional)"
+      }
+    },
+    "save": {
+      "category": "Categoría",
+      "categoryMisc": "Varios",
+      "officialWebsite": "Sitio web oficial",
+      "defaultLanguage": "Idioma predeterminado",
+      "defaultLanguageHint": "Idioma para las cartas que el origen no etiqueta con un idioma",
+      "proxyImages": "Imágenes por proxy",
+      "imageChecking": "comprobando si las imágenes se cargan directamente…",
+      "imageDirect": "las imágenes se cargan directamente, no hace falta proxy",
+      "imageProxy": "las imágenes bloquean la carga directa, cargarlas a través del backend",
+      "imageIdle": "cargar imágenes a través del backend",
+      "nameTaken": "Ya existe una configuración con este nombre.",
+      "configPreview": "Configuración que se guardará",
+      "help": "La configuración se guarda como privada. La paginación, los enlaces a seguir y los demás campos avanzados se pueden editar después en los ajustes de la configuración.",
+      "saving": "Guardando…",
+      "saveConfig": "Guardar configuración",
+      "createFailed": "falló la creación (HTTP {{status}})",
+      "createNoId": "la creación no devolvió ningún ID",
+      "saveFailed": "falló el guardado (HTTP {{status}})"
+    },
+    "tree": {
+      "collapse": "contraer",
+      "expand": "expandir",
+      "root": "(raíz)",
+      "more": "… {{count}} más"
+    },
+    "template": {
+      "urlInvalid": "Introducir una URL completa que empiece por http:// o https://",
+      "jsonBodyObject": "El cuerpo JSON debe ser un objeto como {\"q\": \"Lightning Bolt\"}",
+      "jsonBodyInvalid": "El cuerpo no es un JSON válido",
+      "needCardName": "Introducir el nombre de carta usado en la consulta",
+      "nameInPath": "El nombre de la carta forma parte de la ruta de la URL. Para buscar solo se pueden usar parámetros de consulta (…?q=Nombre).",
+      "notInQuery": "No se encontró \"{{name}}\" en los parámetros de consulta de la URL.",
+      "repeatedParam": "La URL repite un parámetro; solo se conserva su último valor.",
+      "nestedJson": "\"{{key}}\" es JSON anidado; se guarda como texto.",
+      "sentAsText": "\"{{key}}\" se envía como texto (\"{{value}}\") en lugar de {{type}}.",
+      "postNameInUrl": "En POST el nombre de la carta debe ir en el cuerpo, no en la URL.",
+      "notInBody": "No se encontró \"{{name}}\" en el cuerpo de la solicitud."
+    },
+    "pick": {
+      "clickList": "Hacer clic en una lista (un array de entradas).",
+      "chooseListFirst": "Elegir primero la lista de resultados.",
+      "clickInsideEntry": "Hacer clic en un valor dentro de una entrada de la lista de resultados.",
+      "clickElement": "Hacer clic en un elemento.",
+      "clickInsideMarked": "Hacer clic en un elemento dentro de una de las entradas marcadas de la lista."
+    },
+    "testRequest": {
+      "backendFailed": "Falló la solicitud de prueba del backend (HTTP {{status}})"
+    }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Configuración de Deckfinder no encontrada.",
+      "noFetchUrl": "La configuración no tiene URL de obtención.",
+      "noNameSearch": "Esta fuente no admite la búsqueda por nombre.",
+      "nameRequired": "Introducir un nombre.",
+      "deckRequired": "Introducir un enlace o un ID del mazo.",
+      "invalidLinkPattern": "Link Pattern no es una regex válida: {{description}}",
+      "linkPatternNoGroup": "Link Pattern necesita un grupo (?<id>...).",
+      "linkMismatch": "El enlace no corresponde a esta fuente.",
+      "deckNotFound": "Mazo no encontrado (¿privado o eliminado?).",
+      "searchNotFound": "Búsqueda no encontrada (¿privada o eliminada?).",
+      "blocked": "{{host}} bloquea la solicitud (HTTP {{status}}).",
+      "httpError": "{{host}} respondió con HTTP {{status}}.",
+      "invalidUrl": "URL no válida: {{url}}",
+      "httpOnly": "Solo se permiten URL http(s): {{url}}",
+      "internalAddress": "No se permiten direcciones internas.",
+      "hostNotFound": "{{host}} no encontrado.",
+      "unreachable": "{{host}} no accesible: {{detail}}",
+      "cancelled": "Cancelado"
+    },
+    "gallery": {
+      "configNotFound": "Configuración de galería no encontrada.",
+      "baseUrlInvalid": "La configuración necesita una URL base absoluta (http/https).",
+      "credentialMissing": "El acceso \"{{credential}}\" no está configurado en el servidor.",
+      "notFound": "No se encontró nada (¿privado o eliminado?).",
+      "blocked": "{{host}} bloquea la solicitud (HTTP {{status}}).",
+      "blockedCredential": "{{host}} bloquea la solicitud (HTTP {{status}}). El acceso \"{{credential}}\" puede haber caducado.",
+      "httpError": "{{host}} respondió con HTTP {{status}}.",
+      "linkRequired": "Introducir un enlace.",
+      "invalidLinkPattern": "Link Pattern no es una regex válida: {{description}}",
+      "tooManyRedirects": "Demasiadas redirecciones.",
+      "unreachable": "{{host}} no accesible: {{detail}}",
+      "cancelled": "Cancelado"
+    }
+  },
+  "account": {
+    "title": "Cuenta",
+    "loggedInAs": "Sesión iniciada como {{email}}",
+    "loggedInAsBold": "Sesión iniciada como <1>{{email}}</1>.",
+    "logIn": "Iniciar sesión",
+    "loginNotSetUp": "El inicio de sesión no está configurado en este servidor",
+    "pdfHint": "El PDF terminado puede enviarse a esta dirección.",
+    "logOut": "Cerrar sesión",
+    "logOutEverywhere": "Cerrar sesión en todas partes",
+    "deleteWarning": "Se eliminará la cuenta. Los mazos y snapshots de este navegador no se ven afectados.",
+    "deleteNow": "Eliminar cuenta ahora",
+    "delete": "Eliminar cuenta",
+    "privacyPolicy": "Política de privacidad",
+    "intro": "No hace falta contraseña. Se envía un enlace de acceso y un código por correo a la dirección indicada. Así queda confirmada la dirección y el PDF terminado puede enviarse allí.",
+    "emailPlaceholder": "nombre@example.com",
+    "emailAriaLabel": "Dirección de correo",
+    "sendLink": "Enviar enlace de acceso",
+    "storageNotice": "La dirección y los dispositivos de acceso se conservan hasta que se elimine la cuenta.",
+    "testEnvironment": "<1>Entorno de pruebas:</1> no se envía ningún correo, el código ya está rellenado. Pulsar Iniciar sesión.",
+    "sentMail": "Se ha enviado un correo a <1>{{email}}</1>. Abrir el enlace que contiene o introducir aquí el código de 6 dígitos.",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "Código de acceso",
+    "useAnotherAddress": "Usar otra dirección",
+    "errors": {
+      "invalid": "Introducir una dirección de correo válida.",
+      "rateLimited": "Demasiados correos de acceso para esta dirección, volver a intentarlo más tarde.",
+      "disabled": "El inicio de sesión no está configurado en este servidor.",
+      "sendFailed": "No se pudo enviar el correo de acceso, volver a intentarlo.",
+      "linkExpired": "Este enlace de acceso ha caducado o ya se usó. Solicitar uno nuevo.",
+      "deleteFailed": "No se pudo eliminar la cuenta, volver a intentarlo.",
+      "wrongCode": "El código es incorrecto o ha caducado."
+    }
+  }
+}

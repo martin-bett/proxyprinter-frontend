@@ -2,8 +2,7 @@ import React, { useRef, useState } from 'react';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { moveItem } from '../../viewer/filterPriority';
 import './inputs.css';
-
-export const PRIORITY_HINT = 'Drag to set the priority: the top entry wins, the ones below are fallbacks';
+import { useTranslation } from 'react-i18next';
 
 interface SortableListProps {
   items: string[];
@@ -18,7 +17,9 @@ interface SortableListProps {
  * Liste, deren Einträge sich am Griff ⠿ verschieben lassen (Maus und Touch per Pointer-Events,
  * Tastatur mit Pfeil hoch/runter). Die Liste ordnet sich schon während des Ziehens um.
  */
-const SortableList: React.FC<SortableListProps> = ({ items, onReorder, renderItem, className, handleTitle = PRIORITY_HINT }) => {
+const SortableList: React.FC<SortableListProps> = ({ items, onReorder, renderItem, className, handleTitle }) => {
+  const { t } = useTranslation();
+  const handleLabel = handleTitle ?? t('container.sortable.priorityHint');
   const containerRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
@@ -49,8 +50,8 @@ const SortableList: React.FC<SortableListProps> = ({ items, onReorder, renderIte
         role="button"
         tabIndex={0}
         className="sort-handle"
-        title={handleTitle}
-        aria-label={`${handleTitle} (position ${index + 1} of ${items.length})`}
+        title={handleLabel}
+        aria-label={t('container.sortable.handleAria', { hint: handleLabel, position: index + 1, total: items.length })}
         onPointerDown={event => {
           if (event.pointerType === 'mouse' && event.button !== 0) return;
           // Kein langer Klick und kein Umschalten des Eintrags
@@ -96,6 +97,8 @@ const SortableList: React.FC<SortableListProps> = ({ items, onReorder, renderIte
 export default SortableList;
 
 /** Kleine Rangnummer im Filtereintrag: 1 = bevorzugt, die weiteren sind Fallback. */
-export const PriorityRank: React.FC<{ rank?: number }> = ({ rank }) =>
+export const PriorityRank: React.FC<{ rank?: number }> = ({ rank }) => {
+  const { t } = useTranslation();
   // Zahl per CSS, damit sie nicht zum Text des Eintrags gehört
-  rank ? <span className="priority-rank" data-rank={rank} title={rank === 1 ? 'Preferred' : `Fallback ${rank - 1}`} /> : null;
+  return rank ? <span className="priority-rank" data-rank={rank} title={rank === 1 ? t('container.sortable.preferred') : t('container.sortable.fallback', { rank: rank - 1 })} /> : null;
+};

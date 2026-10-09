@@ -1,5 +1,6 @@
 import { ImageQuality } from "../quality/ImageQuality";
 import { openCacheDb } from "./openCacheDb";
+import i18n from "../../i18n";
 import { throttledFetch } from "../RequestThrottle";
 
 const DB_NAME = "mtg_cache_db";
@@ -136,7 +137,7 @@ export async function loadImageElement(url: string): Promise<HTMLImageElement> {
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Proxy-Bild konnte nicht dekodiert werden"));
+      img.onerror = () => reject(new Error(i18n.t("cacheService.proxyDecodeFailed")));
       img.src = objectUrl;
     });
   };
@@ -145,7 +146,7 @@ export async function loadImageElement(url: string): Promise<HTMLImageElement> {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Bild nicht ladbar"));
+      img.onerror = () => reject(new Error(i18n.t("cacheService.imageLoadFailed")));
       img.src = url;
     });
   } catch (e) {
@@ -176,7 +177,7 @@ export async function fetchImageViaProxy(url: string): Promise<Blob> {
     url
   );
   if (!response.ok) {
-    const reason = `Bild nicht ladbar: ${response.headers.get("X-Proxy-Error") || `Proxy-Fehler ${response.status}`}`;
+    const reason = i18n.t("cacheService.imageLoadFailedReason", { reason: response.headers.get("X-Proxy-Error") || i18n.t("cacheService.proxyError", { status: response.status }) });
     proxyFailures.set(url, reason);
     throw new Error(reason);
   }
@@ -325,7 +326,7 @@ class ImageLoaderService {
       this._createImageFromBlob(cached.thumb, true).then(img => {
         if (signal?.aborted) return;
         if (img) onLoad(img, cached.sizeBytes, meta);
-        else onError?.(new Error("Thumbnail could not be created from blob"));
+        else onError?.(new Error(i18n.t("cacheService.thumbnailFailed")));
       }).finally(() => {
         this.activeCacheLoads--;
       });
@@ -345,7 +346,7 @@ class ImageLoaderService {
           // Eintrag aus älteren Versionen ohne kleine Kopie: nachreichen
           if (cached.blob && !cached.thumb) void this._addThumbnail(cacheKey, img);
         } else {
-          onError?.(new Error(cached.blob ? "Image could not be created from blob" : "Image could not be loaded from url"));
+          onError?.(new Error(cached.blob ? i18n.t("cacheService.blobFailed") : i18n.t("cacheService.urlFailed")));
         }
       }).finally(() => {
         this.activeCacheLoads--;
@@ -473,7 +474,7 @@ class ImageLoaderService {
   private async _loadViaProxy(url: string): Promise<{ img: HTMLImageElement; blob: Blob | null }> {
     const blob = await fetchImageViaProxy(url);
     const img = await this._createImageFromBlob(blob);
-    if (!img) throw new Error("Proxy-Bild konnte nicht dekodiert werden");
+    if (!img) throw new Error(i18n.t("cacheService.proxyDecodeFailed"));
     return { img, blob };
   }
 
