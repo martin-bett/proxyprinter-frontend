@@ -356,7 +356,18 @@
       "duration": "所要時間",
       "requests": "リクエスト数"
     },
-    "showRaw": "{{title}}: 生データを表示"
+    "showRaw": "{{title}}: 生データを表示",
+    "headers": {
+      "api": "API",
+      "source": "取得元",
+      "requests": "リクエスト",
+      "duration": "時間",
+      "matches": "件数"
+    },
+    "running": {
+      "title": "実行中の検索",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "デッキが見つかりません。",

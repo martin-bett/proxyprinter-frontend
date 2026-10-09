@@ -360,7 +360,18 @@
       "duration": "Durata",
       "requests": "Numero di richieste"
     },
-    "showRaw": "{{title}}: mostra dati grezzi"
+    "showRaw": "{{title}}: mostra dati grezzi",
+    "headers": {
+      "api": "API",
+      "source": "Origine",
+      "requests": "Richieste",
+      "duration": "Durata",
+      "matches": "Risultati"
+    },
+    "running": {
+      "title": "Ricerche in corso",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "Nessun mazzo trovato.",

@@ -360,7 +360,18 @@
       "duration": "Duración",
       "requests": "Número de solicitudes"
     },
-    "showRaw": "{{title}}: mostrar datos brutos"
+    "showRaw": "{{title}}: mostrar datos brutos",
+    "headers": {
+      "api": "API",
+      "source": "Origen",
+      "requests": "Peticiones",
+      "duration": "Duración",
+      "matches": "Resultados"
+    },
+    "running": {
+      "title": "Búsquedas en curso",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "No se encontraron mazos.",

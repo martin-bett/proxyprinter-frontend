@@ -368,7 +368,18 @@
       "duration": "Длительность",
       "requests": "Количество запросов"
     },
-    "showRaw": "{{title}}: показать исходные данные"
+    "showRaw": "{{title}}: показать исходные данные",
+    "headers": {
+      "api": "API",
+      "source": "Источник",
+      "requests": "Запросы",
+      "duration": "Время",
+      "matches": "Найдено"
+    },
+    "running": {
+      "title": "Текущие поиски",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "Колоды не найдены.",

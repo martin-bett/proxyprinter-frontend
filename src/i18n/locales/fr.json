@@ -360,7 +360,18 @@
       "duration": "Durée",
       "requests": "Nombre de requêtes"
     },
-    "showRaw": "{{title}} : afficher les données brutes"
+    "showRaw": "{{title}} : afficher les données brutes",
+    "headers": {
+      "api": "API",
+      "source": "Source",
+      "requests": "Requêtes",
+      "duration": "Durée",
+      "matches": "Résultats"
+    },
+    "running": {
+      "title": "Recherches en cours",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "Aucun deck trouvé.",
