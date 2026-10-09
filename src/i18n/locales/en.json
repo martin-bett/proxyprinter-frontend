@@ -171,7 +171,7 @@
       "nameReplacement": "Replacement for the pattern, empty = remove"
     },
     "executor": {
-      "pasteLink": "Paste link",
+      "pasteLink": "Paste link (or the whole page source)",
       "execute": "Execute"
     },
     "noImages": "No images found."
@@ -245,11 +245,11 @@
       "ok": "Ok",
       "email": {
         "title": "Email delivery",
-        "label": "Send the download link to (optional): ",
-        "placeholder": "you@example.com",
-        "invalid": "Please enter a valid email address or leave the field empty.",
         "hint": "Useful for large decks: you can close the page, the link arrives when the PDF is ready.",
-        "notAvailable": "Email delivery is not set up on this server."
+        "notAvailable": "Email delivery is not set up on this server.",
+        "sendTo": "Send the download link to {{email}}",
+        "sendToMine": "Send the download link to my email address",
+        "loginHint": "Log in (bubble at the top right) to get the PDF by mail. Your address is confirmed by the login."
       }
     }
   },
@@ -948,6 +948,39 @@
       "tooManyRedirects": "Too many redirects.",
       "unreachable": "{{host}} not reachable: {{detail}}",
       "cancelled": "Cancelled"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "loggedInAs": "Logged in as {{email}}",
+    "loggedInAsBold": "Logged in as <1>{{email}}</1>.",
+    "logIn": "Log in",
+    "loginNotSetUp": "Login is not set up on this server",
+    "pdfHint": "You can have the finished PDF sent to this address.",
+    "logOut": "Log out",
+    "logOutEverywhere": "Log out everywhere",
+    "deleteWarning": "This deletes your account. Your decks and snapshots in this browser are not affected.",
+    "deleteNow": "Delete account now",
+    "delete": "Delete account",
+    "privacyPolicy": "Privacy policy",
+    "intro": "No password needed. We send a login link and a code to your email address. This also confirms the address, so the finished PDF can be sent to it.",
+    "emailPlaceholder": "you@example.com",
+    "emailAriaLabel": "Email address",
+    "sendLink": "Send login link",
+    "storageNotice": "We store your address and the devices you log in on until you delete your account.",
+    "testEnvironment": "<1>Test environment:</1> no mail is sent here, the code is filled in for you. Press Log in.",
+    "sentMail": "We sent a mail to <1>{{email}}</1>. Open the link in it, or enter the 6-digit code here.",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "Login code",
+    "useAnotherAddress": "Use another address",
+    "errors": {
+      "invalid": "Please enter a valid email address.",
+      "rateLimited": "Too many login mails for this address, please try again later.",
+      "disabled": "Login is not set up on this server.",
+      "sendFailed": "The login mail could not be sent, please try again.",
+      "linkExpired": "This login link has expired or was already used. Request a new one.",
+      "deleteFailed": "The account could not be deleted, please try again.",
+      "wrongCode": "The code is wrong or has expired."
     }
   }
 }

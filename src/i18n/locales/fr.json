@@ -171,7 +171,7 @@
       "nameReplacement": "Remplacement pour le motif, vide = supprimer"
     },
     "executor": {
-      "pasteLink": "Coller le lien",
+      "pasteLink": "Coller le lien (ou tout le code source de la page)",
       "execute": "Exécuter"
     },
     "noImages": "Aucune image trouvée."
@@ -245,11 +245,11 @@
       "ok": "OK",
       "email": {
         "title": "Envoi par e-mail",
-        "label": "Envoyer le lien de téléchargement à (facultatif) : ",
-        "placeholder": "vous@example.com",
-        "invalid": "Saisir une adresse e-mail valide ou laisser le champ vide.",
         "hint": "Utile pour les gros decks : la page peut être fermée, le lien arrive quand le PDF est prêt.",
-        "notAvailable": "L'envoi par e-mail n'est pas configuré sur ce serveur."
+        "notAvailable": "L'envoi par e-mail n'est pas configuré sur ce serveur.",
+        "sendTo": "Envoyer le lien de téléchargement à {{email}}",
+        "sendToMine": "Envoyer le lien de téléchargement à sa propre adresse e-mail",
+        "loginHint": "Connexion (bulle en haut à droite) pour recevoir le PDF par e-mail. L'adresse est confirmée par la connexion."
       }
     }
   },
@@ -948,6 +948,39 @@
       "tooManyRedirects": "Trop de redirections.",
       "unreachable": "{{host}} injoignable : {{detail}}",
       "cancelled": "Annulé"
+    }
+  },
+  "account": {
+    "title": "Compte",
+    "loggedInAs": "Connecté en tant que {{email}}",
+    "loggedInAsBold": "Connecté en tant que <1>{{email}}</1>.",
+    "logIn": "Connexion",
+    "loginNotSetUp": "La connexion n'est pas configurée sur ce serveur",
+    "pdfHint": "Le PDF terminé peut être envoyé à cette adresse.",
+    "logOut": "Déconnexion",
+    "logOutEverywhere": "Déconnexion partout",
+    "deleteWarning": "Le compte sera supprimé. Les decks et snapshots de ce navigateur restent intacts.",
+    "deleteNow": "Supprimer le compte maintenant",
+    "delete": "Supprimer le compte",
+    "privacyPolicy": "Politique de confidentialité",
+    "intro": "Aucun mot de passe nécessaire. Un lien de connexion et un code sont envoyés par e-mail à l'adresse indiquée. L'adresse est ainsi confirmée et le PDF terminé peut y être envoyé.",
+    "emailPlaceholder": "nom@example.com",
+    "emailAriaLabel": "Adresse e-mail",
+    "sendLink": "Envoyer le lien de connexion",
+    "storageNotice": "L'adresse et les appareils de connexion sont conservés jusqu'à la suppression du compte.",
+    "testEnvironment": "<1>Environnement de test :</1> aucun e-mail n'est envoyé, le code est déjà saisi. Cliquer sur Connexion.",
+    "sentMail": "Un e-mail a été envoyé à <1>{{email}}</1>. Ouvrir le lien qu'il contient ou saisir ici le code à 6 chiffres.",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "Code de connexion",
+    "useAnotherAddress": "Utiliser une autre adresse",
+    "errors": {
+      "invalid": "Saisir une adresse e-mail valide.",
+      "rateLimited": "Trop d'e-mails de connexion pour cette adresse, réessayer plus tard.",
+      "disabled": "La connexion n'est pas configurée sur ce serveur.",
+      "sendFailed": "L'e-mail de connexion n'a pas pu être envoyé, réessayer.",
+      "linkExpired": "Ce lien de connexion a expiré ou a déjà été utilisé. En demander un nouveau.",
+      "deleteFailed": "Le compte n'a pas pu être supprimé, réessayer.",
+      "wrongCode": "Le code est incorrect ou a expiré."
     }
   }
 }

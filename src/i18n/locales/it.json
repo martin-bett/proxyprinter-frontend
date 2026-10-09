@@ -171,7 +171,7 @@
       "nameReplacement": "Sostituzione per lo schema, vuoto = rimuovi"
     },
     "executor": {
-      "pasteLink": "Incolla link",
+      "pasteLink": "Incollare il link (o l'intero sorgente della pagina)",
       "execute": "Esegui"
     },
     "noImages": "Nessuna immagine trovata."
@@ -245,11 +245,11 @@
       "ok": "Ok",
       "email": {
         "title": "Invio per e-mail",
-        "label": "Invia il link per il download a (opzionale): ",
-        "placeholder": "you@example.com",
-        "invalid": "Inserire un indirizzo e-mail valido o lasciare il campo vuoto.",
         "hint": "Utile per mazzi grandi: la pagina si può chiudere, il link arriva quando il PDF è pronto.",
-        "notAvailable": "L'invio per e-mail non è configurato su questo server."
+        "notAvailable": "L'invio per e-mail non è configurato su questo server.",
+        "sendTo": "Inviare il link di download a {{email}}",
+        "sendToMine": "Inviare il link di download al proprio indirizzo e-mail",
+        "loginHint": "Accesso (bolla in alto a destra) per ricevere il PDF via e-mail. L'indirizzo viene confermato dall'accesso."
       }
     }
   },
@@ -948,6 +948,39 @@
       "tooManyRedirects": "Troppi reindirizzamenti.",
       "unreachable": "{{host}} non raggiungibile: {{detail}}",
       "cancelled": "Annullato"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "loggedInAs": "Accesso come {{email}}",
+    "loggedInAsBold": "Accesso come <1>{{email}}</1>.",
+    "logIn": "Accedi",
+    "loginNotSetUp": "L'accesso non è configurato su questo server",
+    "pdfHint": "Il PDF completato può essere inviato a questo indirizzo.",
+    "logOut": "Esci",
+    "logOutEverywhere": "Esci ovunque",
+    "deleteWarning": "L'account verrà eliminato. Deck e snapshot in questo browser restano invariati.",
+    "deleteNow": "Elimina account ora",
+    "delete": "Elimina account",
+    "privacyPolicy": "Informativa sulla privacy",
+    "intro": "Nessuna password necessaria. Un link di accesso e un codice vengono inviati via e-mail all'indirizzo indicato. In questo modo l'indirizzo è confermato e il PDF completato può esservi inviato.",
+    "emailPlaceholder": "nome@example.com",
+    "emailAriaLabel": "Indirizzo e-mail",
+    "sendLink": "Invia link di accesso",
+    "storageNotice": "Indirizzo e dispositivi di accesso vengono conservati fino all'eliminazione dell'account.",
+    "testEnvironment": "<1>Ambiente di test:</1> nessuna e-mail viene inviata, il codice è già inserito. Premere Accedi.",
+    "sentMail": "È stata inviata un'e-mail a <1>{{email}}</1>. Aprire il link contenuto oppure inserire qui il codice di 6 cifre.",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "Codice di accesso",
+    "useAnotherAddress": "Usa un altro indirizzo",
+    "errors": {
+      "invalid": "Inserire un indirizzo e-mail valido.",
+      "rateLimited": "Troppe e-mail di accesso per questo indirizzo, riprovare più tardi.",
+      "disabled": "L'accesso non è configurato su questo server.",
+      "sendFailed": "Impossibile inviare l'e-mail di accesso, riprovare.",
+      "linkExpired": "Questo link di accesso è scaduto o è già stato usato. Richiederne uno nuovo.",
+      "deleteFailed": "Impossibile eliminare l'account, riprovare.",
+      "wrongCode": "Il codice è errato o scaduto."
     }
   }
 }

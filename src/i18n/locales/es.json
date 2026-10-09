@@ -171,7 +171,7 @@
       "nameReplacement": "Reemplazo para el patrón, vacío = quitar"
     },
     "executor": {
-      "pasteLink": "Pegar enlace",
+      "pasteLink": "Pegar el enlace (o todo el código fuente de la página)",
       "execute": "Ejecutar"
     },
     "noImages": "No se encontraron imágenes."
@@ -245,11 +245,11 @@
       "ok": "Ok",
       "email": {
         "title": "Envío por correo",
-        "label": "Enviar el enlace de descarga a (opcional): ",
-        "placeholder": "tu@ejemplo.com",
-        "invalid": "Introducir una dirección de correo válida o dejar el campo vacío.",
         "hint": "Útil para mazos grandes: se puede cerrar la página, el enlace llega cuando el PDF esté listo.",
-        "notAvailable": "El envío por correo no está configurado en este servidor."
+        "notAvailable": "El envío por correo no está configurado en este servidor.",
+        "sendTo": "Enviar el enlace de descarga a {{email}}",
+        "sendToMine": "Enviar el enlace de descarga a la propia dirección de correo",
+        "loginHint": "Inicio de sesión (burbuja arriba a la derecha) para recibir el PDF por correo. El inicio de sesión confirma la dirección."
       }
     }
   },
@@ -948,6 +948,39 @@
       "tooManyRedirects": "Demasiadas redirecciones.",
       "unreachable": "{{host}} no accesible: {{detail}}",
       "cancelled": "Cancelado"
+    }
+  },
+  "account": {
+    "title": "Cuenta",
+    "loggedInAs": "Sesión iniciada como {{email}}",
+    "loggedInAsBold": "Sesión iniciada como <1>{{email}}</1>.",
+    "logIn": "Iniciar sesión",
+    "loginNotSetUp": "El inicio de sesión no está configurado en este servidor",
+    "pdfHint": "El PDF terminado puede enviarse a esta dirección.",
+    "logOut": "Cerrar sesión",
+    "logOutEverywhere": "Cerrar sesión en todas partes",
+    "deleteWarning": "Se eliminará la cuenta. Los mazos y snapshots de este navegador no se ven afectados.",
+    "deleteNow": "Eliminar cuenta ahora",
+    "delete": "Eliminar cuenta",
+    "privacyPolicy": "Política de privacidad",
+    "intro": "No hace falta contraseña. Se envía un enlace de acceso y un código por correo a la dirección indicada. Así queda confirmada la dirección y el PDF terminado puede enviarse allí.",
+    "emailPlaceholder": "nombre@example.com",
+    "emailAriaLabel": "Dirección de correo",
+    "sendLink": "Enviar enlace de acceso",
+    "storageNotice": "La dirección y los dispositivos de acceso se conservan hasta que se elimine la cuenta.",
+    "testEnvironment": "<1>Entorno de pruebas:</1> no se envía ningún correo, el código ya está rellenado. Pulsar Iniciar sesión.",
+    "sentMail": "Se ha enviado un correo a <1>{{email}}</1>. Abrir el enlace que contiene o introducir aquí el código de 6 dígitos.",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "Código de acceso",
+    "useAnotherAddress": "Usar otra dirección",
+    "errors": {
+      "invalid": "Introducir una dirección de correo válida.",
+      "rateLimited": "Demasiados correos de acceso para esta dirección, volver a intentarlo más tarde.",
+      "disabled": "El inicio de sesión no está configurado en este servidor.",
+      "sendFailed": "No se pudo enviar el correo de acceso, volver a intentarlo.",
+      "linkExpired": "Este enlace de acceso ha caducado o ya se usó. Solicitar uno nuevo.",
+      "deleteFailed": "No se pudo eliminar la cuenta, volver a intentarlo.",
+      "wrongCode": "El código es incorrecto o ha caducado."
     }
   }
 }

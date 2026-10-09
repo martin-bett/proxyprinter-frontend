@@ -171,7 +171,7 @@
       "nameReplacement": "Ersetzung für das Muster, leer = entfernen"
     },
     "executor": {
-      "pasteLink": "Link einfügen",
+      "pasteLink": "Link einfügen (oder den ganzen Seitenquelltext)",
       "execute": "Ausführen"
     },
     "noImages": "Keine Bilder gefunden."
@@ -245,11 +245,11 @@
       "ok": "OK",
       "email": {
         "title": "E-Mail-Zustellung",
-        "label": "Download-Link senden an (optional): ",
-        "placeholder": "name@example.com",
-        "invalid": "Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.",
         "hint": "Nützlich für große Decks: Die Seite kann geschlossen werden, der Link kommt, sobald das PDF fertig ist.",
-        "notAvailable": "E-Mail-Zustellung ist auf diesem Server nicht eingerichtet."
+        "notAvailable": "E-Mail-Zustellung ist auf diesem Server nicht eingerichtet.",
+        "sendTo": "Download-Link an {{email}} senden",
+        "sendToMine": "Download-Link an die eigene E-Mail-Adresse senden",
+        "loginHint": "Anmelden (Bubble oben rechts), um das PDF per Mail zu erhalten. Die Adresse wird durch die Anmeldung bestätigt."
       }
     }
   },
@@ -948,6 +948,39 @@
       "tooManyRedirects": "Zu viele Weiterleitungen.",
       "unreachable": "{{host}} nicht erreichbar: {{detail}}",
       "cancelled": "Abgebrochen"
+    }
+  },
+  "account": {
+    "title": "Konto",
+    "loggedInAs": "Angemeldet als {{email}}",
+    "loggedInAsBold": "Angemeldet als <1>{{email}}</1>.",
+    "logIn": "Anmelden",
+    "loginNotSetUp": "Anmeldung ist auf diesem Server nicht eingerichtet",
+    "pdfHint": "Das fertige PDF kann an diese Adresse geschickt werden.",
+    "logOut": "Abmelden",
+    "logOutEverywhere": "Überall abmelden",
+    "deleteWarning": "Das Konto wird gelöscht. Decks und Snapshots in diesem Browser bleiben erhalten.",
+    "deleteNow": "Konto jetzt löschen",
+    "delete": "Konto löschen",
+    "privacyPolicy": "Datenschutzerklärung",
+    "intro": "Kein Passwort nötig. Ein Anmelde-Link und ein Code gehen per Mail an die angegebene Adresse. Damit ist die Adresse auch bestätigt, und das fertige PDF kann dorthin geschickt werden.",
+    "emailPlaceholder": "name@example.com",
+    "emailAriaLabel": "E-Mail-Adresse",
+    "sendLink": "Anmelde-Link senden",
+    "storageNotice": "Gespeichert werden die Adresse und die Geräte der Anmeldung, bis das Konto gelöscht wird.",
+    "testEnvironment": "<1>Testumgebung:</1> Es wird keine Mail verschickt, der Code ist bereits eingetragen. Auf Anmelden klicken.",
+    "sentMail": "Eine Mail ging an <1>{{email}}</1>. Den Link darin öffnen oder den 6-stelligen Code hier eingeben.",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "Anmeldecode",
+    "useAnotherAddress": "Andere Adresse verwenden",
+    "errors": {
+      "invalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
+      "rateLimited": "Zu viele Anmelde-Mails für diese Adresse, bitte später erneut versuchen.",
+      "disabled": "Anmeldung ist auf diesem Server nicht eingerichtet.",
+      "sendFailed": "Die Anmelde-Mail konnte nicht gesendet werden, bitte erneut versuchen.",
+      "linkExpired": "Dieser Anmelde-Link ist abgelaufen oder wurde schon verwendet. Einen neuen anfordern.",
+      "deleteFailed": "Das Konto konnte nicht gelöscht werden, bitte erneut versuchen.",
+      "wrongCode": "Der Code ist falsch oder abgelaufen."
     }
   }
 }

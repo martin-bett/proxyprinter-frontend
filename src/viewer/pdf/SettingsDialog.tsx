@@ -169,7 +169,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
       </div>
       </div>
       <div className="settings-category settings-email">
-        <h3 className="title is-4">Email delivery</h3>
+        <h3 className="title is-4">{t('pdf.settings.email.title')}</h3>
         <FormControlLabel
           control={
             <Checkbox
@@ -178,17 +178,17 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
               onChange={(e) => handleChange('sendMail', e.target.checked)}
             />
           }
-          label={auth.email ? `Send the download link to ${auth.email}` : 'Send the download link to my email address'}
+          label={auth.email ? t('pdf.settings.email.sendTo', { email: auth.email }) : t('pdf.settings.email.sendToMine')}
         />
         {!mailEnabled
-          ? <p className="help">Email delivery is not set up on this server.</p>
+          ? <p className="help">{t('pdf.settings.email.notAvailable')}</p>
           : !auth.email
-            ? <p className="help">Log in (bubble at the top right) to get the PDF by mail. Your address is confirmed by the login.</p>
-            : <p className="help">Useful for large decks: you can close the page, the link arrives when the PDF is ready.</p>}
+            ? <p className="help">{t('pdf.settings.email.loginHint')}</p>
+            : <p className="help">{t('pdf.settings.email.hint')}</p>}
       </div>
       <div className='dialog-footer'>
-        <button className='button' onClick={handleReset}>Reset</button>
-        <button className='button' onClick={handleSave}>Ok</button>
+        <button className='button' onClick={handleReset}>{t('common.reset')}</button>
+        <button className='button' onClick={handleSave}>{t('pdf.settings.ok')}</button>
       </div>
     </div>
   );

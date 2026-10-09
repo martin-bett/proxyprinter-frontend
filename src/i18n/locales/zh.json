@@ -171,7 +171,7 @@
       "nameReplacement": "模式的替换内容，留空 = 删除"
     },
     "executor": {
-      "pasteLink": "粘贴链接",
+      "pasteLink": "粘贴链接（或整个页面源代码）",
       "execute": "执行"
     },
     "noImages": "未找到图片。"
@@ -244,11 +244,11 @@
       "ok": "确定",
       "email": {
         "title": "邮件发送",
-        "label": "下载链接发送至（可选）：",
-        "placeholder": "you@example.com",
-        "invalid": "请输入有效的邮箱地址，或将此栏留空。",
         "hint": "适合大型牌组：可关闭页面，PDF 完成后链接会发送到邮箱。",
-        "notAvailable": "此服务器未配置邮件发送。"
+        "notAvailable": "此服务器未配置邮件发送。",
+        "sendTo": "将下载链接发送到 {{email}}",
+        "sendToMine": "将下载链接发送到自己的邮箱",
+        "loginHint": "登录（右上角气泡）后可通过邮件接收PDF。登录即确认该邮箱地址。"
       }
     }
   },
@@ -934,6 +934,39 @@
       "tooManyRedirects": "重定向次数过多。",
       "unreachable": "无法连接 {{host}}：{{detail}}",
       "cancelled": "已取消"
+    }
+  },
+  "account": {
+    "title": "账户",
+    "loggedInAs": "已登录：{{email}}",
+    "loggedInAsBold": "已登录：<1>{{email}}</1>。",
+    "logIn": "登录",
+    "loginNotSetUp": "此服务器未设置登录功能",
+    "pdfHint": "生成的PDF可发送到此邮箱。",
+    "logOut": "退出登录",
+    "logOutEverywhere": "在所有设备上退出登录",
+    "deleteWarning": "将删除账户。此浏览器中的卡组和快照不受影响。",
+    "deleteNow": "立即删除账户",
+    "delete": "删除账户",
+    "privacyPolicy": "隐私政策",
+    "intro": "无需密码。登录链接和验证码将通过邮件发送到所填邮箱。这同时确认了邮箱地址，生成的PDF也可发送到该邮箱。",
+    "emailPlaceholder": "name@example.com",
+    "emailAriaLabel": "邮箱地址",
+    "sendLink": "发送登录链接",
+    "storageNotice": "邮箱地址和登录过的设备会保存到账户被删除为止。",
+    "testEnvironment": "<1>测试环境：</1>不会发送邮件，验证码已自动填入。点击登录。",
+    "sentMail": "已向 <1>{{email}}</1> 发送邮件。打开其中的链接，或在此输入6位验证码。",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "登录验证码",
+    "useAnotherAddress": "使用其他邮箱",
+    "errors": {
+      "invalid": "请输入有效的邮箱地址。",
+      "rateLimited": "此邮箱的登录邮件过多，请稍后再试。",
+      "disabled": "此服务器未设置登录功能。",
+      "sendFailed": "登录邮件发送失败，请重试。",
+      "linkExpired": "此登录链接已过期或已被使用。请重新获取。",
+      "deleteFailed": "账户删除失败，请重试。",
+      "wrongCode": "验证码错误或已过期。"
     }
   }
 }
