@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { imageLoaderService } from '../../service/cache/ImageLoaderService';
 import { useImageLoaderCache } from '../../service/cache/hooks/useImageLoaderCache';
 import ProgressBar from '../../components/progress/ProgressBar';
@@ -17,6 +18,7 @@ export const cacheFillColor = (percent: number): string => {
 };
 
 export function CacheProgressBar({ onClick, width = 180 }: CacheProgressBarProps) {
+  const { t } = useTranslation();
   const { totalSize } = useImageLoaderCache();
   const cacheLimit = imageLoaderService.cacheLimit;
   const percent = Math.min(100, Math.round((totalSize / cacheLimit) * 100));
@@ -28,7 +30,7 @@ export function CacheProgressBar({ onClick, width = 180 }: CacheProgressBarProps
         height={18}
         color={cacheFillColor(percent)}
         label={`${percent}%`}
-        title={`Cache: ${Math.round(totalSize / (1024 * 1024))} MB / ${Math.round(cacheLimit / (1024 * 1024))} MB`}
+        title={t('cache.progressTitle', { used: Math.round(totalSize / (1024 * 1024)), limit: Math.round(cacheLimit / (1024 * 1024)) })}
         onClick={onClick}
       />
     </div>

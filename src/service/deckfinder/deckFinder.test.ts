@@ -104,8 +104,8 @@ describe('extractDeck', () => {
   });
 
   it('explains broken configs', () => {
-    expect(() => extractDeck(archidekt, '<html>')).toThrow('kein JSON');
-    expect(() => extractDeck({ ...archidekt, nameField: 'nope' }, archidektBody)).toThrow('Keine Karten');
+    expect(() => extractDeck(archidekt, '<html>')).toThrow('not JSON');
+    expect(() => extractDeck({ ...archidekt, nameField: 'nope' }, archidektBody)).toThrow('No cards found');
   });
 });
 

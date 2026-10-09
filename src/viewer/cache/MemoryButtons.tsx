@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { useTranslation } from 'react-i18next';
 import ActionButton from '../../container/inputs/ActionButton';
 import ClosableDialog from '../../container/ClosableDialog';
+import AccountButton from '../account/AccountButton';
 import SearchCacheService from '../../service/cache/SearchCacheService';
 import { useImageLoaderNumbers } from '../../service/cache/hooks/useImageLoaderNumbers';
+import { formatRate, useDownloadRate } from '../../service/cache/hooks/useDownloadRate';
+import { useFadePresence } from '../../container/useFadePresence';
 import CacheManagerDialog from './CacheManagerDialog';
 import { CacheProgressBar } from './CacheProgressBar';
 import QueueManagerDialog from './QueueManagerDialog';
@@ -22,10 +25,13 @@ interface MemoryButtonsProps {
   resetDisabled?: boolean;
 }
 
+const FADE_MS = 500;
+
 // Icon-Bubbles oben rechts: Download-Queue, Such-Cache und Bild-Cache mit ihren Dialogen,
 // ganz rechts der Papierkorb zum Zurücksetzen des Decks (mit Rückfrage)
 export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButtonsProps) {
-  const { queued, active, cacheLoading } = useImageLoaderNumbers();
+  const { t } = useTranslation();
+  const { queued, active } = useImageLoaderNumbers();
   const [searchCount, setSearchCount] = useState(0);
   const [queueDialogOpen, setQueueDialogOpen] = useState(false);
   const [searchCacheDialogOpen, setSearchCacheDialogOpen] = useState(false);
@@ -45,37 +51,48 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
   const openQueueDialog = () => setQueueDialogOpen(true);
   const openImageCacheDialog = () => setImageCacheDialogOpen(true);
+  // Download-Bubbles nur zeigen, solange etwas geladen oder eingereiht wird, mit weichem Ein- und Ausblenden
+  const downloadsIdle = queued === 0 && active === 0;
+  const { mounted: downloadsMounted, shown: downloadsShown } = useFadePresence(!downloadsIdle, FADE_MS);
+  const fadeClass = `memory-fade${downloadsShown ? ' is-visible' : ''}`;
+  const downloadRate = useDownloadRate(active > 0);
 
   return (
     <>
-      <div className="memory-buttons-bar">
-        <button className="memory-button" title="Wartende Downloads" onClick={openQueueDialog}>
-          <AccessTimeIcon />
-          <span className="memory-button-count">{queued}</span>
-        </button>
-        <button className="memory-button" title="Aktive Downloads" onClick={openQueueDialog}>
-          <DownloadIcon />
-          <span className="memory-button-count">{active}</span>
-        </button>
-        <button className="memory-button" title="Cache-Ladevorgänge" onClick={openQueueDialog}>
-          <UploadIcon />
-          <span className="memory-button-count">{cacheLoading}</span>
-        </button>
-        <button className="memory-button" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
+      <div className="memory-buttons-bar" data-tour="memory-buttons">
+        {downloadsMounted && (
+          <>
+            <button className={`memory-button ${fadeClass}`} data-tour="queue-waiting" title={t('cache.buttons.waitingDownloads')} onClick={openQueueDialog}>
+              <AccessTimeIcon />
+              <span className="memory-button-count">{queued}</span>
+            </button>
+            <button
+              className={`memory-button ${fadeClass}`}
+              title={downloadRate > 0 ? t('cache.buttons.activeDownloadsRate', { rate: formatRate(downloadRate) }) : t('cache.buttons.activeDownloads')}
+              onClick={openQueueDialog}
+            >
+              <DownloadIcon />
+              <span className="memory-button-count">{active}</span>
+            </button>
+          </>
+        )}
+        <button className="memory-button" data-tour="search-cache" title={t('cache.buttons.showSearchCache')} onClick={() => setSearchCacheDialogOpen(true)}>
           <SearchIcon />
           <span className="memory-button-count">{searchCount}</span>
         </button>
-        <button className="memory-button" title="Cache anzeigen" onClick={openImageCacheDialog}>
+        <button className="memory-button" data-tour="image-cache" title={t('cache.buttons.showImageCache')} onClick={openImageCacheDialog}>
           <CacheProgressBar width={120} />
         </button>
         <button
           className="memory-button"
-          title="Deck zurücksetzen"
+          data-tour="reset-deck"
+          title={t('cache.buttons.resetDeck')}
           onClick={() => setResetDialogOpen(true)}
           disabled={resetDisabled}
         >
           <DeleteIcon />
         </button>
+        <AccountButton />
       </div>
 
       <ClosableDialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)} maxWidth="md">
@@ -103,11 +120,11 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
       <ClosableDialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)} maxWidth="xs">
         <div className="reset-deck-dialog">
-          <h2>Deck zurücksetzen?</h2>
-          <p>Decklist, Suchergebnisse und Bildauswahl werden geleert. Der aktuelle Stand wird vorher als Snapshot gespeichert.</p>
+          <h2>{t('cache.buttons.resetDialog.title')}</h2>
+          <p>{t('cache.buttons.resetDialog.text')}</p>
           <div className="reset-deck-actions">
             <ActionButton icon={<CloseIcon />} onClick={() => setResetDialogOpen(false)}>
-              Abbrechen
+              {t('common.cancel')}
             </ActionButton>
             <ActionButton
               icon={<RestartAltIcon />}
@@ -117,7 +134,7 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
                 await onResetDeck();
               }}
             >
-              Zurücksetzen
+              {t('common.reset')}
             </ActionButton>
           </div>
         </div>

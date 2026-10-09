@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ClosableDialog from '../../../container/ClosableDialog';
 import { CropSettings } from '../../../service/ApiFactory';
 import CropMask from './CropMask';
@@ -17,12 +18,14 @@ interface RecropDialogProps {
 }
 
 /** Zuschnitt einer eigenen Karte (Upload, Bild-URL, Galerie, Link-Liste) nachträglich ändern. */
-const RecropDialog: React.FC<RecropDialogProps> = ({ imageUrl, cropSettings, cardAspect, onClose, onApply }) => (
+const RecropDialog: React.FC<RecropDialogProps> = ({ imageUrl, cropSettings, cardAspect, onClose, onApply }) => {
+  const { t } = useTranslation();
+  return (
   <ClosableDialog open={imageUrl !== null} onClose={onClose} maxWidth="lg">
     {imageUrl && (
       <>
         <header className="modal-card-head">
-          <p className="modal-card-title">Crop Image</p>
+          <p className="modal-card-title">{t('crop.title')}</p>
         </header>
         <section className="modal-card-body">
           <CropMask
@@ -30,9 +33,9 @@ const RecropDialog: React.FC<RecropDialogProps> = ({ imageUrl, cropSettings, car
             cardAspect={cardAspect}
             initialCrop={cropSettings}
             loadFallback={imageUrl.startsWith('/') ? undefined : () => loadViaProxy(imageUrl)}
-            backLabel="Cancel"
+            backLabel={t('common.cancel')}
             onBack={onClose}
-            confirmLabel={(count) => (count > 1 ? `Apply (${count} cards)` : 'Apply')}
+            confirmLabel={(count) => (count > 1 ? t('crop.applyCards', { count }) : t('common.apply'))}
             onConfirm={(crops) => {
               if (crops.length > 0) onApply(crops);
               onClose();
@@ -42,6 +45,7 @@ const RecropDialog: React.FC<RecropDialogProps> = ({ imageUrl, cropSettings, car
       </>
     )}
   </ClosableDialog>
-);
+  );
+};
 
 export default RecropDialog;

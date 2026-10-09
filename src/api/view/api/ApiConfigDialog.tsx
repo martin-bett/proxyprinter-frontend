@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Star, Plus } from 'lucide-react';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import './ApiConfigDialog.css';
@@ -24,6 +25,7 @@ interface ApiConfigDialogProps {
 }
 
 const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave }) => {
+  const { t } = useTranslation();
   const [configs, setConfigs] = useState<Config[]>([]);
   const [selectedConfigs, setSelectedConfigs] = useState<number[]>([]);
   const [clickedConfig, setClickedConfig] = useState<Config | null>(null); // Speichert die ausgewählte Konfiguration
@@ -233,10 +235,10 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
 
   const getSearchIconElements = (): IconBarElement[] => {
     return [
-      { key: 'category-mtg', content: <img src='/icons/mtg.png' alt="MTG" /> },
-      { key: 'category-yugi', content: <img src='/icons/yugi.webp' alt="Yugi" /> },
-      { key: 'category-poke', content: <img src='/icons/poke.png' alt="Poke" /> },
-      { key: 'category-misc', content: <img src='/icons/misc.webp' alt="Misc" /> },
+      { key: 'category-mtg', content: <img src='/icons/mtg.png' alt={t('configCommon.categories.mtg')} /> },
+      { key: 'category-yugi', content: <img src='/icons/yugi.webp' alt={t('configCommon.categories.yugi')} /> },
+      { key: 'category-poke', content: <img src='/icons/poke.png' alt={t('configCommon.categories.poke')} /> },
+      { key: 'category-misc', content: <img src='/icons/misc.webp' alt={t('configCommon.categories.misc')} /> },
       { key: 'sub-category-language', content: <TranslateIcon /> },
       { key: 'sub-category-customArts', content: <PaletteIcon /> },
       { key: 'sub-category-public', content: <PublicIcon /> },
@@ -261,20 +263,20 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
       <div className="grid grid-cols-2 config-dialog">
         <div>
         <div className="config-controls">
-          <h2 className="title is-4">Select Configs</h2>
+          <h2 className="title is-4">{t('apiConfig.dialog.title')}</h2>
           <button onClick={handleCreateConfig}
             className="button mb-4 flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             <Plus size={20} />
-            Create Config
+            {t('apiConfig.dialog.createConfig')}
           </button>
 
           <button onClick={(() => onClose())} className="ml-4 button items-center "
-          > Close
+          > {t('common.close')}
           </button>
 
           <button onClick={handleControlToggle} className="ml-4 button items-center "
-          > {showControls ? <VisibilityOffIcon/> : <VisibilityIcon/>} Controls
+          > {showControls ? <VisibilityOffIcon/> : <VisibilityIcon/>} {t('apiConfig.dialog.controls')}
           </button>
 
           <IconBar onSelectionChange={filterSelectionChange}

@@ -1,0 +1,25 @@
+/* Round bubble with the flag, same size as the theme and help bubbles */
+.memory-button.language-chooser-button {
+  padding: 0;
+  width: 44px;
+}
+
+.language-chooser-flag.fi {
+  width: 1.4em;
+  line-height: 1.05em;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.language-chooser-menu .MuiMenuItem-root {
+  gap: 10px;
+}
+
+.language-chooser-hint {
+  padding: 4px 16px 6px;
+  max-width: 220px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  list-style: none;
+}

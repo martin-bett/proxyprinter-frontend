@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import './ImageSelectDialog.css';
 import HoverPreview from './HoverPreview';
-import CardImage, { CardImageError } from './CardImage';
+import ImageSelectStats from './ImageSelectStats';
+import CardImage, { CardImageError, TileState } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
-import { ONLY_THIS_HINT } from '../../container/inputs/useLongPress';
+import { onlyThisHint } from '../../container/inputs/useLongPress';
 import LanguageFlag from '../../container/LanguageFlag';
 import SortableList, { PriorityRank } from '../../container/inputs/SortableList';
 import { applyOrder, priorityRank, sortByPriority } from '../filterPriority';
@@ -21,11 +23,14 @@ const NO_LANGUAGE = 'No Language';
 // Druckschärfe-Filter. Noch nicht gemessene Bilder (nicht geladen) und "kein Text erkannt"
 // laufen unter "unrated", damit sie standardmäßig sichtbar bleiben und überhaupt gemessen werden.
 type QualityFilter = 'good' | 'ok' | 'poor' | 'unrated';
-const QUALITY_FILTERS: { key: QualityFilter; label: string }[] = [
-  { key: 'good', label: 'Gut lesbar' },
-  { key: 'ok', label: 'Etwas weich' },
-  { key: 'poor', label: 'Schlecht lesbar' },
-  { key: 'unrated', label: 'Nicht bewertet' },
+const QUALITY_FILTERS: {
+  key: QualityFilter;
+  labelKey: 'imageSelect.quality.good' | 'imageSelect.quality.ok' | 'imageSelect.quality.poor' | 'imageSelect.quality.unrated';
+}[] = [
+  { key: 'good', labelKey: 'imageSelect.quality.good' },
+  { key: 'ok', labelKey: 'imageSelect.quality.ok' },
+  { key: 'poor', labelKey: 'imageSelect.quality.poor' },
+  { key: 'unrated', labelKey: 'imageSelect.quality.unrated' },
 ];
 
 const qualityFilterOf = (result: CardResult): QualityFilter => {
@@ -33,11 +38,15 @@ const qualityFilterOf = (result: CardResult): QualityFilter => {
   return rating === 'good' || rating === 'ok' || rating === 'poor' ? rating : 'unrated';
 };
 
-const FilterCount: React.FC<{ count: number }> = ({ count }) => (
-  <span className={`filter-count ${count === 0 ? 'is-empty' : ''}`} title={`${count} Bilder`}>{count}</span>
-);
+const FilterCount: React.FC<{ count: number }> = ({ count }) => {
+  const { t } = useTranslation();
+  return (
+    <span className={`filter-count ${count === 0 ? 'is-empty' : ''}`} title={t('imageSelect.imageCount', { count })}>{count}</span>
+  );
+};
 
 const languageOf = (result: CardResult) => result.languageCode || NO_LANGUAGE;
+
 
 interface ImageSelectDialogProps {
   open: boolean;
@@ -86,6 +95,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   onReorderLanguages = noReorder,
   onReorderApis = noReorder,
   deckNav }) => {
+  const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState<CardResult | null>(initialSelectedImage || null);
   // Nur ein Klick auf ein Bild ist eine manuelle Wahl, bloßes Öffnen und Schließen nicht
   const [picked, setPicked] = useState(false);
@@ -228,6 +238,34 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     setPicked(true);
   };
 
+  // Zustand jeder sichtbaren Kachel, Schlüssel ist die Position im Grid (wie beim Rendern)
+  const [tileStates, setTileStates] = useState<Map<string, TileState>>(() => new Map());
+  const setTileState = useCallback((tileId: string, state: TileState) => {
+    setTileStates(prev => {
+      if (state === null) {
+        if (!prev.has(tileId)) return prev;
+        const next = new Map(prev);
+        next.delete(tileId);
+        return next;
+      }
+      if (prev.get(tileId) === state) return prev;
+      return new Map(prev).set(tileId, state);
+    });
+  }, []);
+
+  const tileCounts = useMemo(() => {
+    const counts: Record<'loading' | 'queued' | 'done', number> = { loading: 0, queued: 0, done: 0 };
+    tileStates.forEach(state => {
+      if (state === 'loading' || state === 'queued' || state === 'done') counts[state]++;
+    });
+    return counts;
+  }, [tileStates]);
+
+  const cardName = useMemo(
+    () => initialSelectedImage?.name ?? Object.values(groupedResults).flat()[0]?.name,
+    [initialSelectedImage, groupedResults]
+  );
+
   const handleClose = () => {
     imageLoaderService.stopByCategory('selectgrid');
     onClose(picked ? selectedImage : null);
@@ -239,12 +277,13 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     <div className="image-select-dialog">
       <div className="dialog-overlay" onClick={handleClose}>
         <div className="dialog-content" onClick={e => e.stopPropagation()}>
+          <ImageSelectStats open={open} cardName={cardName} counts={tileCounts} />
           <div className="image-selection-container">
             {deckNav && (
               <div className="deck-nav">
                 <IconButton
-                  aria-label="Previous card"
-                  title="Previous card (←)"
+                  aria-label={t('imageSelect.previousCard')}
+                  title={t('imageSelect.previousCardHint')}
                   disabled={deckNav.position <= 1}
                   onClick={() => stepTo(-1)}
                 >
@@ -252,8 +291,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                 </IconButton>
                 <span className="deck-nav-label">{deckNav.cardName} · {deckNav.position} / {deckNav.total}</span>
                 <IconButton
-                  aria-label="Next card"
-                  title="Next card (→)"
+                  aria-label={t('imageSelect.nextCard')}
+                  title={t('imageSelect.nextCardHint')}
                   disabled={deckNav.position >= deckNav.total}
                   onClick={() => stepTo(1)}
                 >
@@ -290,6 +329,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                             cardInput={result}
                             onLoad={(imageInfo) => handleImageLoad(result, imageInfo)}
                             onError={handleImageLoadError}
+                            onTileState={(state) => setTileState(`${apiName}:${index}`, state)}
                             showImageSettings={true}
                             onlyDimensions={true}
                           />
@@ -302,7 +342,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
           </div>
           <div className="filter-controls">
             <div className="language-filter input-tile-group">
-              <h3 className="title is-4">Filter by Language</h3>
+              <h3 className="title is-4">{t('imageSelect.filterLanguage')}</h3>
               <SortableList
                 items={orderedLanguages}
                 onReorder={onReorderLanguages}
@@ -311,7 +351,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     id={`select-lang-${lang}`}
                     label={
                       <div className="label-container">
-                        <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
+                        <span>{lang === NO_LANGUAGE ? t('imageSelect.noLanguage') : lang}</span>
                         <FilterCount count={languageCounts.get(lang) ?? 0} />
                         <LanguageFlag language={lang} />
                       </div>
@@ -319,7 +359,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     checked={dialogVisibleLanguages.has(lang)}
                     onChange={() => toggleLanguage(lang)}
                     onLongPress={() => setDialogVisibleLanguages(new Set([lang]))}
-                    longPressHint={ONLY_THIS_HINT}
+                    longPressHint={onlyThisHint()}
                     trailing={handle}
                     badge={<PriorityRank rank={priorityRank(orderedLanguages, dialogVisibleLanguages, lang)} />}
                   />
@@ -327,7 +367,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
               />
             </div>
             <div className="language-filter input-tile-group">
-              <h3 className="title is-4">Filter by API</h3>
+              <h3 className="title is-4">{t('imageSelect.filterApi')}</h3>
               <SortableList
                 items={orderedApis}
                 onReorder={onReorderApis}
@@ -343,7 +383,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                     checked={dialogVisibleApis.has(apiName)}
                     onChange={() => toggleApi(apiName)}
                     onLongPress={() => setDialogVisibleApis(new Set([apiName]))}
-                    longPressHint={ONLY_THIS_HINT}
+                    longPressHint={onlyThisHint()}
                     trailing={handle}
                     badge={<PriorityRank rank={priorityRank(orderedApis, dialogVisibleApis, apiName)} />}
                   />
@@ -351,14 +391,14 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
               />
             </div>
             <div className="language-filter input-tile-group">
-              <h3 className="title is-4">Filter by Sharpness</h3>
-              {QUALITY_FILTERS.map(({ key, label }) => (
+              <h3 className="title is-4">{t('imageSelect.filterSharpness')}</h3>
+              {QUALITY_FILTERS.map(({ key, labelKey }) => (
                 <ChoiceButton
                   key={key}
                   id={`select-quality-${key}`}
                   label={
                     <div className="label-container">
-                      <span>{label}</span>
+                      <span>{t(labelKey)}</span>
                       <FilterCount count={qualityCounts.get(key) ?? 0} />
                       <span className={`quality-dot-inline quality-${key === 'unrated' ? 'unknown' : key}`} />
                     </div>
@@ -366,7 +406,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                   checked={visibleQualities.has(key)}
                   onChange={() => toggleQuality(key)}
                   onLongPress={() => setVisibleQualities(new Set([key]))}
-                  longPressHint={ONLY_THIS_HINT}
+                  longPressHint={onlyThisHint()}
                 />
               ))}
             </div>

@@ -1,0 +1,975 @@
+{
+  "themeChooser": {
+    "title": "配色方案：{{name}}",
+    "aria": "选择配色方案（当前：{{name}}）"
+  },
+  "tutorials": {
+    "title": "教程"
+  },
+  "language": {
+    "title": "界面语言：{{name}}",
+    "aria": "选择界面语言（当前：{{name}}）",
+    "hint": "卡牌语言和图片筛选需单独设置。"
+  },
+  "common": {
+    "close": "关闭",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "apply": "应用",
+    "back": "返回",
+    "next": "下一步",
+    "done": "完成",
+    "search": "搜索",
+    "loading": "加载中…",
+    "error": "错误",
+    "replace": "替换",
+    "reset": "重置",
+    "copy": "复制",
+    "download": "下载",
+    "add": "添加",
+    "remove": "移除",
+    "rename": "重命名",
+    "preview": "预览",
+    "settings": "设置",
+    "name": "名称",
+    "language": "语言",
+    "set": "系列",
+    "url": "URL",
+    "none": "无",
+    "info": "信息",
+    "test": "测试",
+    "overwrite": "覆盖",
+    "load": "加载",
+    "retry": "重试"
+  },
+  "configCommon": {
+    "groups": {
+      "baseInfo": "基本信息",
+      "request": "请求",
+      "locator": "定位",
+      "search": "搜索",
+      "followLink": "跟随链接",
+      "nestedLanguage": "嵌套语言",
+      "cardFaces": "牌面"
+    },
+    "fields": {
+      "name": "名称",
+      "category": "分类",
+      "officialWebsite": "官方网站",
+      "method": "方法",
+      "dataFormat": "数据格式",
+      "baseUrl": "基础 URL",
+      "parameterMap": "参数映射",
+      "paginationField": "分页字段",
+      "dataListField": "数据列表字段",
+      "nameField": "名称字段",
+      "imageUrlField": "图片 URL 字段",
+      "languageField": "语言字段",
+      "defaultLanguage": "默认语言",
+      "setField": "系列字段",
+      "linkPattern": "链接模式"
+    },
+    "options": {
+      "get": "GET",
+      "post": "POST",
+      "json": "JSON",
+      "html": "HTML",
+      "text": "文本",
+      "urlEncoded": "URL 编码",
+      "multipart": "Multipart"
+    },
+    "titles": {
+      "defaultLanguage": "来源未提供语言时，卡牌使用的语言"
+    },
+    "categories": {
+      "mtg": "MTG",
+      "poke": "宝可梦",
+      "yugi": "游戏王",
+      "misc": "其他"
+    },
+    "categoryIcons": {
+      "mtg": "MTG 图标",
+      "poke": "宝可梦图标",
+      "yugi": "游戏王图标",
+      "misc": "其他图标"
+    },
+    "languages": {
+      "en": "英语",
+      "de": "德语",
+      "fr": "法语",
+      "it": "意大利语",
+      "es": "西班牙语",
+      "pt": "葡萄牙语",
+      "ja": "日语",
+      "ko": "韩语",
+      "ru": "俄语",
+      "zh": "中文",
+      "ph": "瑞克斯语"
+    },
+    "noProperties": "无属性。",
+    "setProperties": "设置属性",
+    "unsetProperties": "取消设置属性",
+    "configSettings": "配置设置",
+    "publish": "发布",
+    "unpublish": "取消发布",
+    "copyConfig": "复制配置"
+  },
+  "apiConfig": {
+    "fields": {
+      "customArts": "自定义图片",
+      "concurrentLimit": "并发上限",
+      "requestFormat": "请求格式",
+      "csrfTokenVariableName": "CSRF Token 变量名",
+      "requiresCsrfToken": "需要 CSRF Token",
+      "useBackendProxy": "使用后端 Proxy",
+      "proxyImages": "Proxy 图片",
+      "nameSplitCharacter": "名称分隔符",
+      "setNumberField": "系列编号字段",
+      "followLinkField": "跟随链接字段",
+      "followLinkImageField": "图片字段"
+    },
+    "titles": {
+      "proxyImages": "通过后端加载此 API 的图片（适用于没有 CORS 头的主机）",
+      "cardFacesDataListField": "牌面列表，例如 Scryfall 的 card_faces。每个带图片的牌面各算一个匹配。"
+    },
+    "connectedCards": {
+      "dataListFieldTitle": "匹配内部的列表，例如 Scryfall 的 all_parts",
+      "nameFieldTitle": "每个条目的名称，将在所有启用的 API 中搜索",
+      "linkField": "链接字段",
+      "linkFieldTitle": "可选：指向确切对象的链接（格式与匹配相同）",
+      "typeField": "类型字段",
+      "typeFieldTitle": "可选：每个条目的类型，例如 type_line",
+      "title": "关联卡牌",
+      "titleTooltip": "列表中的每个条目成为独立卡牌（数量 1），并在所有启用的 API 中搜索",
+      "removeList": "移除列表",
+      "addList": "添加列表"
+    },
+    "dialog": {
+      "title": "选择配置",
+      "createConfig": "创建配置",
+      "controls": "操作"
+    }
+  },
+  "galleryConfig": {
+    "fields": {
+      "followInputRedirects": "跟随链接重定向",
+      "credential": "凭据",
+      "imageUrlPattern": "图片 URL 模式",
+      "imageUrlReplacement": "图片 URL 替换",
+      "namePattern": "名称模式",
+      "nameReplacement": "名称替换"
+    },
+    "titles": {
+      "parameterMap": "每个条目对应一个输入框。来源无需输入时留空",
+      "linkPattern": "带命名分组的正则，例如 (?<id>\\d+)。分组会填入基础 URL 中的 {id} 等；设置链接模式或凭据后，由后端获取来源",
+      "followInputRedirects": "链接与模式不匹配时，先跟随其重定向（短链接和分享链接）",
+      "credential": "服务器管理员保存的凭据名称（例如 reddit）。Cookie 或 token 保留在服务器上，只发送给匹配的主机",
+      "imageUrlPattern": "作用于所读图片 URL 的正则。不匹配时该条目被丢弃（例如视频、子文件夹）",
+      "imageUrlReplacement": "模式的替换内容，分组写作 $1，例如 https://i.redd.it/$1",
+      "namePattern": "作用于所读名称的正则，例如 \\.\\w+$ 匹配文件扩展名",
+      "nameReplacement": "模式的替换内容，留空 = 删除"
+    },
+    "executor": {
+      "pasteLink": "粘贴链接（或整个页面源代码）",
+      "execute": "执行"
+    },
+    "noImages": "未找到图片。"
+  },
+  "deckFinderConfig": {
+    "fields": {
+      "fetchUrl": "获取 URL",
+      "deckNameField": "牌组名称字段",
+      "entryListFields": "条目列表字段",
+      "quantityField": "数量字段",
+      "numberField": "编号字段",
+      "boardField": "分区字段",
+      "optionalBoards": "可选分区",
+      "searchUrl": "搜索 URL",
+      "searchListField": "结果列表字段",
+      "searchIdField": "牌组 ID 字段",
+      "searchNameField": "牌组名称字段",
+      "searchOwnerField": "所有者字段",
+      "searchImageField": "图片字段",
+      "searchInfoField": "信息字段"
+    },
+    "titles": {
+      "linkPattern": "牌组链接的正则；分组 (?<id>...) 提供牌组 ID",
+      "fetchUrl": "含 {id} 的获取 URL",
+      "entryListFields": "卡牌列表的路径，以逗号分隔。\"*\" = 对象的所有值，\"Sideboard=path\" 将列表归入某个分区",
+      "numberField": "收藏编号，仅与系列一起使用",
+      "boardField": "条目的一个或多个分类，文本或列表",
+      "optionalBoards": "仅按需加载的分区，以逗号分隔（文本格式：分段标题）",
+      "searchUrl": "含 {query} 和可选 {page} 的搜索 URL",
+      "searchInfoField": "例如卡牌数量"
+    },
+    "new": "新建"
+  },
+  "rating": {
+    "title": "评分",
+    "availability": "可用性",
+    "quality": "质量"
+  },
+  "pdf": {
+    "preview": {
+      "ariaLabel": "页面预览",
+      "doesNotFit": "超出 A4 范围"
+    },
+    "progress": {
+      "title": "正在生成 PDF",
+      "category": {
+        "queued": "队列",
+        "download": "下载",
+        "build": "构建",
+        "finishing": "收尾"
+      },
+      "queuePosition": "第 {{current}} 位，共 {{total}} 位",
+      "pageCount_other": "{{count}} 页",
+      "starting": "正在开始生成 PDF…",
+      "emailNotice": "下载链接也会发送至 {{email}}。"
+    },
+    "settings": {
+      "dimensions": "尺寸",
+      "width": "宽度：",
+      "height": "高度：",
+      "verticalMargin": "垂直边距：",
+      "horizontalMargin": "水平边距：",
+      "maxDpi": "最大 DPI：",
+      "cutlines": "裁切线",
+      "lineThickness": "线条粗细：",
+      "cutLineColor": "裁切线颜色：",
+      "corners": "圆角",
+      "detectBorderColor": "检测边框颜色",
+      "cornerColor": "圆角颜色：",
+      "ok": "确定",
+      "email": {
+        "title": "邮件发送",
+        "hint": "适合大型牌组：可关闭页面，PDF 完成后链接会发送到邮箱。",
+        "notAvailable": "此服务器未配置邮件发送。",
+        "sendTo": "将下载链接发送到 {{email}}",
+        "sendToMine": "将下载链接发送到自己的邮箱",
+        "loginHint": "登录（右上角气泡）后可通过邮件接收PDF。登录即确认该邮箱地址。"
+      }
+    }
+  },
+  "snapshot": {
+    "cardsCount_other": "{{count}} 张卡牌",
+    "pdfExpired": "PDF 已过期",
+    "pdfAvailable": "PDF {{size}}，有效期至 {{date}}",
+    "restoreLastSession": "恢复上次会话",
+    "save": "保存快照",
+    "activeTitle": "{{label}} 已启用：更改将保存在此处",
+    "loadTitle": "加载 {{label}}",
+    "downloadPdf": "下载 PDF",
+    "downloadPdfOf": "下载 {{label}} 的 PDF",
+    "overwriteTitle": "用当前状态覆盖",
+    "overwriteAria": "用当前状态覆盖 {{label}}",
+    "renameAria": "重命名 {{label}}",
+    "deleteAria": "删除 {{label}}",
+    "storedInBrowser": "保存在此浏览器 · {{size}}",
+    "deleteAll": "全部删除",
+    "saveFailed": "无法保存快照。",
+    "customCardsGone_other": "{{count}} 张自定义卡牌已不在服务器上，请重新上传。",
+    "pdfLinkRemoved": "其 PDF 链接将被移除。",
+    "confirmOverwrite": "用当前状态覆盖“{{label}}”？",
+    "namePrompt": "快照名称",
+    "confirmDelete": "删除快照“{{label}}”？",
+    "confirmDeleteAll": "删除保存在此浏览器中的所有快照？"
+  },
+  "cache": {
+    "progressTitle": "缓存：{{used}} MB / {{limit}} MB",
+    "manager": {
+      "title": "图片缓存",
+      "clickToDelete": "点击删除",
+      "groupProtected": "已保护",
+      "deleteKeepProtected": "点击删除（{{count}} 项受保护的保留）",
+      "lock": {
+        "protected": "已保护。点击取消保护",
+        "partial": "{{total}} 项中有 {{locked}} 项受保护。点击全部保护",
+        "unprotected": "点击以防止删除"
+      },
+      "protectFromDeletion": "防止删除",
+      "apiTotal": "API 合计",
+      "usage": "已用 {{used}} MB，上限 {{limit}} MB",
+      "protectedCount": "{{count}} 项受保护",
+      "limitLabel": "上限（MB）",
+      "setLimit": "设置上限",
+      "clearCache": "清空缓存",
+      "hint": "点击单元格可删除其对应的图片，红色高亮表示将被删除的内容。锁用于保护图片：清空缓存时保留，仅当受保护图片本身超出上限时才会被移除以腾出空间。",
+      "count": "数量",
+      "allApis": "所有 API",
+      "empty": "缓存为空"
+    },
+    "buttons": {
+      "waitingDownloads": "等待中的下载",
+      "activeDownloads": "进行中的下载",
+      "activeDownloadsRate": "进行中的下载 · {{rate}}",
+      "showSearchCache": "显示搜索缓存",
+      "showImageCache": "显示图片缓存",
+      "resetDeck": "重置牌组",
+      "resetDialog": {
+        "title": "重置牌组？",
+        "text": "牌表、搜索结果和图片选择将被清除。当前状态会先保存为快照。"
+      }
+    },
+    "queue": {
+      "title": "队列管理",
+      "cancelApi": "取消 API：",
+      "cancelLanguage": "取消语言：",
+      "columns": {
+        "api": "API",
+        "cardName": "卡牌名称",
+        "priority": "优先级",
+        "category": "分类",
+        "action": "操作"
+      },
+      "empty": "队列中没有条目",
+      "cancelEntry": "取消条目"
+    },
+    "search": {
+      "title": "搜索缓存",
+      "savedCount_other": "{{count}} 条已保存的搜索",
+      "deleteAll": "删除所有搜索",
+      "hint": "数字为找到的匹配数。点击单元格可删除其对应的搜索；红色高亮表示将被删除的内容。",
+      "allForCard": "该卡牌全部",
+      "empty": "没有已保存的搜索"
+    }
+  },
+  "log": {
+    "raw": {
+      "title": "API 原始响应",
+      "collapseAll": "全部折叠",
+      "expandAll": "全部展开",
+      "copied": "已复制 ✓",
+      "copy": "复制到剪贴板"
+    },
+    "source": {
+      "cache": "从缓存加载",
+      "server": "从共享服务器缓存加载",
+      "network": "从网络加载",
+      "error": "错误",
+      "running": "搜索中"
+    },
+    "columns": {
+      "source": "来源：缓存、服务器缓存或网络",
+      "matches": "匹配",
+      "duration": "耗时",
+      "requests": "请求数"
+    },
+    "showRaw": "{{title}}：显示原始数据"
+  },
+  "deckImport": {
+    "noDecks": "未找到牌组。",
+    "sourcesTitle": "牌组查找来源",
+    "backToImport": "返回导入",
+    "title": "导入牌组",
+    "sources": "来源",
+    "source": "来源",
+    "privateSource": "{{name}}（私有）",
+    "inputLabelSearch": "牌组链接、ID 或牌组名称",
+    "inputLabel": "牌组链接或 ID",
+    "linkRecognized": "已识别 {{name}} 链接",
+    "alsoLoad": "同时加载：",
+    "loadDeck": "加载牌组",
+    "searchByName": "按名称搜索",
+    "loadHit": "加载 {{name}}",
+    "hitCards": "{{info}} 张卡牌",
+    "moreResults": "更多结果"
+  },
+  "cacheService": {
+    "proxyDecodeFailed": "无法解码 Proxy 图片",
+    "imageLoadFailed": "无法加载图片",
+    "imageLoadFailedReason": "无法加载图片：{{reason}}",
+    "proxyError": "Proxy 错误 {{status}}",
+    "thumbnailFailed": "无法从 blob 创建缩略图",
+    "blobFailed": "无法从 blob 创建图片",
+    "urlFailed": "无法从 URL 加载图片"
+  },
+  "grid": {
+    "proxyImageLoadError": "Proxy 图片加载错误",
+    "printSharpness": "打印清晰度：{{rating}}（清晰度 {{sharpness}}，{{dpi}} DPI）",
+    "unknownResolution": "分辨率未知",
+    "sharpnessLine": "清晰度 {{sharpness}} · {{dpi}} DPI · {{rating}}",
+    "noLanguage": "无语言",
+    "noSetInfo": "无系列信息",
+    "linkList": {
+      "title": "添加链接",
+      "label": "图片 URL（以逗号、分号或换行分隔）",
+      "add_other": "添加 {{count}} 张图片"
+    }
+  },
+  "quality": {
+    "rating": {
+      "good": "清晰易读",
+      "ok": "可读，略有模糊",
+      "poor": "文字可能难以辨认",
+      "unknown": "未检测到文字"
+    }
+  },
+  "crop": {
+    "imageAlt": "裁剪",
+    "cardTitle": "卡牌 {{number}}",
+    "loadError": "无法加载图片，请检查 URL。",
+    "modeCrop": "裁剪",
+    "modeCut": "拆分图集",
+    "keepAspect": "保持宽高比",
+    "keepAspectHint": "使裁剪区域保持 PDF 设置中的卡牌比例，打印时图片不会变形",
+    "wholeImage": "整张图片",
+    "offsetX": "X 偏移",
+    "offsetY": "Y 偏移",
+    "width": "宽度",
+    "height": "高度",
+    "hint": "用鼠标移动裁剪框、拖动角点，或输入像素值。",
+    "rows": "行数",
+    "columns": "列数",
+    "outerBorder": "外边框（px）",
+    "gap": "卡牌间距（px）",
+    "info": {
+      "tooLarge": "边距和间距大于图片。",
+      "summary_other": "{{count}} 张卡牌，每张 {{tileWidth}} × {{tileHeight}} px（图片 {{imageWidth}} × {{imageHeight}}）",
+      "summaryStretched_other": "{{count}} 张卡牌，每张 {{tileWidth}} × {{tileHeight}} px（图片 {{imageWidth}} × {{imageHeight}}），与卡牌比例不符，打印时会被拉伸"
+    },
+    "addCards_other": "添加 {{count}} 张卡牌",
+    "title": "裁剪图片",
+    "applyCards": "应用（{{count}} 张卡牌）"
+  },
+  "imageSelect": {
+    "quality": {
+      "good": "清晰易读",
+      "ok": "略有模糊",
+      "poor": "难以辨认",
+      "unrated": "未评分"
+    },
+    "imageCount_other": "{{count}} 张图片",
+    "previousCard": "上一张卡牌",
+    "previousCardHint": "上一张卡牌（←）",
+    "nextCard": "下一张卡牌",
+    "nextCardHint": "下一张卡牌（→）",
+    "filterLanguage": "按语言筛选",
+    "filterApi": "按 API 筛选",
+    "filterSharpness": "按清晰度筛选",
+    "noLanguage": "无语言",
+    "stats": {
+      "downloading": "下载中",
+      "queued": "排队中",
+      "loaded": "已加载",
+      "cached": "此卡牌的缓存图片",
+      "removeCached": "移除此卡牌的缓存图片"
+    }
+  },
+  "addCard": {
+    "uploadError": "上传时出错。",
+    "uploadFileError": "上传文件时出错。",
+    "title": "添加自定义卡牌",
+    "titleReplace": "替换“{{name}}”",
+    "searchApis": "搜索 API",
+    "cardName": "卡牌名称",
+    "searching": "搜索中…",
+    "searchAgain": "重新搜索",
+    "foundNone": "未找到“{{name}}”的卡图",
+    "found_other": "找到“{{name}}”的 {{count}} 张卡图",
+    "replaceInDeck": "替换牌组中的卡牌",
+    "addToDeck": "加入牌组",
+    "insertImageUrl": "输入图片 URL",
+    "imageUrl": "图片 URL",
+    "nextCrop": "下一步：裁剪",
+    "uploadFile": "上传文件",
+    "chooseFile": "选择文件…",
+    "noFileChosen": "未选择文件"
+  },
+  "container": {
+    "onlyThisHint": "按住 2 秒仅显示此项",
+    "cropOverlay": {
+      "tabCrop": "裁剪",
+      "name": "名称：",
+      "set": "系列：",
+      "api": "API：",
+      "language": "语言：",
+      "imageSize": "图片尺寸：",
+      "crop": "裁剪：",
+      "cropValue": "{{width}} × {{height}}，起点 {{x}}, {{y}}"
+    },
+    "iconBar": {
+      "viewFiltering": "视图筛选"
+    },
+    "sortable": {
+      "priorityHint": "拖动以设置优先级：最上面的优先，其余作为备选",
+      "handleAria": "{{hint}}（第 {{position}} 位，共 {{total}} 位）",
+      "preferred": "首选",
+      "fallback": "备选 {{rank}}"
+    }
+  },
+  "deckInput": {
+    "pdfError": {
+      "lostConnection": "与 PDF 生成的连接已中断，请重试。",
+      "startFailed": "无法开始生成 PDF，请重试。",
+      "downloadFailed": "无法下载 PDF，请重试。"
+    },
+    "categoryIcon": {
+      "mtg": "MTG 图标",
+      "poke": "宝可梦图标",
+      "misc": "其他图标"
+    },
+    "noLanguage": "无语言",
+    "ratio": {
+      "active": "已启用 {{selected}} / {{total}}",
+      "shown": "已显示 {{selected}} / {{total}}"
+    },
+    "snapshots": {
+      "title": "快照",
+      "saved": "已保存 {{count}} 个",
+      "noneSaved": "暂无"
+    },
+    "apiSelection": {
+      "title": "API 选择",
+      "manage": "管理 API",
+      "categoryRatio": "{{category}}：{{selected}} / {{total}}"
+    },
+    "decklist": {
+      "title": "输入牌表",
+      "cards_other": "{{count}} 张卡牌",
+      "empty": "空",
+      "analyze": "分析牌组"
+    },
+    "tokens": {
+      "label": "Token 及其他",
+      "tooltip": "将 Token、徽记等作为独立卡牌添加。提供方：{{apis}}",
+      "none": "没有启用的 API 提供 Token 或其他卡牌"
+    },
+    "serverCache": {
+      "label": "共享搜索缓存",
+      "tooltip": "使用其他用户已找到的搜索结果（共享服务器缓存）。取消勾选则始终自行搜索来源。",
+      "disabled": "此服务器已关闭共享搜索缓存"
+    },
+    "append": {
+      "label": "追加",
+      "tooltip": "将分析的卡牌添加到当前选择中，而不是替换它。"
+    },
+    "import": {
+      "title": "导入牌组",
+      "sources": "牌组查找来源",
+      "placeholder": "牌组链接、ID 或名称",
+      "detected": "{{name}} 链接",
+      "load": "加载牌组",
+      "searchByName": "按名称搜索",
+      "options": "选项"
+    },
+    "addSingle": {
+      "title": "添加单张",
+      "gallery": "图库搜索",
+      "links": "添加链接"
+    },
+    "searchLog": {
+      "title": "搜索日志",
+      "entries_other": "{{count}} 条记录"
+    },
+    "card": {
+      "cropImage": "裁剪图片",
+      "neededBy": "需要方：{{names}}",
+      "noArt": "未找到卡图",
+      "replaceTooltip": "重新搜索或为此条目添加图片；将替换牌组中的该条目",
+      "discardTooltip": "从牌组中移除此条目",
+      "discard": "丢弃",
+      "noImage": "无可用图片",
+      "removeCard": "移除卡牌",
+      "oneLess": "减一张",
+      "oneMore": "加一张"
+    },
+    "view": {
+      "title": "视图选项",
+      "uniquePrints": "逐张版本",
+      "showImageInfo": "显示图片信息",
+      "gridSize": "网格大小 {{size}}",
+      "languageFilter": "语言筛选",
+      "apiFilter": "API 筛选"
+    },
+    "pdf": {
+      "title": "PDF 生成",
+      "create": "创建 PDF",
+      "tooLarge": "PDF 约为 {{size}}，上限为 {{limit}} MB。请将牌组拆分为多个 PDF，或在设置中降低最大 DPI。",
+      "estimate": "预计大小：约 {{size}}",
+      "estimateWithLimit": "预计大小：约 {{size}}，上限 {{limit}} MB"
+    },
+    "replaceDeck": {
+      "title": "替换牌表？",
+      "messageNamed_other": "“{{name}}”（{{count}} 张卡牌）将替换当前牌表。当前状态会先保存为快照。",
+      "messageUnnamed_other": "已加载的牌组（{{count}} 张卡牌）将替换当前牌表。当前状态会先保存为快照。"
+    }
+  },
+  "info": {
+    "disclaimer": {
+      "title": "免责声明",
+      "sources": "本网站从公开来源和第三方 API 加载卡牌图片和信息。对这些来源提供的内容，本站不承担责任。本站不主张图片的任何版权或所有权，所有权利归各自所有者所有。",
+      "noncommercial": "本项目为非商业项目，仅供个人、教育或研究用途。使用本站不产生任何盈利。",
+      "accept": "继续使用即表示已知悉并接受此免责声明。",
+      "understand": "我已了解"
+    },
+    "participate": "参与",
+    "donate": "捐赠"
+  },
+  "tour": {
+    "createDeck": {
+      "title": "如何创建牌组",
+      "steps": {
+        "s1": {
+          "title": "输入牌表",
+          "content": "在此粘贴或输入牌组，每行一张卡牌，数量在前，例如“4 Lightning Bolt”。常见组牌网站的导出内容可直接使用。"
+        },
+        "s2": {
+          "title": "Token 及其他",
+          "content": "勾选后，卡牌产生的 Token、徽记等其他卡牌会作为独立卡牌加入。"
+        },
+        "s3": {
+          "title": "搜索图片",
+          "content": "“分析牌组”会在所有启用的来源中搜索每张卡牌。结果陆续显示在网格中。"
+        },
+        "s4": {
+          "title": "或导入牌组",
+          "content": "粘贴牌组链接或 ID 并点击“加载牌组”，或输入牌组名称并使用“按名称搜索”。导入的牌组替换牌表前，当前状态会先保存为快照。"
+        },
+        "s5": {
+          "title": "添加单张卡牌",
+          "content": "添加自己的图片、搜索图库，或粘贴图片链接列表，逐张添加卡牌。"
+        },
+        "s6": {
+          "title": "牌组",
+          "content": "每张卡牌对应一个方块。点击方块可更换图片，用 + 和 − 调整数量。"
+        },
+        "s7": {
+          "title": "打印",
+          "content": "选择满意后，“创建 PDF”会生成包含所有卡牌的可打印页面。"
+        }
+      }
+    },
+    "changeSources": {
+      "title": "如何更改来源",
+      "steps": {
+        "s1": {
+          "title": "选择来源",
+          "content": "每个条目是搜索时请求卡图的一个来源。可勾选或取消单个来源，或点击分类一次切换其下所有来源。"
+        },
+        "s2": {
+          "title": "管理来源",
+          "content": "齿轮会打开来源管理器，可在其中添加新来源、编辑现有来源或进行测试。"
+        },
+        "s3": {
+          "title": "共享搜索缓存",
+          "content": "重用其他用户已找到的搜索结果，速度快得多。取消勾选则始终自行向来源查询，例如修改来源之后。"
+        },
+        "s4": {
+          "title": "图库",
+          "content": "图库搜索用于浏览不属于常规卡牌搜索的图片图库。"
+        },
+        "s5": {
+          "title": "牌组来源",
+          "content": "此齿轮用于管理可导入牌组的组牌网站。"
+        }
+      }
+    },
+    "cardAppearance": {
+      "title": "如何编辑卡牌外观",
+      "steps": {
+        "s1": {
+          "title": "视图设置",
+          "content": "“逐张版本”为每张副本显示一个方块，因此每张副本都可使用不同图片。“显示图片信息”会在每个方块上增加尺寸和质量详情。"
+        },
+        "s2": {
+          "title": "网格大小",
+          "content": "放大或缩小网格中的方块。仅改变视图，不影响 PDF。"
+        },
+        "s3": {
+          "title": "选择和裁剪图片",
+          "content": "点击方块可查看该卡牌找到的所有图片并选择其他图片。自己的图片可通过方块上的裁剪按钮重新裁剪。"
+        },
+        "s4": {
+          "title": "打印设置",
+          "content": "在此设置卡牌尺寸、边距、裁切线、圆角和最大图片分辨率。预览显示页面的效果。"
+        }
+      }
+    },
+    "storage": {
+      "title": "存储管理",
+      "steps": {
+        "s1": {
+          "title": "下载和缓存",
+          "content": "这些气泡显示后台进度：等待中和进行中的下载，以及从缓存加载的图片。点击可查看队列。"
+        },
+        "s2": {
+          "title": "搜索缓存",
+          "content": "搜索结果保存在浏览器中，再次搜索同一张卡牌会立即显示。点击可查看或删除已保存的搜索。"
+        },
+        "s3": {
+          "title": "图片缓存",
+          "content": "下载的图片同样保存在浏览器中。进度条显示图片缓存的占用情况；点击可进行清理。"
+        },
+        "s4": {
+          "title": "重置牌组",
+          "content": "清除牌表、结果和选择。移除任何内容前会先确认。"
+        },
+        "s5": {
+          "title": "快照",
+          "content": "快照也保存在此浏览器中。在此删除旧快照以释放空间。"
+        }
+      }
+    },
+    "filters": {
+      "title": "使用筛选",
+      "steps": {
+        "s1": {
+          "title": "语言筛选",
+          "content": "取消勾选某种语言即可隐藏其图片。按住条目 2 秒可仅显示该语言。"
+        },
+        "s2": {
+          "title": "优先级",
+          "content": "拖动条目可重新排序。顺序决定自动选用的图片：最上面的优先，其余作为备选。数字显示各条目的排名。"
+        },
+        "s3": {
+          "title": "来源筛选",
+          "content": "来源的用法相同：隐藏来源、按住仅显示一个、拖动设置首选来源。"
+        },
+        "s4": {
+          "title": "对牌组的影响",
+          "content": "手动选择的卡牌只要符合筛选条件就保持选中。没有任何匹配图片的方块会被标记。图片选择对话框使用相同的筛选。"
+        }
+      }
+    },
+    "snapshots": {
+      "title": "什么是快照",
+      "steps": {
+        "s1": {
+          "title": "快照",
+          "content": "快照保存全部工作内容：牌表、所选图片、启用的来源、筛选和打印设置。快照保存在此浏览器中。刷新后，“恢复上次会话”可回到之前的状态。"
+        },
+        "s2": {
+          "title": "保存",
+          "content": "保存当前状态。创建 PDF 时，以及导入的牌组替换牌表前，也会自动生成快照。"
+        },
+        "s3": {
+          "title": "加载和管理",
+          "content": "点击快照即可加载。旁边的按钮可用当前状态覆盖、重命名或删除它。已创建 PDF 的快照在 PDF 有效期内可再次下载。"
+        }
+      }
+    },
+    "locale": {
+      "skip": "跳过",
+      "nextWithProgress": "下一步（{step} / {steps}）"
+    }
+  },
+  "themes": {
+    "plains": "平原",
+    "island": "海岛",
+    "swamp": "沼泽",
+    "mountain": "山脉",
+    "forest": "树林",
+    "midnight": "午夜"
+  },
+  "errors": {
+    "deckFinder": {
+      "notJson": "响应不是 JSON。配置的数据格式是否匹配？",
+      "noEntryListFields": "配置中没有条目列表字段。",
+      "noCards": "响应中未找到卡牌。配置的字段是否匹配？",
+      "searchNotJson": "搜索响应不是 JSON。"
+    }
+  },
+  "wizard": {
+    "title": "创建 API",
+    "steps": {
+      "request": "请求",
+      "searchTerm": "搜索词",
+      "fields": "字段"
+    },
+    "request": {
+      "help": "粘贴一个已能返回结果的搜索请求，例如 <0>https://api.scryfall.com/cards/search?q=Lightning+Bolt</0>。",
+      "method": "方法",
+      "restUrl": "REST URL",
+      "bodyFormat": "Body 格式",
+      "formatForm": "表单（a=1&b=2）",
+      "body": "Body",
+      "expert": "来源需要跟随链接、CSRF Token 或嵌套语言？",
+      "createEmpty": "创建空配置并手动填写"
+    },
+    "searchTerm": {
+      "help": "此请求中搜索的是哪个卡牌名称？它会被替换为 <0>{cardname}</0>，这样每次搜索都会填入牌表中的卡牌。",
+      "cardName": "卡牌名称",
+      "baseUrl": "基础 URL",
+      "query": "查询"
+    },
+    "test": {
+      "help": "请求先直接在浏览器中运行。若来源阻止此方式（CORS），则通过后端运行，并将配置设为使用后端 Proxy。",
+      "running": "运行中…",
+      "run": "运行测试请求",
+      "status": "状态",
+      "httpStatus": "HTTP {{status}}",
+      "route": "路径",
+      "routeDirect": "浏览器直接请求",
+      "routeProxy": "通过后端 Proxy",
+      "useBackendProxy": "使用后端 Proxy",
+      "directFailed": "（直接调用失败：{{error}}）",
+      "format": "格式",
+      "detected": "根据响应检测（{{contentType}}）",
+      "noContentType": "无内容类型",
+      "truncated": "响应在 3 MB 处被截断。",
+      "parseError": "无法将响应解析为 {{format}}：{{error}}"
+    },
+    "preview": {
+      "summary": "{{all}} 条结果，{{matching}} 条匹配“{{name}}”",
+      "chooseList": "选择结果列表以查看结果。",
+      "image": "图片",
+      "lang": "语言",
+      "number": "编号",
+      "more": "… 另有 {{count}} 条",
+      "noMatch": "没有结果的名称恰好为“{{name}}”。搜索只保留名称完全匹配的结果，请检查名称字段，或设置分隔符（例如双面牌名称用 <0>//</0>）。"
+    },
+    "fields": {
+      "helpJson": "选择一个字段，然后点击原始数据中对应的值。字段相对于列表中的单个条目读取。",
+      "helpHtml": "选择一个字段，然后点击原始数据中对应的值。值使用“css-selector | innerText”或“css-selector | attr:src”语法。",
+      "wholeAnswer": "（整个响应）",
+      "splitChar": "分隔符",
+      "splitCharHint": "多部分卡牌名称之间的分隔字符，例如 Scryfall 的 //",
+      "splitCharPlaceholder": "例如 //",
+      "followPages": "通过 <0>{{field}}</0> 跟随下一页",
+      "guessAgain": "重新推测字段"
+    },
+    "roles": {
+      "dataListField": {
+        "label": "结果列表",
+        "hint": "每张卡牌对应一个条目的列表"
+      },
+      "nameField": {
+        "hint": "卡牌名称，必须与搜索的名称一致"
+      },
+      "imageUrlField": {
+        "label": "图片",
+        "hint": "卡图的 URL"
+      },
+      "languageField": {
+        "hint": "卡牌语言（可选）"
+      },
+      "setField": {
+        "hint": "系列 / 版本（可选）"
+      },
+      "setNumberField": {
+        "label": "系列编号",
+        "hint": "收藏编号（可选）"
+      }
+    },
+    "save": {
+      "category": "分类",
+      "categoryMisc": "其他",
+      "officialWebsite": "官方网站",
+      "defaultLanguage": "默认语言",
+      "defaultLanguageHint": "来源未标注语言的卡牌所使用的语言",
+      "proxyImages": "Proxy 图片",
+      "imageChecking": "正在检查图片能否直接加载…",
+      "imageDirect": "图片可直接加载，无需 Proxy",
+      "imageProxy": "图片阻止直接加载，通过后端加载",
+      "imageIdle": "通过后端加载图片",
+      "nameTaken": "已存在同名配置。",
+      "configPreview": "将保存的配置",
+      "help": "配置将保存为私有。分页、跟随链接及其他高级字段可稍后在配置设置中编辑。",
+      "saving": "保存中…",
+      "saveConfig": "保存配置",
+      "createFailed": "创建失败（HTTP {{status}}）",
+      "createNoId": "创建未返回 ID",
+      "saveFailed": "保存失败（HTTP {{status}}）"
+    },
+    "tree": {
+      "collapse": "折叠",
+      "expand": "展开",
+      "root": "（根）",
+      "more": "… 另有 {{count}} 项"
+    },
+    "template": {
+      "urlInvalid": "请输入以 http:// 或 https:// 开头的完整 URL",
+      "jsonBodyObject": "JSON Body 必须是对象，例如 {\"q\": \"Lightning Bolt\"}",
+      "jsonBodyInvalid": "Body 不是有效的 JSON",
+      "needCardName": "请输入查询中使用的卡牌名称",
+      "nameInPath": "卡牌名称位于 URL 路径中。搜索只能使用查询参数（…?q=Name）。",
+      "notInQuery": "在 URL 的查询参数中未找到“{{name}}”。",
+      "repeatedParam": "URL 中有重复参数，仅保留最后一个值。",
+      "nestedJson": "“{{key}}”是嵌套 JSON，将作为文本存储。",
+      "sentAsText": "“{{key}}”以文本（“{{value}}”）发送，而非 {{type}}。",
+      "postNameInUrl": "POST 请求中卡牌名称必须在 Body 里，而不是 URL 中。",
+      "notInBody": "在请求 Body 中未找到“{{name}}”。"
+    },
+    "pick": {
+      "clickList": "点击一个列表（条目数组）。",
+      "chooseListFirst": "请先选择结果列表。",
+      "clickInsideEntry": "点击结果列表某个条目内的值。",
+      "clickElement": "点击一个元素。",
+      "clickInsideMarked": "点击已标记列表条目内的元素。"
+    },
+    "testRequest": {
+      "backendFailed": "后端测试请求失败（HTTP {{status}}）"
+    }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "未找到 Deckfinder 配置。",
+      "noFetchUrl": "配置没有获取 URL。",
+      "noNameSearch": "此来源不支持按名称搜索。",
+      "nameRequired": "请输入名称。",
+      "deckRequired": "请输入牌组链接或 ID。",
+      "invalidLinkPattern": "Link Pattern 不是有效的正则表达式：{{description}}",
+      "linkPatternNoGroup": "Link Pattern 需要包含分组 (?<id>...)。",
+      "linkMismatch": "链接与此来源不匹配。",
+      "deckNotFound": "未找到牌组（私密或已删除？）。",
+      "searchNotFound": "未找到搜索结果（私密或已删除？）。",
+      "blocked": "{{host}} 拦截了请求（HTTP {{status}}）。",
+      "httpError": "{{host}} 返回了 HTTP {{status}}。",
+      "invalidUrl": "无效的 URL：{{url}}",
+      "httpOnly": "仅允许 http(s) URL：{{url}}",
+      "internalAddress": "不允许使用内部地址。",
+      "hostNotFound": "未找到 {{host}}。",
+      "unreachable": "无法连接 {{host}}：{{detail}}",
+      "cancelled": "已取消"
+    },
+    "gallery": {
+      "configNotFound": "未找到图库配置。",
+      "baseUrlInvalid": "配置需要绝对基础 URL（http/https）。",
+      "credentialMissing": "服务器上未设置凭据“{{credential}}”。",
+      "notFound": "未找到内容（私密或已删除？）。",
+      "blocked": "{{host}} 拦截了请求（HTTP {{status}}）。",
+      "blockedCredential": "{{host}} 拦截了请求（HTTP {{status}}）。凭据“{{credential}}”可能已过期。",
+      "httpError": "{{host}} 返回了 HTTP {{status}}。",
+      "linkRequired": "请输入链接。",
+      "invalidLinkPattern": "Link Pattern 不是有效的正则表达式：{{description}}",
+      "tooManyRedirects": "重定向次数过多。",
+      "unreachable": "无法连接 {{host}}：{{detail}}",
+      "cancelled": "已取消"
+    }
+  },
+  "account": {
+    "title": "账户",
+    "loggedInAs": "已登录：{{email}}",
+    "loggedInAsBold": "已登录：<1>{{email}}</1>。",
+    "logIn": "登录",
+    "loginNotSetUp": "此服务器未设置登录功能",
+    "pdfHint": "生成的PDF可发送到此邮箱。",
+    "logOut": "退出登录",
+    "logOutEverywhere": "在所有设备上退出登录",
+    "deleteWarning": "将删除账户。此浏览器中的卡组和快照不受影响。",
+    "deleteNow": "立即删除账户",
+    "delete": "删除账户",
+    "privacyPolicy": "隐私政策",
+    "intro": "无需密码。登录链接和验证码将通过邮件发送到所填邮箱。这同时确认了邮箱地址，生成的PDF也可发送到该邮箱。",
+    "emailPlaceholder": "name@example.com",
+    "emailAriaLabel": "邮箱地址",
+    "sendLink": "发送登录链接",
+    "storageNotice": "邮箱地址和登录过的设备会保存到账户被删除为止。",
+    "testEnvironment": "<1>测试环境：</1>不会发送邮件，验证码已自动填入。点击登录。",
+    "sentMail": "已向 <1>{{email}}</1> 发送邮件。打开其中的链接，或在此输入6位验证码。",
+    "codePlaceholder": "123456",
+    "codeAriaLabel": "登录验证码",
+    "useAnotherAddress": "使用其他邮箱",
+    "errors": {
+      "invalid": "请输入有效的邮箱地址。",
+      "rateLimited": "此邮箱的登录邮件过多，请稍后再试。",
+      "disabled": "此服务器未设置登录功能。",
+      "sendFailed": "登录邮件发送失败，请重试。",
+      "linkExpired": "此登录链接已过期或已被使用。请重新获取。",
+      "deleteFailed": "账户删除失败，请重试。",
+      "wrongCode": "验证码错误或已过期。"
+    }
+  }
+}

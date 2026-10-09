@@ -3,6 +3,8 @@
 // und das Deck als Decklist-Text im Arena-Format gebaut. Konzept: concepts/deckfinder.md.
 import { DeckEntry } from '../../api/types/types';
 import { formatDeckLine, parseDeckLine, sectionHeader } from '../deck/deckParser';
+import { backendErrorText } from '../../i18n/backendError';
+import i18n from '../../i18n';
 
 export interface DeckFinderConfig {
   id: number;
@@ -156,10 +158,10 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('Antwort ist kein JSON. Stimmt das Data Format der Config?');
+    throw new Error(i18n.t('errors.deckFinder.notJson'));
   }
   const listFields = splitList(config.entryListFields);
-  if (listFields.length === 0) throw new Error('Die Config hat keine Entry List Fields.');
+  if (listFields.length === 0) throw new Error(i18n.t('errors.deckFinder.noEntryListFields'));
 
   const entries: (DeckEntry & { board: string | null })[] = [];
   for (const field of listFields) {
@@ -190,7 +192,7 @@ export function extractDeck(config: DeckFinderConfig, body: string, selectedBoar
       }
     }
   }
-  if (entries.length === 0) throw new Error('Keine Karten in der Antwort gefunden. Stimmen die Felder der Config?');
+  if (entries.length === 0) throw new Error(i18n.t('errors.deckFinder.noCards'));
   return buildDeck(entries, selected, text(valueAt(data, config.deckNameField)));
 }
 
@@ -200,7 +202,7 @@ export function extractSearchHits(config: DeckFinderConfig, body: string): DeckS
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('Antwort der Suche ist kein JSON.');
+    throw new Error(i18n.t('errors.deckFinder.searchNotJson'));
   }
   const list = config.searchListField ? valueAt(data, config.searchListField) : data;
   if (!Array.isArray(list)) return [];
@@ -224,7 +226,8 @@ function headers(fingerprint?: string | null): HeadersInit {
 async function readError(response: Response): Promise<string> {
   try {
     const body = await response.json();
-    if (body && typeof body.error === 'string') return body.error;
+    const text = backendErrorText(body);
+    if (text) return text;
   } catch {
     // kein JSON
   }

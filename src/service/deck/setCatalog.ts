@@ -63,7 +63,7 @@ export function loadSetCatalog(): Promise<void> {
           // ohne Speicher wird beim nächsten Mal neu geladen
         }
       } catch (error) {
-        console.warn('Set-Katalog nicht geladen, vergleiche Sets nur roh', error);
+        console.warn('Set catalog not loaded, comparing sets raw only', error);
       } finally {
         loading = null;
       }

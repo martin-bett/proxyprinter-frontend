@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { HTMLElement } from 'node-html-parser';
 import ApiFactory, { ApiConfig, SearchResult } from '../../../../service/ApiFactory';
 import { DEFAULT_LANGUAGE_OPTIONS } from '../../defaultLanguages';
@@ -20,7 +21,7 @@ interface Props {
   onCreated: (configId: number) => void;
 }
 
-const STEPS = ['Request', 'Search term', 'Test', 'Fields', 'Save'];
+const STEPS = ['wizard.steps.request', 'wizard.steps.searchTerm', 'common.test', 'wizard.steps.fields', 'common.save'] as const;
 const PREVIEW_ROWS = 8;
 
 interface Meta {
@@ -35,6 +36,7 @@ interface Meta {
 
 /** Schritt-für-Schritt-Anlage einer API-Config aus einer echten Beispielabfrage. */
 const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel, onCreateEmpty, onCreated }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [req, setReq] = useState<WizardRequest>({ url: '', method: 'GET', body: '', requestFormat: 'json' });
   const [searchName, setSearchName] = useState('');
@@ -210,9 +212,9 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
     const headers = { 'Content-Type': 'application/json', 'X-Fingerprint': fingerprint || '' };
     try {
       const created = await fetch('/api/configs/create', { method: 'GET', headers });
-      if (!created.ok) throw new Error(`create failed (HTTP ${created.status})`);
+      if (!created.ok) throw new Error(t('wizard.save.createFailed', { status: created.status }));
       const id = Number(await created.text());
-      if (!id) throw new Error('create returned no id');
+      if (!id) throw new Error(t('wizard.save.createNoId'));
       const config: Partial<ApiConfig> = { ...draft };
       delete config.type;
       const edited = await fetch('/api/configs/edit', {
@@ -220,7 +222,7 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
         headers,
         body: JSON.stringify({ ...config, id, name: meta.name.trim(), published: false }),
       });
-      if (!edited.ok) throw new Error(`save failed (HTTP ${edited.status})`);
+      if (!edited.ok) throw new Error(t('wizard.save.saveFailed', { status: edited.status }));
       onCreated(id);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : String(e));
@@ -231,24 +233,24 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
 
   const renderRequest = () => (
     <div className="wiz-panel">
-      <p className="wiz-help">Paste a search request that already returns results, e.g. <code>https://api.scryfall.com/cards/search?q=Lightning+Bolt</code>.</p>
+      <p className="wiz-help"><Trans i18nKey="wizard.request.help" components={[<code />]} /></p>
       <div className="wiz-grid">
-        <label>Method</label>
+        <label>{t('wizard.request.method')}</label>
         <div className="wiz-segment">
           {(['GET', 'POST'] as const).map(m => (
             <button key={m} type="button" className={'button is-small' + (req.method === m ? ' is-active' : '')} onClick={() => setReq({ ...req, method: m })}>{m}</button>
           ))}
         </div>
-        <label>REST URL</label>
+        <label>{t('wizard.request.restUrl')}</label>
         <input className="input" type="text" value={req.url} placeholder="https://…" onChange={e => setReq({ ...req, url: e.target.value })} />
         {req.method === 'POST' && (
           <>
-            <label>Body format</label>
+            <label>{t('wizard.request.bodyFormat')}</label>
             <select className="wiz-select" value={req.requestFormat} onChange={e => setReq({ ...req, requestFormat: e.target.value as WizardRequest['requestFormat'] })}>
               <option value="json">JSON</option>
-              <option value="urlencoded">Form (a=1&amp;b=2)</option>
+              <option value="urlencoded">{t('wizard.request.formatForm')}</option>
             </select>
-            <label>Body</label>
+            <label>{t('wizard.request.body')}</label>
             <textarea className="textarea" rows={6} value={req.body}
               placeholder={req.requestFormat === 'json' ? '{"search": "Lightning Bolt"}' : 'search=Lightning+Bolt&type=card'}
               onChange={e => setReq({ ...req, body: e.target.value })} />
@@ -257,26 +259,26 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
       </div>
       {req.url && requestError && <p className="wiz-error">{requestError}</p>}
       <p className="wiz-help wiz-expert">
-        Source needs follow links, CSRF tokens or nested languages?{' '}
-        <button type="button" className="wiz-link" onClick={onCreateEmpty}>Create an empty config and fill it in by hand</button>
+        {t('wizard.request.expert')}{' '}
+        <button type="button" className="wiz-link" onClick={onCreateEmpty}>{t('wizard.request.createEmpty')}</button>
       </p>
     </div>
   );
 
   const renderSearchTerm = () => (
     <div className="wiz-panel">
-      <p className="wiz-help">Which card name did you search for in this request? It gets replaced by <code>{'{cardname}'}</code>, so every search fills in the card from the decklist.</p>
+      <p className="wiz-help"><Trans i18nKey="wizard.searchTerm.help" components={[<code />]} /></p>
       <div className="wiz-grid">
-        <label>Card name</label>
+        <label>{t('wizard.searchTerm.cardName')}</label>
         <input className="input" type="text" value={searchName} placeholder="Lightning Bolt" onChange={e => setSearchName(e.target.value)} autoFocus />
       </div>
       {searchName && templateError && <p className="wiz-error">{templateError}</p>}
       {!isTemplateError(template) && (
         <div className="wiz-summary">
-          <div><span className="wiz-muted">Base URL</span> <code>{template.baseUrl}</code></div>
+          <div><span className="wiz-muted">{t('wizard.searchTerm.baseUrl')}</span> <code>{template.baseUrl}</code></div>
           {Object.entries(template.parameterMap.request).map(([k, v]) => (
             <div key={k} className={template.nameParams.includes(k) ? 'wiz-param-hit' : ''}>
-              <span className="wiz-muted">{req.method === 'GET' ? 'Query' : 'Body'}</span> <code>{k}</code> = <code>{v}</code>
+              <span className="wiz-muted">{req.method === 'GET' ? t('wizard.searchTerm.query') : t('wizard.request.body')}</span> <code>{k}</code> = <code>{v}</code>
             </div>
           ))}
           {template.warnings.map(w => <p key={w} className="wiz-warning">{w}</p>)}
@@ -287,31 +289,31 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
 
   const renderTest = () => (
     <div className="wiz-panel">
-      <p className="wiz-help">The request runs directly in your browser first. If the source blocks that (CORS), it runs through our backend and the config is set to use the backend proxy.</p>
+      <p className="wiz-help">{t('wizard.test.help')}</p>
       <button type="button" className="button is-primary" onClick={handleRunTest} disabled={testing}>
-        {testing ? 'Running…' : test ? 'Run again' : 'Run test request'}
+        {testing ? t('wizard.test.running') : test ? t('common.retry') : t('wizard.test.run')}
       </button>
       {testError && <p className="wiz-error">{testError}</p>}
       {test && (
         <div className="wiz-summary">
-          <div><span className="wiz-muted">Status</span> <span className={testOk ? 'wiz-ok' : 'wiz-error-text'}>HTTP {test.status}</span></div>
+          <div><span className="wiz-muted">{t('wizard.test.status')}</span> <span className={testOk ? 'wiz-ok' : 'wiz-error-text'}>{t('wizard.test.httpStatus', { status: test.status })}</span></div>
           <div>
-            <span className="wiz-muted">Route</span>{' '}
-            {test.via === 'direct' ? 'direct from the browser' : <>via backend proxy <span className="wiz-tag">Use Backend Proxy</span></>}
-            {test.directError && <span className="wiz-muted"> (direct call failed: {test.directError})</span>}
+            <span className="wiz-muted">{t('wizard.test.route')}</span>{' '}
+            {test.via === 'direct' ? t('wizard.test.routeDirect') : <>{t('wizard.test.routeProxy')} <span className="wiz-tag">{t('wizard.test.useBackendProxy')}</span></>}
+            {test.directError && <span className="wiz-muted"> {t('wizard.test.directFailed', { error: test.directError })}</span>}
           </div>
           <div>
-            <span className="wiz-muted">Format</span>{' '}
+            <span className="wiz-muted">{t('wizard.test.format')}</span>{' '}
             <div className="wiz-segment is-inline">
               {(['json', 'html'] as const).map(f => (
                 <button key={f} type="button" className={'button is-small' + (format === f ? ' is-active' : '')}
                   onClick={() => { setFormat(f); if (test) applyGuess(f, test); }}>{f.toUpperCase()}</button>
               ))}
             </div>
-            <span className="wiz-muted"> detected from the answer ({test.contentType || 'no content type'})</span>
+            <span className="wiz-muted"> {t('wizard.test.detected', { contentType: test.contentType || t('wizard.test.noContentType') })}</span>
           </div>
-          {test.truncated && <p className="wiz-warning">The answer was cut off at 3 MB.</p>}
-          {parsed.error && <p className="wiz-error">Could not read the answer as {format.toUpperCase()}: {parsed.error}</p>}
+          {test.truncated && <p className="wiz-warning">{t('wizard.test.truncated')}</p>}
+          {parsed.error && <p className="wiz-error">{t('wizard.test.parseError', { format: format.toUpperCase(), error: parsed.error })}</p>}
           {!testOk && !parsed.error && <pre className="wiz-raw">{test.body.slice(0, 2000)}</pre>}
         </div>
       )}
@@ -321,14 +323,14 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
   const renderPreview = () => (
     <div className="wiz-preview">
       <h3 className="wiz-subtitle">
-        Preview
-        {preview && <span className="wiz-muted"> {preview.all.length} results, {preview.matching.length} match "{searchName.trim()}"</span>}
+        {t('common.preview')}
+        {preview && <span className="wiz-muted"> {t('wizard.preview.summary', { all: preview.all.length, matching: preview.matching.length, name: searchName.trim() })}</span>}
       </h3>
       {previewError && <p className="wiz-error">{previewError}</p>}
-      {!preview && !previewError && <p className="wiz-muted">Choose the result list to see results.</p>}
+      {!preview && !previewError && <p className="wiz-muted">{t('wizard.preview.chooseList')}</p>}
       {preview && preview.all.length > 0 && (
         <table className="table is-narrow is-fullwidth wiz-table">
-          <thead><tr><th>Name</th><th>Image</th><th>Lang</th><th>Set</th><th>Nr</th></tr></thead>
+          <thead><tr><th>{t('common.name')}</th><th>{t('wizard.preview.image')}</th><th>{t('wizard.preview.lang')}</th><th>{t('common.set')}</th><th>{t('wizard.preview.number')}</th></tr></thead>
           <tbody>
             {preview.all.slice(0, PREVIEW_ROWS).map((r, i) => (
               <tr key={i} className={preview.matching.includes(r) ? 'wiz-match' : ''}>
@@ -342,9 +344,9 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
           </tbody>
         </table>
       )}
-      {preview && preview.all.length > PREVIEW_ROWS && <p className="wiz-muted">… and {preview.all.length - PREVIEW_ROWS} more</p>}
+      {preview && preview.all.length > PREVIEW_ROWS && <p className="wiz-muted">{t('wizard.preview.more', { count: preview.all.length - PREVIEW_ROWS })}</p>}
       {preview && preview.all.length > 0 && preview.matching.length === 0 && (
-        <p className="wiz-warning">No result has exactly the name "{searchName.trim()}". Searches only keep exact name matches, so check the name field or set a split character (e.g. <code>{'//'}</code> for double-faced names).</p>
+        <p className="wiz-warning"><Trans i18nKey="wizard.preview.noMatch" values={{ name: searchName.trim() }} components={[<code />]} /></p>
       )}
     </div>
   );
@@ -352,30 +354,30 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
   const renderFields = () => (
     <div className="wiz-fields">
       <div className="wiz-fields-side">
-        <p className="wiz-help">Pick a field, then click the matching value in the raw data. {format === 'json' ? 'Fields are read relative to one list entry.' : 'Values use the syntax "css-selector | innerText" or "css-selector | attr:src".'}</p>
+        <p className="wiz-help">{format === 'json' ? t('wizard.fields.helpJson') : t('wizard.fields.helpHtml')}</p>
         {ROLES.map(r => (
-          <div key={r.role} className={'wiz-role' + (activeRole === r.role ? ' is-active' : '')} onClick={() => setActiveRole(r.role)} title={r.hint}>
+          <div key={r.role} className={'wiz-role' + (activeRole === r.role ? ' is-active' : '')} onClick={() => setActiveRole(r.role)} title={t(r.hint)}>
             <span className={'wiz-swatch ' + roleClass(r.role)} />
-            <span className="wiz-role-label">{r.label}{r.required ? ' *' : ''}</span>
+            <span className="wiz-role-label">{t(r.label)}{r.required ? ' *' : ''}</span>
             <input className="input is-small" type="text" value={fields[r.role] ?? ''}
-              placeholder={r.role === 'dataListField' && format === 'json' ? '(whole answer)' : ''}
+              placeholder={r.role === 'dataListField' && format === 'json' ? t('wizard.fields.wholeAnswer') : ''}
               onFocus={() => setActiveRole(r.role)}
               onChange={e => setField(r.role, e.target.value)} />
           </div>
         ))}
         <div className="wiz-role">
           <span className="wiz-swatch" />
-          <span className="wiz-role-label" title="Character between the names of multi-part cards, e.g. // at Scryfall">Split char</span>
-          <input className="input is-small" type="text" value={meta.nameSplitCharacter} placeholder="e.g. //"
+          <span className="wiz-role-label" title={t('wizard.fields.splitCharHint')}>{t('wizard.fields.splitChar')}</span>
+          <input className="input is-small" type="text" value={meta.nameSplitCharacter} placeholder={t('wizard.fields.splitCharPlaceholder')}
             onChange={e => setMeta({ ...meta, nameSplitCharacter: e.target.value })} />
         </div>
         {paginationLink && (
           <label className="wiz-check">
             <input type="checkbox" checked={meta.usePagination} onChange={e => setMeta({ ...meta, usePagination: e.target.checked })} />
-            Follow next pages via <code>{paginationLink}</code>
+            <Trans i18nKey="wizard.fields.followPages" values={{ field: paginationLink }} components={[<code />]} />
           </label>
         )}
-        <button type="button" className="button is-small" onClick={() => test && applyGuess(format, test)}>Guess fields again</button>
+        <button type="button" className="button is-small" onClick={() => test && applyGuess(format, test)}>{t('wizard.fields.guessAgain')}</button>
         {pickError && <p className="wiz-error">{pickError}</p>}
         {renderPreview()}
       </div>
@@ -389,49 +391,49 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
   const renderSave = () => (
     <div className="wiz-panel">
       <div className="wiz-grid">
-        <label>Name *</label>
+        <label>{t('common.name')} *</label>
         <input className="input" type="text" value={meta.name} onChange={e => setMeta({ ...meta, name: e.target.value })} />
-        <label>Category</label>
+        <label>{t('wizard.save.category')}</label>
         <select className="wiz-select" value={meta.category} onChange={e => setMeta({ ...meta, category: e.target.value })}>
           <option value="MTG">MTG</option>
           <option value="POKE">Poke</option>
           <option value="YUGIOH">Yugi</option>
-          <option value="MISC">Misc</option>
+          <option value="MISC">{t('wizard.save.categoryMisc')}</option>
         </select>
-        <label>Official Website</label>
+        <label>{t('wizard.save.officialWebsite')}</label>
         <input className="input" type="text" value={meta.officialWebsite} onChange={e => setMeta({ ...meta, officialWebsite: e.target.value })} />
-        <label title="Language for cards the source does not tag with a language">Default Language</label>
+        <label title={t('wizard.save.defaultLanguageHint')}>{t('wizard.save.defaultLanguage')}</label>
         <select className="wiz-select" value={meta.defaultLanguage} onChange={e => setMeta({ ...meta, defaultLanguage: e.target.value })}>
           {DEFAULT_LANGUAGE_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
         </select>
-        <label>Proxy Images</label>
+        <label>{t('wizard.save.proxyImages')}</label>
         <label className="wiz-check">
           <input type="checkbox" checked={meta.proxyImages} onChange={e => setMeta({ ...meta, proxyImages: e.target.checked })} />
-          {imageCheck === 'checking' && 'checking whether images load directly…'}
-          {imageCheck === 'direct' && 'images load directly, no proxy needed'}
-          {imageCheck === 'proxy' && 'images block direct loading, load them through the backend'}
-          {imageCheck === 'idle' && 'load images through the backend'}
+          {imageCheck === 'checking' && t('wizard.save.imageChecking')}
+          {imageCheck === 'direct' && t('wizard.save.imageDirect')}
+          {imageCheck === 'proxy' && t('wizard.save.imageProxy')}
+          {imageCheck === 'idle' && t('wizard.save.imageIdle')}
         </label>
       </div>
-      {meta.name.trim() && nameTaken && <p className="wiz-error">A config with this name already exists.</p>}
+      {meta.name.trim() && nameTaken && <p className="wiz-error">{t('wizard.save.nameTaken')}</p>}
       <details className="wiz-details">
-        <summary>Config that will be saved</summary>
+        <summary>{t('wizard.save.configPreview')}</summary>
         <pre className="wiz-raw">{JSON.stringify(draft && { ...draft, name: meta.name.trim() }, null, 2)}</pre>
       </details>
       {saveError && <p className="wiz-error">{saveError}</p>}
-      <p className="wiz-help">The config is saved as private. Pagination, follow links and the other expert fields can be edited afterwards in the config settings.</p>
+      <p className="wiz-help">{t('wizard.save.help')}</p>
     </div>
   );
 
   return (
     <div className="api-create-wizard">
       <div className="wiz-header">
-        <h2 className="title is-4">Create API</h2>
+        <h2 className="title is-4">{t('wizard.title')}</h2>
         <ol className="wiz-steps">
           {STEPS.map((s, i) => (
             <li key={s} className={(i === step ? 'is-current' : '') + (i < step ? ' is-done' : '')}
               onClick={() => i < step && setStep(i)}>
-              <span className="wiz-step-nr">{i + 1}</span>{s}
+              <span className="wiz-step-nr">{i + 1}</span>{t(s)}
             </li>
           ))}
         </ol>
@@ -444,16 +446,16 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
       {step === 4 && renderSave()}
 
       <div className="wiz-actions">
-        <button type="button" className="button" onClick={onCancel}>Cancel</button>
+        <button type="button" className="button" onClick={onCancel}>{t('common.cancel')}</button>
         <span className="wiz-spacer" />
-        {step > 0 && <button type="button" className="button" onClick={() => setStep(step - 1)}>Back</button>}
+        {step > 0 && <button type="button" className="button" onClick={() => setStep(step - 1)}>{t('common.back')}</button>}
         {step < STEPS.length - 1 && (
           <button type="button" className="button is-primary" disabled={!canNext}
-            onClick={() => { if (step === 1 && !test) handleRunTest(); setStep(step + 1); }}>Next</button>
+            onClick={() => { if (step === 1 && !test) handleRunTest(); setStep(step + 1); }}>{t('common.next')}</button>
         )}
         {step === STEPS.length - 1 && (
           <button type="button" className="button is-primary" disabled={saving || !meta.name.trim() || nameTaken || !draft} onClick={handleSave}>
-            {saving ? 'Saving…' : 'Save config'}
+            {saving ? t('wizard.save.saving') : t('wizard.save.saveConfig')}
           </button>
         )}
       </div>

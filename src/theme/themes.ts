@@ -101,7 +101,7 @@ const darkBase: typeof lightBase = {
 export const THEMES: AppTheme[] = [
   {
     id: 'plains',
-    name: 'Ebene',
+    name: 'Plains',
     mode: 'light',
     mana: 'W',
     colors: {
@@ -125,7 +125,7 @@ export const THEMES: AppTheme[] = [
   },
   {
     id: 'island',
-    name: 'Insel',
+    name: 'Island',
     mode: 'light',
     mana: 'U',
     colors: {
@@ -145,7 +145,7 @@ export const THEMES: AppTheme[] = [
   },
   {
     id: 'swamp',
-    name: 'Sumpf',
+    name: 'Swamp',
     mode: 'dark',
     mana: 'B',
     colors: {
@@ -167,7 +167,7 @@ export const THEMES: AppTheme[] = [
   },
   {
     id: 'mountain',
-    name: 'Gebirge',
+    name: 'Mountain',
     mode: 'light',
     mana: 'R',
     colors: {
@@ -187,7 +187,7 @@ export const THEMES: AppTheme[] = [
   },
   {
     id: 'forest',
-    name: 'Wald',
+    name: 'Forest',
     mode: 'light',
     mana: 'G',
     colors: {
@@ -206,7 +206,7 @@ export const THEMES: AppTheme[] = [
   },
   {
     id: 'midnight',
-    name: 'Mitternacht',
+    name: 'Midnight',
     mode: 'dark',
     mana: 'P',
     colors: {

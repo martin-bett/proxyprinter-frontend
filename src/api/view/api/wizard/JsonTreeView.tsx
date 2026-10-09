@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FieldAssignment, FieldRole, JsonPath, pathToString, rolesAt } from './jsonFields';
 import { roleClass } from './roles';
 
@@ -32,6 +33,7 @@ const RoleBadges: React.FC<{ roles: FieldRole[] }> = ({ roles }) => (
 );
 
 const JsonNode: React.FC<{ name: string | number | null; value: unknown; path: JsonPath; fields: FieldAssignment; onSelect: (p: JsonPath) => void }> = ({ name, value, path, fields, onSelect }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(() => shouldOpen(path, fields));
   const roles = rolesAt(path, fields);
   const isContainer = value !== null && typeof value === 'object';
@@ -41,7 +43,7 @@ const JsonNode: React.FC<{ name: string | number | null; value: unknown; path: J
     <span
       className={cls}
       onClick={e => { e.stopPropagation(); onSelect(path); }}
-      title={pathToString(path) || '(root)'}
+      title={pathToString(path) || t('wizard.tree.root')}
     >
       {name !== null && <span className="wiz-key">{typeof name === 'number' ? `[${name}]` : name}</span>}
       {name !== null && <span className="wiz-punct">: </span>}
@@ -59,7 +61,7 @@ const JsonNode: React.FC<{ name: string | number | null; value: unknown; path: J
     : Object.entries(value as Record<string, unknown>);
   return (
     <div className="wiz-row">
-      <button type="button" className="wiz-toggle" onClick={() => setOpen(!open)} aria-label={open ? 'collapse' : 'expand'}>
+      <button type="button" className="wiz-toggle" onClick={() => setOpen(!open)} aria-label={open ? t('wizard.tree.collapse') : t('wizard.tree.expand')}>
         {open ? '▾' : '▸'}
       </button>
       {label}
@@ -68,7 +70,7 @@ const JsonNode: React.FC<{ name: string | number | null; value: unknown; path: J
           {entries.slice(0, MAX_CHILDREN).map(([k, v]) => (
             <JsonNode key={String(k)} name={k} value={v} path={[...path, k]} fields={fields} onSelect={onSelect} />
           ))}
-          {entries.length > MAX_CHILDREN && <div className="wiz-more">… {entries.length - MAX_CHILDREN} more</div>}
+          {entries.length > MAX_CHILDREN && <div className="wiz-more">{t('wizard.tree.more', { count: entries.length - MAX_CHILDREN })}</div>}
         </div>
       )}
     </div>

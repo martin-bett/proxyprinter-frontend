@@ -1,7 +1,7 @@
 import { CardResult, CardResultsMap } from '../../api/types/types';
 import { defaultSettings } from '../../viewer/pdf/SettingsDialog';
 import {
-  WorkState, createSnapshot, customUploadIds, isEmptyState, migrateSnapshot, overwriteSnapshot, restoreSnapshot, snapshotLabel, SNAPSHOT_VERSION,
+  WorkState, createSnapshot, customUploadIds, isEmptyState, migrateSnapshot, overwriteSnapshot, restoreSnapshot, snapshotCardsText, snapshotLabel, snapshotTimestamp, SNAPSHOT_VERSION,
 } from './snapshot';
 
 const card = (name: string, apiName: string, imageUrl: string, languageCode = 'en'): CardResult => ({
@@ -25,7 +25,7 @@ function workState(): WorkState {
     visibleLanguages: new Set(['en']),
     visibleApis: new Set(['scryfall']),
     uniquePrints: true,
-    settings: { ...defaultSettings, width: 70, email: 'me@example.com' },
+    settings: { ...defaultSettings, width: 70, sendMail: true },
   };
 }
 
@@ -46,7 +46,7 @@ describe('snapshot', () => {
 
   it('keeps the automatic name of a snapshot without custom name', () => {
     const old = createSnapshot({ ...workState(), decklist: '1 Island', cardResults: {}, selectedCards: {} }, 'manual', 1000);
-    expect(snapshotLabel(overwriteSnapshot(old, workState(), 2000))).toBe('1 card · Island');
+    expect(snapshotLabel(overwriteSnapshot(old, workState(), 2000))).toBe(`${snapshotTimestamp(1000)} Island`);
   });
 
 
@@ -60,7 +60,7 @@ describe('snapshot', () => {
     expect(Array.from(state.visibleLanguages)).toEqual(['en']);
     expect(Array.from(state.visibleApis)).toEqual(['scryfall']);
     expect(state.settings.width).toBe(70);
-    expect((state.settings as any).email).toBeUndefined();
+    expect((state.settings as any).sendMail).toBeUndefined();
 
     const bolts = state.cardResults['Lightning Bolt'];
     expect(bolts.count).toBe(2);
@@ -95,7 +95,10 @@ describe('snapshot', () => {
   it('labels with card count and first card', () => {
     const snapshot = createSnapshot(workState(), 'manual');
     expect(snapshot.label).toEqual({ cardCount: 3, firstCard: 'Lightning Bolt' });
-    expect(snapshotLabel(snapshot)).toBe('3 cards · Lightning Bolt');
+    expect(snapshotLabel(snapshot)).toBe(`${snapshotTimestamp(snapshot.createdAt)} Lightning Bolt`);
+    expect(snapshotCardsText(snapshot)).toBe('3 cards');
+    expect(snapshotTimestamp(new Date(2026, 9, 8, 19, 30).getTime())).toBe('10081930');
+    expect(snapshotTimestamp(new Date(2026, 0, 2, 3, 4).getTime())).toBe('01020304');
     expect(snapshotLabel({ ...snapshot, label: { ...snapshot.label, custom: 'Burn' } })).toBe('Burn');
   });
 

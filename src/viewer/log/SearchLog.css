@@ -91,3 +91,7 @@
 .search-log-error .search-log-source-button {
   color: #d32f2f;
 }
+
+.search-log-running .search-log-source-button:disabled {
+  opacity: 1;
+}

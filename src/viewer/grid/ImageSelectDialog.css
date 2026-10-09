@@ -20,10 +20,11 @@
   
 .image-select-dialog .image-selection-container {
   grid-column: 1 / 2;
-  grid-row: 1 / 3;
+  grid-row: 2 / 4;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -85,6 +86,48 @@
   
 
 
+.image-select-dialog .image-select-stats {
+  grid-column: 1 / 4;
+  grid-row: 1 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+
+.image-select-dialog .image-select-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+/* Download-Rate und MB des Caches: gedämpft, ohne eigenen Rahmen */
+.image-select-dialog .image-select-stat-value {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.image-select-dialog .image-select-stat-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.image-select-dialog .image-select-stat-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .image-select-dialog .dialog-buttons {
   grid-column: 1 / 4;
   grid-row: 3 / 4;
@@ -118,18 +161,28 @@
     justify-content: "center";
     align-items: "center";
     grid-column: 2 / 3;
-    grid-row: 1 / 3;
+    grid-row: 2 / 4;
+    min-height: 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
-.image-select-dialog .language-filter {
+/* Rechte Spalte scrollt für sich, damit Statistik-Zeile und Buttons bei vielen Filtern sichtbar bleiben */
+.image-select-dialog .filter-controls {
   grid-column: 3 / 4;
-  grid-row: 1 / 3;
+  grid-row: 2 / 4;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 10px;
   border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-select-dialog .language-filter {
   display: flex;
   flex-direction: column;
   gap: 2px;

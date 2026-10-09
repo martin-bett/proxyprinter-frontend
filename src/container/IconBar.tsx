@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './IconBar.css';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useTranslation } from 'react-i18next';
 
 export interface IconBarElement {
   key: string;
@@ -20,6 +21,7 @@ const IconBar: React.FC<IconBarProps> = ({
   elements,
   initialSelection = []
 }) => {
+  const { t } = useTranslation();
   const [selectedItems, setSelectedItems] = useState<string[]>(initialSelection);
 
   // Update parent component when selection changes
@@ -38,7 +40,7 @@ const IconBar: React.FC<IconBarProps> = ({
 
   return (
     <div className="flex items-center icon-bar space-x-2">
-      <div title="View Filtering"><VisibilityIcon titleAccess="hallo" className='info-icon' /></div>
+      <div title={t('container.iconBar.viewFiltering')}><VisibilityIcon titleAccess="hallo" className='info-icon' /></div>
       {elements.map((element) => (
         <div
           key={element.key}
