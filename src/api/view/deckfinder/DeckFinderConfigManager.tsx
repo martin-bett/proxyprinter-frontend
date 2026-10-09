@@ -10,6 +10,7 @@ import { Alert } from '@mui/material';
 import ConfigFieldTable, { CATEGORY_OPTIONS, ConfigField } from '../ConfigFieldTable';
 import ActionButton from '../../../container/inputs/ActionButton';
 import { DeckFinderConfig, deckFinderConfigOperation, isDeckFinderConfigOwner } from '../../../service/deckfinder/deckFinder';
+import { useAuth } from '../../../service/auth/auth';
 
 const DECK_FINDER_FIELDS: ConfigField[] = [
   { group: 'configCommon.groups.baseInfo', name: 'name', label: 'configCommon.fields.name', required: true },
@@ -40,9 +41,11 @@ interface DeckFinderConfigManagerProps {
   onChanged: () => void;
 }
 
-/** Deckfinder-Configs ansehen, anlegen und bearbeiten. Andere sehen eine Config erst nach Publish. */
+/** Deckfinder-Configs ansehen, anlegen und bearbeiten (nur angemeldet). Andere sehen eine Config erst nach Publish. */
 const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ configs, onChanged }) => {
   const { t } = useTranslation();
+  const auth = useAuth();
+  const loggedIn = !!auth.email;
   const [selectedId, setSelectedId] = useState<number | null>(configs[0]?.id ?? null);
   const selected = configs.find(c => c.id === selectedId) || null;
   const [draft, setDraft] = useState<Record<string, unknown>>({});
@@ -52,9 +55,9 @@ const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ confi
   useEffect(() => {
     setDraft(selected ? { ...selected } : {});
     setIsOwner(false);
-    if (selected) isDeckFinderConfigOwner(selected.id).then(setIsOwner);
+    if (selected && loggedIn) isDeckFinderConfigOwner(selected.id).then(setIsOwner);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(selected)]);
+  }, [JSON.stringify(selected), loggedIn]);
 
   const run = async (operation: Parameters<typeof deckFinderConfigOperation>[0], body?: Partial<DeckFinderConfig>) => {
     setError(null);
@@ -86,7 +89,8 @@ const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ confi
             {config.name}
           </button>
         ))}
-        <button type="button" className="deckfinder-config-item" onClick={() => run('create')}>
+        <button type="button" className="deckfinder-config-item" onClick={() => run('create')} disabled={!loggedIn}
+          title={loggedIn ? undefined : t('configCommon.loginToEdit')}>
           <AddIcon className="subCategoryIcon" />{t('deckFinderConfig.new')}
         </button>
       </div>
@@ -113,8 +117,10 @@ const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ confi
                 <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={() => run('delete', { id: selected.id })}>{t('common.delete')}</ActionButton>
               </>
             )}
-            <ActionButton icon={<ContentCopyIcon />} onClick={() => run('copy', { id: selected.id })}>{t('configCommon.copyConfig')}</ActionButton>
+            <ActionButton icon={<ContentCopyIcon />} onClick={() => run('copy', { id: selected.id })} disabled={!loggedIn}
+              title={loggedIn ? undefined : t('configCommon.loginToEdit')}>{t('configCommon.copyConfig')}</ActionButton>
           </div>
+          {!loggedIn && <p className="help">{t('configCommon.loginToEdit')}</p>}
         </form>
       )}
     </div>

@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import { Config } from '../../../service/ApiFactory';
 import ConfigFieldTable, { CATEGORY_OPTIONS, ConfigField } from '../ConfigFieldTable';
 import { DEFAULT_LANGUAGE_OPTIONS } from '../defaultLanguages';
 import ActionButton from '../../../container/inputs/ActionButton';
+import { useAuth } from '../../../service/auth/auth';
 
 export interface GalleryConfigFormState {
   id?: number;
@@ -71,8 +71,9 @@ interface GalleryConfigWizardProps {
 
 const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPublish, onDelete, onCopy, initialConfig }) => {
   const { t } = useTranslation();
+  const auth = useAuth();
+  const loggedIn = !!auth.email;
   const [isOwner, setIsOwner] = useState(false);
-  const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [config, setConfig] = useState<GalleryConfigFormState>({
     name: '',
     category: 'misc',
@@ -96,16 +97,6 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     nameReplacement: ''
   });
 
-  // Fingerprint-Initialisierung
-  useEffect(() => {
-    const initFingerprint = async () => {
-      const fp = await FingerprintJS.load();
-      const result = await fp.get();
-      setFingerprint(result.visitorId);
-    };
-    initFingerprint();
-  }, []);
-
   useEffect(() => {
     if (initialConfig) {
       setConfig((prevConfig) => ({
@@ -121,14 +112,14 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(initialConfig)]);
 
+  // Bearbeiten darf nur das Konto, dem die Config gehört
   useEffect(() => {
-    if (config.name && fingerprint) {
+    if (!loggedIn) {
+      setIsOwner(false);
+    } else if (config.name && config.id !== undefined) {
       fetch(`/api/gallery/${config.id}/check`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Fingerprint': fingerprint, // Falls benötigt
-        }
+        headers: { 'Content-Type': 'application/json' },
       })
         .then((response) => {
           if (!response.ok) {
@@ -144,7 +135,7 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
           setIsOwner(false);
         });
     }
-  }, [fingerprint, config.name, config.id]);
+  }, [loggedIn, config.name, config.id]);
 
   const handlePublish = () => { onPublish(config.id); }
   const handleDelete = () => { onDelete(config.id); }
@@ -194,8 +185,10 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
               <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>{t('common.delete')}</ActionButton>
             </>
           ) : null}
-          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig}>{t('configCommon.copyConfig')}</ActionButton>
+          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig} disabled={!loggedIn}
+            title={loggedIn ? undefined : t('configCommon.loginToEdit')}>{t('configCommon.copyConfig')}</ActionButton>
         </div>
+        {!loggedIn && <p className="help">{t('configCommon.loginToEdit')}</p>}
       </form>
     </div>
   );

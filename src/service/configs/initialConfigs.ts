@@ -1,4 +1,3 @@
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { Config } from '../ApiFactory';
 
 // Gleiche Schlüssel wie im ApiConfigDialog, damit der Dialog die Auswahl übernimmt
@@ -17,10 +16,8 @@ export const loadSavedConfigs = (): Config[] | null => {
 // Erster Besuch: alle sichtbaren Configs vom Backend holen und als ausgewählt speichern.
 // Schlägt das fehl, wird nichts gespeichert und beim nächsten Besuch erneut versucht.
 export const fetchAndSelectAllConfigs = async (): Promise<Config[]> => {
-  const fp = await FingerprintJS.load();
-  const { visitorId } = await fp.get();
   const response = await fetch('/api/configs', {
-    headers: { 'Content-Type': 'application/json', 'X-Fingerprint': visitorId },
+    headers: { 'Content-Type': 'application/json' },
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch configs: ${response.status}`);

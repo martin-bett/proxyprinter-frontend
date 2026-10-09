@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Star, Plus } from 'lucide-react';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import './ApiConfigDialog.css';
 import ApiConfigWizard, { ApiConfigFormState } from './ApiConfigWizard';
 import TranslateIcon from '@mui/icons-material/Translate';
@@ -17,6 +16,7 @@ import ConfigContainer from '../ConfigContainer';
 import { ApiConfig, Config } from '../../../service/ApiFactory';
 import { refreshStoredSelection } from './configSelection';
 import ApiCreateWizard from './wizard/ApiCreateWizard';
+import { useAuth } from '../../../service/auth/auth';
 
 interface ApiConfigDialogProps {
   open: boolean;
@@ -29,23 +29,11 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   const [configs, setConfigs] = useState<Config[]>([]);
   const [selectedConfigs, setSelectedConfigs] = useState<number[]>([]);
   const [clickedConfig, setClickedConfig] = useState<Config | null>(null); // Speichert die ausgewählte Konfiguration
-  const [fingerprint, setFingerprint] = useState<string | null>(null);
+  const auth = useAuth();
+  const loggedIn = !!auth.email;
   const [showControls, setShowControls] = useState(false);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
-
-  // Fingerprint-Initialisierung
-  useEffect(() => {
-    const initFingerprint = async () => {
-      const fp = await FingerprintJS.load();
-      const result = await fp.get();
-      setFingerprint(result.visitorId);
-    };
-    initFingerprint();
-  }, []);
-
-
-
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedConfigs');
@@ -55,12 +43,11 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   }, []);
 
 
+  // Nach Login/Logout neu laden: eigene Configs hängen am Konto
   useEffect(() => {
-    if (fingerprint) {
-      fetchConfigs();
-    }
+    fetchConfigs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fingerprint]);
+  }, [auth.email]);
 
   const handleConfigSelect = (configId: number) => {
     const newSelection = selectedConfigs.includes(configId)
@@ -80,10 +67,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
     try {
       const response = await fetch('/api/configs', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Fingerprint': fingerprint || '',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
@@ -124,10 +108,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
     try {
       const response = await fetch(`/api/configs/${operation}`, {
         method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Fingerprint': fingerprint || '', // Falls benötigt
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : null
       });
 
@@ -251,7 +232,6 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   if (creating) {
     return (
       <ApiCreateWizard
-        fingerprint={fingerprint}
         existingNames={configs.map(c => c.name)}
         onCancel={() => setCreating(false)}
         onCreateEmpty={handleCreateEmptyConfig}
@@ -264,7 +244,8 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
         <div>
         <div className="config-controls">
           <h2 className="title is-4">{t('apiConfig.dialog.title')}</h2>
-          <button onClick={handleCreateConfig}
+          <button onClick={handleCreateConfig} disabled={!loggedIn}
+            title={loggedIn ? undefined : t('configCommon.loginToEdit')}
             className="button mb-4 flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             <Plus size={20} />

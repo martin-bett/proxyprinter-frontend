@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { useAuth } from '../../../service/auth/auth';
 import { Alert, LinearProgress } from '@mui/material';
 import ConfigContainer from '../ConfigContainer';
 import GalleryConfigWizard, { GalleryConfigFormState } from './GalleryConfigWizard';
@@ -18,17 +18,8 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
     const [configs, setConfigs] = useState<Config[]>([]);
     const [selectedConfigs, setSelectedConfigs] = useState<number[]>([]);
     const [clickedConfig, setClickedConfig] = useState<Config | null>(null); //
-    const [fingerprint, setFingerprint] = useState<string | null>(null);
+    const auth = useAuth();
     const [galleryStatus, setGalleryStatus] = useState<{ loading: boolean; error?: string }>({ loading: false });
-
-    useEffect(() => {
-        const initFingerprint = async () => {
-          const fp = await FingerprintJS.load();
-          const result = await fp.get();
-          setFingerprint(result.visitorId);
-        };
-        initFingerprint();
-      }, []);
 
     const fetchGalleryResults = async (config: GalleryConfig) => {
       const singleConfigRecord = {
@@ -56,10 +47,7 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
       try {
         const response = await fetch(`/api/gallery/${operation}`, {
           method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Fingerprint': fingerprint || '', // Falls benötigt
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: body ? JSON.stringify(body) : null
         });
 
@@ -103,12 +91,11 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
       handleConfigOperation('POST', 'delete', newConfig);
     };
 
+      // Nach Login/Logout neu laden: eigene Configs hängen am Konto
       useEffect(() => {
-        if (fingerprint) {
-          fetchGalleries();
-        }
+        fetchGalleries();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [fingerprint]);
+      }, [auth.email]);
 
 
       const handleConfigItemClick = (config: Config, event: React.MouseEvent) => {
@@ -133,10 +120,7 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
         try {
           const response = await fetch('/api/gallery', {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Fingerprint': fingerprint || '',
-            },
+            headers: { 'Content-Type': 'application/json' },
           });
 
           if (!response.ok) {

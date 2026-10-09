@@ -113,7 +113,8 @@
     "configSettings": "Настройки конфигурации",
     "publish": "Опубликовать",
     "unpublish": "Снять с публикации",
-    "copyConfig": "Копировать конфигурацию"
+    "copyConfig": "Копировать конфигурацию",
+    "loginToEdit": "Вход (пузырёк вверху справа), чтобы создавать, копировать и редактировать свои конфигурации."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Оценка",
     "availability": "Доступность",
-    "quality": "Качество"
+    "quality": "Качество",
+    "loginToRate": "Вход (пузырёк вверху справа), чтобы оценивать."
   },
   "pdf": {
     "preview": {
@@ -990,6 +992,16 @@
       "tooManyRedirects": "Слишком много перенаправлений.",
       "unreachable": "{{host}} недоступен: {{detail}}",
       "cancelled": "Отменено"
+    },
+    "proxy": {
+      "invalidUrl": "Недопустимый URL: {{url}}",
+      "httpOnly": "Разрешены только URL http(s): {{url}}",
+      "internalAddress": "Внутренние адреса не допускаются.",
+      "hostNotFound": "{{host}} не найден.",
+      "tooManyRedirects": "Слишком много перенаправлений: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Требуется вход."
     }
   },
   "account": {

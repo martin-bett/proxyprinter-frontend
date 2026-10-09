@@ -1,14 +1,12 @@
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { Config } from '../../../service/ApiFactory';
 
 const STORAGE_KEY = 'setConfigs';
 
-/** Lädt alle für diesen Browser sichtbaren Configs vom Backend. */
+/** Lädt die sichtbaren Configs vom Backend: veröffentlichte und, angemeldet, die eigenen. */
 export async function fetchVisibleConfigs(): Promise<Config[]> {
-  const fp = await (await FingerprintJS.load()).get();
   const response = await fetch('/api/configs', {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json', 'X-Fingerprint': fp.visitorId },
+    headers: { 'Content-Type': 'application/json' },
   });
   if (!response.ok) throw new Error('Failed to fetch configs');
   return response.json();

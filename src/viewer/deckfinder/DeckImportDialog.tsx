@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import ActionButton from '../../container/inputs/ActionButton';
 import DeckFinderConfigManager from '../../api/view/deckfinder/DeckFinderConfigManager';
 import {
-  DeckFinderConfig, DeckSearchHit, LoadedDeck, getFingerprint, loadDeck, matchDeckLink, searchDecks, splitList,
+  DeckFinderConfig, DeckSearchHit, LoadedDeck, loadDeck, matchDeckLink, searchDecks, splitList,
 } from '../../service/deckfinder/deckFinder';
 import './DeckImport.css';
 
@@ -55,12 +55,12 @@ const DeckImportDialog: React.FC<DeckImportDialogProps> = ({ configs, initialInp
   };
 
   const load = (deckInput: string) => config && run(async () => {
-    const deck = await loadDeck(config, deckInput, boards, await getFingerprint());
+    const deck = await loadDeck(config, deckInput, boards);
     onLoaded(deck, config);
   });
 
   const search = (nextPage: number) => config && run(async () => {
-    const found = await searchDecks(config, input, nextPage, await getFingerprint());
+    const found = await searchDecks(config, input, nextPage);
     if (found.length === 0 && nextPage === 1) setError(t('deckImport.noDecks'));
     setHits(prev => nextPage === 1 ? found : [...prev, ...found]);
     setPage(nextPage);
