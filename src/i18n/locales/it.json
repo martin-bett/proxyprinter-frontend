@@ -913,5 +913,41 @@
     "testRequest": {
       "backendFailed": "Richiesta di test al backend non riuscita (HTTP {{status}})"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Configurazione Deckfinder non trovata.",
+      "noFetchUrl": "La configurazione non ha un URL di recupero.",
+      "noNameSearch": "Questa fonte non supporta la ricerca per nome.",
+      "nameRequired": "Inserire un nome.",
+      "deckRequired": "Inserire un link o un ID del mazzo.",
+      "invalidLinkPattern": "Link Pattern non è una regex valida: {{description}}",
+      "linkPatternNoGroup": "Link Pattern richiede un gruppo (?<id>...).",
+      "linkMismatch": "Il link non corrisponde a questa fonte.",
+      "deckNotFound": "Mazzo non trovato (privato o eliminato?).",
+      "searchNotFound": "Ricerca non trovata (privata o eliminata?).",
+      "blocked": "{{host}} blocca la richiesta (HTTP {{status}}).",
+      "httpError": "{{host}} ha risposto con HTTP {{status}}.",
+      "invalidUrl": "URL non valido: {{url}}",
+      "httpOnly": "Sono ammessi solo URL http(s): {{url}}",
+      "internalAddress": "Gli indirizzi interni non sono ammessi.",
+      "hostNotFound": "{{host}} non trovato.",
+      "unreachable": "{{host}} non raggiungibile: {{detail}}",
+      "cancelled": "Annullato"
+    },
+    "gallery": {
+      "configNotFound": "Configurazione galleria non trovata.",
+      "baseUrlInvalid": "La configurazione richiede un URL base assoluto (http/https).",
+      "credentialMissing": "L'accesso \"{{credential}}\" non è configurato sul server.",
+      "notFound": "Nessun risultato (privato o eliminato?).",
+      "blocked": "{{host}} blocca la richiesta (HTTP {{status}}).",
+      "blockedCredential": "{{host}} blocca la richiesta (HTTP {{status}}). L'accesso \"{{credential}}\" potrebbe essere scaduto.",
+      "httpError": "{{host}} ha risposto con HTTP {{status}}.",
+      "linkRequired": "Inserire un link.",
+      "invalidLinkPattern": "Link Pattern non è una regex valida: {{description}}",
+      "tooManyRedirects": "Troppi reindirizzamenti.",
+      "unreachable": "{{host}} non raggiungibile: {{detail}}",
+      "cancelled": "Annullato"
+    }
   }
 }

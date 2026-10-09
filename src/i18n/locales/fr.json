@@ -913,5 +913,41 @@
     "testRequest": {
       "backendFailed": "Échec de la requête de test du backend (HTTP {{status}})"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Configuration Deckfinder introuvable.",
+      "noFetchUrl": "La configuration n'a pas d'URL de récupération.",
+      "noNameSearch": "Cette source ne permet pas la recherche par nom.",
+      "nameRequired": "Veuillez saisir un nom.",
+      "deckRequired": "Veuillez saisir un lien ou un identifiant de deck.",
+      "invalidLinkPattern": "Link Pattern n'est pas une regex valide : {{description}}",
+      "linkPatternNoGroup": "Link Pattern nécessite un groupe (?<id>...).",
+      "linkMismatch": "Le lien ne correspond pas à cette source.",
+      "deckNotFound": "Deck introuvable (privé ou supprimé ?).",
+      "searchNotFound": "Recherche introuvable (privée ou supprimée ?).",
+      "blocked": "{{host}} bloque la requête (HTTP {{status}}).",
+      "httpError": "{{host}} a répondu avec HTTP {{status}}.",
+      "invalidUrl": "URL non valide : {{url}}",
+      "httpOnly": "Seules les URL http(s) sont autorisées : {{url}}",
+      "internalAddress": "Les adresses internes ne sont pas autorisées.",
+      "hostNotFound": "{{host}} introuvable.",
+      "unreachable": "{{host}} injoignable : {{detail}}",
+      "cancelled": "Annulé"
+    },
+    "gallery": {
+      "configNotFound": "Configuration de galerie introuvable.",
+      "baseUrlInvalid": "La configuration nécessite une URL de base absolue (http/https).",
+      "credentialMissing": "L'accès « {{credential}} » n'est pas configuré sur le serveur.",
+      "notFound": "Rien trouvé (privé ou supprimé ?).",
+      "blocked": "{{host}} bloque la requête (HTTP {{status}}).",
+      "blockedCredential": "{{host}} bloque la requête (HTTP {{status}}). L'accès « {{credential}} » a peut-être expiré.",
+      "httpError": "{{host}} a répondu avec HTTP {{status}}.",
+      "linkRequired": "Veuillez saisir un lien.",
+      "invalidLinkPattern": "Link Pattern n'est pas une regex valide : {{description}}",
+      "tooManyRedirects": "Trop de redirections.",
+      "unreachable": "{{host}} injoignable : {{detail}}",
+      "cancelled": "Annulé"
+    }
   }
 }

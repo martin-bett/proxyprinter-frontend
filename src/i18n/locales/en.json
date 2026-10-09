@@ -913,5 +913,41 @@
     "testRequest": {
       "backendFailed": "Backend test request failed (HTTP {{status}})"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Deckfinder config not found.",
+      "noFetchUrl": "The config has no fetch URL.",
+      "noNameSearch": "This source does not support search by name.",
+      "nameRequired": "Please enter a name.",
+      "deckRequired": "Please enter a deck link or ID.",
+      "invalidLinkPattern": "Link Pattern is not a valid regex: {{description}}",
+      "linkPatternNoGroup": "Link Pattern needs a group (?<id>...).",
+      "linkMismatch": "Link does not match this source.",
+      "deckNotFound": "Deck not found (private or deleted?).",
+      "searchNotFound": "Search not found (private or deleted?).",
+      "blocked": "{{host}} blocks the request (HTTP {{status}}).",
+      "httpError": "{{host}} responded with HTTP {{status}}.",
+      "invalidUrl": "Invalid URL: {{url}}",
+      "httpOnly": "Only http(s) URLs are allowed: {{url}}",
+      "internalAddress": "Internal addresses are not allowed.",
+      "hostNotFound": "{{host}} not found.",
+      "unreachable": "{{host}} not reachable: {{detail}}",
+      "cancelled": "Cancelled"
+    },
+    "gallery": {
+      "configNotFound": "Gallery config not found.",
+      "baseUrlInvalid": "The config needs an absolute base URL (http/https).",
+      "credentialMissing": "Credential \"{{credential}}\" is not set up on the server.",
+      "notFound": "Nothing found (private or deleted?).",
+      "blocked": "{{host}} blocks the request (HTTP {{status}}).",
+      "blockedCredential": "{{host}} blocks the request (HTTP {{status}}). Credential \"{{credential}}\" may have expired.",
+      "httpError": "{{host}} responded with HTTP {{status}}.",
+      "linkRequired": "Please enter a link.",
+      "invalidLinkPattern": "Link Pattern is not a valid regex: {{description}}",
+      "tooManyRedirects": "Too many redirects.",
+      "unreachable": "{{host}} not reachable: {{detail}}",
+      "cancelled": "Cancelled"
+    }
   }
 }

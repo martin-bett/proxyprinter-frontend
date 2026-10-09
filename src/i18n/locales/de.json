@@ -913,5 +913,41 @@
     "testRequest": {
       "backendFailed": "Backend-Testanfrage fehlgeschlagen (HTTP {{status}})"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Deckfinder-Config nicht gefunden.",
+      "noFetchUrl": "Die Config hat keine Fetch URL.",
+      "noNameSearch": "Diese Quelle bietet keine Suche per Name.",
+      "nameRequired": "Bitte einen Namen eingeben.",
+      "deckRequired": "Bitte einen Deck-Link oder eine ID eingeben.",
+      "invalidLinkPattern": "Link Pattern ist keine gültige Regex: {{description}}",
+      "linkPatternNoGroup": "Link Pattern braucht eine Gruppe (?<id>...).",
+      "linkMismatch": "Link passt nicht zu dieser Quelle.",
+      "deckNotFound": "Deck nicht gefunden (privat oder gelöscht?).",
+      "searchNotFound": "Suche nicht gefunden (privat oder gelöscht?).",
+      "blocked": "{{host}} blockt den Abruf (HTTP {{status}}).",
+      "httpError": "{{host}} antwortet mit HTTP {{status}}.",
+      "invalidUrl": "Ungültige URL: {{url}}",
+      "httpOnly": "Nur http(s)-URLs sind erlaubt: {{url}}",
+      "internalAddress": "Interne Adressen sind nicht erlaubt.",
+      "hostNotFound": "{{host}} nicht gefunden.",
+      "unreachable": "{{host}} nicht erreichbar: {{detail}}",
+      "cancelled": "Abgebrochen"
+    },
+    "gallery": {
+      "configNotFound": "Gallery-Config nicht gefunden.",
+      "baseUrlInvalid": "Die Config braucht eine absolute Base URL (http/https).",
+      "credentialMissing": "Zugang \"{{credential}}\" ist auf dem Server nicht eingerichtet.",
+      "notFound": "Nichts gefunden (privat oder gelöscht?).",
+      "blocked": "{{host}} blockt den Abruf (HTTP {{status}}).",
+      "blockedCredential": "{{host}} blockt den Abruf (HTTP {{status}}). Zugang \"{{credential}}\" evtl. abgelaufen.",
+      "httpError": "{{host}} antwortet mit HTTP {{status}}.",
+      "linkRequired": "Bitte einen Link eingeben.",
+      "invalidLinkPattern": "Link Pattern ist keine gültige Regex: {{description}}",
+      "tooManyRedirects": "Zu viele Weiterleitungen.",
+      "unreachable": "{{host}} nicht erreichbar: {{detail}}",
+      "cancelled": "Abgebrochen"
+    }
   }
 }

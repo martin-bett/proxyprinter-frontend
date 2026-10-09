@@ -899,5 +899,41 @@
     "testRequest": {
       "backendFailed": "バックエンドのテストリクエストに失敗（HTTP {{status}}）"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Deckfinder の設定が見つかりません。",
+      "noFetchUrl": "設定に取得 URL がありません。",
+      "noNameSearch": "このソースは名前での検索に対応していません。",
+      "nameRequired": "名前を入力してください。",
+      "deckRequired": "デッキのリンクまたは ID を入力してください。",
+      "invalidLinkPattern": "Link Pattern は有効な正規表現ではありません: {{description}}",
+      "linkPatternNoGroup": "Link Pattern にはグループ (?<id>...) が必要です。",
+      "linkMismatch": "リンクがこのソースと一致しません。",
+      "deckNotFound": "デッキが見つかりません（非公開または削除済み？）。",
+      "searchNotFound": "検索結果が見つかりません（非公開または削除済み？）。",
+      "blocked": "{{host}} がリクエストをブロックしました（HTTP {{status}}）。",
+      "httpError": "{{host}} が HTTP {{status}} を返しました。",
+      "invalidUrl": "無効な URL: {{url}}",
+      "httpOnly": "http(s) の URL のみ使用できます: {{url}}",
+      "internalAddress": "内部アドレスは使用できません。",
+      "hostNotFound": "{{host}} が見つかりません。",
+      "unreachable": "{{host}} に接続できません: {{detail}}",
+      "cancelled": "キャンセルされました"
+    },
+    "gallery": {
+      "configNotFound": "ギャラリーの設定が見つかりません。",
+      "baseUrlInvalid": "設定には絶対パスのベース URL（http/https）が必要です。",
+      "credentialMissing": "認証情報「{{credential}}」がサーバーに設定されていません。",
+      "notFound": "何も見つかりません（非公開または削除済み？）。",
+      "blocked": "{{host}} がリクエストをブロックしました（HTTP {{status}}）。",
+      "blockedCredential": "{{host}} がリクエストをブロックしました（HTTP {{status}}）。認証情報「{{credential}}」の期限が切れている可能性があります。",
+      "httpError": "{{host}} が HTTP {{status}} を返しました。",
+      "linkRequired": "リンクを入力してください。",
+      "invalidLinkPattern": "Link Pattern は有効な正規表現ではありません: {{description}}",
+      "tooManyRedirects": "リダイレクトが多すぎます。",
+      "unreachable": "{{host}} に接続できません: {{detail}}",
+      "cancelled": "キャンセルされました"
+    }
   }
 }

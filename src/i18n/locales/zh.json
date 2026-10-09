@@ -899,5 +899,41 @@
     "testRequest": {
       "backendFailed": "后端测试请求失败（HTTP {{status}}）"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "未找到 Deckfinder 配置。",
+      "noFetchUrl": "配置没有获取 URL。",
+      "noNameSearch": "此来源不支持按名称搜索。",
+      "nameRequired": "请输入名称。",
+      "deckRequired": "请输入牌组链接或 ID。",
+      "invalidLinkPattern": "Link Pattern 不是有效的正则表达式：{{description}}",
+      "linkPatternNoGroup": "Link Pattern 需要包含分组 (?<id>...)。",
+      "linkMismatch": "链接与此来源不匹配。",
+      "deckNotFound": "未找到牌组（私密或已删除？）。",
+      "searchNotFound": "未找到搜索结果（私密或已删除？）。",
+      "blocked": "{{host}} 拦截了请求（HTTP {{status}}）。",
+      "httpError": "{{host}} 返回了 HTTP {{status}}。",
+      "invalidUrl": "无效的 URL：{{url}}",
+      "httpOnly": "仅允许 http(s) URL：{{url}}",
+      "internalAddress": "不允许使用内部地址。",
+      "hostNotFound": "未找到 {{host}}。",
+      "unreachable": "无法连接 {{host}}：{{detail}}",
+      "cancelled": "已取消"
+    },
+    "gallery": {
+      "configNotFound": "未找到图库配置。",
+      "baseUrlInvalid": "配置需要绝对基础 URL（http/https）。",
+      "credentialMissing": "服务器上未设置凭据“{{credential}}”。",
+      "notFound": "未找到内容（私密或已删除？）。",
+      "blocked": "{{host}} 拦截了请求（HTTP {{status}}）。",
+      "blockedCredential": "{{host}} 拦截了请求（HTTP {{status}}）。凭据“{{credential}}”可能已过期。",
+      "httpError": "{{host}} 返回了 HTTP {{status}}。",
+      "linkRequired": "请输入链接。",
+      "invalidLinkPattern": "Link Pattern 不是有效的正则表达式：{{description}}",
+      "tooManyRedirects": "重定向次数过多。",
+      "unreachable": "无法连接 {{host}}：{{detail}}",
+      "cancelled": "已取消"
+    }
   }
 }

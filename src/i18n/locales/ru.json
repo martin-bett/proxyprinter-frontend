@@ -941,5 +941,41 @@
     "testRequest": {
       "backendFailed": "Тестовый запрос через бэкенд не удался (HTTP {{status}})"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Конфигурация Deckfinder не найдена.",
+      "noFetchUrl": "В конфигурации нет URL для загрузки.",
+      "noNameSearch": "Этот источник не поддерживает поиск по названию.",
+      "nameRequired": "Введите название.",
+      "deckRequired": "Введите ссылку или ID колоды.",
+      "invalidLinkPattern": "Link Pattern не является допустимым регулярным выражением: {{description}}",
+      "linkPatternNoGroup": "Link Pattern должен содержать группу (?<id>...).",
+      "linkMismatch": "Ссылка не подходит к этому источнику.",
+      "deckNotFound": "Колода не найдена (приватная или удалена?).",
+      "searchNotFound": "Поиск не найден (приватный или удалён?).",
+      "blocked": "{{host}} блокирует запрос (HTTP {{status}}).",
+      "httpError": "{{host}} ответил с кодом HTTP {{status}}.",
+      "invalidUrl": "Недопустимый URL: {{url}}",
+      "httpOnly": "Разрешены только URL http(s): {{url}}",
+      "internalAddress": "Внутренние адреса не допускаются.",
+      "hostNotFound": "{{host}} не найден.",
+      "unreachable": "{{host}} недоступен: {{detail}}",
+      "cancelled": "Отменено"
+    },
+    "gallery": {
+      "configNotFound": "Конфигурация галереи не найдена.",
+      "baseUrlInvalid": "В конфигурации нужен абсолютный базовый URL (http/https).",
+      "credentialMissing": "Доступ «{{credential}}» не настроен на сервере.",
+      "notFound": "Ничего не найдено (приватно или удалено?).",
+      "blocked": "{{host}} блокирует запрос (HTTP {{status}}).",
+      "blockedCredential": "{{host}} блокирует запрос (HTTP {{status}}). Возможно, доступ «{{credential}}» истёк.",
+      "httpError": "{{host}} ответил с кодом HTTP {{status}}.",
+      "linkRequired": "Введите ссылку.",
+      "invalidLinkPattern": "Link Pattern не является допустимым регулярным выражением: {{description}}",
+      "tooManyRedirects": "Слишком много перенаправлений.",
+      "unreachable": "{{host}} недоступен: {{detail}}",
+      "cancelled": "Отменено"
+    }
   }
 }

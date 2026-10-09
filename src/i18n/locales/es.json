@@ -913,5 +913,41 @@
     "testRequest": {
       "backendFailed": "Falló la solicitud de prueba del backend (HTTP {{status}})"
     }
+  },
+  "backendErrors": {
+    "deckfinder": {
+      "configNotFound": "Configuración de Deckfinder no encontrada.",
+      "noFetchUrl": "La configuración no tiene URL de obtención.",
+      "noNameSearch": "Esta fuente no admite la búsqueda por nombre.",
+      "nameRequired": "Introducir un nombre.",
+      "deckRequired": "Introducir un enlace o un ID del mazo.",
+      "invalidLinkPattern": "Link Pattern no es una regex válida: {{description}}",
+      "linkPatternNoGroup": "Link Pattern necesita un grupo (?<id>...).",
+      "linkMismatch": "El enlace no corresponde a esta fuente.",
+      "deckNotFound": "Mazo no encontrado (¿privado o eliminado?).",
+      "searchNotFound": "Búsqueda no encontrada (¿privada o eliminada?).",
+      "blocked": "{{host}} bloquea la solicitud (HTTP {{status}}).",
+      "httpError": "{{host}} respondió con HTTP {{status}}.",
+      "invalidUrl": "URL no válida: {{url}}",
+      "httpOnly": "Solo se permiten URL http(s): {{url}}",
+      "internalAddress": "No se permiten direcciones internas.",
+      "hostNotFound": "{{host}} no encontrado.",
+      "unreachable": "{{host}} no accesible: {{detail}}",
+      "cancelled": "Cancelado"
+    },
+    "gallery": {
+      "configNotFound": "Configuración de galería no encontrada.",
+      "baseUrlInvalid": "La configuración necesita una URL base absoluta (http/https).",
+      "credentialMissing": "El acceso \"{{credential}}\" no está configurado en el servidor.",
+      "notFound": "No se encontró nada (¿privado o eliminado?).",
+      "blocked": "{{host}} bloquea la solicitud (HTTP {{status}}).",
+      "blockedCredential": "{{host}} bloquea la solicitud (HTTP {{status}}). El acceso \"{{credential}}\" puede haber caducado.",
+      "httpError": "{{host}} respondió con HTTP {{status}}.",
+      "linkRequired": "Introducir un enlace.",
+      "invalidLinkPattern": "Link Pattern no es una regex válida: {{description}}",
+      "tooManyRedirects": "Demasiadas redirecciones.",
+      "unreachable": "{{host}} no accesible: {{detail}}",
+      "cancelled": "Cancelado"
+    }
   }
 }

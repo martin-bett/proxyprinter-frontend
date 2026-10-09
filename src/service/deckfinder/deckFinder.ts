@@ -3,6 +3,7 @@
 // und das Deck als Decklist-Text im Arena-Format gebaut. Konzept: concepts/deckfinder.md.
 import { DeckEntry } from '../../api/types/types';
 import { formatDeckLine, parseDeckLine, sectionHeader } from '../deck/deckParser';
+import { backendErrorText } from '../../i18n/backendError';
 import i18n from '../../i18n';
 
 export interface DeckFinderConfig {
@@ -225,7 +226,8 @@ function headers(fingerprint?: string | null): HeadersInit {
 async function readError(response: Response): Promise<string> {
   try {
     const body = await response.json();
-    if (body && typeof body.error === 'string') return body.error;
+    const text = backendErrorText(body);
+    if (text) return text;
   } catch {
     // kein JSON
   }
