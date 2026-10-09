@@ -533,6 +533,8 @@ const DeckInputAndViewer: React.FC = () => {
       setCardResults({});
     }
     setLog([]);
+    // Jede Suche öffnet den Search Log, damit man sieht, was gerade gesucht wird
+    setSearchLogOpen(true);
     setProgress(0);
 
     // Gleiche Karte aus mehreren Sets wird eine Gruppe; der Set-Wunsch gilt je Platz
@@ -1296,6 +1298,7 @@ const DeckInputAndViewer: React.FC = () => {
   /** Sucht eine einzelne Karte über alle aktiven APIs, ohne sie schon ins Deck zu legen. */
   const searchSingleCard = async (cardName: string): Promise<CardResultsMap> => {
     setIsLoading(true);
+    setSearchLogOpen(true);
     setProgress(0);
 
     // Erstelle einen einzelnen Card Entry mit count 1
