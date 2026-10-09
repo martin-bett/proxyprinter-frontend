@@ -113,7 +113,8 @@
     "configSettings": "Ajustes de la configuración",
     "publish": "Publicar",
     "unpublish": "Despublicar",
-    "copyConfig": "Copiar configuración"
+    "copyConfig": "Copiar configuración",
+    "loginToEdit": "Inicio de sesión (burbuja arriba a la derecha) para crear, copiar y editar configuraciones propias."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Valoración",
     "availability": "Disponibilidad",
-    "quality": "Calidad"
+    "quality": "Calidad",
+    "loginToRate": "Inicio de sesión (burbuja arriba a la derecha) para valorar."
   },
   "pdf": {
     "preview": {
@@ -951,6 +953,16 @@
       "tooManyRedirects": "Demasiadas redirecciones.",
       "unreachable": "{{host}} no accesible: {{detail}}",
       "cancelled": "Cancelado"
+    },
+    "proxy": {
+      "invalidUrl": "URL no válida: {{url}}",
+      "httpOnly": "Solo se permiten URL http(s): {{url}}",
+      "internalAddress": "No se permiten direcciones internas.",
+      "hostNotFound": "{{host}} no encontrado.",
+      "tooManyRedirects": "Demasiadas redirecciones: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Se requiere inicio de sesión."
     }
   },
   "account": {

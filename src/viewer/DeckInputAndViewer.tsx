@@ -24,7 +24,7 @@ import AddCardDialog, { SaveCustomCardFn } from './grid/AddCardDialog';
 import LinkListDialog, { nameFromLink } from './grid/LinkListDialog';
 import GalleryConfigDialog from '../api/view/gallery/GalleryConfigDialog';
 import DeckImportDialog from './deckfinder/DeckImportDialog';
-import { DeckFinderConfig, LoadedDeck, fetchDeckFinderConfigs, getFingerprint, loadDeck, matchDeckLink } from '../service/deckfinder/deckFinder';
+import { DeckFinderConfig, LoadedDeck, fetchDeckFinderConfigs, loadDeck, matchDeckLink } from '../service/deckfinder/deckFinder';
 import { parseDecklist } from '../service/deck/deckParser';
 import { loadSetCatalog } from '../service/deck/setCatalog';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -979,12 +979,13 @@ const DeckInputAndViewer: React.FC = () => {
 
   const reloadDeckFinderConfigs = useCallback(async () => {
     try {
-      setDeckFinderConfigs(await fetchDeckFinderConfigs(await getFingerprint()));
+      setDeckFinderConfigs(await fetchDeckFinderConfigs());
     } catch (e) {
       console.error('Could not load deckfinder configs:', e);
     }
   }, []);
-  useEffect(() => { reloadDeckFinderConfigs(); }, [reloadDeckFinderConfigs]);
+  // Nach Login/Logout neu laden: eigene Configs hängen am Konto
+  useEffect(() => { reloadDeckFinderConfigs(); }, [reloadDeckFinderConfigs, auth.email]);
 
   // Quelle zum Link im Feld der Section "Import Deck"
   const detectedDeckSource = useMemo(() => matchDeckLink(deckFinderConfigs, deckImportInput), [deckFinderConfigs, deckImportInput]);
@@ -1014,7 +1015,7 @@ const DeckInputAndViewer: React.FC = () => {
     }
     setDeckLinkStatus({ loading: true });
     try {
-      const deck = await loadDeck(detectedDeckSource, input, [], await getFingerprint());
+      const deck = await loadDeck(detectedDeckSource, input, []);
       await applyLoadedDeck(deck);
     } catch (e) {
       setDeckLinkStatus({ loading: false, error: e instanceof Error ? e.message : String(e) });

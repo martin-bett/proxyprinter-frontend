@@ -113,7 +113,8 @@
     "configSettings": "配置设置",
     "publish": "发布",
     "unpublish": "取消发布",
-    "copyConfig": "复制配置"
+    "copyConfig": "复制配置",
+    "loginToEdit": "登录（右上角气泡）后可创建、复制和编辑自己的配置。"
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "评分",
     "availability": "可用性",
-    "quality": "质量"
+    "quality": "质量",
+    "loginToRate": "登录（右上角气泡）后可评分。"
   },
   "pdf": {
     "preview": {
@@ -937,6 +939,16 @@
       "tooManyRedirects": "重定向次数过多。",
       "unreachable": "无法连接 {{host}}：{{detail}}",
       "cancelled": "已取消"
+    },
+    "proxy": {
+      "invalidUrl": "无效的 URL：{{url}}",
+      "httpOnly": "仅允许 http(s) URL：{{url}}",
+      "internalAddress": "不允许使用内部地址。",
+      "hostNotFound": "未找到 {{host}}。",
+      "tooManyRedirects": "重定向次数过多：{{url}}"
+    },
+    "auth": {
+      "loginRequired": "需要登录。"
     }
   },
   "account": {

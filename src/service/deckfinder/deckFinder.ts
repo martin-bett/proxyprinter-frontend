@@ -219,9 +219,7 @@ export function extractSearchHits(config: DeckFinderConfig, body: string): DeckS
   });
 }
 
-function headers(fingerprint?: string | null): HeadersInit {
-  return { 'Content-Type': 'application/json', 'X-Fingerprint': fingerprint || '' };
-}
+const JSON_HEADERS: HeadersInit = { 'Content-Type': 'application/json' };
 
 async function readError(response: Response): Promise<string> {
   try {
@@ -234,52 +232,37 @@ async function readError(response: Response): Promise<string> {
   return `HTTP ${response.status}`;
 }
 
-export async function fetchDeckFinderConfigs(fingerprint?: string | null): Promise<DeckFinderConfig[]> {
-  const response = await fetch('/api/deckfinder', { headers: headers(fingerprint) });
+/** Veröffentlichte und, angemeldet, eigene Configs (Konto per Sitzungs-Cookie). */
+export async function fetchDeckFinderConfigs(): Promise<DeckFinderConfig[]> {
+  const response = await fetch('/api/deckfinder', { headers: JSON_HEADERS });
   if (!response.ok) throw new Error(await readError(response));
   const configs: DeckFinderConfig[] = await response.json();
   return configs.sort((a, b) => Number(!!b.published) - Number(!!a.published) || a.name.localeCompare(b.name));
 }
 
-export async function loadDeck(config: DeckFinderConfig, input: string, selectedBoards: string[], fingerprint?: string | null): Promise<LoadedDeck> {
-  const response = await fetch(`/api/deckfinder/${config.id}/fetch?input=${encodeURIComponent(input.trim())}`, { headers: headers(fingerprint) });
+export async function loadDeck(config: DeckFinderConfig, input: string, selectedBoards: string[]): Promise<LoadedDeck> {
+  const response = await fetch(`/api/deckfinder/${config.id}/fetch?input=${encodeURIComponent(input.trim())}`, { headers: JSON_HEADERS });
   if (!response.ok) throw new Error(await readError(response));
   return extractDeck(config, await response.text(), selectedBoards);
 }
 
-export async function searchDecks(config: DeckFinderConfig, query: string, page: number, fingerprint?: string | null): Promise<DeckSearchHit[]> {
-  const response = await fetch(`/api/deckfinder/${config.id}/search?query=${encodeURIComponent(query.trim())}&page=${page}`, { headers: headers(fingerprint) });
+export async function searchDecks(config: DeckFinderConfig, query: string, page: number): Promise<DeckSearchHit[]> {
+  const response = await fetch(`/api/deckfinder/${config.id}/search?query=${encodeURIComponent(query.trim())}&page=${page}`, { headers: JSON_HEADERS });
   if (!response.ok) throw new Error(await readError(response));
   return extractSearchHits(config, await response.text());
 }
 
-let fingerprintPromise: Promise<string> | null = null;
-
-/** Browser-Fingerprint für eigene (nicht veröffentlichte) Configs, einmal pro Seite berechnet. */
-export function getFingerprint(): Promise<string> {
-  if (!fingerprintPromise) {
-    fingerprintPromise = import('@fingerprintjs/fingerprintjs')
-      .then(FingerprintJS => FingerprintJS.load())
-      .then(fp => fp.get())
-      .then(result => result.visitorId)
-      .catch(() => '');
-  }
-  return fingerprintPromise;
-}
-
-/** Verwaltung: create/copy/edit/publish/delete wie bei Gallery-Configs. */
+/** Verwaltung: create/copy/edit/publish/delete wie bei Gallery-Configs, nur angemeldet. */
 export async function deckFinderConfigOperation(operation: 'create' | 'copy' | 'edit' | 'publish' | 'delete', body?: Partial<DeckFinderConfig>): Promise<void> {
-  const fingerprint = await getFingerprint();
   const response = await fetch(`/api/deckfinder/${operation}`, {
     method: operation === 'create' ? 'GET' : 'POST',
-    headers: headers(fingerprint),
+    headers: JSON_HEADERS,
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!response.ok) throw new Error(await readError(response));
 }
 
 export async function isDeckFinderConfigOwner(configId: number): Promise<boolean> {
-  const fingerprint = await getFingerprint();
-  const response = await fetch(`/api/deckfinder/${configId}/check`, { headers: headers(fingerprint) });
+  const response = await fetch(`/api/deckfinder/${configId}/check`, { headers: JSON_HEADERS });
   return response.ok ? Boolean(await response.json()) : false;
 }

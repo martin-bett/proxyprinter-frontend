@@ -113,7 +113,8 @@
     "configSettings": "Réglages de la config",
     "publish": "Publier",
     "unpublish": "Dépublier",
-    "copyConfig": "Copier la config"
+    "copyConfig": "Copier la config",
+    "loginToEdit": "Connexion (bulle en haut à droite) pour créer, copier et modifier ses propres configs."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Évaluation",
     "availability": "Disponibilité",
-    "quality": "Qualité"
+    "quality": "Qualité",
+    "loginToRate": "Connexion (bulle en haut à droite) pour évaluer."
   },
   "pdf": {
     "preview": {
@@ -951,6 +953,16 @@
       "tooManyRedirects": "Trop de redirections.",
       "unreachable": "{{host}} injoignable : {{detail}}",
       "cancelled": "Annulé"
+    },
+    "proxy": {
+      "invalidUrl": "URL non valide : {{url}}",
+      "httpOnly": "Seules les URL http(s) sont autorisées : {{url}}",
+      "internalAddress": "Les adresses internes ne sont pas autorisées.",
+      "hostNotFound": "{{host}} introuvable.",
+      "tooManyRedirects": "Trop de redirections : {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Connexion requise."
     }
   },
   "account": {
