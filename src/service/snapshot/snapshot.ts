@@ -231,12 +231,26 @@ function firstCardName(decklist: string, entries: SnapshotEntry[]): string {
   return '';
 }
 
-/** Anzeigename, z. B. „60 cards · Lightning Bolt“ (die Oberfläche ist englisch). */
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Zeitstempel MMddHHmm in Ortszeit, z. B. „10081930“. */
+export function snapshotTimestamp(ms: number): string {
+  const d = new Date(ms);
+  return `${pad2(d.getMonth() + 1)}${pad2(d.getDate())}${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+}
+
+/** Anzeigename, z. B. „10081930 Lightning Bolt“ (Zeitstempel MMddHHmm + erste Karte). */
 export function snapshotLabel(snapshot: Snapshot): string {
   if (snapshot.label.custom) return snapshot.label.custom;
-  const { cardCount, firstCard } = snapshot.label;
-  const cards = `${cardCount} ${cardCount === 1 ? 'card' : 'cards'}`;
-  return firstCard ? `${cards} · ${firstCard}` : cards;
+  const stamp = snapshotTimestamp(snapshot.createdAt);
+  const { firstCard } = snapshot.label;
+  return firstCard ? `${stamp} ${firstCard}` : stamp;
+}
+
+/** Kartenzahl für die Infozeile, z. B. „60 cards“. */
+export function snapshotCardsText(snapshot: Snapshot): string {
+  const { cardCount } = snapshot.label;
+  return `${cardCount} ${cardCount === 1 ? 'card' : 'cards'}`;
 }
 
 /** Bringt ältere Snapshots auf die aktuelle Version. Wirft bei unbekanntem Format oder neuerer Version. */

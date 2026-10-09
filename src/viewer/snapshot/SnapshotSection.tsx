@@ -8,12 +8,14 @@ import SaveAsIcon from '@mui/icons-material/SaveAs';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ActionButton from '../../container/inputs/ActionButton';
-import { Snapshot, snapshotLabel } from '../../service/snapshot/snapshot';
+import { Snapshot, snapshotCardsText, snapshotLabel } from '../../service/snapshot/snapshot';
 import { PdfInfo, pdfDownloadUrl, pdfFileName } from '../../service/snapshot/snapshotBackend';
 import './SnapshotSection.css';
 
 export interface SnapshotSectionProps {
   snapshots: Snapshot[];
+  /** Geladener bzw. gespeicherter Snapshot, der beim Weiterarbeiten überschrieben wird */
+  activeId: string | null;
   /** Letzte Sitzung, nur gesetzt, solange sie wiederhergestellt werden kann */
   session: Snapshot | null;
   /** PDF-Status je Snapshot-ID: Info, null = gelöscht, fehlt = unbekannt */
@@ -48,7 +50,7 @@ const kindIcon = (snapshot: Snapshot) => {
 };
 
 const SnapshotSection: React.FC<SnapshotSectionProps> = ({
-  snapshots, session, pdfInfos, notice, canSave, totalBytes, onSave, onLoad, onOverwrite, onRename, onDelete, onDeleteAll,
+  snapshots, activeId, session, pdfInfos, notice, canSave, totalBytes, onSave, onLoad, onOverwrite, onRename, onDelete, onDeleteAll,
 }) => {
   const listed = snapshots.filter(s => s.kind !== 'session');
 
@@ -71,26 +73,32 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
             <span className="input-tile-title">
               <span className="snapshot-text">
                 <span className="snapshot-label">Restore last session</span>
-                <span className="snapshot-meta">{snapshotLabel(session)} · {formatDate(session.createdAt)}</span>
+                <span className="snapshot-meta">{snapshotLabel(session)} · {snapshotCardsText(session)} · {formatDate(session.createdAt)}</span>
               </span>
             </span>
           </button>
         </div>
       )}
 
-      <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave}>Save Snapshot</ActionButton>
+      <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave} data-tour="save-snapshot">Save Snapshot</ActionButton>
 
       {listed.map(snapshot => {
         const info = pdfInfos[snapshot.id];
         const label = snapshotLabel(snapshot);
+        const active = snapshot.id === activeId;
         return (
-          <div key={snapshot.id} className="input-tile snapshot-row">
-            <button type="button" className="snapshot-open" onClick={() => onLoad(snapshot)} title={`Load ${label}`}>
+          <div key={snapshot.id} className={`input-tile snapshot-row${active ? ' is-active' : ''}`} aria-current={active || undefined}>
+            <button
+              type="button"
+              className="snapshot-open"
+              onClick={() => onLoad(snapshot)}
+              title={active ? `${label} is active: changes are saved here` : `Load ${label}`}
+            >
               <span className="input-tile-lead" aria-hidden="true">{kindIcon(snapshot)}</span>
               <span className="input-tile-title">
                 <span className="snapshot-text">
                   <span className="snapshot-label">{label}</span>
-                  <span className="snapshot-meta">{formatDate(snapshot.createdAt)}</span>
+                  <span className="snapshot-meta">{snapshotCardsText(snapshot)} · {formatDate(snapshot.createdAt)}</span>
                   {pdfMeta(snapshot)}
                 </span>
               </span>

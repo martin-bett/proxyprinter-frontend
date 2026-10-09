@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
 import { useAuth } from '../../service/auth/auth';
+import { PdfPagePreview, PreviewCard } from './PdfPagePreview';
 
 export interface PdfSettings {
   width: number;
@@ -42,9 +43,11 @@ interface SettingsDialogProps {
   onSettingsChange: (settings: PdfSettings) => void;
   /** Kann der Server Mails verschicken? Sonst ist die Option ausgegraut. */
   mailEnabled?: boolean;
+  /** Die ersten Karten des Decks für die Seitenvorschau; leer = graue Platzhalter. */
+  previewCards?: PreviewCard[];
 }
 
-function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = false }: SettingsDialogProps) {
+function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = false, previewCards = [] }: SettingsDialogProps) {
   const [localSettings, setLocalSettings] = useState<PdfSettings>(settings);
   const auth = useAuth();
 
@@ -68,6 +71,11 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
 
   return (
     <div className="settings-dialog">
+      <div className="settings-row">
+      <div className="settings-category settings-preview">
+        <h3 className="title is-4">Preview</h3>
+        <PdfPagePreview settings={localSettings} cards={previewCards} />
+      </div>
       <div className="settings-category">
         <h3 className="title is-4">Dimensions</h3>
         <div>
@@ -156,6 +164,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
             ></div>
           )}
         </div>
+      </div>
       </div>
       <div className="settings-category settings-email">
         <h3 className="title is-4">Email delivery</h3>

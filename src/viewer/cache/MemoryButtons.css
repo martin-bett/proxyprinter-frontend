@@ -27,6 +27,16 @@
   font-size: 0.9rem;
 }
 
+/* Download-Bubbles blenden weich ein und aus (siehe useFadePresence) */
+.memory-fade {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.memory-fade.is-visible {
+  opacity: 1;
+}
+
 .memory-button:hover:not(:disabled) {
   background: var(--hover);
 }

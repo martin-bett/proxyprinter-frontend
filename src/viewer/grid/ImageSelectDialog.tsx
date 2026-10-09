@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import IconButton from '@mui/material/IconButton';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import './ImageSelectDialog.css';
 import HoverPreview from './HoverPreview';
-import CardImage, { CardImageError } from './CardImage';
+import ImageSelectStats from './ImageSelectStats';
+import CardImage, { CardImageError, TileState } from './CardImage';
 
 import CropImageOverlay from '../../container/CropImageOverlay';
 import ChoiceButton from '../../container/inputs/ChoiceButton';
@@ -36,6 +40,7 @@ const FilterCount: React.FC<{ count: number }> = ({ count }) => (
 
 const languageOf = (result: CardResult) => result.languageCode || NO_LANGUAGE;
 
+
 interface ImageSelectDialogProps {
   open: boolean;
   /** Bekommt das gewählte Bild nur, wenn im Dialog eins angeklickt wurde, sonst null */
@@ -52,6 +57,19 @@ interface ImageSelectDialogProps {
   apiOrder?: string[];
   onReorderLanguages?: (order: string[]) => void;
   onReorderApis?: (order: string[]) => void;
+  /** Blättern zur vorherigen/nächsten Karte im Deck, ohne den Dialog zu schließen */
+  deckNav?: DeckNav;
+}
+
+/** Position der aktuellen Karte im Deck. Blättern übergibt die Wahl dieser Karte (oder null, wenn nichts geklickt wurde). */
+export interface DeckNav {
+  /** Ändert sich mit jeder Karte, damit die Auswahl im Dialog zurückgesetzt wird */
+  key: string;
+  cardName: string;
+  /** 1-basiert */
+  position: number;
+  total: number;
+  onStep: (delta: -1 | 1, picked: CardResult | null) => void;
 }
 
 const noReorder = () => undefined;
@@ -68,7 +86,8 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
   languageOrder = [],
   apiOrder = [],
   onReorderLanguages = noReorder,
-  onReorderApis = noReorder }) => {
+  onReorderApis = noReorder,
+  deckNav }) => {
   const [selectedImage, setSelectedImage] = useState<CardResult | null>(initialSelectedImage || null);
   // Nur ein Klick auf ein Bild ist eine manuelle Wahl, bloßes Öffnen und Schließen nicht
   const [picked, setPicked] = useState(false);
@@ -147,6 +166,37 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     }
   }, [initialSelectedImage]);
 
+  // Beim Blättern zur nächsten Karte: Auswahl und "gewählt"-Merker gehören zur neuen Karte
+  useEffect(() => {
+    setSelectedImage(initialSelectedImage || null);
+    setPicked(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckNav?.key]);
+
+  // Eine manuelle Wahl wird beim Blättern mitgegeben, sonst bleibt die Karte unverändert
+  const stepTo = useCallback((delta: -1 | 1) => {
+    if (!deckNav) return;
+    const target = deckNav.position - 1 + delta;
+    if (target < 0 || target >= deckNav.total) return;
+    deckNav.onStep(delta, picked ? selectedImage : null);
+  }, [deckNav, picked, selectedImage]);
+
+  // Pfeiltasten blättern, außer in Eingabefeldern (z.B. Zahlenfelder im Zuschnitt)
+  useEffect(() => {
+    if (!open || !deckNav) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        stepTo(e.key === 'ArrowLeft' ? -1 : 1);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, deckNav, stepTo]);
+
   const toggleLanguage = (languageCode: string) => {
     setDialogVisibleLanguages(prev => {
       const newSet = new Set(prev);
@@ -180,6 +230,34 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     setPicked(true);
   };
 
+  // Zustand jeder sichtbaren Kachel, Schlüssel ist die Position im Grid (wie beim Rendern)
+  const [tileStates, setTileStates] = useState<Map<string, TileState>>(() => new Map());
+  const setTileState = useCallback((tileId: string, state: TileState) => {
+    setTileStates(prev => {
+      if (state === null) {
+        if (!prev.has(tileId)) return prev;
+        const next = new Map(prev);
+        next.delete(tileId);
+        return next;
+      }
+      if (prev.get(tileId) === state) return prev;
+      return new Map(prev).set(tileId, state);
+    });
+  }, []);
+
+  const tileCounts = useMemo(() => {
+    const counts: Record<'loading' | 'queued' | 'done', number> = { loading: 0, queued: 0, done: 0 };
+    tileStates.forEach(state => {
+      if (state === 'loading' || state === 'queued' || state === 'done') counts[state]++;
+    });
+    return counts;
+  }, [tileStates]);
+
+  const cardName = useMemo(
+    () => initialSelectedImage?.name ?? Object.values(groupedResults).flat()[0]?.name,
+    [initialSelectedImage, groupedResults]
+  );
+
   const handleClose = () => {
     imageLoaderService.stopByCategory('selectgrid');
     onClose(picked ? selectedImage : null);
@@ -191,7 +269,29 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
     <div className="image-select-dialog">
       <div className="dialog-overlay" onClick={handleClose}>
         <div className="dialog-content" onClick={e => e.stopPropagation()}>
+          <ImageSelectStats open={open} cardName={cardName} counts={tileCounts} />
           <div className="image-selection-container">
+            {deckNav && (
+              <div className="deck-nav">
+                <IconButton
+                  aria-label="Previous card"
+                  title="Previous card (←)"
+                  disabled={deckNav.position <= 1}
+                  onClick={() => stepTo(-1)}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+                <span className="deck-nav-label">{deckNav.cardName} · {deckNav.position} / {deckNav.total}</span>
+                <IconButton
+                  aria-label="Next card"
+                  title="Next card (→)"
+                  disabled={deckNav.position >= deckNav.total}
+                  onClick={() => stepTo(1)}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              </div>
+            )}
             <CropImageOverlay
               selectedImage={selectedImage}
               cardAspect={cardAspect}
@@ -221,6 +321,7 @@ const ImageSelectDialog: React.FC<ImageSelectDialogProps> = ({
                             cardInput={result}
                             onLoad={(imageInfo) => handleImageLoad(result, imageInfo)}
                             onError={handleImageLoadError}
+                            onTileState={(state) => setTileState(`${apiName}:${index}`, state)}
                             showImageSettings={true}
                             onlyDimensions={true}
                           />

@@ -11,6 +11,8 @@ import ClosableDialog from '../../container/ClosableDialog';
 import AccountButton from '../account/AccountButton';
 import SearchCacheService from '../../service/cache/SearchCacheService';
 import { useImageLoaderNumbers } from '../../service/cache/hooks/useImageLoaderNumbers';
+import { formatRate, useDownloadRate } from '../../service/cache/hooks/useDownloadRate';
+import { useFadePresence } from '../../container/useFadePresence';
 import CacheManagerDialog from './CacheManagerDialog';
 import { CacheProgressBar } from './CacheProgressBar';
 import QueueManagerDialog from './QueueManagerDialog';
@@ -22,6 +24,8 @@ interface MemoryButtonsProps {
   onResetDeck: () => Promise<void> | void;
   resetDisabled?: boolean;
 }
+
+const FADE_MS = 500;
 
 // Icon-Bubbles oben rechts: Download-Queue, Such-Cache und Bild-Cache mit ihren Dialogen,
 // ganz rechts der Papierkorb zum Zurücksetzen des Decks (mit Rückfrage)
@@ -46,31 +50,45 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
 
   const openQueueDialog = () => setQueueDialogOpen(true);
   const openImageCacheDialog = () => setImageCacheDialogOpen(true);
+  // Download-Bubbles nur zeigen, solange etwas geladen oder eingereiht wird, mit weichem Ein- und Ausblenden
+  const downloadsIdle = queued === 0 && active === 0;
+  const { mounted: downloadsMounted, shown: downloadsShown } = useFadePresence(!downloadsIdle, FADE_MS);
+  const fadeClass = `memory-fade${downloadsShown ? ' is-visible' : ''}`;
+  const downloadRate = useDownloadRate(active > 0);
 
   return (
     <>
-      <div className="memory-buttons-bar">
-        <button className="memory-button" title="Wartende Downloads" onClick={openQueueDialog}>
-          <AccessTimeIcon />
-          <span className="memory-button-count">{queued}</span>
-        </button>
-        <button className="memory-button" title="Aktive Downloads" onClick={openQueueDialog}>
-          <DownloadIcon />
-          <span className="memory-button-count">{active}</span>
-        </button>
+      <div className="memory-buttons-bar" data-tour="memory-buttons">
+        {downloadsMounted && (
+          <>
+            <button className={`memory-button ${fadeClass}`} data-tour="queue-waiting" title="Wartende Downloads" onClick={openQueueDialog}>
+              <AccessTimeIcon />
+              <span className="memory-button-count">{queued}</span>
+            </button>
+            <button
+              className={`memory-button ${fadeClass}`}
+              title={downloadRate > 0 ? `Aktive Downloads · ${formatRate(downloadRate)}` : 'Aktive Downloads'}
+              onClick={openQueueDialog}
+            >
+              <DownloadIcon />
+              <span className="memory-button-count">{active}</span>
+            </button>
+          </>
+        )}
         <button className="memory-button" title="Cache-Ladevorgänge" onClick={openQueueDialog}>
           <UploadIcon />
           <span className="memory-button-count">{cacheLoading}</span>
         </button>
-        <button className="memory-button" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
+        <button className="memory-button" data-tour="search-cache" title="Search Cache anzeigen" onClick={() => setSearchCacheDialogOpen(true)}>
           <SearchIcon />
           <span className="memory-button-count">{searchCount}</span>
         </button>
-        <button className="memory-button" title="Cache anzeigen" onClick={openImageCacheDialog}>
+        <button className="memory-button" data-tour="image-cache" title="Cache anzeigen" onClick={openImageCacheDialog}>
           <CacheProgressBar width={120} />
         </button>
         <button
           className="memory-button"
+          data-tour="reset-deck"
           title="Deck zurücksetzen"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetDisabled}

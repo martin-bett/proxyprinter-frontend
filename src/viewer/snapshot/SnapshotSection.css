@@ -123,3 +123,18 @@
 .snapshot-footer button:hover {
   color: var(--accent);
 }
+
+/* Aktiver Snapshot: wird beim Weiterarbeiten überschrieben */
+.snapshot-row.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.snapshot-row.is-active .input-tile-lead {
+  border-right-color: var(--accent);
+  color: var(--accent);
+}
+
+.snapshot-row.is-active .snapshot-label {
+  font-weight: 600;
+}

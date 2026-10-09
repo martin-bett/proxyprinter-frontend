@@ -41,3 +41,12 @@ describe('SettingsDialog mail option', () => {
     expect(screen.getByText(/not set up/i)).toBeInTheDocument();
   });
 });
+
+describe('SettingsDialog preview', () => {
+  it('shows the slot count and updates it with the dimensions', () => {
+    render(<SettingsDialog open onClose={jest.fn()} settings={defaultSettings} onSettingsChange={jest.fn()} />);
+    expect(screen.getByText(/3 × 3 = 9/)).toBeInTheDocument();
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '90' } });
+    expect(screen.getByText(/2 × 3 = 6/)).toBeInTheDocument();
+  });
+});

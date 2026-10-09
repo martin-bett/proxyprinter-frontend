@@ -123,6 +123,12 @@ export function usesBackendFetch(config: Config): config is GalleryConfig {
 
 export type Config = GalleryConfig | ApiConfig;
 
+/** Eingabe, die selbst die Quellantwort ist (JSON oder HTML eingefügt) statt eines Links, sonst undefined. */
+export function pastedSource(input: string): string | undefined {
+  const text = input.trim();
+  return /^[\[{<]/.test(text) ? text : undefined;
+}
+
 
 export function isApiConfig(config: Config): config is ApiConfig {
   return (
@@ -149,6 +155,13 @@ export interface ApiParams {
   set?:string;
   // Optional: executeApiRequest tracks/overwrites the page counter internally.
   pageCount?:number;
+}
+
+/** Zwischenstand einer laufenden Suche, nach jeder fertigen Seite */
+export interface PageProgress {
+  /** Treffer bisher, gefiltert wie das Endergebnis */
+  count: number;
+  requestCount: number;
 }
 
 export interface GalleryParams{
@@ -218,13 +231,13 @@ export default class ApiFactory {
     });
   }
 
-  createApi(configKey: string): (params: ApiParams) => Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
+  createApi(configKey: string): (params: ApiParams, onPage?: (progress: PageProgress) => void) => Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     const config = this.configs[configKey];
     if (!config) {
       throw new Error(`Config not found for key: ${configKey}`);
     }
 
-    return (params: ApiParams) => this.executeApiRequest(config, params);
+    return (params: ApiParams, onPage?: (progress: PageProgress) => void) => this.executeApiRequest(config, params, onPage);
   }
 
   private processUrl(baseUrl: string, urlParams: Record<string, string> | undefined): string {
@@ -244,7 +257,8 @@ export default class ApiFactory {
 
   private async executeApiRequest(
     config: Config, 
-    params: ApiParams
+    params: ApiParams,
+    onPage?: (progress: PageProgress) => void
 ): Promise<{ results: SearchResult[], rawResponse: string, requestCount: number }> {
     let allResults: SearchResult[] = [];
     let allRawResponses: string[] = [];
@@ -272,6 +286,7 @@ export default class ApiFactory {
 
             const pageResults = await this.processDataList(dataList, config);
             allResults = allResults.concat(pageResults);
+            if (onPage) onPage({ count: this.filterAndDeduplicateResults(allResults, params, config).length, requestCount: allRawResponses.length });
 
             // Erhöhe den PageCount, wenn mehr Seiten verfügbar sind
             if (maxPage && pageCount < maxPage) {
@@ -314,6 +329,11 @@ export default class ApiFactory {
     currentUrl: string
   ): Promise<{ response: Response, requestUrl: URL }> {
     const processedParams = await this.processRequestParameters(config, params);
+    // Eingefügter Quelltext statt Link: nichts abrufen, der Text ist die Antwort (z.B. Reddit-JSON aus dem eigenen Browser)
+    const pasted = usesBackendFetch(config) ? pastedSource(this.galleryInput(config, processedParams)) : undefined;
+    if (pasted) {
+      return { response: new Response(pasted), requestUrl: new URL(config.baseUrl, window.location.origin) };
+    }
     const { requestUrl, fetchOptions } = usesBackendFetch(config)
       ? this.buildBackendFetch(config, processedParams)
       : this.buildRequest(config, processedParams, currentUrl);
@@ -408,10 +428,14 @@ export default class ApiFactory {
   }
 
   // Das Backend löst den Link per Link-Pattern auf, ruft die Quelle (ggf. mit Zugang) ab und gibt die Rohantwort zurück
-  private buildBackendFetch(config: GalleryConfig, processedParams: Record<string, string>): { requestUrl: URL, fetchOptions: RequestInit } {
-    const input = [...Object.values(processedParams), ...Object.values(config.parameterMap?.url ?? {})]
+  private galleryInput(config: GalleryConfig, processedParams: Record<string, string>): string {
+    return [...Object.values(processedParams), ...Object.values(config.parameterMap?.url ?? {})]
       .map(value => String(value ?? '').trim())
       .find(value => value && value !== '$GALLERY_INPUT$') ?? '';
+  }
+
+  private buildBackendFetch(config: GalleryConfig, processedParams: Record<string, string>): { requestUrl: URL, fetchOptions: RequestInit } {
+    const input = this.galleryInput(config, processedParams);
     const requestUrl = new URL(`/api/gallery/${config.id}/fetch`, window.location.origin);
     if (input) {
       requestUrl.searchParams.set('input', input);

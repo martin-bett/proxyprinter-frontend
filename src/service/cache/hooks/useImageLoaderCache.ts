@@ -6,6 +6,7 @@ export function useImageLoaderCache(): CacheSnapshot {
     byApi: {},
     byCard: {},
     totalSize: 0,
+    lockedCount: 0,
   });
 
   useEffect(() => {
