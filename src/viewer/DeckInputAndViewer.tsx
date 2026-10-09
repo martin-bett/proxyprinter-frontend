@@ -1416,12 +1416,12 @@ const DeckInputAndViewer: React.FC = () => {
                 })}
               </div>
               <div className="decklist-input-buttons">
-                <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
                 <div className="decklist-append-checkbox">
                   {renderCheckbox('appendMode', 'Append', appendMode, (event) => {
                     setAppendMode(event.target.checked);
                   })}
                 </div>
+                <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
               </div>
             </form>
           </CollapsibleSection>

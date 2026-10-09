@@ -516,28 +516,28 @@
   margin-bottom: 12px;
 }
 
+/* Append hängt als kurzer Tab direkt oben rechts am Analyze-Button */
 .decklist-input-buttons {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
   margin-top: 8px;
-  position: relative;
 }
 
 .decklist-append-checkbox {
-  position: absolute;
-  top: -10px;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  width: 55%;
+}
+
+.decklist-append-checkbox .input-tile {
+  min-height: 1.75rem;
+  margin: 0;
   border-bottom: none;
-  border-radius: 4px 4px 0 0;
-  padding: 2px 6px;
-  z-index: 10;
-  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.decklist-input-buttons > .action-button {
+  border-top-right-radius: 0;
 }
 
 /* Checkbox „Tokens & Extras“ über Analyze; ausgegraut, wenn keine aktive API verbundene Karten liefert */
