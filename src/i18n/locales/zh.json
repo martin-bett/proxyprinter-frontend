@@ -113,7 +113,8 @@
     "configSettings": "配置设置",
     "publish": "发布",
     "unpublish": "取消发布",
-    "copyConfig": "复制配置"
+    "copyConfig": "复制配置",
+    "loginToEdit": "登录（右上角气泡）后可创建、复制和编辑自己的配置。"
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "评分",
     "availability": "可用性",
-    "quality": "质量"
+    "quality": "质量",
+    "loginToRate": "登录（右上角气泡）后可评分。"
   },
   "pdf": {
     "preview": {
@@ -356,7 +358,18 @@
       "duration": "耗时",
       "requests": "请求数"
     },
-    "showRaw": "{{title}}：显示原始数据"
+    "showRaw": "{{title}}：显示原始数据",
+    "headers": {
+      "api": "API",
+      "source": "来源",
+      "requests": "请求",
+      "duration": "耗时",
+      "matches": "结果"
+    },
+    "running": {
+      "title": "正在进行的搜索",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "未找到牌组。",
@@ -937,6 +950,16 @@
       "tooManyRedirects": "重定向次数过多。",
       "unreachable": "无法连接 {{host}}：{{detail}}",
       "cancelled": "已取消"
+    },
+    "proxy": {
+      "invalidUrl": "无效的 URL：{{url}}",
+      "httpOnly": "仅允许 http(s) URL：{{url}}",
+      "internalAddress": "不允许使用内部地址。",
+      "hostNotFound": "未找到 {{host}}。",
+      "tooManyRedirects": "重定向次数过多：{{url}}"
+    },
+    "auth": {
+      "loginRequired": "需要登录。"
     }
   },
   "account": {
@@ -970,6 +993,17 @@
       "linkExpired": "此登录链接已过期或已被使用。请重新获取。",
       "deleteFailed": "账户删除失败，请重试。",
       "wrongCode": "验证码错误或已过期。"
+    }
+  },
+  "version": {
+    "build": "构建 {{number}}",
+    "backendBuild": "后端 {{number}}",
+    "stats": {
+      "sharedSearches_other": "{{number}} 条共享搜索",
+      "tempImages_other": "缓存中 {{number}} 张临时图片",
+      "cachedPdfs_other": "缓存中 {{number}} 个 PDF",
+      "decksToday_other": "今天已创建 {{number}} 副套牌",
+      "decksTotal_other": "共 {{number}} 副套牌"
     }
   }
 }

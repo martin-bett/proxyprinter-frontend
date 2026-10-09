@@ -1,9 +1,9 @@
 import { Star } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import Skeleton from '@mui/material/Skeleton';
 import { Config } from '../../service/ApiFactory';
+import { useAuth } from '../../service/auth/auth';
 
 interface Rating {
   configId: number;
@@ -16,13 +16,15 @@ interface ApiRatingProps {
   ratingChanged: (configs: Config[]) => void;
 }
 
+/** Eigene Bewertung einer Config, nur angemeldet (eine pro Konto). */
 const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
   const { t } = useTranslation();
-  const [fingerprint, setFingerprint] = useState<string | null>(null);
+  const auth = useAuth();
+  const loggedIn = !!auth.email;
   const [config, setConfig] = useState<Config | (Pick<Config, 'ratingValue' | 'ratingCount' | 'averageRating'> & { id?: number })>({ ratingValue: 0, ratingCount: 0, averageRating: 0 });
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [currentRating, setCurrentRating] = useState<Rating>({ scoreAvailability: 0, scoreQuality: 0, configId: -1 });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (conf) {
@@ -38,31 +40,12 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
   }, [conf, ratings]);
 
   useEffect(() => {
-    const initFingerprint = async () => {
-      try {
-        const fp = await FingerprintJS.load();
-        const result = await fp.get();
-        setFingerprint(result.visitorId);
-      } catch (error) {
-        console.error('Error loading the fingerprint:', error);
-        setIsLoading(false);
-      }
-    };
-    initFingerprint();
-  }, []);
-
-  useEffect(() => {
     const fetchRatings = async () => {
-      if (!fingerprint) return;
-
       try {
         setIsLoading(true);
         const response = await fetch(`/api/ratings/get`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Fingerprint': fingerprint
-          }
+          headers: { 'Content-Type': 'application/json' },
         });
         const data: Rating[] = await response.json();
         setRatings(data);
@@ -79,27 +62,27 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
       }
     };
 
-    if (fingerprint) {
+    if (loggedIn) {
       fetchRatings();
+    } else {
+      setRatings([]);
+      setCurrentRating({ scoreAvailability: 0, scoreQuality: 0, configId: -1 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fingerprint, conf?.id]);
+  }, [loggedIn, conf?.id]);
 
   const findRating = (configId: number): Rating => {
     return ratings.find(r => r.configId === configId) || { scoreAvailability: 0, scoreQuality: 0, configId };
   };
 
   const handleRating = async (configId: number, score: number, action: 'availability' | 'quality') => {
-    if (!fingerprint) return;
+    if (!loggedIn) return;
 
     try {
       setIsLoading(true);
       await fetch(`/api/configs/${configId}/rate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Fingerprint': fingerprint
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ score, action })
       });
 
@@ -111,10 +94,7 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
 
       // Aktualisiere die Ratings nach dem Rating
       const ratingsResponse = await fetch(`/api/ratings/get`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Fingerprint': fingerprint
-        }
+        headers: { 'Content-Type': 'application/json' },
       });
       const ratingsData: Rating[] = await ratingsResponse.json();
       setRatings(ratingsData);
@@ -131,6 +111,7 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
 
   const RatingStars: React.FC<{ score: number; onRatingClick: (score: number) => void }> = ({ score, onRatingClick }) => {
     const [hoverScore, setHoverScore] = useState(0);
+    const shown = loggedIn ? (hoverScore || score) : 0;
 
     return (
       <div className="is-flex is-align-items-center" style={{ gap: '1rem' }}>
@@ -138,13 +119,13 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
           <div
             key={starScore}
             style={{
-              cursor: 'pointer',
+              cursor: loggedIn ? 'pointer' : 'default',
               width: '40px',
               height: '40px',
               position: 'relative'
             }}
-            onClick={() => onRatingClick(starScore)}
-            onMouseEnter={() => setHoverScore(starScore)}
+            onClick={() => loggedIn && onRatingClick(starScore)}
+            onMouseEnter={() => loggedIn && setHoverScore(starScore)}
             onMouseLeave={() => setHoverScore(0)}
           >
             <Star
@@ -155,8 +136,8 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
                 width: '100%',
                 height: '100%',
                 transition: 'all 0.2s ease',
-                stroke: starScore <= (hoverScore || score) ? 'var(--rating)' : 'var(--border)',
-                fill: starScore <= (hoverScore || score) ? 'var(--rating)' : 'transparent'
+                stroke: starScore <= shown ? 'var(--rating)' : 'var(--border)',
+                fill: starScore <= shown ? 'var(--rating)' : 'transparent'
               }}
             />
           </div>
@@ -176,7 +157,7 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
 
   return (
     <>
-    <div className="rating-container">
+    <div className="rating-container" title={loggedIn ? undefined : t('rating.loginToRate')}>
       <div className="rating-title">{t('rating.title')}</div>
       <div className="is-flex is-justify-content-center" style={{ gap: '4rem' }}>
         <div className="is-flex is-flex-direction-column is-align-items-center" style={{ gap: '0.75rem' }}>
@@ -194,6 +175,7 @@ const ApiRating: React.FC<ApiRatingProps> = ({ conf, ratingChanged }) => {
           />
         </div>
       </div>
+      {!loggedIn && <p className="help has-text-centered">{t('rating.loginToRate')}</p>}
     </div>
     </>
   );

@@ -113,7 +113,8 @@
     "configSettings": "Ajustes de la configuración",
     "publish": "Publicar",
     "unpublish": "Despublicar",
-    "copyConfig": "Copiar configuración"
+    "copyConfig": "Copiar configuración",
+    "loginToEdit": "Inicio de sesión (burbuja arriba a la derecha) para crear, copiar y editar configuraciones propias."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Valoración",
     "availability": "Disponibilidad",
-    "quality": "Calidad"
+    "quality": "Calidad",
+    "loginToRate": "Inicio de sesión (burbuja arriba a la derecha) para valorar."
   },
   "pdf": {
     "preview": {
@@ -360,7 +362,18 @@
       "duration": "Duración",
       "requests": "Número de solicitudes"
     },
-    "showRaw": "{{title}}: mostrar datos brutos"
+    "showRaw": "{{title}}: mostrar datos brutos",
+    "headers": {
+      "api": "API",
+      "source": "Origen",
+      "requests": "Peticiones",
+      "duration": "Duración",
+      "matches": "Resultados"
+    },
+    "running": {
+      "title": "Búsquedas en curso",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "No se encontraron mazos.",
@@ -951,6 +964,16 @@
       "tooManyRedirects": "Demasiadas redirecciones.",
       "unreachable": "{{host}} no accesible: {{detail}}",
       "cancelled": "Cancelado"
+    },
+    "proxy": {
+      "invalidUrl": "URL no válida: {{url}}",
+      "httpOnly": "Solo se permiten URL http(s): {{url}}",
+      "internalAddress": "No se permiten direcciones internas.",
+      "hostNotFound": "{{host}} no encontrado.",
+      "tooManyRedirects": "Demasiadas redirecciones: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Se requiere inicio de sesión."
     }
   },
   "account": {
@@ -984,6 +1007,22 @@
       "linkExpired": "Este enlace de acceso ha caducado o ya se usó. Solicitar uno nuevo.",
       "deleteFailed": "No se pudo eliminar la cuenta, volver a intentarlo.",
       "wrongCode": "El código es incorrecto o ha caducado."
+    }
+  },
+  "version": {
+    "build": "Build {{number}}",
+    "backendBuild": "Backend {{number}}",
+    "stats": {
+      "sharedSearches_one": "{{number}} búsqueda compartida",
+      "sharedSearches_other": "{{number}} búsquedas compartidas",
+      "tempImages_one": "{{number}} imagen temporal en caché",
+      "tempImages_other": "{{number}} imágenes temporales en caché",
+      "cachedPdfs_one": "{{number}} PDF en caché",
+      "cachedPdfs_other": "{{number}} PDF en caché",
+      "decksToday_one": "{{number}} mazo creado hoy",
+      "decksToday_other": "{{number}} mazos creados hoy",
+      "decksTotal_one": "{{number}} mazo en total",
+      "decksTotal_other": "{{number}} mazos en total"
     }
   }
 }

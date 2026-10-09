@@ -113,7 +113,8 @@
     "configSettings": "Impostazioni config",
     "publish": "Pubblica",
     "unpublish": "Ritira",
-    "copyConfig": "Copia config"
+    "copyConfig": "Copia config",
+    "loginToEdit": "Accesso (bolla in alto a destra) per creare, copiare e modificare config proprie."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Valutazione",
     "availability": "Disponibilità",
-    "quality": "Qualità"
+    "quality": "Qualità",
+    "loginToRate": "Accesso (bolla in alto a destra) per valutare."
   },
   "pdf": {
     "preview": {
@@ -360,7 +362,18 @@
       "duration": "Durata",
       "requests": "Numero di richieste"
     },
-    "showRaw": "{{title}}: mostra dati grezzi"
+    "showRaw": "{{title}}: mostra dati grezzi",
+    "headers": {
+      "api": "API",
+      "source": "Origine",
+      "requests": "Richieste",
+      "duration": "Durata",
+      "matches": "Risultati"
+    },
+    "running": {
+      "title": "Ricerche in corso",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "Nessun mazzo trovato.",
@@ -951,6 +964,16 @@
       "tooManyRedirects": "Troppi reindirizzamenti.",
       "unreachable": "{{host}} non raggiungibile: {{detail}}",
       "cancelled": "Annullato"
+    },
+    "proxy": {
+      "invalidUrl": "URL non valido: {{url}}",
+      "httpOnly": "Sono ammessi solo URL http(s): {{url}}",
+      "internalAddress": "Gli indirizzi interni non sono ammessi.",
+      "hostNotFound": "{{host}} non trovato.",
+      "tooManyRedirects": "Troppi reindirizzamenti: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Accesso richiesto."
     }
   },
   "account": {
@@ -984,6 +1007,22 @@
       "linkExpired": "Questo link di accesso è scaduto o è già stato usato. Richiederne uno nuovo.",
       "deleteFailed": "Impossibile eliminare l'account, riprovare.",
       "wrongCode": "Il codice è errato o scaduto."
+    }
+  },
+  "version": {
+    "build": "Build {{number}}",
+    "backendBuild": "Backend {{number}}",
+    "stats": {
+      "sharedSearches_one": "{{number}} ricerca condivisa",
+      "sharedSearches_other": "{{number}} ricerche condivise",
+      "tempImages_one": "{{number}} immagine temporanea in cache",
+      "tempImages_other": "{{number}} immagini temporanee in cache",
+      "cachedPdfs_one": "{{number}} PDF in cache",
+      "cachedPdfs_other": "{{number}} PDF in cache",
+      "decksToday_one": "{{number}} mazzo creato oggi",
+      "decksToday_other": "{{number}} mazzi creati oggi",
+      "decksTotal_one": "{{number}} mazzo in totale",
+      "decksTotal_other": "{{number}} mazzi in totale"
     }
   }
 }

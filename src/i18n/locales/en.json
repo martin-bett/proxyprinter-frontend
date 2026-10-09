@@ -113,7 +113,8 @@
     "configSettings": "Config Settings",
     "publish": "Publish",
     "unpublish": "Unpublish",
-    "copyConfig": "Copy Config"
+    "copyConfig": "Copy Config",
+    "loginToEdit": "Log in (bubble at the top right) to create, copy and edit own configs."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Rating",
     "availability": "Availability",
-    "quality": "Quality"
+    "quality": "Quality",
+    "loginToRate": "Log in (bubble at the top right) to rate."
   },
   "pdf": {
     "preview": {
@@ -360,7 +362,18 @@
       "duration": "Duration",
       "requests": "Number of requests"
     },
-    "showRaw": "{{title}}: Show raw data"
+    "showRaw": "{{title}}: Show raw data",
+    "headers": {
+      "api": "API",
+      "source": "Source",
+      "requests": "Requests",
+      "duration": "Duration",
+      "matches": "Matches"
+    },
+    "running": {
+      "title": "Running searches",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "No decks found.",
@@ -951,6 +964,16 @@
       "tooManyRedirects": "Too many redirects.",
       "unreachable": "{{host}} not reachable: {{detail}}",
       "cancelled": "Cancelled"
+    },
+    "proxy": {
+      "invalidUrl": "Invalid URL: {{url}}",
+      "httpOnly": "Only http(s) URLs are allowed: {{url}}",
+      "internalAddress": "Internal addresses are not allowed.",
+      "hostNotFound": "{{host}} not found.",
+      "tooManyRedirects": "Too many redirects: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Login required."
     }
   },
   "account": {
@@ -984,6 +1007,22 @@
       "linkExpired": "This login link has expired or was already used. Request a new one.",
       "deleteFailed": "The account could not be deleted, please try again.",
       "wrongCode": "The code is wrong or has expired."
+    }
+  },
+  "version": {
+    "build": "Build {{number}}",
+    "backendBuild": "Backend {{number}}",
+    "stats": {
+      "sharedSearches_one": "{{number}} shared search",
+      "sharedSearches_other": "{{number}} shared searches",
+      "tempImages_one": "{{number}} temp image in cache",
+      "tempImages_other": "{{number}} temp images in cache",
+      "cachedPdfs_one": "{{number}} PDF in cache",
+      "cachedPdfs_other": "{{number}} PDFs in cache",
+      "decksToday_one": "{{number}} deck created today",
+      "decksToday_other": "{{number}} decks created today",
+      "decksTotal_one": "{{number}} deck in total",
+      "decksTotal_other": "{{number}} decks in total"
     }
   }
 }

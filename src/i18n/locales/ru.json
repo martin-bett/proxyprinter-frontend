@@ -113,7 +113,8 @@
     "configSettings": "Настройки конфигурации",
     "publish": "Опубликовать",
     "unpublish": "Снять с публикации",
-    "copyConfig": "Копировать конфигурацию"
+    "copyConfig": "Копировать конфигурацию",
+    "loginToEdit": "Вход (пузырёк вверху справа), чтобы создавать, копировать и редактировать свои конфигурации."
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "Оценка",
     "availability": "Доступность",
-    "quality": "Качество"
+    "quality": "Качество",
+    "loginToRate": "Вход (пузырёк вверху справа), чтобы оценивать."
   },
   "pdf": {
     "preview": {
@@ -368,7 +370,18 @@
       "duration": "Длительность",
       "requests": "Количество запросов"
     },
-    "showRaw": "{{title}}: показать исходные данные"
+    "showRaw": "{{title}}: показать исходные данные",
+    "headers": {
+      "api": "API",
+      "source": "Источник",
+      "requests": "Запросы",
+      "duration": "Время",
+      "matches": "Найдено"
+    },
+    "running": {
+      "title": "Текущие поиски",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "Колоды не найдены.",
@@ -979,6 +992,16 @@
       "tooManyRedirects": "Слишком много перенаправлений.",
       "unreachable": "{{host}} недоступен: {{detail}}",
       "cancelled": "Отменено"
+    },
+    "proxy": {
+      "invalidUrl": "Недопустимый URL: {{url}}",
+      "httpOnly": "Разрешены только URL http(s): {{url}}",
+      "internalAddress": "Внутренние адреса не допускаются.",
+      "hostNotFound": "{{host}} не найден.",
+      "tooManyRedirects": "Слишком много перенаправлений: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "Требуется вход."
     }
   },
   "account": {
@@ -1012,6 +1035,32 @@
       "linkExpired": "Срок действия ссылки для входа истёк, или она уже использована. Запросить новую.",
       "deleteFailed": "Не удалось удалить аккаунт, повторить попытку.",
       "wrongCode": "Код неверный или истёк."
+    }
+  },
+  "version": {
+    "build": "Сборка {{number}}",
+    "backendBuild": "Бэкенд {{number}}",
+    "stats": {
+      "sharedSearches_one": "{{number}} общий поиск",
+      "sharedSearches_few": "{{number}} общих поиска",
+      "sharedSearches_many": "{{number}} общих поисков",
+      "sharedSearches_other": "{{number}} общих поиска",
+      "tempImages_one": "{{number}} временное изображение в кэше",
+      "tempImages_few": "{{number}} временных изображения в кэше",
+      "tempImages_many": "{{number}} временных изображений в кэше",
+      "tempImages_other": "{{number}} временного изображения в кэше",
+      "cachedPdfs_one": "{{number}} PDF в кэше",
+      "cachedPdfs_few": "{{number}} PDF в кэше",
+      "cachedPdfs_many": "{{number}} PDF в кэше",
+      "cachedPdfs_other": "{{number}} PDF в кэше",
+      "decksToday_one": "{{number}} колода создана сегодня",
+      "decksToday_few": "{{number}} колоды создано сегодня",
+      "decksToday_many": "{{number}} колод создано сегодня",
+      "decksToday_other": "{{number}} колоды создано сегодня",
+      "decksTotal_one": "Всего {{number}} колода",
+      "decksTotal_few": "Всего {{number}} колоды",
+      "decksTotal_many": "Всего {{number}} колод",
+      "decksTotal_other": "Всего {{number}} колоды"
     }
   }
 }

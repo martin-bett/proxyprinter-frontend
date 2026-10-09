@@ -6,7 +6,6 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@fingerprintjs/fingerprintjs": "^4.5.1",
     "@mui/icons-material": "^6.1.7",
     "@mui/material": "^6.1.7",
     "@textabledev/langs-flags-list": "^1.0.0",
@@ -36,8 +35,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "node scripts/react-scripts.js start",
+    "build": "node scripts/react-scripts.js build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

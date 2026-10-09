@@ -13,7 +13,6 @@ import HtmlTreeView from './HtmlTreeView';
 import './ApiCreateWizard.css';
 
 interface Props {
-  fingerprint: string | null;
   existingNames: string[];
   onCancel: () => void;
   /** Leere Config ohne Wizard anlegen (Expertenmodus) */
@@ -35,7 +34,7 @@ interface Meta {
 }
 
 /** Schritt-für-Schritt-Anlage einer API-Config aus einer echten Beispielabfrage. */
-const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel, onCreateEmpty, onCreated }) => {
+const ApiCreateWizard: React.FC<Props> = ({ existingNames, onCancel, onCreateEmpty, onCreated }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [req, setReq] = useState<WizardRequest>({ url: '', method: 'GET', body: '', requestFormat: 'json' });
@@ -209,7 +208,7 @@ const ApiCreateWizard: React.FC<Props> = ({ fingerprint, existingNames, onCancel
     if (!draft) return;
     setSaving(true);
     setSaveError('');
-    const headers = { 'Content-Type': 'application/json', 'X-Fingerprint': fingerprint || '' };
+    const headers = { 'Content-Type': 'application/json' };
     try {
       const created = await fetch('/api/configs/create', { method: 'GET', headers });
       if (!created.ok) throw new Error(t('wizard.save.createFailed', { status: created.status }));

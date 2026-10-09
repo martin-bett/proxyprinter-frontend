@@ -113,7 +113,8 @@
     "configSettings": "コンフィグ設定",
     "publish": "公開",
     "unpublish": "非公開にする",
-    "copyConfig": "コンフィグをコピー"
+    "copyConfig": "コンフィグをコピー",
+    "loginToEdit": "ログイン（右上のバブル）すると、自分のコンフィグを作成・コピー・編集できます。"
   },
   "apiConfig": {
     "fields": {
@@ -208,7 +209,8 @@
   "rating": {
     "title": "評価",
     "availability": "入手性",
-    "quality": "品質"
+    "quality": "品質",
+    "loginToRate": "ログイン（右上のバブル）すると評価できます。"
   },
   "pdf": {
     "preview": {
@@ -356,7 +358,18 @@
       "duration": "所要時間",
       "requests": "リクエスト数"
     },
-    "showRaw": "{{title}}: 生データを表示"
+    "showRaw": "{{title}}: 生データを表示",
+    "headers": {
+      "api": "API",
+      "source": "取得元",
+      "requests": "リクエスト",
+      "duration": "時間",
+      "matches": "件数"
+    },
+    "running": {
+      "title": "実行中の検索",
+      "more": "+{{count}}"
+    }
   },
   "deckImport": {
     "noDecks": "デッキが見つかりません。",
@@ -937,6 +950,16 @@
       "tooManyRedirects": "リダイレクトが多すぎます。",
       "unreachable": "{{host}} に接続できません: {{detail}}",
       "cancelled": "キャンセルされました"
+    },
+    "proxy": {
+      "invalidUrl": "無効な URL: {{url}}",
+      "httpOnly": "http(s) の URL のみ使用できます: {{url}}",
+      "internalAddress": "内部アドレスは使用できません。",
+      "hostNotFound": "{{host}} が見つかりません。",
+      "tooManyRedirects": "リダイレクトが多すぎます: {{url}}"
+    },
+    "auth": {
+      "loginRequired": "ログインが必要です。"
     }
   },
   "account": {
@@ -970,6 +993,17 @@
       "linkExpired": "このログインリンクは期限切れか、すでに使用されています。新しいリンクをリクエストしてください。",
       "deleteFailed": "アカウントを削除できませんでした。再試行してください。",
       "wrongCode": "コードが間違っているか、期限切れです。"
+    }
+  },
+  "version": {
+    "build": "ビルド {{number}}",
+    "backendBuild": "バックエンド {{number}}",
+    "stats": {
+      "sharedSearches_other": "共有検索 {{number}} 件",
+      "tempImages_other": "キャッシュ内の一時画像 {{number}} 件",
+      "cachedPdfs_other": "キャッシュ内の PDF {{number}} 件",
+      "decksToday_other": "今日作成されたデッキ {{number}} 件",
+      "decksTotal_other": "合計 {{number}} デッキ"
     }
   }
 }

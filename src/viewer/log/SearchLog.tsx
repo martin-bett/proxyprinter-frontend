@@ -5,7 +5,6 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import CircularProgress from '@mui/material/CircularProgress';
 import { useTranslation } from 'react-i18next';
 import { LogEntry } from '../../api/types/types';
 import './SearchLog.css';
@@ -16,7 +15,6 @@ const sourceIcon = {
   server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'log.source.server' },
   network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'log.source.network' },
   error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'log.source.error' },
-  running: { icon: <CircularProgress size="0.85em" color="inherit" />, title: 'log.source.running' },
 } as const satisfies Record<LogEntry['source'], { icon: React.ReactNode; title: string }>;
 
 // Kurz halten, die Spalte ist schmal: 85ms, 1.2s, 12s
@@ -34,23 +32,23 @@ interface SearchLogProps {
 export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
   const { t } = useTranslation();
   return (
-    <div className="log">
+    <div className="search-log">
       <table className="search-log-table">
         <colgroup>
           <col className="search-log-api" />
           <col className="search-log-source" />
-          <col className="search-log-count" />
-          <col className="search-log-duration" />
           <col className="search-log-requests" />
+          <col className="search-log-duration" />
+          <col className="search-log-count" />
           <col />
         </colgroup>
         <thead>
           <tr>
-            <th>API</th>
-            <th title={t('log.columns.source')}>Q</th>
-            <th className="search-log-cell-number" title={t('log.columns.matches')}>#</th>
-            <th className="search-log-cell-number" title={t('log.columns.duration')}><TimerOutlinedIcon fontSize="inherit" /></th>
-            <th className="search-log-cell-number" title={t('log.columns.requests')}><SwapVertIcon fontSize="inherit" /></th>
+            <th>{t('log.headers.api')}</th>
+            <th title={t('log.columns.source')}>{t('log.headers.source')}</th>
+            <th className="search-log-cell-number" title={t('log.columns.requests')}><SwapVertIcon fontSize="inherit" /> {t('log.headers.requests')}</th>
+            <th className="search-log-cell-number" title={t('log.columns.duration')}><TimerOutlinedIcon fontSize="inherit" /> {t('log.headers.duration')}</th>
+            <th className="search-log-cell-number" title={t('log.columns.matches')}># {t('log.headers.matches')}</th>
             <th>{t('common.name')}</th>
           </tr>
         </thead>
@@ -59,10 +57,8 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
             const { icon, title: titleKey } = sourceIcon[entry.source];
             const title = t(titleKey);
             const raw = entry.source === 'error' ? entry.error : entry.rawResponse;
-            // Laufende Suche ohne fertige Seite: noch keine Werte
-            const pending = entry.source === 'running' && !entry.requestCount;
             return (
-              <tr key={entry.id ?? `done-${index}`} className={`search-log-row search-log-${entry.source}`}>
+              <tr key={index} className={`search-log-row search-log-${entry.source}`}>
                 <td className="search-log-cell-api" title={entry.configName}>{entry.configName}</td>
                 <td>
                   <button
@@ -76,9 +72,9 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
                     {icon}
                   </button>
                 </td>
-                <td className="search-log-cell-number">{entry.source === 'error' || pending ? '–' : entry.count}</td>
-                <td className="search-log-cell-number">{pending ? '–' : formatDuration(entry.durationMs)}</td>
-                <td className="search-log-cell-number">{pending ? '–' : entry.requestCount ?? '–'}</td>
+                <td className="search-log-cell-number">{entry.requestCount ?? '–'}</td>
+                <td className="search-log-cell-number">{formatDuration(entry.durationMs)}</td>
+                <td className="search-log-cell-number">{entry.source === 'error' ? '–' : entry.count}</td>
                 <td className="search-log-cell-name" title={entry.error ? `${entry.cardName}: ${entry.error}` : entry.cardName}>
                   {entry.cardName}
                 </td>
