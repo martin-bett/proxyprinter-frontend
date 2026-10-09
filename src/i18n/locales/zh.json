@@ -997,6 +997,13 @@
   },
   "version": {
     "build": "构建 {{number}}",
-    "backendBuild": "后端 {{number}}"
+    "backendBuild": "后端 {{number}}",
+    "stats": {
+      "sharedSearches_other": "{{number}} 条共享搜索",
+      "tempImages_other": "缓存中 {{number}} 张临时图片",
+      "cachedPdfs_other": "缓存中 {{number}} 个 PDF",
+      "decksToday_other": "今天已创建 {{number}} 副套牌",
+      "decksTotal_other": "共 {{number}} 副套牌"
+    }
   }
 }
