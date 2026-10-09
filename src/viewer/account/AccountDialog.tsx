@@ -28,6 +28,7 @@ export default function AccountDialog({ onClose, linkFailed = false }: AccountDi
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(linkFailed ? 'This login link has expired or was already used. Request a new one.' : null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -62,13 +63,14 @@ export default function AccountDialog({ onClose, linkFailed = false }: AccountDi
   const sendLink = async () => {
     setBusy(true);
     setError(null);
-    const result = await requestLogin(email);
+    const answer = await requestLogin(email);
     setBusy(false);
-    if (result === 'sent') {
+    if (answer.result === 'sent') {
       setSentTo(email.trim());
-      setCode('');
+      setDevCode(answer.devCode ?? null);
+      setCode(answer.devCode ?? '');
     } else {
-      setError(REQUEST_ERRORS[result]);
+      setError(REQUEST_ERRORS[answer.result]);
     }
   };
 
@@ -113,7 +115,13 @@ export default function AccountDialog({ onClose, linkFailed = false }: AccountDi
         </>
       ) : (
         <>
-          <p>We sent a mail to <strong>{sentTo}</strong>. Open the link in it, or enter the 6-digit code here.</p>
+          {devCode ? (
+            <p>
+              <strong>Test environment:</strong> no mail is sent here, the code is filled in for you. Press Log in.
+            </p>
+          ) : (
+            <p>We sent a mail to <strong>{sentTo}</strong>. Open the link in it, or enter the 6-digit code here.</p>
+          )}
           <input
             className="input"
             inputMode="numeric"

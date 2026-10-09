@@ -27,14 +27,16 @@ describe('auth', () => {
 
   it('maps login request answers', async () => {
     global.fetch = respond(200);
-    expect(await requestLogin(' a@b.de ')).toBe('sent');
+    expect(await requestLogin(' a@b.de ')).toEqual({ result: 'sent' });
     expect(JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)).toEqual({ email: 'a@b.de' });
     global.fetch = respond(400);
-    expect(await requestLogin('x')).toBe('invalid');
+    expect((await requestLogin('x')).result).toBe('invalid');
     global.fetch = respond(429);
-    expect(await requestLogin('a@b.de')).toBe('rate-limited');
+    expect((await requestLogin('a@b.de')).result).toBe('rate-limited');
     global.fetch = respond(503);
-    expect(await requestLogin('a@b.de')).toBe('disabled');
+    expect((await requestLogin('a@b.de')).result).toBe('disabled');
+    global.fetch = respond(200, { status: 'sent', devCode: '123456' });
+    expect(await requestLogin('a@b.de')).toEqual({ result: 'sent', devCode: '123456' });
   });
 
   it('logs in with a code and logs out', async () => {

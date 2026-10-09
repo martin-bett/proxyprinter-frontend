@@ -16,6 +16,12 @@ export interface AuthState {
 
 export type RequestLoginResult = 'sent' | 'invalid' | 'rate-limited' | 'disabled' | 'error';
 
+/** devCode ist nur in Testumgebungen gesetzt, dort geht keine Mail raus und der Server nennt den Code direkt. */
+export interface RequestLoginAnswer {
+  result: RequestLoginResult;
+  devCode?: string;
+}
+
 let state: AuthState = { loaded: false, loginEnabled: false, email: null };
 const listeners = new Set<() => void>();
 
@@ -49,18 +55,21 @@ export const refreshAuth = async (): Promise<void> => {
   }
 };
 
-export const requestLogin = async (email: string): Promise<RequestLoginResult> => {
+export const requestLogin = async (email: string): Promise<RequestLoginAnswer> => {
   try {
     const response = await fetch('/api/auth/login/request', {
       method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ email: email.trim() }),
     });
-    if (response.ok) return 'sent';
-    if (response.status === 400) return 'invalid';
-    if (response.status === 429) return 'rate-limited';
-    if (response.status === 503) return 'disabled';
-    return 'error';
+    if (response.ok) {
+      const data = await response.json().catch(() => null);
+      return { result: 'sent', ...(typeof data?.devCode === 'string' ? { devCode: data.devCode } : {}) };
+    }
+    if (response.status === 400) return { result: 'invalid' };
+    if (response.status === 429) return { result: 'rate-limited' };
+    if (response.status === 503) return { result: 'disabled' };
+    return { result: 'error' };
   } catch {
-    return 'error';
+    return { result: 'error' };
   }
 };
 
