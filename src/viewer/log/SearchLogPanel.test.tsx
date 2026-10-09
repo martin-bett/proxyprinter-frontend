@@ -13,7 +13,8 @@ describe('SearchLogPanel', () => {
     render(<SearchLogPanel open entries={[]} running={[]} pendingByApi={{}} onShowRaw={() => {}} onClose={onClose} />);
     const dialog = screen.getByRole('dialog', { name: 'Search Log' });
     expect(dialog).toHaveTextContent('0 entries');
-    expect(screen.queryByText('Running searches')).not.toBeInTheDocument();
+    expect(screen.queryByText('Running')).not.toBeInTheDocument();
+    expect(screen.getByText('History')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Close'));
     fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(2);

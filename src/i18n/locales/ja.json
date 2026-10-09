@@ -367,8 +367,10 @@
       "matches": "件数"
     },
     "running": {
-      "title": "実行中の検索",
-      "more": "+{{count}}"
+      "title": "実行中"
+    },
+    "history": {
+      "title": "履歴"
     }
   },
   "deckImport": {

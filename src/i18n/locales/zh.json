@@ -367,8 +367,10 @@
       "matches": "结果"
     },
     "running": {
-      "title": "正在进行的搜索",
-      "more": "+{{count}}"
+      "title": "进行中"
+    },
+    "history": {
+      "title": "历史"
     }
   },
   "deckImport": {

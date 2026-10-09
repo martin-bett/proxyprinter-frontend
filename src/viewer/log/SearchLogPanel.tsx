@@ -47,6 +47,7 @@ export default function SearchLogPanel({ open, entries, running, pendingByApi, o
         </IconButton>
       </div>
       <RunningSearches running={running} pendingByApi={pendingByApi} />
+      <div className="search-log-section-title search-log-history-title">{t('log.history.title')}</div>
       <div
         ref={bodyRef}
         className="search-log-panel-body"

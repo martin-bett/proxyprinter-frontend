@@ -371,8 +371,10 @@
       "matches": "Résultats"
     },
     "running": {
-      "title": "Recherches en cours",
-      "more": "+{{count}}"
+      "title": "En cours"
+    },
+    "history": {
+      "title": "Historique"
     }
   },
   "deckImport": {

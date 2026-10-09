@@ -371,8 +371,10 @@
       "matches": "Treffer"
     },
     "running": {
-      "title": "Laufende Suchen",
-      "more": "+{{count}}"
+      "title": "Laufend"
+    },
+    "history": {
+      "title": "Verlauf"
     }
   },
   "deckImport": {
