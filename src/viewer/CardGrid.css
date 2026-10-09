@@ -619,3 +619,8 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+
+.version-build {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

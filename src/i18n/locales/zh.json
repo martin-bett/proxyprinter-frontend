@@ -971,5 +971,9 @@
       "deleteFailed": "账户删除失败，请重试。",
       "wrongCode": "验证码错误或已过期。"
     }
+  },
+  "version": {
+    "build": "构建 {{number}}",
+    "backendBuild": "后端 {{number}}"
   }
 }
