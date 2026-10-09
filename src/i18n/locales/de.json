@@ -307,7 +307,6 @@
       "waitingDownloads": "Wartende Downloads",
       "activeDownloads": "Aktive Downloads",
       "activeDownloadsRate": "Aktive Downloads · {{rate}}",
-      "cacheLoadingQueue": "Cache-Ladewarteschlange",
       "showSearchCache": "Such-Cache anzeigen",
       "showImageCache": "Bild-Cache anzeigen",
       "resetDeck": "Deck zurücksetzen",
@@ -552,6 +551,10 @@
       "label": "Gemeinsamer Such-Cache",
       "tooltip": "Suchergebnisse nutzen, die andere bereits gefunden haben (gemeinsamer Server-Cache). Abwählen, um immer selbst in den Quellen zu suchen.",
       "disabled": "Der gemeinsame Such-Cache ist auf diesem Server abgeschaltet"
+    },
+    "append": {
+      "label": "Anhängen",
+      "tooltip": "Analysierte Karten zur aktuellen Auswahl hinzufügen statt sie zu ersetzen."
     },
     "import": {
       "title": "Deck importieren",

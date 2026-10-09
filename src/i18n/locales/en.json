@@ -307,7 +307,6 @@
       "waitingDownloads": "Waiting downloads",
       "activeDownloads": "Active downloads",
       "activeDownloadsRate": "Active downloads · {{rate}}",
-      "cacheLoadingQueue": "Cache loading queue",
       "showSearchCache": "Show search cache",
       "showImageCache": "Show image cache",
       "resetDeck": "Reset deck",
@@ -552,6 +551,10 @@
       "label": "Shared Search Cache",
       "tooltip": "Use search results other users already found (shared server cache). Uncheck to always search the sources yourself.",
       "disabled": "The shared search cache is turned off on this server"
+    },
+    "append": {
+      "label": "Append",
+      "tooltip": "Add the analyzed cards to the current selection instead of replacing it."
     },
     "import": {
       "title": "Import Deck",

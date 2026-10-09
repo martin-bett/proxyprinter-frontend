@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
@@ -32,7 +31,7 @@ const FADE_MS = 500;
 // ganz rechts der Papierkorb zum Zurücksetzen des Decks (mit Rückfrage)
 export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButtonsProps) {
   const { t } = useTranslation();
-  const { queued, active, cacheLoading } = useImageLoaderNumbers();
+  const { queued, active } = useImageLoaderNumbers();
   const [searchCount, setSearchCount] = useState(0);
   const [queueDialogOpen, setQueueDialogOpen] = useState(false);
   const [searchCacheDialogOpen, setSearchCacheDialogOpen] = useState(false);
@@ -77,10 +76,6 @@ export default function MemoryButtons({ onResetDeck, resetDisabled }: MemoryButt
             </button>
           </>
         )}
-        <button className="memory-button" title={t('cache.buttons.cacheLoadingQueue')} onClick={openQueueDialog}>
-          <UploadIcon />
-          <span className="memory-button-count">{cacheLoading}</span>
-        </button>
         <button className="memory-button" data-tour="search-cache" title={t('cache.buttons.showSearchCache')} onClick={() => setSearchCacheDialogOpen(true)}>
           <SearchIcon />
           <span className="memory-button-count">{searchCount}</span>

@@ -307,7 +307,6 @@
       "waitingDownloads": "Descargas en espera",
       "activeDownloads": "Descargas activas",
       "activeDownloadsRate": "Descargas activas · {{rate}}",
-      "cacheLoadingQueue": "Cola de carga de caché",
       "showSearchCache": "Mostrar caché de búsqueda",
       "showImageCache": "Mostrar caché de imágenes",
       "resetDeck": "Reiniciar mazo",
@@ -552,6 +551,10 @@
       "label": "Caché de búsqueda compartida",
       "tooltip": "Usar resultados de búsqueda que otros usuarios ya encontraron (caché compartida del servidor). Desmarcar para buscar siempre directamente en los orígenes.",
       "disabled": "La caché de búsqueda compartida está desactivada en este servidor"
+    },
+    "append": {
+      "label": "Añadir",
+      "tooltip": "Añadir las cartas analizadas a la selección actual en lugar de reemplazarla."
     },
     "import": {
       "title": "Importar mazo",

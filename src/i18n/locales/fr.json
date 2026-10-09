@@ -307,7 +307,6 @@
       "waitingDownloads": "Téléchargements en attente",
       "activeDownloads": "Téléchargements actifs",
       "activeDownloadsRate": "Téléchargements actifs · {{rate}}",
-      "cacheLoadingQueue": "File de chargement du cache",
       "showSearchCache": "Afficher le cache de recherche",
       "showImageCache": "Afficher le cache d'images",
       "resetDeck": "Réinitialiser le deck",
@@ -552,6 +551,10 @@
       "label": "Cache de recherche partagé",
       "tooltip": "Utiliser les résultats déjà trouvés par d'autres utilisateurs (cache serveur partagé). Décocher pour toujours interroger soi-même les sources.",
       "disabled": "Le cache de recherche partagé est désactivé sur ce serveur"
+    },
+    "append": {
+      "label": "Ajouter",
+      "tooltip": "Ajouter les cartes analysées à la sélection actuelle au lieu de la remplacer."
     },
     "import": {
       "title": "Importer un deck",

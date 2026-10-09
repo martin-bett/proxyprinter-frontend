@@ -307,7 +307,6 @@
       "waitingDownloads": "Download in attesa",
       "activeDownloads": "Download attivi",
       "activeDownloadsRate": "Download attivi · {{rate}}",
-      "cacheLoadingQueue": "Coda di caricamento cache",
       "showSearchCache": "Mostra cache ricerche",
       "showImageCache": "Mostra cache immagini",
       "resetDeck": "Reimposta mazzo",
@@ -552,6 +551,10 @@
       "label": "Cache di ricerca condivisa",
       "tooltip": "Usa i risultati già trovati da altri utenti (cache condivisa del server). Deselezionare per cercare sempre direttamente nelle fonti.",
       "disabled": "La cache di ricerca condivisa è disattivata su questo server"
+    },
+    "append": {
+      "label": "Aggiungi",
+      "tooltip": "Aggiungere le carte analizzate alla selezione attuale invece di sostituirla."
     },
     "import": {
       "title": "Importa mazzo",

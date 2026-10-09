@@ -304,7 +304,6 @@
       "waitingDownloads": "待機中のダウンロード",
       "activeDownloads": "実行中のダウンロード",
       "activeDownloadsRate": "実行中のダウンロード · {{rate}}",
-      "cacheLoadingQueue": "キャッシュ読み込みキュー",
       "showSearchCache": "検索キャッシュを表示",
       "showImageCache": "画像キャッシュを表示",
       "resetDeck": "デッキをリセット",
@@ -541,6 +540,10 @@
       "label": "共有検索キャッシュ",
       "tooltip": "他のユーザーが見つけた検索結果（共有サーバーキャッシュ）を使用します。チェックを外すと、常にソースを自分で検索します。",
       "disabled": "このサーバーでは共有検索キャッシュが無効です"
+    },
+    "append": {
+      "label": "追加",
+      "tooltip": "分析したカードを現在の選択に置き換えずに追加します。"
     },
     "import": {
       "title": "デッキをインポート",

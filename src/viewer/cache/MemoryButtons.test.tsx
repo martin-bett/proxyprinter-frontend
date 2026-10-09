@@ -31,7 +31,7 @@ describe('MemoryButtons Download-Bubbles', () => {
 
     expect(screen.queryByTitle('Waiting downloads')).toBeNull();
     expect(screen.queryByTitle('Active downloads')).toBeNull();
-    expect(screen.getByTitle('Cache loading queue')).toBeTruthy();
+    expect(screen.getByTitle('Show search cache')).toBeTruthy();
   });
 
   it('zeigt die Bubbles, sobald etwas wartet oder lädt', () => {

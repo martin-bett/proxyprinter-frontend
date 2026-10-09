@@ -304,7 +304,6 @@
       "waitingDownloads": "等待中的下载",
       "activeDownloads": "进行中的下载",
       "activeDownloadsRate": "进行中的下载 · {{rate}}",
-      "cacheLoadingQueue": "缓存加载队列",
       "showSearchCache": "显示搜索缓存",
       "showImageCache": "显示图片缓存",
       "resetDeck": "重置牌组",
@@ -541,6 +540,10 @@
       "label": "共享搜索缓存",
       "tooltip": "使用其他用户已找到的搜索结果（共享服务器缓存）。取消勾选则始终自行搜索来源。",
       "disabled": "此服务器已关闭共享搜索缓存"
+    },
+    "append": {
+      "label": "追加",
+      "tooltip": "将分析的卡牌添加到当前选择中，而不是替换它。"
     },
     "import": {
       "title": "导入牌组",

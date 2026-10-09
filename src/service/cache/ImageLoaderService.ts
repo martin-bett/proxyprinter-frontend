@@ -5,6 +5,7 @@ import { throttledFetch } from "../RequestThrottle";
 
 const DB_NAME = "mtg_cache_db";
 const STORE_NAME = "images";
+const CACHE_LIMIT_KEY = "cacheLimitBytes";
 
 /** Loosely-typed card reference used only to build cache keys and for display/filtering. */
 export interface CacheCardInput {
@@ -248,7 +249,7 @@ class ImageLoaderService {
   private maxConcurrent: number;
   private subscribers: Set<() => void> = new Set();
   private _lastSnapshot: CacheSnapshot | null = null;
-  cacheLimit = 1024 * 1024 * 1024; // 1 GB
+  cacheLimit = 4 * 1024 * 1024 * 1024; // 4 GB
   /** Erfüllt, sobald der persistente Cache beim Start geprüft wurde (Tests warten darauf). */
   readonly ready: Promise<void>;
 
@@ -258,12 +259,25 @@ class ImageLoaderService {
   }
 
   private async _initPersistentCache(): Promise<void> {
+    try {
+      const saved = localStorage.getItem(CACHE_LIMIT_KEY);
+      if (saved) {
+        this.cacheLimit = Number(saved);
+      }
+    } catch {
+      // localStorage not available
+    }
     await this._enforceCacheLimit();
     this.notifySubscribers();
   }
 
   setCacheLimit(newLimit: number): void {
     this.cacheLimit = newLimit;
+    try {
+      localStorage.setItem(CACHE_LIMIT_KEY, String(newLimit));
+    } catch {
+      // localStorage not available
+    }
     this._enforceCacheLimit();
     this.notifySubscribers();
   }
