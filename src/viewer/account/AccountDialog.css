@@ -1,0 +1,45 @@
+.account-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.account-dialog p {
+  margin: 0 0 12px;
+  color: var(--text);
+}
+
+.account-dialog .account-help {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.account-dialog .account-error {
+  color: var(--danger);
+}
+
+.account-dialog a {
+  color: var(--accent-strong, var(--text));
+  text-decoration: underline;
+}
+
+.account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.account-actions .action-button {
+  margin: 0;
+}
+
+.account-actions .is-danger .input-tile-lead {
+  color: var(--danger);
+}
+
+.account-letter {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
