@@ -678,6 +678,8 @@ const DeckInputAndViewer: React.FC = () => {
     setVisibleLanguages(newVisibleLanguages);
     setCardResults(mergedResults);
     setIsLoading(false);
+    // Suche fertig: der Search Log geht wieder zu (über den Button jederzeit erneut zu öffnen)
+    setSearchLogOpen(false);
 
     // Früher manuell gewählte Bilder (aus dem Such-Cache) gelten wieder als manuelle Wahl,
     // der Rest kommt aus der Filter-Priorität
@@ -1367,6 +1369,8 @@ const DeckInputAndViewer: React.FC = () => {
       }
     };
     setIsLoading(false);
+    // Suche fertig: der Search Log geht wieder zu (über den Button jederzeit erneut zu öffnen)
+    setSearchLogOpen(false);
     // Andere Seiten mehrseitiger Karten werden eigene Einträge, sofern sie nicht schon in der Liste stehen
     return splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name && name !== replaceTarget));
   };
