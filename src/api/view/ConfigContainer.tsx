@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import TranslateIcon from '@mui/icons-material/Translate';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PublicIcon from '@mui/icons-material/Public';
@@ -17,6 +18,7 @@ interface ConfigContainerProps {
 }
 
 const ConfigContainer: React.FC<ConfigContainerProps> = ({ configs, clickedConfig, selectedConfigs, handleItemClick, handleExecute }) => {
+    const { t } = useTranslation();
     const handleWebsiteClick = (url: string, event: React.MouseEvent) => {
         event.stopPropagation();
         window.open(url, "_blank");
@@ -34,13 +36,13 @@ const ConfigContainer: React.FC<ConfigContainerProps> = ({ configs, clickedConfi
                       (() => {
                         switch (config.category.toLowerCase()) {
                           case 'mtg':
-                            return <img src='/icons/mtg.png' alt="MTG Icon" className="categoryIcon" />;
+                            return <img src='/icons/mtg.png' alt={t('configCommon.categoryIcons.mtg')} className="categoryIcon" />;
                           case 'poke':
-                            return <img src='/icons/poke.png' alt="Pokemon Icon" className="categoryIcon" />;
+                            return <img src='/icons/poke.png' alt={t('configCommon.categoryIcons.poke')} className="categoryIcon" />;
                           case 'yugioh':
-                            return <img src='/icons/yugi.webp' alt="Yugi Icon" className="categoryIcon" />;
+                            return <img src='/icons/yugi.webp' alt={t('configCommon.categoryIcons.yugi')} className="categoryIcon" />;
                           case 'misc':
-                            return <img src='/icons/misc.webp' alt="Misc Icon" className="categoryIcon" />;
+                            return <img src='/icons/misc.webp' alt={t('configCommon.categoryIcons.misc')} className="categoryIcon" />;
                           default:
                             return null;
                         }

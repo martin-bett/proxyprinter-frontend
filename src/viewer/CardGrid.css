@@ -250,6 +250,23 @@
   margin: 5px 25px 5px 25px;
 }
 
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.settings-row > .settings-category {
+  margin: 5px 12px;
+}
+
+.pdf-page-preview canvas {
+  display: block;
+  border: 1px solid var(--disabled-overlay, #ccc);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 .settings-category.settings-email {
   display: block;
   max-width: 420px;
@@ -516,6 +533,30 @@
   margin-bottom: 12px;
 }
 
+/* Append hängt als kurzer Tab direkt oben rechts am Analyze-Button */
+.decklist-input-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.decklist-append-checkbox {
+  width: 55%;
+}
+
+.decklist-append-checkbox .input-tile {
+  min-height: 1.75rem;
+  margin: 0;
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.decklist-input-buttons > .action-button {
+  border-top-right-radius: 0;
+}
+
 /* Checkbox „Tokens & Extras“ über Analyze; ausgegraut, wenn keine aktive API verbundene Karten liefert */
 .connected-cards-toggle {
   margin-bottom: 8px;
@@ -539,4 +580,42 @@
 /* API Selection ist einklappbar: Abstand kommt vom Abschnitt, nicht zusätzlich von der Gruppe */
 .api-toggles.checkbox-group {
   margin-bottom: 0;
+}
+
+/* Eintrag ohne einen einzigen Fund: Platz einer Karte mit Knopf zum Austauschen */
+.no-image.no-results {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em;
+  border: 1px dashed var(--card-border);
+  border-radius: var(--card-radius);
+  font-size: 0.8em;
+}
+.no-image.no-results .action-button {
+  margin: 0;
+  min-height: 2.25em;
+  font-size: 1.1em;
+}
+.no-image.no-results .action-button .input-tile-lead {
+  flex-basis: 2.25em;
+}
+.no-image.no-results .action-button .input-tile-lead svg {
+  width: 1.25em;
+  height: 1.25em;
+}
+.no-image.no-results .action-button .input-tile-title {
+  padding: 0.25em 0.6em;
+}
+
+/* Add Single: Suchergebnis vor dem Hinzufügen bestätigen */
+.add-single-found {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }

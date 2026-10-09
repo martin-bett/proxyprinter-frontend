@@ -1,10 +1,11 @@
+import i18n from '../../i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Wie lange ein Feld gedrückt gehalten werden muss, bis der lange Klick auslöst. */
 export const LONG_PRESS_MS = 2000;
 
 /** Tooltip für Filter, die per langem Klick nur einen Eintrag auswählen. */
-export const ONLY_THIS_HINT = 'Hold for 2 seconds to show only this one';
+export const onlyThisHint = () => i18n.t('container.onlyThisHint');
 
 /**
  * Langer Klick (Maus und Touch) auf einem Element. Nach dem Auslösen wird der folgende

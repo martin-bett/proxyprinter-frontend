@@ -1,15 +1,29 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ImageSelectDialog from './ImageSelectDialog';
 import { CardResult } from '../../api/types/types';
 
 jest.mock('./CardImage', () => ({
   __esModule: true,
-  default: ({ cardInput }: { cardInput: CardResult }) => <div data-testid="card">{cardInput.name}</div>,
+  // Kachel meldet "lade..." als laufenden Download, alles andere als fertig
+  default: ({ cardInput, onTileState }: { cardInput: CardResult; onTileState?: (s: string) => void }) => {
+    const { useEffect } = require('react');
+    useEffect(() => {
+      onTileState?.(cardInput.name.startsWith('lade') ? 'loading' : 'done');
+      return () => onTileState?.(null as unknown as string);
+    }, [cardInput.name]);
+    return <div data-testid="card">{cardInput.name}</div>;
+  },
 }));
 jest.mock('../../container/CropImageOverlay', () => ({ __esModule: true, default: () => null }));
 jest.mock('../../service/cache/ImageLoaderService', () => ({
-  imageLoaderService: { stopByCategory: jest.fn() },
+  imageLoaderService: {
+    stopByCategory: jest.fn(),
+    // Keine jest.fn: CRA setzt Mocks vor jedem Test zurück
+    getCacheStatsForCardName: () => Promise.resolve({ count: 0, bytes: 0 }),
+    getDownloadRate: () => 1.5 * 1024 * 1024,
+    clearCacheForCardName: jest.fn(),
+  },
 }));
 
 const card = (name: string, rating?: 'good' | 'ok' | 'poor' | 'unknown', languageCode?: string, apiName = 'scryfall') =>
@@ -38,11 +52,11 @@ it('blendet Bilder nach Druckschärfe aus', () => {
   );
   expect(shown()).toEqual(['scharf', 'weich', 'matsch', 'neu']);
 
-  fireEvent.click(screen.getByLabelText(/^Schlecht lesbar/));
+  fireEvent.click(screen.getByLabelText(/^Hard to read/));
   expect(shown()).toEqual(['scharf', 'weich', 'neu']);
 
-  fireEvent.click(screen.getByLabelText(/^Etwas weich/));
-  fireEvent.click(screen.getByLabelText(/^Nicht bewertet/));
+  fireEvent.click(screen.getByLabelText(/^Slightly soft/));
+  fireEvent.click(screen.getByLabelText(/^Not rated/));
   expect(shown()).toEqual(['scharf']);
 });
 
@@ -78,4 +92,81 @@ it('zeigt an jedem Filterwert, wie viele Bilder dahinter stecken', () => {
   expect(countOf('select-quality-good')).toBe('1');
   // Die eigene Gruppe nicht: mpc zeigt weiter, was beim Einschalten dazukäme
   expect(countOf('select-api-mpc')).toBe('2');
+});
+
+it('zählt Downloads und fertige Kacheln in der Zeile oben', async () => {
+  render(
+    <ImageSelectDialog
+      open={true}
+      onClose={() => {}}
+      groupedResults={{ scryfall: [card('lade1'), card('lade2'), card('fertig'), card('fertig2')] }}
+      initialSelectedImage={null}
+      onImageLoadError={() => {}}
+      initialVisibleLanguages={new Set(['No Language'])}
+      initialVisibleApis={new Set(['scryfall'])}
+    />
+  );
+  await waitFor(() => expect(screen.getByTitle('Loaded').textContent).toContain('2'));
+  expect(screen.getByTitle('Downloading').textContent).toContain('2');
+  expect(screen.getByTitle('Queued').textContent).toContain('0');
+  // Die gebündelte Download-Rate steht immer neben dem Zähler
+  await waitFor(() => expect(screen.getByTitle('Downloading').textContent).toContain('(1.5 MB/s)'));
+});
+
+describe('Blättern zur nächsten/vorherigen Karte im Deck', () => {
+  const renderWithNav = (position: number, onStep = jest.fn()) => {
+    render(
+      <ImageSelectDialog
+        open={true}
+        onClose={() => {}}
+        groupedResults={{ scryfall: [card('a', 'good', 'en'), card('b', 'good', 'en')] }}
+        initialSelectedImage={null}
+        onImageLoadError={() => {}}
+        initialVisibleLanguages={new Set(['en'])}
+        initialVisibleApis={new Set(['scryfall'])}
+        deckNav={{ key: `k${position}`, cardName: 'Test', position, total: 3, onStep }}
+      />
+    );
+    return onStep;
+  };
+
+  it('Pfeiltasten blättern ohne Auswahl mit null', () => {
+    const onStep = renderWithNav(2);
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(onStep).toHaveBeenLastCalledWith(1, null);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(onStep).toHaveBeenLastCalledWith(-1, null);
+  });
+
+  it('gibt ein im Dialog angeklicktes Bild beim Blättern mit', () => {
+    const onStep = renderWithNav(2);
+    fireEvent.click(screen.getByText('b'));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(onStep).toHaveBeenLastCalledWith(1, expect.objectContaining({ name: 'b' }));
+  });
+
+  it('blättert nicht über das Deckende hinaus', () => {
+    const onStep = renderWithNav(1);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(onStep).not.toHaveBeenCalled();
+    expect((screen.getByLabelText('Previous card') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByLabelText('Next card') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('die Pfeil-Buttons blättern', () => {
+    const onStep = renderWithNav(2);
+    fireEvent.click(screen.getByLabelText('Next card'));
+    expect(onStep).toHaveBeenLastCalledWith(1, null);
+    fireEvent.click(screen.getByLabelText('Previous card'));
+    expect(onStep).toHaveBeenLastCalledWith(-1, null);
+  });
+
+  it('Pfeiltasten in Eingabefeldern blättern nicht', () => {
+    const onStep = renderWithNav(2);
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'ArrowRight' });
+    expect(onStep).not.toHaveBeenCalled();
+    input.remove();
+  });
 });

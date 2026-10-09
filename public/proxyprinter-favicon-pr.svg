@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Favicon der PR-Umgebungen <slug>.test.proxyprinter.eu: lila Karten, lila Badge PR -->
+  <g transform="translate(3.5 0.5) scale(0.9)">
+  <g transform="rotate(-10 20 28)">
+    <rect x="3" y="5" width="32" height="45" rx="4" fill="#2b2b2b" stroke="#c77dff" stroke-width="2.5"/>
+    <text x="15" y="33" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="bold" fill="#c77dff" text-anchor="middle">P</text>
+  </g>
+  <g transform="rotate(10 40 37)">
+    <rect x="24" y="14" width="32" height="45" rx="4" fill="#1e1e1e" stroke="#c77dff" stroke-width="2.5"/>
+    <text x="40" y="46" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="bold" fill="#c77dff" text-anchor="middle">P</text>
+  </g>
+  </g>
+  <circle cx="47" cy="17" r="16" fill="#8e24aa" stroke="#ffffff" stroke-width="3"/>
+  <text x="47" y="24" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="bold" fill="#ffffff" text-anchor="middle">PR</text>
+</svg>

@@ -1,6 +1,8 @@
 // Hilfen für JSON-Antworten im API-Wizard: Pfade wie ApiFactory sie liest
 // ("data", "image_uris.png"), Listen finden und Felder vorschlagen.
 
+import i18n from '../../../../i18n';
+
 export type FieldRole = 'dataListField' | 'nameField' | 'imageUrlField' | 'languageField' | 'setField' | 'setNumberField';
 
 export type FieldAssignment = Partial<Record<FieldRole, string>>;
@@ -175,13 +177,13 @@ export function pathForRole(
       const sub = clicked.slice(0, i);
       if (Array.isArray(getAt(root, sub))) return { path: pathToString(sub) };
     }
-    return { error: 'Click on a list (an array of entries).' };
+    return { error: i18n.t('wizard.pick.clickList') };
   }
-  if (listPath === undefined) return { error: 'Choose the result list first.' };
+  if (listPath === undefined) return { error: i18n.t('wizard.pick.chooseListFirst') };
   const prefix = listPath ? listPath.split('.') : [];
   const head = clicked.slice(0, prefix.length).map(String);
   if (head.join('.') !== prefix.join('.') || clicked.length < prefix.length + 2 || typeof clicked[prefix.length] !== 'number') {
-    return { error: 'Click on a value inside one entry of the result list.' };
+    return { error: i18n.t('wizard.pick.clickInsideEntry') };
   }
   return { path: pathToString(clicked.slice(prefix.length + 1)) };
 }

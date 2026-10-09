@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { fetchImageViaProxy, imageLoaderService } from "../../service/cache/ImageLoaderService";
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
+import { fetchImageViaProxy, imageLoaderService, ImageLoadMeta } from "../../service/cache/ImageLoaderService";
 import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { ImageInfo } from "../../service/ApiFactory";
@@ -7,11 +9,14 @@ import { CardResult } from "../../api/types/types";
 import { ImageQuality, qualityCacheKey, queueImageQuality } from "../../service/quality/ImageQuality";
 import LanguageFlag from "../../container/LanguageFlag";
 
-const RATING_LABEL: Record<ImageQuality["rating"], string> = {
-  good: "gut lesbar",
-  ok: "lesbar, etwas weich",
-  poor: "Text vermutlich schlecht lesbar",
-  unknown: "kein Text erkannt",
+const RATING_LABEL_KEY: Record<
+  ImageQuality["rating"],
+  "quality.rating.good" | "quality.rating.ok" | "quality.rating.poor" | "quality.rating.unknown"
+> = {
+  good: "quality.rating.good",
+  ok: "quality.rating.ok",
+  poor: "quality.rating.poor",
+  unknown: "quality.rating.unknown",
 };
 
 // Kartenformat 63 x 88 mm, damit lässt sich die Höhe aus der Breite ableiten
@@ -19,6 +24,9 @@ const CARD_ASPECT = 63 / 88;
 // Laden beginnt eine Kartenhöhe vor dem sichtbaren Bereich, entladen erst ab zwei Kartenhöhen
 const LOAD_MARGIN_CARDS = 1;
 const UNLOAD_MARGIN_CARDS = 2;
+
+// Kacheln brauchen keine Originalauflösung: Canvas höchstens so breit (Pixel)
+const MAX_TILE_CANVAS_WIDTH = 640;
 
 export const QUEUE_CATEGORY_SELECT = 'selectgrid';
 const QUEUE_CATEGORY_DECK = 'deckgrid';
@@ -39,10 +47,15 @@ export interface CardImageError extends CardResult {
   error: string;
 }
 
+/** Zustand einer Kachel für Zähler (z. B. im Bildauswahl-Dialog); null = nichts zu zählen */
+export type TileState = 'queued' | 'loading' | 'done' | 'error' | null;
+
 interface CardImageProps {
   cardInput: CardResult;
   onLoad?: (imageInfo: ImageInfo) => void;
   onError?: (error: CardImageError) => void;
+  /** Meldet den Zustand der Kachel, bei Unmount null */
+  onTileState?: (state: TileState) => void;
   showImageSettings?: boolean;
   onlyDimensions?: boolean;
   priority?: number;
@@ -53,11 +66,13 @@ const CardImage: React.FC<CardImageProps> = ({
   cardInput,
   onLoad,
   onError,
+  onTileState,
   showImageSettings,
   onlyDimensions = false,
   priority = 1,
   isPermanent = false,
 }) => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(isPermanent);
   const containerRef = useRef<HTMLDivElement>(null);
   const [card, setCard] = useState<CardResult | null>(null);
@@ -67,12 +82,28 @@ const CardImage: React.FC<CardImageProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState("");
   const imageRef = useRef<HTMLImageElement | null>(null); // Referenz zum geladenen Bild
+  // Originalmaße; weichen von imageRef ab, wenn dort nur die verkleinerte Kopie liegt
+  const fullSizeRef = useRef<{ width: number; height: number } | null>(null);
+  const isThumbRef = useRef(false);
   const [proxyTried, setProxyTried] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [quality, setQuality] = useState<ImageQuality | null>(null);
   const qualityRun = useRef(0);
   const loadRun = useRef(0);
   const [placeholderHeight, setPlaceholderHeight] = useState<number | undefined>(undefined);
+
+  // Zustand für die Zähler melden; beim Entladen oder Verschwinden der Kachel austragen
+  useEffect(() => {
+    const state: TileState = lastError ? 'error'
+      : !isLoading ? 'done'
+      : status === 'LOADING' ? 'loading'
+      : status.startsWith('QUEUED') ? 'queued'
+      : null;
+    onTileState?.(state);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isLoading, lastError]);
+
+  useEffect(() => () => onTileState?.(null), []);
 
   useEffect(() => {
     if (isPermanent) {
@@ -176,11 +207,10 @@ const CardImage: React.FC<CardImageProps> = ({
           cardInput: card,
           category: isPermanent ? QUEUE_CATEGORY_DECK : QUEUE_CATEGORY_SELECT,
           signal: abort.signal,
-          onLoad: (img) => {
+          preferThumbnail: true,
+          onLoad: (img, _size, meta) => {
             if (stale()) return;
-            imageRef.current = img;
-            handleLoad(img);
-            renderCanvas(img);
+            applyImage(img, meta);
           },
           onError: (error) => {
             if (stale()) return;
@@ -195,13 +225,11 @@ const CardImage: React.FC<CardImageProps> = ({
                   const img = new window.Image();
                   img.onload = () => {
                     if (stale()) return;
-                    imageRef.current = img;
-                    handleLoad(img);
-                    renderCanvas(img);
+                    applyImage(img);
                   };
                   img.onerror = () => {
                     if (stale()) return;
-                    const proxyError = "Proxy-Image-Load-Fehler";
+                    const proxyError = i18n.t('grid.proxyImageLoadError');
                     setIsLoading(false);
                     const combined = [prevError, proxyError].filter(Boolean).join(" | ");
                     setLastError(combined);
@@ -251,8 +279,17 @@ const CardImage: React.FC<CardImageProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardInput.cropSettings]);
 
+  const applyImage = (img: HTMLImageElement, meta?: ImageLoadMeta) => {
+    imageRef.current = img;
+    isThumbRef.current = !!meta?.thumbnail;
+    fullSizeRef.current = meta ? { width: meta.fullWidth, height: meta.fullHeight } : { width: img.naturalWidth, height: img.naturalHeight };
+    handleLoad(img);
+    renderCanvas(img);
+  };
+
   const handleLoad = (img: HTMLImageElement) => {
-    const { naturalWidth, naturalHeight } = img;
+    const naturalWidth = fullSizeRef.current?.width ?? img.naturalWidth;
+    const naturalHeight = fullSizeRef.current?.height ?? img.naturalHeight;
 
     const fileType = extractFileType(card?.imageUrl || '');
 
@@ -282,13 +319,16 @@ const CardImage: React.FC<CardImageProps> = ({
     const key = qualityCacheKey(crop);
     imageLoaderService.getCachedQuality(cacheInput, key).then(async (cached) => {
       if (run !== qualityRun.current) return;
-      const result = cached || (await queueImageQuality(img, crop));
+      // Hält die Kachel nur die kleine Kopie, braucht eine neue Messung das Original
+      const source = cached || !isThumbRef.current ? img : await imageLoaderService.loadFullFromCache(cacheInput);
+      if (run !== qualityRun.current) return;
+      const result = cached || (source ? await queueImageQuality(source, crop) : null);
       if (run !== qualityRun.current || !result) return;
       if (!cached) imageLoaderService.saveQuality(cacheInput, key, result);
       setQuality(result);
       const info: ImageInfo = {
-        width: img.naturalWidth,
-        height: img.naturalHeight,
+        width: fullSizeRef.current?.width ?? img.naturalWidth,
+        height: fullSizeRef.current?.height ?? img.naturalHeight,
         fileType: extractFileType(card?.imageUrl || cardInput.imageUrl || ''),
         quality: result,
       };
@@ -320,8 +360,12 @@ const CardImage: React.FC<CardImageProps> = ({
     const { offSetX = 0, offSetY = 0, width = 0, height = 0, isStretch = true } =
       card?.cropSettings || {};
 
-    const cropWidth = width > 0 ? width : img.naturalWidth;
-    const cropHeight = height > 0 ? height : img.naturalHeight;
+    // Crop-Werte gelten für das Original; liegt nur die kleine Kopie vor, umrechnen
+    const scale = fullSizeRef.current ? img.naturalWidth / fullSizeRef.current.width : 1;
+    const cropX = offSetX * scale;
+    const cropY = offSetY * scale;
+    const cropWidth = width > 0 ? width * scale : img.naturalWidth;
+    const cropHeight = height > 0 ? height * scale : img.naturalHeight;
 
     let targetWidth = cropWidth;
     let targetHeight = cropHeight;
@@ -337,15 +381,17 @@ const CardImage: React.FC<CardImageProps> = ({
       }
     }
 
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
+    // Nie größer als nötig zeichnen
+    const shrink = Math.min(1, MAX_TILE_CANVAS_WIDTH / targetWidth);
+    canvas.width = Math.max(1, Math.round(targetWidth * shrink));
+    canvas.height = Math.max(1, Math.round(targetHeight * shrink));
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.drawImage(
       img,
-      offSetX,
-      offSetY,
+      cropX,
+      cropY,
       cropWidth,
       cropHeight,
       0,
@@ -378,7 +424,7 @@ const CardImage: React.FC<CardImageProps> = ({
             {quality && (
               <span
                 className={`quality-dot quality-${quality.rating}`}
-                title={`Druckschärfe: ${RATING_LABEL[quality.rating]} (Schärfe ${quality.sharpness.toFixed(2)}, ${quality.effectiveDpi} DPI)`}
+                title={t('grid.printSharpness', { rating: t(RATING_LABEL_KEY[quality.rating]), sharpness: quality.sharpness.toFixed(2), dpi: quality.effectiveDpi })}
               />
             )}
           </div>
@@ -391,12 +437,12 @@ const CardImage: React.FC<CardImageProps> = ({
               <div className="info-row">
                 {imageInfo.width && imageInfo.height
                   ? `w${imageInfo.width} h${imageInfo.height}`
-                  : "Unknown resolution"}{" "}
+                  : t('grid.unknownResolution')}{" "}
                 ({imageInfo.fileType})
               </div>
               {quality && (
                 <div className="info-row">
-                  Schärfe {quality.sharpness.toFixed(2)} · {quality.effectiveDpi} DPI · {RATING_LABEL[quality.rating]}
+                  {t('grid.sharpnessLine', { sharpness: quality.sharpness.toFixed(2), dpi: quality.effectiveDpi, rating: t(RATING_LABEL_KEY[quality.rating]) })}
                 </div>
               )}
               {!onlyDimensions && card && (
@@ -416,12 +462,12 @@ const CardImage: React.FC<CardImageProps> = ({
                   )}
                   <div className="info-row">{card.apiName}</div>
                   <div className="info-row">
-                    {card.languageCode || "NO LANGUAGE"}
+                    {card.languageCode || t('grid.noLanguage')}
                   </div>
                   <div className="info-row">
                     {card.set
                       ? `${card.set}(${card.setNumber || "??"})`
-                      : "NO SET INFO"}
+                      : t('grid.noSetInfo')}
                   </div>
                 </>
               )}

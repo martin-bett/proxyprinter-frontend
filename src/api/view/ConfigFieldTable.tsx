@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { ParseKeys } from 'i18next';
 import CollapsibleSection from '../../container/inputs/CollapsibleSection';
 import './ConfigFieldTable.css';
 
@@ -6,16 +8,18 @@ type InputChange = React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTML
 
 export interface ConfigField {
   name: string;
-  label: string;
-  // Gruppe als Zwischenzeile in der Tabelle (z. B. "Request", "Locator")
-  group: string;
+  // i18n-Key der Beschriftung (wird beim Rendern übersetzt)
+  label: ParseKeys;
+  // Gruppe als Zwischenzeile in der Tabelle (i18n-Key, z. B. "Request", "Locator")
+  group: ParseKeys;
   type?: 'text' | 'number' | 'checkbox' | 'select' | 'json';
-  options?: [string, string][];
-  title?: string;
+  // [Wert, i18n-Key der Anzeige]
+  options?: [string, ParseKeys][];
+  title?: ParseKeys;
   required?: boolean;
 }
 
-export const CATEGORY_OPTIONS: [string, string][] = [['MTG', 'MTG'], ['POKE', 'Poke'], ['YUGIOH', 'Yugi'], ['MISC', 'Misc']];
+export const CATEGORY_OPTIONS: [string, ParseKeys][] = [['MTG', 'configCommon.categories.mtg'], ['POKE', 'configCommon.categories.poke'], ['YUGIOH', 'configCommon.categories.yugi'], ['MISC', 'configCommon.categories.misc']];
 
 /** Ein Feld gilt als gesetzt, wenn es einen Wert hat: true, nicht leeres Objekt, nicht leerer Text. */
 export const isFieldSet = (value: unknown): boolean => {
@@ -37,19 +41,20 @@ interface ConfigFieldTableProps {
   onJsonChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-const displayValue = (field: ConfigField, value: unknown): string => {
+const displayValue = (field: ConfigField, value: unknown, t: (key: ParseKeys) => string): string => {
   if (field.type === 'json') return JSON.stringify(value ?? {}, null, 2);
-  if (field.type === 'select') return field.options?.find(([v]) => v === String(value ?? ''))?.[1] ?? String(value ?? '');
+  if (field.type === 'select') return (() => { const key = field.options?.find(([v]) => v === String(value ?? ''))?.[1]; return key ? t(key) : String(value ?? ''); })();
   return value === undefined || value === null ? '' : String(value);
 };
 
 const FieldInput: React.FC<{ field: ConfigField; value: unknown; editable: boolean; onChange: (e: InputChange) => void; onJsonChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void }> = ({ field, value, editable, onChange, onJsonChange }) => {
+  const { t } = useTranslation();
   if (field.type === 'checkbox') {
     return <input type="checkbox" name={field.name} checked={!!value} onChange={onChange} disabled={!editable} />;
   }
   if (!editable) {
     // Nur ansehen: Wert als Text statt ausgegrautem Eingabefeld
-    const text = displayValue(field, value);
+    const text = displayValue(field, value, t);
     return field.type === 'json'
       ? <pre className="config-value is-json">{text}</pre>
       : <span className="config-value">{text || '—'}</span>;
@@ -57,18 +62,18 @@ const FieldInput: React.FC<{ field: ConfigField; value: unknown; editable: boole
   if (field.type === 'select') {
     return (
       <select name={field.name} value={String(value ?? '')} onChange={onChange}>
-        {field.options?.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        {field.options?.map(([v, label]) => <option key={v} value={v}>{t(label)}</option>)}
       </select>
     );
   }
   if (field.type === 'json') {
-    return <textarea name={field.name} value={displayValue(field, value)} onChange={onJsonChange} />;
+    return <textarea name={field.name} value={displayValue(field, value, t)} onChange={onJsonChange} />;
   }
   return (
     <input
       type={field.type === 'number' ? 'number' : 'text'}
       name={field.name}
-      value={displayValue(field, value)}
+      value={displayValue(field, value, t)}
       onChange={onChange}
       required={field.required}
     />
@@ -76,19 +81,20 @@ const FieldInput: React.FC<{ field: ConfigField; value: unknown; editable: boole
 };
 
 const FieldRows: React.FC<Omit<ConfigFieldTableProps, 'savedValues'>> = ({ fields, values, editable, onChange, onJsonChange }) => {
+  const { t } = useTranslation();
   if (fields.length === 0) {
-    return <p className="config-table-empty">No properties.</p>;
+    return <p className="config-table-empty">{t('configCommon.noProperties')}</p>;
   }
   const rows: React.ReactNode[] = [];
-  let group = '';
+  let group: string = '';
   fields.forEach(field => {
     if (field.group !== group) {
       group = field.group;
-      rows.push(<tr key={`group-${group}`} className="config-table-group"><th colSpan={2}>{group}</th></tr>);
+      rows.push(<tr key={`group-${group}`} className="config-table-group"><th colSpan={2}>{t(field.group)}</th></tr>);
     }
     rows.push(
       <tr key={field.name}>
-        <th scope="row" title={field.title}>{field.label}</th>
+        <th scope="row" title={field.title ? t(field.title) : undefined}>{t(field.label)}</th>
         <td>
           <FieldInput field={field} value={values[field.name]} editable={editable} onChange={onChange} onJsonChange={onJsonChange} />
         </td>
@@ -100,6 +106,7 @@ const FieldRows: React.FC<Omit<ConfigFieldTableProps, 'savedValues'>> = ({ field
 
 /** Config-Felder in zwei Bereichen: gesetzte (aufgeklappt) und nicht gesetzte (zugeklappt). */
 const ConfigFieldTable: React.FC<ConfigFieldTableProps> = ({ fields, values, savedValues, ...rest }) => {
+  const { t } = useTranslation();
   const source = savedValues ?? values;
   const [setFields, unsetFields] = useMemo(() => {
     const set: ConfigField[] = [];
@@ -110,10 +117,10 @@ const ConfigFieldTable: React.FC<ConfigFieldTableProps> = ({ fields, values, sav
 
   return (
     <div className="config-field-table">
-      <CollapsibleSection title={<span className="config-section-title">SET properties<span className="config-count">{setFields.length}</span></span>} defaultOpen>
+      <CollapsibleSection title={<span className="config-section-title">{t('configCommon.setProperties')}<span className="config-count">{setFields.length}</span></span>} defaultOpen>
         <FieldRows fields={setFields} values={values} {...rest} />
       </CollapsibleSection>
-      <CollapsibleSection title={<span className="config-section-title">UNSET properties<span className="config-count">{unsetFields.length}</span></span>} defaultOpen={false}>
+      <CollapsibleSection title={<span className="config-section-title">{t('configCommon.unsetProperties')}<span className="config-count">{unsetFields.length}</span></span>} defaultOpen={false}>
         <FieldRows fields={unsetFields} values={values} {...rest} />
       </CollapsibleSection>
     </div>

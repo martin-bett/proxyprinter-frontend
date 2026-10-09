@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import React, { useEffect, useState } from 'react';
 import { Button, Divider, TextField } from '@mui/material';
 import { Box } from '@mui/material';
 import { CropSettings } from '../../service/ApiFactory';
+import { CardResultsMap } from '../../api/types/types';
 import CropMask from './crop/CropMask';
 import { loadViaProxy } from './crop/loadViaProxy';
 
@@ -21,20 +23,35 @@ interface AddCardDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: SaveCustomCardFn;
-  searchForApis: (cardName: string) => Promise<void>;
+  /** Sucht die Karte über die aktiven APIs; ins Deck kommt sie erst mit "Add to deck". */
+  searchCard: (cardName: string) => Promise<CardResultsMap>;
+  onAddSearched: (results: CardResultsMap) => void;
+  /** Gesetzt, wenn der Dialog einen Eintrag ohne Fund ersetzt: Name zum Vorbelegen und für den Titel. */
+  replaceName?: string;
   /** Seitenverhältnis einer Karte (Breite / Höhe) aus den PDF-Einstellungen. */
   cardAspect?: number;
   /** Meldet, ob gerade die Zuschnitt-Maske offen ist (dann braucht der Dialog mehr Breite). */
   onMaskOpenChange?: (open: boolean) => void;
 }
 
-const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchForApis, cardAspect = 63 / 88, onMaskOpenChange }) => {
+const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, searchCard, onAddSearched, replaceName, cardAspect = 63 / 88, onMaskOpenChange }) => {
+  const { t } = useTranslation();
   const [maskSource, setMaskSource] = useState<MaskSource | null>(null);
   const [cardName, setCardName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  // Ergebnis der letzten Namenssuche, wartet auf "Add to deck"
+  const [searched, setSearched] = useState<{ name: string; results: CardResultsMap } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Beim Öffnen: Name des zu ersetzenden Eintrags vorbelegen, altes Suchergebnis verwerfen
+  useEffect(() => {
+    if (!open) return;
+    setCardName(replaceName ?? '');
+    setSearched(null);
+  }, [open, replaceName]);
 
   // Object-URLs der Vorschau wieder freigeben
   useEffect(() => {
@@ -78,10 +95,10 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
       if (response.ok && data.success) {
         return data.generatedId;
       }
-      setUploadError(data.message || 'Ein Fehler ist beim Hochladen aufgetreten.');
+      setUploadError(data.message || t('addCard.uploadError'));
       return null;
     } catch (error) {
-      setUploadError('Ein Fehler ist beim Hochladen der Datei aufgetreten.');
+      setUploadError(t('addCard.uploadFileError'));
       console.error('Upload error:', error);
       return null;
     }
@@ -107,11 +124,24 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
   };
 
   const handleNameSearch = async () => {
-    if (!cardName) {
-      alert('Bitte geben Sie einen Namen ein');
-      return;
+    const name = cardName.trim();
+    if (!name) return;
+    setIsSearching(true);
+    try {
+      setSearched({ name, results: await searchCard(name) });
+    } finally {
+      setIsSearching(false);
     }
-    await searchForApis(cardName);
+  };
+
+  const foundArts = searched ? Object.values(searched.results).reduce((sum, group) => sum + group.results.length, 0) : 0;
+  // Ergebnis gilt nur für den gesuchten Namen; nach einer Änderung muss neu gesucht werden
+  const searchCurrent = searched !== null && searched.name === cardName.trim();
+
+  const handleAddSearched = () => {
+    if (!searched || foundArts === 0) return;
+    onAddSearched(searched.results);
+    setSearched(null);
     setCardName('');
   };
 
@@ -123,7 +153,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
     return (
       <>
         <header className="modal-card-head">
-          <p className="modal-card-title">Crop Image</p>
+          <p className="modal-card-title">{t('crop.title')}</p>
         </header>
         <section className="modal-card-body">
           <CropMask
@@ -144,7 +174,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
     <>
 
       <header className="modal-card-head">
-        <p className="modal-card-title">Add Custom Card</p>
+        <p className="modal-card-title">{replaceName !== undefined ? t('addCard.titleReplace', { name: replaceName }) : t('addCard.title')}</p>
       </header>
       <Box
         sx={{
@@ -157,37 +187,57 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
           <section className="modal-card-body">
             {/* Name Search Section */}
             <div className="box">
-              <h3 className="title is-5">Search Apis</h3>
+              <h3 className="title is-5">{t('addCard.searchApis')}</h3>
               <div className="field">
                 <TextField
                   fullWidth
-                  label="cardname"
+                  label={t('addCard.cardName')}
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNameSearch(); } }}
                   variant="outlined"
                   size="small"
                   className="mb-3"
                 />
               </div>
               <Button
-                variant="contained"
+                variant={searchCurrent ? 'outlined' : 'contained'}
                 color="primary"
                 onClick={handleNameSearch}
+                disabled={isSearching || !cardName.trim()}
                 fullWidth
               >
-                Search
+                {isSearching ? t('addCard.searching') : searched ? t('addCard.searchAgain') : t('common.search')}
               </Button>
+              {searched && (
+                <div className="add-single-found" role="status">
+                  <p className={foundArts === 0 ? 'has-text-danger' : undefined}>
+                    {foundArts === 0
+                      ? t('addCard.foundNone', { name: searched.name })
+                      : t('addCard.found', { count: foundArts, name: searched.name })}
+                  </p>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddSearched}
+                    disabled={foundArts === 0 || isSearching}
+                    fullWidth
+                  >
+                    {replaceName !== undefined ? t('addCard.replaceInDeck') : t('addCard.addToDeck')}
+                  </Button>
+                </div>
+              )}
             </div>
 
             <Divider className="my-4" />
 
             {/* External URL Section */}
             <div className="box">
-              <h3 className="title is-5">Insert ImageUrl</h3>
+              <h3 className="title is-5">{t('addCard.insertImageUrl')}</h3>
               <div className="field">
                 <TextField
                   fullWidth
-                  label="Image URL"
+                  label={t('addCard.imageUrl')}
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   variant="outlined"
@@ -202,7 +252,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                 disabled={!imageUrl.trim()}
                 fullWidth
               >
-                Next: crop
+                {t('addCard.nextCrop')}
               </Button>
             </div>
 
@@ -211,7 +261,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
 
             {/* File Upload Section */}
             <div className="box">
-              <h3 className="title is-5">upload file</h3>
+              <h3 className="title is-5">{t('addCard.uploadFile')}</h3>
               <div className="field">
                 <div className="file has-name is-fullwidth">
                   <label className="file-label">
@@ -222,10 +272,10 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                       accept="image/*"
                     />
                     <span className="file-cta">
-                      <span className="file-label">choose file...</span>
+                      <span className="file-label">{t('addCard.chooseFile')}</span>
                     </span>
                     <span className="file-name">
-                      {file ? file.name : 'no file chosen'}
+                      {file ? file.name : t('addCard.noFileChosen')}
                     </span>
                   </label>
                 </div>
@@ -237,7 +287,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
                 disabled={!file}
                 fullWidth
               >
-                Next: crop
+                {t('addCard.nextCrop')}
               </Button>
             </div>
 

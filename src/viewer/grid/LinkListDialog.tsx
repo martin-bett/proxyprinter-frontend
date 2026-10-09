@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ActionButton from '../../container/inputs/ActionButton';
@@ -23,6 +24,7 @@ interface LinkListDialogProps {
 }
 
 const LinkListDialog: React.FC<LinkListDialogProps> = ({ onSubmit }) => {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const links = parseLinkList(text);
 
@@ -35,12 +37,12 @@ const LinkListDialog: React.FC<LinkListDialogProps> = ({ onSubmit }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3 className="title is-5">Add Links</h3>
+      <h3 className="title is-5">{t('grid.linkList.title')}</h3>
       <TextField
         fullWidth
         multiline
         minRows={6}
-        label="Image URLs (separated by comma, semicolon or new line)"
+        label={t('grid.linkList.label')}
         value={text}
         onChange={(e) => setText(e.target.value)}
         variant="outlined"
@@ -48,7 +50,7 @@ const LinkListDialog: React.FC<LinkListDialogProps> = ({ onSubmit }) => {
         className="mb-3"
       />
       <ActionButton type="submit" className="is-primary" icon={<AddIcon />} disabled={links.length === 0}>
-        {links.length === 1 ? 'Add 1 image' : `Add ${links.length} images`}
+        {t('grid.linkList.add', { count: links.length })}
       </ActionButton>
     </form>
   );

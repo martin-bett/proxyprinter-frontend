@@ -5,16 +5,19 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import { LogEntry } from '../../api/types/types';
 import './SearchLog.css';
 
 // Pfeil hoch auf Boden = aus dem Cache geladen, Pfeil runter = aus dem Netz geholt
-const sourceIcon: Record<LogEntry['source'], { icon: React.ReactNode; title: string }> = {
-  cache: { icon: <UploadIcon fontSize="inherit" />, title: 'Aus dem Cache geladen' },
-  server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'Aus dem gemeinsamen Server-Cache geladen' },
-  network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'Aus dem Netz geladen' },
-  error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'Fehler' },
-};
+const sourceIcon = {
+  cache: { icon: <UploadIcon fontSize="inherit" />, title: 'log.source.cache' },
+  server: { icon: <CloudDownloadOutlinedIcon fontSize="inherit" />, title: 'log.source.server' },
+  network: { icon: <ArrowDownwardIcon fontSize="inherit" />, title: 'log.source.network' },
+  error: { icon: <ErrorOutlineIcon fontSize="inherit" />, title: 'log.source.error' },
+  running: { icon: <CircularProgress size="0.85em" color="inherit" />, title: 'log.source.running' },
+} as const satisfies Record<LogEntry['source'], { icon: React.ReactNode; title: string }>;
 
 // Kurz halten, die Spalte ist schmal: 85ms, 1.2s, 12s
 export function formatDuration(ms: number): string {
@@ -29,6 +32,7 @@ interface SearchLogProps {
 }
 
 export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
+  const { t } = useTranslation();
   return (
     <div className="log">
       <table className="search-log-table">
@@ -43,25 +47,28 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
         <thead>
           <tr>
             <th>API</th>
-            <th title="Quelle: Cache, Server-Cache oder Netz">Q</th>
-            <th className="search-log-cell-number" title="Treffer">#</th>
-            <th className="search-log-cell-number" title="Dauer"><TimerOutlinedIcon fontSize="inherit" /></th>
-            <th className="search-log-cell-number" title="Anzahl Requests"><SwapVertIcon fontSize="inherit" /></th>
-            <th>Name</th>
+            <th title={t('log.columns.source')}>Q</th>
+            <th className="search-log-cell-number" title={t('log.columns.matches')}>#</th>
+            <th className="search-log-cell-number" title={t('log.columns.duration')}><TimerOutlinedIcon fontSize="inherit" /></th>
+            <th className="search-log-cell-number" title={t('log.columns.requests')}><SwapVertIcon fontSize="inherit" /></th>
+            <th>{t('common.name')}</th>
           </tr>
         </thead>
         <tbody>
           {entries.map((entry, index) => {
-            const { icon, title } = sourceIcon[entry.source];
+            const { icon, title: titleKey } = sourceIcon[entry.source];
+            const title = t(titleKey);
             const raw = entry.source === 'error' ? entry.error : entry.rawResponse;
+            // Laufende Suche ohne fertige Seite: noch keine Werte
+            const pending = entry.source === 'running' && !entry.requestCount;
             return (
-              <tr key={index} className={`search-log-row search-log-${entry.source}`}>
+              <tr key={entry.id ?? `done-${index}`} className={`search-log-row search-log-${entry.source}`}>
                 <td className="search-log-cell-api" title={entry.configName}>{entry.configName}</td>
                 <td>
                   <button
                     type="button"
                     className="search-log-source-button"
-                    title={raw ? `${title}: Rohdaten anzeigen` : title}
+                    title={raw ? t('log.showRaw', { title }) : title}
                     aria-label={title}
                     disabled={!raw}
                     onClick={() => raw && onShowRaw(raw)}
@@ -69,9 +76,9 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
                     {icon}
                   </button>
                 </td>
-                <td className="search-log-cell-number">{entry.source === 'error' ? '–' : entry.count}</td>
-                <td className="search-log-cell-number">{formatDuration(entry.durationMs)}</td>
-                <td className="search-log-cell-number">{entry.requestCount ?? '–'}</td>
+                <td className="search-log-cell-number">{entry.source === 'error' || pending ? '–' : entry.count}</td>
+                <td className="search-log-cell-number">{pending ? '–' : formatDuration(entry.durationMs)}</td>
+                <td className="search-log-cell-number">{pending ? '–' : entry.requestCount ?? '–'}</td>
                 <td className="search-log-cell-name" title={entry.error ? `${entry.cardName}: ${entry.error}` : entry.cardName}>
                   {entry.cardName}
                 </td>

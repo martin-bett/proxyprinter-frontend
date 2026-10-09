@@ -7,13 +7,16 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTranslation } from 'react-i18next';
 import ActionButton from '../../container/inputs/ActionButton';
-import { Snapshot, snapshotLabel } from '../../service/snapshot/snapshot';
+import { Snapshot, snapshotCardsText, snapshotLabel } from '../../service/snapshot/snapshot';
 import { PdfInfo, pdfDownloadUrl, pdfFileName } from '../../service/snapshot/snapshotBackend';
 import './SnapshotSection.css';
 
 export interface SnapshotSectionProps {
   snapshots: Snapshot[];
+  /** Geladener bzw. gespeicherter Snapshot, der beim Weiterarbeiten überschrieben wird */
+  activeId: string | null;
   /** Letzte Sitzung, nur gesetzt, solange sie wiederhergestellt werden kann */
   session: Snapshot | null;
   /** PDF-Status je Snapshot-ID: Info, null = gelöscht, fehlt = unbekannt */
@@ -48,15 +51,16 @@ const kindIcon = (snapshot: Snapshot) => {
 };
 
 const SnapshotSection: React.FC<SnapshotSectionProps> = ({
-  snapshots, session, pdfInfos, notice, canSave, totalBytes, onSave, onLoad, onOverwrite, onRename, onDelete, onDeleteAll,
+  snapshots, activeId, session, pdfInfos, notice, canSave, totalBytes, onSave, onLoad, onOverwrite, onRename, onDelete, onDeleteAll,
 }) => {
+  const { t } = useTranslation();
   const listed = snapshots.filter(s => s.kind !== 'session');
 
   const pdfMeta = (snapshot: Snapshot) => {
     if (!snapshot.pdf.generated) return null;
     const info = pdfInfos[snapshot.id];
-    if (info === null) return <span className="snapshot-meta is-expired">PDF expired</span>;
-    if (info) return <span className="snapshot-meta">PDF {formatSize(info.fileSize)}, available until {formatDay(info.expiresAt)}</span>;
+    if (info === null) return <span className="snapshot-meta is-expired">{t('snapshot.pdfExpired')}</span>;
+    if (info) return <span className="snapshot-meta">{t('snapshot.pdfAvailable', { size: formatSize(info.fileSize), date: formatDay(info.expiresAt) })}</span>;
     return null;
   };
 
@@ -66,31 +70,37 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
 
       {session && (
         <div className="input-tile snapshot-row snapshot-session">
-          <button type="button" className="snapshot-open" onClick={() => onLoad(session)} title="Restore last session">
+          <button type="button" className="snapshot-open" onClick={() => onLoad(session)} title={t('snapshot.restoreLastSession')}>
             <span className="input-tile-lead" aria-hidden="true"><HistoryIcon /></span>
             <span className="input-tile-title">
               <span className="snapshot-text">
-                <span className="snapshot-label">Restore last session</span>
-                <span className="snapshot-meta">{snapshotLabel(session)} · {formatDate(session.createdAt)}</span>
+                <span className="snapshot-label">{t('snapshot.restoreLastSession')}</span>
+                <span className="snapshot-meta">{snapshotLabel(session)} · {snapshotCardsText(session)} · {formatDate(session.createdAt)}</span>
               </span>
             </span>
           </button>
         </div>
       )}
 
-      <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave}>Save Snapshot</ActionButton>
+      <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave} data-tour="save-snapshot">{t('snapshot.save')}</ActionButton>
 
       {listed.map(snapshot => {
         const info = pdfInfos[snapshot.id];
         const label = snapshotLabel(snapshot);
+        const active = snapshot.id === activeId;
         return (
-          <div key={snapshot.id} className="input-tile snapshot-row">
-            <button type="button" className="snapshot-open" onClick={() => onLoad(snapshot)} title={`Load ${label}`}>
+          <div key={snapshot.id} className={`input-tile snapshot-row${active ? ' is-active' : ''}`} aria-current={active || undefined}>
+            <button
+              type="button"
+              className="snapshot-open"
+              onClick={() => onLoad(snapshot)}
+              title={active ? t('snapshot.activeTitle', { label }) : t('snapshot.loadTitle', { label })}
+            >
               <span className="input-tile-lead" aria-hidden="true">{kindIcon(snapshot)}</span>
               <span className="input-tile-title">
                 <span className="snapshot-text">
                   <span className="snapshot-label">{label}</span>
-                  <span className="snapshot-meta">{formatDate(snapshot.createdAt)}</span>
+                  <span className="snapshot-meta">{snapshotCardsText(snapshot)} · {formatDate(snapshot.createdAt)}</span>
                   {pdfMeta(snapshot)}
                 </span>
               </span>
@@ -100,8 +110,8 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
                 className="snapshot-tool"
                 href={pdfDownloadUrl(snapshot.pdf.generated.progressId, pdfFileName(label))}
                 download={`${pdfFileName(label)}.pdf`}
-                title="Download PDF"
-                aria-label={`Download PDF of ${label}`}
+                title={t('snapshot.downloadPdf')}
+                aria-label={t('snapshot.downloadPdfOf', { label })}
               >
                 <DownloadIcon />
               </a>
@@ -111,15 +121,15 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
               className="snapshot-tool"
               onClick={() => onOverwrite(snapshot)}
               disabled={!canSave}
-              title="Overwrite with current state"
-              aria-label={`Overwrite ${label} with current state`}
+              title={t('snapshot.overwriteTitle')}
+              aria-label={t('snapshot.overwriteAria', { label })}
             >
               <SaveAsIcon />
             </button>
-            <button type="button" className="snapshot-tool" onClick={() => onRename(snapshot)} title="Rename" aria-label={`Rename ${label}`}>
+            <button type="button" className="snapshot-tool" onClick={() => onRename(snapshot)} title={t('common.rename')} aria-label={t('snapshot.renameAria', { label })}>
               <EditIcon />
             </button>
-            <button type="button" className="snapshot-tool" onClick={() => onDelete(snapshot)} title="Delete" aria-label={`Delete ${label}`}>
+            <button type="button" className="snapshot-tool" onClick={() => onDelete(snapshot)} title={t('common.delete')} aria-label={t('snapshot.deleteAria', { label })}>
               <DeleteIcon />
             </button>
           </div>
@@ -128,8 +138,8 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
 
       {listed.length > 0 && (
         <div className="snapshot-footer">
-          <span>Stored in this browser · {formatSize(totalBytes)}</span>
-          <button type="button" onClick={onDeleteAll}>Delete all</button>
+          <span>{t('snapshot.storedInBrowser', { size: formatSize(totalBytes) })}</span>
+          <button type="button" onClick={onDeleteAll}>{t('snapshot.deleteAll')}</button>
         </div>
       )}
     </div>

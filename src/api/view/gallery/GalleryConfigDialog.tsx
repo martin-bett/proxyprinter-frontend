@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { Alert, LinearProgress } from '@mui/material';
 import ConfigContainer from '../ConfigContainer';
@@ -13,6 +14,7 @@ interface GalleryConfigDialogProps {
 }
 
 const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, handleGalleryResults }) => {
+    const { t } = useTranslation();
     const [configs, setConfigs] = useState<Config[]>([]);
     const [selectedConfigs, setSelectedConfigs] = useState<number[]>([]);
     const [clickedConfig, setClickedConfig] = useState<Config | null>(null); //
@@ -39,7 +41,7 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
         console.log(result);
         if (result.results.length === 0) {
           // Dialog offen lassen, sonst sieht man nicht, dass nichts gefunden wurde
-          setGalleryStatus({ loading: false, error: 'Keine Bilder gefunden.' });
+          setGalleryStatus({ loading: false, error: t('galleryConfig.noImages') });
           return;
         }
         setGalleryStatus({ loading: false });

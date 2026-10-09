@@ -93,6 +93,22 @@ async function runLimited<T>(tasks: (() => Promise<T>)[], limit: number): Promis
   return results;
 }
 
+/**
+ * Ob das Backend den Such-Cache anbietet (searchcache.enabled). Nur ein ausdrückliches "aus"
+ * oder ein Backend ohne den Endpunkt (404) schaltet ihn ab; Netzfehler lassen ihn an.
+ */
+export async function fetchServerCacheEnabled(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/search-cache/info');
+    if (response.status === 404) return false;
+    if (!response.ok) return true;
+    const info: { enabled?: boolean } = await response.json();
+    return info.enabled !== false;
+  } catch {
+    return true;
+  }
+}
+
 class ServerSearchCache {
   private queue: StoreEntry[] = [];
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -133,7 +149,7 @@ class ServerSearchCache {
           (byServerKey.get(id) || []).forEach(request => hits.set(lookupKey(request.apiKey, request.term), hit.result));
         });
       } catch (error) {
-        console.warn('Server-Such-Cache nicht erreichbar', error);
+        console.warn('Server search cache not reachable', error);
       }
     }), LOOKUP_PARALLEL);
     return hits;
@@ -166,7 +182,7 @@ class ServerSearchCache {
           body: JSON.stringify({ entries }),
         });
       } catch (error) {
-        console.warn('Konnte Suchergebnisse nicht an den Server-Cache senden', error);
+        console.warn('Could not send search results to the server cache', error);
       }
     };
     for (const entry of pending) {

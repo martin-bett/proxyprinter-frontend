@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [develop, master]
+    # labeled/unlabeled: Die Labels skip-preview und skip-tests werden bei jedem Label-Wechsel neu ausgewertet
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [develop]
   workflow_dispatch:
@@ -11,8 +13,35 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Labels am PR (nur PRs nach develop; Pushes auf develop/master und Release-PRs nach master ignorieren sie):
+#   skip-preview: keine Testumgebung (Image wird nur gebaut, nicht gepusht/ausgerollt)
+#   skip-tests:   Job "test" wird übersprungen (zählt für required checks als erfüllt)
 jobs:
+  labels:
+    # legt die Labels an, falls sie fehlen (idempotent)
+    if: github.event_name != 'pull_request' || github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const wanted = [
+              ['skip-preview', 'Keine Testumgebung für diesen PR', 'c5def5'],
+              ['skip-tests', 'Test-Suite für diesen PR überspringen (nur bei winzigen Änderungen)', 'fbca04'],
+            ];
+            const { owner, repo } = context.repo;
+            for (const [name, description, color] of wanted) {
+              try { await github.rest.issues.getLabel({ owner, repo, name }); }
+              catch (e) { await github.rest.issues.createLabel({ owner, repo, name, description, color }); }
+            }
+
   test:
+    if: >-
+      github.event_name != 'pull_request' || github.base_ref != 'develop' ||
+      !contains(github.event.pull_request.labels.*.name, 'skip-tests')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +62,20 @@ jobs:
           # Wie im Docker-Build: ESLint-Warnungen brechen den Build nicht ab
           CI: false
 
+  skipped:
+    if: >-
+      github.event_name == 'pull_request' && github.base_ref == 'develop' &&
+      (contains(github.event.pull_request.labels.*.name, 'skip-tests') || contains(github.event.pull_request.labels.*.name, 'skip-preview'))
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::notice::Per Label übersprungen: tests=${{ contains(github.event.pull_request.labels.*.name, 'skip-tests') }}, preview=${{ contains(github.event.pull_request.labels.*.name, 'skip-preview') }}"
+
   docker:
+    # ohne Tests und ohne Testumgebung gibt es keinen Grund, das Image zu bauen
+    if: >-
+      github.event_name != 'pull_request' || github.base_ref != 'develop' ||
+      !(contains(github.event.pull_request.labels.*.name, 'skip-tests') && contains(github.event.pull_request.labels.*.name, 'skip-preview'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -54,6 +96,7 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE: ${{ github.base_ref }}
+          SKIP_PREVIEW: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'skip-preview') }}
           BEFORE: ${{ github.event.before }}
         run: |
           slug=$(printf '%s' "$BRANCH" | sha256sum | cut -c1-6)
@@ -62,6 +105,10 @@ jobs:
           preview=false; tag=""; range=""
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
             [ "$BASE" = develop ] && preview=true
+            if [ "$SKIP_PREVIEW" = true ]; then
+              echo "::notice::Label skip-preview, keine Testumgebung"
+              preview=false
+            fi
             tag="br-$slug"; range="origin/$BASE...HEAD"
           elif [ "$BRANCH" = develop ]; then
             slug=develop; legacy=""; tag=develop; preview=true
@@ -99,8 +146,10 @@ jobs:
 
   preview:
     needs: [test, docker]
-    if: needs.docker.outputs.preview == 'true'
+    # Tests per Label übersprungen (skipped) sind ok, fehlgeschlagene nicht
+    if: always() && needs.docker.outputs.preview == 'true' && (needs.test.result == 'success' || needs.test.result == 'skipped')
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     concurrency:
       group: preview-${{ needs.docker.outputs.slug }}
       cancel-in-progress: false
@@ -133,7 +182,7 @@ jobs:
             printf 'export LEGACY_SLUG=%q\n' "$LEGACY_SLUG"
             printf 'export GHCR_USER=%q GHCR_TOKEN=%q\n' "$GITHUB_ACTOR" "$GHCR_TOKEN"
             cat .github/deploy/preview.sh
-          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes \
+          } | ssh -i ~/.ssh/id_deploy -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
                 "$VPS_USER@$VPS_HOST" 'f=$(mktemp) && cat > "$f" && bash "$f" < /dev/null; rc=$?; rm -f "$f"; exit $rc' | tee preview.log
           { grep -m1 '^PREVIEW_URL=' preview.log || true; } | cut -d= -f2- > preview-url.txt
       - name: Link im PR

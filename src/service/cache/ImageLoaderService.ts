@@ -1,5 +1,6 @@
 import { ImageQuality } from "../quality/ImageQuality";
 import { openCacheDb } from "./openCacheDb";
+import i18n from "../../i18n";
 import { throttledFetch } from "../RequestThrottle";
 
 const DB_NAME = "mtg_cache_db";
@@ -23,23 +24,75 @@ interface ImageCacheDbEntry {
   blob: Blob | null;
   // Druckschärfe je Crop-Ausschnitt, Schlüssel aus qualityCacheKey()
   quality?: Record<string, ImageQuality>;
+  // Verkleinerte Kopie für Kachelansichten (ganzes Bild, THUMB_MAX_WIDTH breit) und Originalmaße
+  thumb?: Blob;
+  width?: number;
+  height?: number;
+  // Mit dem Schloss im Bild-Cache-Dialog geschützt: bleibt beim Leeren stehen und wird beim Platzschaffen zuletzt gelöscht
+  locked?: boolean;
+}
+
+/** Filter auf Cache-Einträge: ohne Angabe passt jeder Wert. */
+export interface CacheEntryFilter {
+  apiName?: string;
+  cardName?: string;
+}
+
+function matchesFilter(entry: ImageCacheDbEntry, { apiName, cardName }: CacheEntryFilter): boolean {
+  return (apiName === undefined || entry.cardInput?.apiName === apiName)
+    && (cardName === undefined || entry.cardInput?.name === cardName);
+}
+
+/** Löschreihenfolge beim Platzschaffen: erst ungeschützte, dann geschützte Einträge, jeweils die ältesten zuerst. */
+export function evictionOrder<T extends { locked?: boolean; timestamp?: number }>(entries: T[]): T[] {
+  return [...entries].sort((a, b) => Number(!!a.locked) - Number(!!b.locked) || (a.timestamp || 0) - (b.timestamp || 0));
+}
+
+/** Breite der verkleinerten Kopie, die Kacheln statt des Originals dekodieren. */
+export const THUMB_MAX_WIDTH = 512;
+
+/** Maße des Originals, wenn onLoad nur die verkleinerte Kopie liefert. */
+export interface ImageLoadMeta {
+  fullWidth: number;
+  fullHeight: number;
+  thumbnail: boolean;
+}
+
+/** Verkleinert ein Bild auf höchstens THUMB_MAX_WIDTH Pixel Breite. null, wenn nichts zu verkleinern ist oder Canvas fehlt. */
+export async function createThumbnail(img: HTMLImageElement): Promise<Blob | null> {
+  try {
+    const { naturalWidth: w, naturalHeight: h } = img;
+    if (!w || !h || w <= THUMB_MAX_WIDTH) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = THUMB_MAX_WIDTH;
+    canvas.height = Math.max(1, Math.round((h * THUMB_MAX_WIDTH) / w));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.85));
+  } catch (e) {
+    return null;
+  }
 }
 
 export interface AddToQueueParams {
   url: string;
   priority: number;
-  onLoad: (img: HTMLImageElement, sizeBytes?: number) => void;
+  onLoad: (img: HTMLImageElement, sizeBytes?: number, meta?: ImageLoadMeta) => void;
   onError?: (error: unknown) => void;
   onProcessListChange?: (status: string) => void;
   category?: string;
   cardInput?: CacheCardInput;
+  /** Liegt im Cache eine verkleinerte Kopie, liefert onLoad diese (meta.thumbnail) statt des Originals. */
+  preferThumbnail?: boolean;
   /** Abbruch durch den Aufrufer: wartender Eintrag fliegt raus, laufender Download wird fertig, Callbacks werden nicht mehr gerufen. */
   signal?: AbortSignal;
 }
 
 // Ein Interessent an einem Bild; mehrere Karten mit gleichem Bild teilen sich einen Queue-Eintrag
 interface QueueListener {
-  onLoad: (img: HTMLImageElement, sizeBytes?: number) => void;
+  onLoad: (img: HTMLImageElement, sizeBytes?: number, meta?: ImageLoadMeta) => void;
   onError?: (error: unknown) => void;
   onProcessListChange?: (status: string) => void;
   signal?: AbortSignal;
@@ -85,7 +138,7 @@ export async function loadImageElement(url: string): Promise<HTMLImageElement> {
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Proxy-Bild konnte nicht dekodiert werden"));
+      img.onerror = () => reject(new Error(i18n.t("cacheService.proxyDecodeFailed")));
       img.src = objectUrl;
     });
   };
@@ -94,7 +147,7 @@ export async function loadImageElement(url: string): Promise<HTMLImageElement> {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Bild nicht ladbar"));
+      img.onerror = () => reject(new Error(i18n.t("cacheService.imageLoadFailed")));
       img.src = url;
     });
   } catch (e) {
@@ -125,12 +178,15 @@ export async function fetchImageViaProxy(url: string): Promise<Blob> {
     url
   );
   if (!response.ok) {
-    const reason = `Bild nicht ladbar: ${response.headers.get("X-Proxy-Error") || `Proxy-Fehler ${response.status}`}`;
+    const reason = i18n.t("cacheService.imageLoadFailedReason", { reason: response.headers.get("X-Proxy-Error") || i18n.t("cacheService.proxyError", { status: response.status }) });
     proxyFailures.set(url, reason);
     throw new Error(reason);
   }
   return response.blob();
 }
+
+/** Fenster, über das die Download-Rate gemittelt wird (Millisekunden) */
+const DOWNLOAD_RATE_WINDOW_MS = 5000;
 
 export interface QueueNumbers {
   queued: number;
@@ -142,6 +198,7 @@ export interface CacheSnapshot {
   byApi: Record<string, ImageCacheDbEntry[]>;
   byCard: Record<string, ImageCacheDbEntry[]>;
   totalSize: number;
+  lockedCount: number;
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -158,12 +215,6 @@ async function deleteFromIndexedDB(cacheKey: string): Promise<void> {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
   tx.objectStore(STORE_NAME).delete(cacheKey);
-}
-
-async function clearIndexedDB(): Promise<void> {
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  tx.objectStore(STORE_NAME).clear();
 }
 
 async function getAllFromIndexedDB(): Promise<ImageCacheDbEntry[]> {
@@ -191,6 +242,7 @@ async function getFromIndexedDB(cacheKey: string): Promise<ImageCacheDbEntry | u
 class ImageLoaderService {
   private queue: QueueEntry[] = [];
   private activeLoads = 0;
+  private recentDownloads: { at: number; bytes: number }[] = [];
   private activeProxyLoads = 0;
   private proxyImageApis: Set<string> = new Set();
   private activeCacheLoads = 0;
@@ -234,9 +286,8 @@ class ImageLoaderService {
     const entries = await getAllFromIndexedDB();
     let total = entries.reduce((sum, e) => sum + (e.sizeBytes || 0), 0);
     if (total <= this.cacheLimit) return;
-    // Sortiere nach ältestem timestamp
-    entries.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-    for (const entry of entries) {
+    // Geschützte Einträge fallen erst, wenn sie allein das Limit überschreiten
+    for (const entry of evictionOrder(entries)) {
       await deleteFromIndexedDB(entry.cacheKey);
       total -= entry.sizeBytes || 0;
       if (total <= this.cacheLimit) break;
@@ -276,12 +327,26 @@ class ImageLoaderService {
     return `${cardInput.apiName || "NOAPI"}::${cardInput.name || "NONAME"}::${cardInput.imageUrl || ""}`;
   }
 
-  async addToQueue({ url, priority, onLoad, onError, onProcessListChange, category, cardInput, signal }: AddToQueueParams): Promise<void> {
+  async addToQueue({ url, priority, onLoad, onError, onProcessListChange, category, cardInput, signal, preferThumbnail }: AddToQueueParams): Promise<void> {
     if (signal?.aborted) return;
     const cacheKey = this._makeCacheKey(cardInput || {});
     const cached = await getFromIndexedDB(cacheKey);
     // Während des Cache-Lookups abgebrochen (z.B. Karte weggefiltert): gar nicht erst einreihen
     if (signal?.aborted) return;
+    if (cached && preferThumbnail && cached.thumb && cached.width && cached.height) {
+      // Kachelansicht: nur die kleine Kopie dekodieren
+      const meta: ImageLoadMeta = { fullWidth: cached.width, fullHeight: cached.height, thumbnail: true };
+      this.activeCacheLoads++;
+      this._createImageFromBlob(cached.thumb, true).then(img => {
+        if (signal?.aborted) return;
+        if (img) onLoad(img, cached.sizeBytes, meta);
+        else onError?.(new Error(i18n.t("cacheService.thumbnailFailed")));
+      }).finally(() => {
+        this.activeCacheLoads--;
+      });
+      onProcessListChange?.("LOADING");
+      return;
+    }
     if (cached) {
       // Wenn img noch nicht geladen, aus Blob erzeugen, sonst Fallback: Bild-URL laden
       this.activeCacheLoads++;
@@ -292,8 +357,10 @@ class ImageLoaderService {
         if (signal?.aborted) return;
         if (img) {
           onLoad(img, cached.sizeBytes);
+          // Eintrag aus älteren Versionen ohne kleine Kopie: nachreichen
+          if (cached.blob && !cached.thumb) void this._addThumbnail(cacheKey, img);
         } else {
-          onError?.(new Error(cached.blob ? "Image could not be created from blob" : "Image could not be loaded from url"));
+          onError?.(new Error(cached.blob ? i18n.t("cacheService.blobFailed") : i18n.t("cacheService.urlFailed")));
         }
       }).finally(() => {
         this.activeCacheLoads--;
@@ -382,8 +449,13 @@ class ImageLoaderService {
       const load = proxied ? this._loadViaProxy(url) : this._loadDirect(url);
       load.then(async ({ img, blob }) => {
         const sizeBytes = blob?.size || 0;
+        this._recordDownload(sizeBytes);
         const cacheKey = this._makeCacheKey(cardInput || {});
-        const cacheEntry: ImageCacheDbEntry = { sizeBytes, cardInput, timestamp: Date.now(), cacheKey, imageUrl: url, blob };
+        const thumb = blob ? await createThumbnail(img) : null;
+        const cacheEntry: ImageCacheDbEntry = {
+          sizeBytes: sizeBytes + (thumb?.size || 0), cardInput, timestamp: Date.now(), cacheKey, imageUrl: url, blob,
+          ...(thumb ? { thumb, width: img.naturalWidth, height: img.naturalHeight } : {}),
+        };
         await saveToIndexedDB(cacheEntry);
         await this._enforceCacheLimit();
         this._liveListeners(entry).forEach(l => l.onLoad(img, sizeBytes));
@@ -416,16 +488,49 @@ class ImageLoaderService {
   private async _loadViaProxy(url: string): Promise<{ img: HTMLImageElement; blob: Blob | null }> {
     const blob = await fetchImageViaProxy(url);
     const img = await this._createImageFromBlob(blob);
-    if (!img) throw new Error("Proxy-Bild konnte nicht dekodiert werden");
+    if (!img) throw new Error(i18n.t("cacheService.proxyDecodeFailed"));
     return { img, blob };
   }
 
-  private _createImageFromBlob(blob: Blob): Promise<HTMLImageElement | null> {
+  /** Kleine Kopie für einen vorhandenen Cache-Eintrag nachreichen (ohne Quality-Daten zu überschreiben). */
+  private async _addThumbnail(cacheKey: string, img: HTMLImageElement): Promise<void> {
+    try {
+      const thumb = await createThumbnail(img);
+      if (!thumb) return;
+      const entry = await getFromIndexedDB(cacheKey);
+      if (!entry || entry.thumb) return;
+      await saveToIndexedDB({
+        ...entry, thumb, width: img.naturalWidth, height: img.naturalHeight, sizeBytes: (entry.sizeBytes || 0) + thumb.size,
+      });
+    } catch (e) { }
+  }
+
+  /** Gecachte Blobs eines Bildes (Original und kleine Kopie), ohne Netzwerk. */
+  async getCachedBlobs(cardInput: CacheCardInput): Promise<{ blob?: Blob; thumb?: Blob; width?: number; height?: number } | undefined> {
+    try {
+      const entry = await getFromIndexedDB(this._makeCacheKey(cardInput));
+      if (!entry || (!entry.blob && !entry.thumb)) return undefined;
+      return { blob: entry.blob || undefined, thumb: entry.thumb, width: entry.width, height: entry.height };
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  /** Original aus dem Cache dekodieren (z.B. für die Schärfemessung, wenn die Kachel nur die kleine Kopie hält). */
+  loadFullFromCache(cardInput: CacheCardInput): Promise<HTMLImageElement | null> {
+    return this.loadImageFromPersistentCache(this._makeCacheKey(cardInput));
+  }
+
+  private _createImageFromBlob(blob: Blob, revokeAfterLoad = false): Promise<HTMLImageElement | null> {
     return new Promise((resolve) => {
       const img = new window.Image();
       img.crossOrigin = "Anonymous";
-      img.src = URL.createObjectURL(blob);
-      img.onload = () => resolve(img);
+      const objectUrl = URL.createObjectURL(blob);
+      img.src = objectUrl;
+      img.onload = () => {
+        if (revokeAfterLoad) URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
       img.onerror = () => resolve(null);
     });
   }
@@ -490,8 +595,9 @@ class ImageLoaderService {
     this.notifyAllStatuses();
   }
 
+  /** Leert den Cache bis auf die geschützten Einträge und stoppt alle Downloads. */
   async clearCache(): Promise<void> {
-    await clearIndexedDB();
+    await this._deleteUnlocked({});
     clearProxyFailures();
     this.queue = [];
     this.activeLoads = 0;
@@ -500,36 +606,49 @@ class ImageLoaderService {
   }
 
   async clearCacheForCardName(cardName: string): Promise<void> {
+    await this.deleteUnlocked({ cardName });
+  }
+
+  /** Anzahl und Größe aller gecachten Bilder einer Karte (über alle APIs) */
+  async getCacheStatsForCardName(cardName: string): Promise<{ count: number; bytes: number }> {
     const entries = await getAllFromIndexedDB();
-    for (const value of entries) {
-      if (value.cardInput?.name === cardName) {
-        await deleteFromIndexedDB(value.cacheKey);
-      }
-    }
-    this.notifySubscribers();
+    return entries
+      .filter(value => value.cardInput?.name === cardName)
+      .reduce((stats, value) => ({ count: stats.count + 1, bytes: stats.bytes + value.sizeBytes }), { count: 0, bytes: 0 });
   }
 
   async clearCacheForApiName(apiName: string): Promise<void> {
+    await this.deleteUnlocked({ apiName });
+  }
+
+  async clearCacheForApiAndCard(apiName: string, cardName: string): Promise<void> {
+    await this.deleteUnlocked({ apiName, cardName });
+  }
+
+  /** Schützt die passenden Einträge vor dem Löschen oder hebt den Schutz auf. */
+  async setLocked(filter: CacheEntryFilter, locked: boolean): Promise<void> {
     const entries = await getAllFromIndexedDB();
-    for (const value of entries) {
-      if (value.cardInput?.apiName === apiName) {
-        await deleteFromIndexedDB(value.cacheKey);
+    for (const entry of entries) {
+      if (matchesFilter(entry, filter) && !!entry.locked !== locked) {
+        await saveToIndexedDB({ ...entry, locked });
       }
     }
     this.notifySubscribers();
   }
 
-  async clearCacheForApiAndCard(apiName: string, cardName: string): Promise<void> {
+  /** Löscht die passenden Einträge, geschützte bleiben stehen. */
+  async deleteUnlocked(filter: CacheEntryFilter): Promise<void> {
+    await this._deleteUnlocked(filter);
+    this.notifySubscribers();
+  }
+
+  private async _deleteUnlocked(filter: CacheEntryFilter): Promise<void> {
     const entries = await getAllFromIndexedDB();
-    for (const value of entries) {
-      if (
-        value.cardInput?.apiName === apiName &&
-        value.cardInput?.name === cardName
-      ) {
-        await deleteFromIndexedDB(value.cacheKey);
+    for (const entry of entries) {
+      if (!entry.locked && matchesFilter(entry, filter)) {
+        await deleteFromIndexedDB(entry.cacheKey);
       }
     }
-    this.notifySubscribers();
   }
 
   notifyAllStatuses(): void {
@@ -544,10 +663,12 @@ class ImageLoaderService {
     const byApi = await this.getCacheGroupedByApiName();
     const byCard = await this.getCacheGroupedByCardName();
     const totalSize = await this.getTotalCacheSize();
-    const snapshot: CacheSnapshot = { byApi, byCard, totalSize };
+    const lockedCount = Object.values(byApi).flat().filter(e => e.locked).length;
+    const snapshot: CacheSnapshot = { byApi, byCard, totalSize, lockedCount };
     if (
       this._lastSnapshot &&
       this._lastSnapshot.totalSize === snapshot.totalSize &&
+      this._lastSnapshot.lockedCount === snapshot.lockedCount &&
       Object.keys(this._lastSnapshot.byApi).length === Object.keys(snapshot.byApi).length &&
       Object.keys(this._lastSnapshot.byCard).length === Object.keys(snapshot.byCard).length
     ) {
@@ -589,6 +710,23 @@ class ImageLoaderService {
     this.queue = this.queue.filter(entry => entry.cardInput?.languageCode !== languageCode);
     this.notifyAllStatuses();
     this.notifySubscribers();
+  }
+
+  private _recordDownload(bytes: number): void {
+    if (bytes > 0) this.recentDownloads.push({ at: Date.now(), bytes });
+    this._pruneDownloads(Date.now());
+  }
+
+  private _pruneDownloads(now: number): void {
+    const cutoff = now - DOWNLOAD_RATE_WINDOW_MS;
+    while (this.recentDownloads.length > 0 && this.recentDownloads[0].at < cutoff) this.recentDownloads.shift();
+  }
+
+  /** Gebündelte Download-Rate (Bytes pro Sekunde): fertig geladene Bytes aller Downloads der letzten Sekunden */
+  getDownloadRate(): number {
+    this._pruneDownloads(Date.now());
+    const bytes = this.recentDownloads.reduce((sum, download) => sum + download.bytes, 0);
+    return bytes / (DOWNLOAD_RATE_WINDOW_MS / 1000);
   }
 
   // Zähler für die Download-Bubble (wartend, aktive Downloads, Ladevorgänge aus dem Cache)

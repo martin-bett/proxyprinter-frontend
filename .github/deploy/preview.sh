@@ -35,23 +35,22 @@ if [ ! -f "$PREVIEW_ROOT/.env" ]; then
   echo "::warning::Testumgebungen sind auf dem Server noch nicht eingerichtet ($PREVIEW_ROOT/.env fehlt, siehe deploy/PREVIEW.md), übersprungen"
   exit 0
 fi
-# Umgebung des gleichen Branches unter dem alten, langen Namen (vor den kurzen Namen) einmalig entfernen
-if [ -n "${LEGACY_SLUG:-}" ] && [ "$LEGACY_SLUG" != "$SLUG" ] && [[ "$LEGACY_SLUG" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] \
-   && [ "$LEGACY_SLUG" != develop ] && [ -d "$PREVIEW_ROOT/envs/$LEGACY_SLUG" ]; then
-  ACTION=purge SLUG="$LEGACY_SLUG" LEGACY_SLUG= bash "$0" || true
-fi
-
 cd "$PREVIEW_ROOT"
 exec 9>.lock
 flock -w 600 9
 
-if [ "$SLUG" = develop ]; then
-  ENV_DIR="$PREVIEW_ROOT/develop"; HOST="$PREVIEW_DOMAIN"; PROJECT=ppt-develop; DB_NAME=proxymaster
-else
-  ENV_DIR="$PREVIEW_ROOT/envs/$SLUG"; HOST="$SLUG.$PREVIEW_DOMAIN"; PROJECT="ppt-$SLUG"; DB_NAME="pr_${SLUG//-/_}"
-fi
-NGINX_CONF="$NGINX_DIR/proxyprinter-test-$HOST.conf"
-URL="https://$HOST"
+# Setzt SLUG und alles, was davon abhängt
+use_slug() {
+  SLUG="$1"
+  if [ "$SLUG" = develop ]; then
+    ENV_DIR="$PREVIEW_ROOT/develop"; HOST="$PREVIEW_DOMAIN"; PROJECT=ppt-develop; DB_NAME=proxymaster
+  else
+    ENV_DIR="$PREVIEW_ROOT/envs/$SLUG"; HOST="$SLUG.$PREVIEW_DOMAIN"; PROJECT="ppt-$SLUG"; DB_NAME="pr_${SLUG//-/_}"
+  fi
+  NGINX_CONF="$NGINX_DIR/proxyprinter-test-$HOST.conf"
+  URL="https://$HOST"
+}
+use_slug "$SLUG"
 
 log() { echo "[$SLUG] $*"; }
 
@@ -146,16 +145,26 @@ EOF
       SPRING_DATASOURCE_USERNAME: mtguser
       SPRING_DATASOURCE_PASSWORD: \${DB_PASSWORD}
       APP_PUBLIC_URL: $URL
+      AUTH_DEV_SHOW_CODE: "true"
       PDF_MAX_SIZE_MB: "100"
       JAVA_TOOL_OPTIONS: -Xmx512m
 EOF
-      # PR-Backends: speicherintensive Funktionen aus bzw. kurz halten (develop bleibt wie die Produktion)
-      [ "$SLUG" != develop ] && cat <<EOF
+      # Gemeinsamer Such-Cache: nur im develop-Backend an, auf eigenem Volume (überlebt Neuausrollen, getrennt von der Produktion).
+      # PR-Backends: Such-Cache aus, speicherintensive Funktionen kurz halten.
+      if [ "$SLUG" = develop ]; then
+        cat <<EOF
+      SEARCHCACHE_ENABLED: "true"
+    volumes:
+      - search-cache:/app/search-cache
+EOF
+      else
+        cat <<EOF
       SEARCHCACHE_ENABLED: "false"
       PDF_RETENTION_DAYS: "1"
       UPLOAD_RETENTION_DAYS: "1"
       LOG_DB_RETENTION_DAYS: "3"
 EOF
+      fi
       cat <<EOF
     networks:
       default:
@@ -184,7 +193,7 @@ networks:
     name: ppt-api
     external: true
 EOF
-    [ "$SLUG" = develop ] && printf 'volumes:\n  db-data:\n'
+    [ "$SLUG" = develop ] && printf 'volumes:\n  db-data:\n  search-cache:\n'
   } > "$ENV_DIR/docker-compose.yml"
   ln -sf "$PREVIEW_ROOT/.env" "$ENV_DIR/.env"
 }
@@ -349,6 +358,14 @@ purge() {
 docker network inspect ppt-db >/dev/null 2>&1 || docker network create ppt-db >/dev/null
 docker network inspect ppt-api >/dev/null 2>&1 || docker network create ppt-api >/dev/null
 declare -F apply_migrations >/dev/null || apply_migrations() { :; }
+
+# Umgebung des gleichen Branches unter dem alten, langen Namen (vor den kurzen Namen) einmalig entfernen.
+# In einer Subshell statt per "bash $0": die Datei beginnt mit den exports aus dem Workflow, ein erneuter
+# Aufruf würde ACTION/SLUG/LEGACY_SLUG überschreiben und sich endlos selbst aufrufen.
+if [ -n "${LEGACY_SLUG:-}" ] && [ "$LEGACY_SLUG" != "$SLUG" ] && [[ "$LEGACY_SLUG" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] \
+   && [ "$LEGACY_SLUG" != develop ] && [ -d "$PREVIEW_ROOT/envs/$LEGACY_SLUG" ]; then
+  (use_slug "$LEGACY_SLUG"; purge) || true
+fi
 
 case "$ACTION" in
   deploy) deploy ;;

@@ -8,13 +8,15 @@ import { CropSettings } from '../ApiFactory';
 import { ManualPicksMap } from '../../viewer/filterPriority';
 import { PdfSettings, defaultSettings } from '../../viewer/pdf/SettingsDialog';
 
+import i18n from '../../i18n';
+
 export const SNAPSHOT_FORMAT = 'proxyprinter-snapshot';
 export const SNAPSHOT_VERSION = 1;
 
 export type SnapshotKind = 'session' | 'generate' | 'manual';
 
 /** PDF-Einstellungen ohne E-Mail-Adresse, die gehört nicht zum Arbeitsstand. */
-export type SnapshotPdfSettings = Omit<PdfSettings, 'email'>;
+export type SnapshotPdfSettings = Omit<PdfSettings, 'sendMail'>;
 
 export interface SnapshotSelection {
   /** Index in results */
@@ -164,7 +166,7 @@ export function createSnapshot(state: WorkState, kind: SnapshotKind, now: number
     };
   });
 
-  const { email, ...pdfSettings } = state.settings;
+  const { sendMail, ...pdfSettings } = state.settings;
   const search: Snapshot['search'] = {
     decklist: state.decklist,
     enabledApis: Object.keys(state.enabledApis).filter(name => state.enabledApis[name]).sort(),
@@ -231,12 +233,26 @@ function firstCardName(decklist: string, entries: SnapshotEntry[]): string {
   return '';
 }
 
-/** Anzeigename, z. B. „60 cards · Lightning Bolt“ (die Oberfläche ist englisch). */
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Zeitstempel MMddHHmm in Ortszeit, z. B. „10081930“. */
+export function snapshotTimestamp(ms: number): string {
+  const d = new Date(ms);
+  return `${pad2(d.getMonth() + 1)}${pad2(d.getDate())}${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+}
+
+/** Anzeigename, z. B. „10081930 Lightning Bolt“ (Zeitstempel MMddHHmm + erste Karte). */
 export function snapshotLabel(snapshot: Snapshot): string {
   if (snapshot.label.custom) return snapshot.label.custom;
-  const { cardCount, firstCard } = snapshot.label;
-  const cards = `${cardCount} ${cardCount === 1 ? 'card' : 'cards'}`;
-  return firstCard ? `${cards} · ${firstCard}` : cards;
+  const stamp = snapshotTimestamp(snapshot.createdAt);
+  const { firstCard } = snapshot.label;
+  return firstCard ? `${stamp} ${firstCard}` : stamp;
+}
+
+/** Kartenzahl für die Infozeile, z. B. „60 cards“. */
+export function snapshotCardsText(snapshot: Snapshot): string {
+  const { cardCount } = snapshot.label;
+  return i18n.t('snapshot.cardsCount', { count: cardCount });
 }
 
 /** Bringt ältere Snapshots auf die aktuelle Version. Wirft bei unbekanntem Format oder neuerer Version. */
@@ -269,7 +285,7 @@ export function migrateSnapshot(raw: any): Snapshot {
 }
 
 function withoutEmail(settings: PdfSettings): SnapshotPdfSettings {
-  const { email, ...rest } = settings;
+  const { sendMail, ...rest } = settings;
   return rest;
 }
 

@@ -23,6 +23,7 @@ const request = (result?: any) => {
   },
 };
 (global as any).URL.createObjectURL = () => "blob:test";
+(global as any).URL.revokeObjectURL = () => {};
 class FakeImage {
   onload: (() => void) | null = null;
   onerror: ((e: unknown) => void) | null = null;
@@ -32,7 +33,7 @@ class FakeImage {
 (window as any).Image = FakeImage;
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { imageLoaderService, isProxyOnlyUrl, loadImageElement } = require("./ImageLoaderService");
+const { imageLoaderService, isProxyOnlyUrl, loadImageElement, evictionOrder } = require("./ImageLoaderService");
 
 describe("ImageLoaderService mit Proxy Images", () => {
   let pending: (() => void)[] = [];
@@ -161,7 +162,7 @@ describe("ImageLoaderService mit Proxy Images", () => {
     for (let i = 0; i < 10 && errors.length < 1; i++) await new Promise(r => setTimeout(r, 50));
     await add();
     await flush();
-    expect(errors).toEqual(["Bild nicht ladbar: HTTP 308", "Bild nicht ladbar: HTTP 308"]);
+    expect(errors).toEqual(["Image could not be loaded: HTTP 308", "Image could not be loaded: HTTP 308"]);
     expect((global as any).fetch).toHaveBeenCalledTimes(1);
   });
 
@@ -209,3 +210,81 @@ describe("ImageLoaderService mit Proxy Images", () => {
   });
 });
 export {};
+
+describe("ImageLoaderService Thumbnails", () => {
+  const cardInput = { apiName: "A", name: "Bolt", imageUrl: "https://x/bolt.jpg" };
+  const key = "A::Bolt::https://x/bolt.jpg";
+
+  it("liefert mit preferThumbnail die kleine Kopie samt Originalmaßen", async () => {
+    stores.set(key, { cacheKey: key, sizeBytes: 11, timestamp: 1, imageUrl: cardInput.imageUrl, cardInput,
+      blob: { size: 10 }, thumb: { size: 1 }, width: 3000, height: 4000 });
+    const meta = await new Promise<any>((resolve, reject) =>
+      imageLoaderService.addToQueue({ url: cardInput.imageUrl, priority: 1, cardInput, preferThumbnail: true,
+        onLoad: (_img: unknown, _size: number, m: unknown) => resolve(m), onError: reject }));
+    expect(meta).toEqual({ fullWidth: 3000, fullHeight: 4000, thumbnail: true });
+  });
+
+  it("ohne preferThumbnail kommt das Original ohne meta", async () => {
+    const meta = await new Promise<any>((resolve, reject) =>
+      imageLoaderService.addToQueue({ url: cardInput.imageUrl, priority: 1, cardInput,
+        onLoad: (_img: unknown, _size: number, m: unknown) => resolve(m), onError: reject }));
+    expect(meta).toBeUndefined();
+  });
+
+  it("getCachedBlobs liefert Original und kleine Kopie", async () => {
+    const cached = await imageLoaderService.getCachedBlobs(cardInput);
+    expect(cached.thumb).toBeDefined();
+    expect(cached.width).toBe(3000);
+  });
+});
+
+describe("ImageLoaderService geschützte Einträge", () => {
+  const put = (api: string, name: string, timestamp: number, sizeBytes = 10, locked?: boolean) => {
+    const cacheKey = `${api}::${name}::`;
+    stores.set(cacheKey, { cacheKey, sizeBytes, timestamp, imageUrl: "", blob: null, cardInput: { apiName: api, name }, locked });
+    return cacheKey;
+  };
+  const flush = () => new Promise(r => setTimeout(r, 20));
+
+  beforeEach(() => stores.clear());
+  afterAll(() => { imageLoaderService.cacheLimit = 1024 * 1024 * 1024; });
+
+  it("löscht beim Platzschaffen erst ungeschützte, dann geschützte Einträge, jeweils die ältesten zuerst", () => {
+    const order = evictionOrder([
+      { id: "a", timestamp: 1, locked: true },
+      { id: "b", timestamp: 3 },
+      { id: "c", timestamp: 2, locked: true },
+      { id: "d", timestamp: 4 },
+    ]).map((e: any) => e.id);
+    expect(order).toEqual(["b", "d", "a", "c"]);
+  });
+
+  it("setLocked schützt nur die passenden Einträge, Löschen und Cache leeren lassen sie stehen", async () => {
+    put("A", "Bolt", 1);
+    put("A", "Opt", 2);
+    put("B", "Bolt", 3);
+    await imageLoaderService.setLocked({ cardName: "Bolt" }, true);
+    expect([...stores.values()].filter(e => e.locked).map(e => e.cacheKey).sort()).toEqual(["A::Bolt::", "B::Bolt::"]);
+
+    await imageLoaderService.clearCacheForApiName("A");
+    expect([...stores.keys()].sort()).toEqual(["A::Bolt::", "B::Bolt::"]);
+
+    await imageLoaderService.setLocked({ apiName: "B", cardName: "Bolt" }, false);
+    await imageLoaderService.clearCache();
+    expect([...stores.keys()]).toEqual(["A::Bolt::"]);
+  });
+
+  it("Limit: geschützte fallen nur, wenn sie allein das Limit überschreiten", async () => {
+    put("A", "old-locked", 1, 10, true);
+    put("A", "old", 2);
+    put("A", "new", 3);
+    imageLoaderService.setCacheLimit(15);
+    await flush();
+    expect([...stores.keys()]).toEqual(["A::old-locked::"]);
+
+    put("A", "locked2", 4, 10, true);
+    imageLoaderService.setCacheLimit(15);
+    await flush();
+    expect([...stores.keys()]).toEqual(["A::locked2::"]);
+  });
+});

@@ -1,8 +1,12 @@
-.theme-chooser-bar {
+/* Bubbles oben links: Theme-Chooser und Tutorials nebeneinander */
+.top-left-bubbles {
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 10;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 /* Runde Bubble nur mit Symbol */

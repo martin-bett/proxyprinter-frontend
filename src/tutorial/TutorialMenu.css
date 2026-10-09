@@ -1,0 +1,29 @@
+/* Runde Bubble mit Fragezeichen, gleiche Größe wie der Theme-Chooser */
+.memory-button.tutorial-button {
+  padding: 0;
+  width: 44px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tutorial-menu-header {
+  padding: 4px 16px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.MuiMenuItem-root.tutorial-menu-item {
+  font-size: 0.95rem;
+}
+
+/* Die Seite ist per html { zoom } verkleinert. Joyride misst Ziele in sichtbaren Pixeln und zeichnet
+   Spotlight und Tooltip im gezoomten Body, daher Zoom hier aufheben, sonst sitzen sie um 10 % daneben. */
+#react-joyride-portal,
+.__floater {
+  zoom: calc(1 / var(--page-zoom));
+}

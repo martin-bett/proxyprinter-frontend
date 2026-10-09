@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -11,27 +12,27 @@ import ActionButton from '../../../container/inputs/ActionButton';
 import { DeckFinderConfig, deckFinderConfigOperation, isDeckFinderConfigOwner } from '../../../service/deckfinder/deckFinder';
 
 const DECK_FINDER_FIELDS: ConfigField[] = [
-  { group: 'Base Info', name: 'name', label: 'Name', required: true },
-  { group: 'Base Info', name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS },
-  { group: 'Base Info', name: 'officialWebsite', label: 'Official Website' },
-  { group: 'Request', name: 'linkPattern', label: 'Link Pattern', title: 'Regex für Deck-Links, die Gruppe (?<id>...) liefert die Deck-ID' },
-  { group: 'Request', name: 'fetchUrl', label: 'Fetch URL', title: 'Abruf-URL mit {id}' },
-  { group: 'Request', name: 'dataFormat', label: 'Data Format', type: 'select', options: [['json', 'JSON'], ['text', 'Text']] },
-  { group: 'Locator', name: 'deckNameField', label: 'Deck Name Field' },
-  { group: 'Locator', name: 'entryListFields', label: 'Entry List Fields', title: 'Pfade zu den Kartenlisten, komma-getrennt. "*" = alle Werte eines Objekts, "Sideboard=pfad" ordnet die Liste einem Board zu' },
-  { group: 'Locator', name: 'quantityField', label: 'Quantity Field' },
-  { group: 'Locator', name: 'nameField', label: 'Name Field' },
-  { group: 'Locator', name: 'setField', label: 'Set Field' },
-  { group: 'Locator', name: 'numberField', label: 'Number Field', title: 'Sammlernummer, nur zusammen mit Set' },
-  { group: 'Locator', name: 'boardField', label: 'Board Field', title: 'Kategorie(n) eines Eintrags, Text oder Liste' },
-  { group: 'Locator', name: 'optionalBoards', label: 'Optional Boards', title: 'Boards, die nur auf Wunsch geladen werden, komma-getrennt (bei Text: Abschnittsköpfe)' },
-  { group: 'Search', name: 'searchUrl', label: 'Search URL', title: 'Such-URL mit {query} und optional {page}' },
-  { group: 'Search', name: 'searchListField', label: 'Result List Field' },
-  { group: 'Search', name: 'searchIdField', label: 'Deck ID Field' },
-  { group: 'Search', name: 'searchNameField', label: 'Deck Name Field' },
-  { group: 'Search', name: 'searchOwnerField', label: 'Owner Field' },
-  { group: 'Search', name: 'searchImageField', label: 'Image Field' },
-  { group: 'Search', name: 'searchInfoField', label: 'Info Field', title: 'z. B. Kartenanzahl' },
+  { group: 'configCommon.groups.baseInfo', name: 'name', label: 'configCommon.fields.name', required: true },
+  { group: 'configCommon.groups.baseInfo', name: 'category', label: 'configCommon.fields.category', type: 'select', options: CATEGORY_OPTIONS },
+  { group: 'configCommon.groups.baseInfo', name: 'officialWebsite', label: 'configCommon.fields.officialWebsite' },
+  { group: 'configCommon.groups.request', name: 'linkPattern', label: 'configCommon.fields.linkPattern', title: 'deckFinderConfig.titles.linkPattern' },
+  { group: 'configCommon.groups.request', name: 'fetchUrl', label: 'deckFinderConfig.fields.fetchUrl', title: 'deckFinderConfig.titles.fetchUrl' },
+  { group: 'configCommon.groups.request', name: 'dataFormat', label: 'configCommon.fields.dataFormat', type: 'select', options: [['json', 'configCommon.options.json'], ['text', 'configCommon.options.text']] },
+  { group: 'configCommon.groups.locator', name: 'deckNameField', label: 'deckFinderConfig.fields.deckNameField' },
+  { group: 'configCommon.groups.locator', name: 'entryListFields', label: 'deckFinderConfig.fields.entryListFields', title: 'deckFinderConfig.titles.entryListFields' },
+  { group: 'configCommon.groups.locator', name: 'quantityField', label: 'deckFinderConfig.fields.quantityField' },
+  { group: 'configCommon.groups.locator', name: 'nameField', label: 'configCommon.fields.nameField' },
+  { group: 'configCommon.groups.locator', name: 'setField', label: 'configCommon.fields.setField' },
+  { group: 'configCommon.groups.locator', name: 'numberField', label: 'deckFinderConfig.fields.numberField', title: 'deckFinderConfig.titles.numberField' },
+  { group: 'configCommon.groups.locator', name: 'boardField', label: 'deckFinderConfig.fields.boardField', title: 'deckFinderConfig.titles.boardField' },
+  { group: 'configCommon.groups.locator', name: 'optionalBoards', label: 'deckFinderConfig.fields.optionalBoards', title: 'deckFinderConfig.titles.optionalBoards' },
+  { group: 'configCommon.groups.search', name: 'searchUrl', label: 'deckFinderConfig.fields.searchUrl', title: 'deckFinderConfig.titles.searchUrl' },
+  { group: 'configCommon.groups.search', name: 'searchListField', label: 'deckFinderConfig.fields.searchListField' },
+  { group: 'configCommon.groups.search', name: 'searchIdField', label: 'deckFinderConfig.fields.searchIdField' },
+  { group: 'configCommon.groups.search', name: 'searchNameField', label: 'deckFinderConfig.fields.searchNameField' },
+  { group: 'configCommon.groups.search', name: 'searchOwnerField', label: 'deckFinderConfig.fields.searchOwnerField' },
+  { group: 'configCommon.groups.search', name: 'searchImageField', label: 'deckFinderConfig.fields.searchImageField' },
+  { group: 'configCommon.groups.search', name: 'searchInfoField', label: 'deckFinderConfig.fields.searchInfoField', title: 'deckFinderConfig.titles.searchInfoField' },
 ];
 
 interface DeckFinderConfigManagerProps {
@@ -41,6 +42,7 @@ interface DeckFinderConfigManagerProps {
 
 /** Deckfinder-Configs ansehen, anlegen und bearbeiten. Andere sehen eine Config erst nach Publish. */
 const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ configs, onChanged }) => {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<number | null>(configs[0]?.id ?? null);
   const selected = configs.find(c => c.id === selectedId) || null;
   const [draft, setDraft] = useState<Record<string, unknown>>({});
@@ -85,7 +87,7 @@ const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ confi
           </button>
         ))}
         <button type="button" className="deckfinder-config-item" onClick={() => run('create')}>
-          <AddIcon className="subCategoryIcon" />New
+          <AddIcon className="subCategoryIcon" />{t('deckFinderConfig.new')}
         </button>
       </div>
       {selected && (
@@ -101,17 +103,17 @@ const DeckFinderConfigManager: React.FC<DeckFinderConfigManagerProps> = ({ confi
           <div className="config-actions">
             {isOwner && (
               <>
-                <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>Save</ActionButton>
+                <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>{t('common.save')}</ActionButton>
                 <ActionButton
                   icon={selected.published ? <LockIcon /> : <PublicIcon />}
                   onClick={() => run('publish', { id: selected.id, published: !selected.published })}
                 >
-                  {selected.published ? 'Unpublish' : 'Publish'}
+                  {selected.published ? t('configCommon.unpublish') : t('configCommon.publish')}
                 </ActionButton>
-                <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={() => run('delete', { id: selected.id })}>Delete</ActionButton>
+                <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={() => run('delete', { id: selected.id })}>{t('common.delete')}</ActionButton>
               </>
             )}
-            <ActionButton icon={<ContentCopyIcon />} onClick={() => run('copy', { id: selected.id })}>Copy Config</ActionButton>
+            <ActionButton icon={<ContentCopyIcon />} onClick={() => run('copy', { id: selected.id })}>{t('configCommon.copyConfig')}</ActionButton>
           </div>
         </form>
       )}

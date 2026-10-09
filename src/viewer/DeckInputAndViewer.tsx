@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { imageLoaderService, loadImageElement } from '../service/cache/ImageLoaderService';
 import SearchCacheService, { SearchApiResult } from '../service/cache/SearchCacheService';
-import serverSearchCache, { ServerLookup, lookupKey } from '../service/cache/ServerSearchCache';
+import serverSearchCache, { ServerLookup, fetchServerCacheEnabled, lookupKey } from '../service/cache/ServerSearchCache';
 import ImageSelectDialog from './grid/ImageSelectDialog';
 import PdfProgressDialog, { ProgressDto, isFinished } from './pdf/PdfProgressDialog';
 import '../viewer/CardGrid.css';
 import { SettingsDialog, defaultSettings, PdfSettings } from './pdf/SettingsDialog';
 import { fetchPdfMailEnabled } from './pdf/pdfEmail';
+import { useAuth } from '../service/auth/auth';
 import { DEFAULT_MAX_PDF_SIZE_MB, PdfImageEntry, bytesToMb, estimatePdfBytes, fetchPdfSizeLimitMb, formatMb } from './pdf/pdfSizeLimit';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CropIcon from '@mui/icons-material/Crop';
+import FindReplaceIcon from '@mui/icons-material/FindReplace';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CardImage, { CardImageError } from './grid/CardImage';
 import CardTitle from './grid/CardTitle';
 import RecropDialog from './grid/crop/RecropDialog';
@@ -37,14 +41,17 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import PayPalDonateButton from './info/PayPalDonateButton';
 import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
+import { setLoadingProgressTitle } from '../service/tabTitle';
 import VersionInfo from './info/VersionInfo';
 import ThemeChooser from '../theme/ThemeChooser';
+import TutorialMenu from '../tutorial/TutorialMenu';
+import LanguageChooser from '../i18n/LanguageChooser';
 import { Minus, Plus } from 'lucide-react';
 import EyeTriangle from '../svg/EyeTriangle';
 import { Dialog } from '@mui/material';
 import ClosableDialog from '../container/ClosableDialog';
 import ChoiceButton from '../container/inputs/ChoiceButton';
-import { ONLY_THIS_HINT } from '../container/inputs/useLongPress';
+import { onlyThisHint } from '../container/inputs/useLongPress';
 import { fetchAndSelectAllConfigs, loadSavedConfigs } from '../service/configs/initialConfigs';
 import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import SortableList, { PriorityRank } from '../container/inputs/SortableList';
@@ -58,13 +65,15 @@ import LanguageFlag from '../container/LanguageFlag';
 import ActionButton from '../container/inputs/ActionButton';
 import CategoryToggle from '../container/inputs/CategoryToggle';
 import MemoryButtons from './cache/MemoryButtons';
-import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, SearchResult, hasConnectedCards } from '../service/ApiFactory';
+import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, PageProgress, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
 import SearchLog from './log/SearchLog';
+import { replaceDeckEntry } from './replaceDeckEntry';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
 import { CardGroup, CardResult, CardResultsMap, DeckEntry, GroupedResults, LogEntry, SelectedCardsMap } from '../api/types/types';
+import { adjustSelectionForCountChange } from './selectionUtils';
 
 const NO_LANGUAGE = 'No Language';
 const languageOfCard = (card: CardResult) => card.languageCode || NO_LANGUAGE;
@@ -95,10 +104,17 @@ const defaultCropSettings: CropSettings = {
   isStretch: true
 };
 
+/** Laufender Netzsuch-Eintrag im Search Log */
+interface NetworkLog {
+  onPage: (progress: PageProgress) => void;
+  finish: (entry: LogEntry) => void;
+}
+
 const SEARCH_CONNECTED_KEY = 'searchConnectedCards';
 const USE_SERVER_CACHE_KEY = 'useServerSearchCache';
 
 const DeckInputAndViewer: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [decklist, setDecklist] = useState('');
   const [appendMode, setAppendMode] = useState(false);
   const [cardResults, setCardResults] = useState<CardResultsMap>({});
@@ -106,6 +122,11 @@ const DeckInputAndViewer: React.FC = () => {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fortschritt auch im Tab-Titel zeigen, solange Karten aus den APIs geladen werden
+  useEffect(() => {
+    setLoadingProgressTitle(isLoading ? progress : null);
+  }, [isLoading, progress]);
   const [rawDataDialog, setRawDataDialog] = useState<string | null>(null);
   const [categoryStates, setCategoryStates] = useState<Record<string, boolean>>({});
   const [apiConfigs, setApiConfigs] = useState<Record<string, Config>>({}); // New state for API configs
@@ -142,6 +163,12 @@ const DeckInputAndViewer: React.FC = () => {
       return true;
     }
   });
+  // Backend kann den Such-Cache abschalten (searchcache.enabled=false, z. B. in PR-Testumgebungen)
+  const [serverCacheAvailable, setServerCacheAvailable] = useState(true);
+  const serverCacheActive = useServerCache && serverCacheAvailable;
+  useEffect(() => {
+    fetchServerCacheEnabled().then(setServerCacheAvailable);
+  }, []);
   const [showImageSettings, setShowImageSettings] = useState(false);
 
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -151,6 +178,8 @@ const DeckInputAndViewer: React.FC = () => {
   const [pdfProgressDialogOpen, setPdfProgressDialogOpen] = useState(false);
   const [customCardDialogOpen, setCustomCardDialogOpen] = useState(false);
   const [customCardMaskOpen, setCustomCardMaskOpen] = useState(false);
+  // Eintrag ohne Fund, den der Add-Single-Dialog gerade ersetzt (null = normales Hinzufügen)
+  const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
   const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
   const [linkListDialogOpen, setLinkListDialogOpen] = useState(false);
   // Deckfinder: Decks per Link, ID oder Name von Deckbuilder-Seiten laden
@@ -229,16 +258,51 @@ const DeckInputAndViewer: React.FC = () => {
     setLog((prevLog) => [...prevLog, entry]);
   };
 
+  // Netzsuchen stehen sofort im Log (läuft noch) und werden nach jeder fertigen Seite aktualisiert.
+  // Wurde das Log inzwischen geleert, kommt ein später fertiger Eintrag nicht zurück.
+  const nextLogId = useRef(0);
+  const startNetworkLog = (configName: string, cardName: string, startedAt: number): NetworkLog => {
+    const id = ++nextLogId.current;
+    setLog((prevLog) => [...prevLog, { id, configName, cardName, source: 'running', count: 0, durationMs: 0, requestCount: 0 }]);
+    const replace = (entry: LogEntry) => setLog((prevLog) => prevLog.map(other => (other.id === id ? { ...entry, id } : other)));
+    return {
+      onPage: ({ count, requestCount }) => replace({ configName, cardName, source: 'running', count, requestCount, durationMs: performance.now() - startedAt }),
+      finish: replace,
+    };
+  };
+  const finishLog = (entry: LogEntry, run: NetworkLog | undefined) => (run ? run.finish(entry) : addToLog(entry));
+
   const handleSettingsChange = (newSettings: PdfSettings) => {
     setSettings(newSettings);
   };
 
   const handleAddCustomCard = () => {
+    setReplaceTarget(null);
+    setCustomCardDialogOpen(true);
+  };
+
+  /** Eintrag ohne Fund ganz aus dem Deck nehmen (alle Exemplare). */
+  const handleDiscardEntry = (cardName: string) => {
+    const drop = <T,>(prev: Record<string, T>) => {
+      if (!(cardName in prev)) return prev;
+      const next = { ...prev };
+      delete next[cardName];
+      return next;
+    };
+    setCardResults(drop);
+    setSelectedCards(drop);
+    setManualPicks(drop);
+    setFreshPicks(new Set());
+  };
+
+  const handleReplaceCard = (cardName: string) => {
+    setReplaceTarget(cardName);
     setCustomCardDialogOpen(true);
   };
 
   const handleCloseCustomCardDialog = () => {
     setCustomCardDialogOpen(false);
+    setReplaceTarget(null);
   };
 
   const handleOpenGalleryDialog = () => {
@@ -282,37 +346,51 @@ const DeckInputAndViewer: React.FC = () => {
     setApiConfigs(configsObject); // Update internal API configs state
   };
 
-  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[]) => {
+  /** Neue Einträge ins Deck: ans Ende oder, mit replaceKey, an die Stelle dieses Eintrags (der dann wegfällt). */
+  const insertDeckEntries = (entries: CardResultsMap, replaceKey: string | null) => {
+    if (replaceKey === null) {
+      setCardResults(prev => ({ ...prev, ...entries }));
+      return;
+    }
+    setCardResults(prev => replaceDeckEntry(prev, replaceKey, entries));
+    const dropOld = <T,>(prev: Record<string, T>) => {
+      if (!(replaceKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[replaceKey];
+      return next;
+    };
+    setSelectedCards(dropOld);
+    setManualPicks(dropOld);
+    setFreshPicks(new Set());
+  };
+
+  const addCustomCrops = (cardName: string, imageUrl: string, crops: CropSettings[], replaceKey: string | null = null) => {
     // Freie Schlüssel wählen, damit ein zweites Bild mit gleichem Namen keine Karte überschreibt
-    const usedKeys = new Set(Object.keys(cardResults));
+    const usedKeys = new Set(Object.keys(cardResults).filter(key => key !== replaceKey));
     const cropKeys: string[] = [];
     for (let i = 0; cropKeys.length < crops.length; i++) {
       const key = `${cardName}_crop${i}`;
       if (!usedKeys.has(key)) cropKeys.push(key);
     }
+    // Eintrag in cardResults für jeden Zuschnitt
+    const entries: CardResultsMap = {};
     crops.forEach((crop, cropIndex) => {
-      // Eintrag in cardResults für jeden Zuschnitt
-      const cropKey = cropKeys[cropIndex];
-      const cropCard: CardResult = {
-        name: cardName,
-        imageUrl,
-        apiName: 'custom',
-        languageCode: NO_LANGUAGE,
-        cropSettings: crop,
+      entries[cropKeys[cropIndex]] = {
+        count: 1,
+        results: [{
+          name: cardName,
+          imageUrl,
+          apiName: 'custom',
+          languageCode: NO_LANGUAGE,
+          cropSettings: crop,
+        }],
       };
-
-      setCardResults((prev) => ({
-        ...prev,
-        [cropKey]: {
-          count: 1,
-          results: [cropCard],
-        },
-      }));
-
-      setSelectedCards((prev) => ({
-        ...prev,
-        [cropKey]: [cropCard],
-      }));
+    });
+    insertDeckEntries(entries, replaceKey);
+    setSelectedCards((prev) => {
+      const next = { ...prev };
+      Object.entries(entries).forEach(([key, group]) => { next[key] = [group.results[0]]; });
+      return next;
     });
   };
 
@@ -348,18 +426,19 @@ const DeckInputAndViewer: React.FC = () => {
     }
     if (!finalImageUrl) return;
     const url = finalImageUrl;
+    const replaceKey = replaceTarget;
 
     if (crops && crops.length > 0) {
       // Zuschnitte kommen fertig aus der Maske
-      addCustomCrops(cardName, url, crops);
+      addCustomCrops(cardName, url, crops, replaceKey);
     } else {
       // Ganzes Bild: Bild laden, um die Dimensionen zu ermitteln (Google Drive u.ä. nur über den Backend-Proxy)
       loadImageElement(url)
         .then(img => {
-          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }]);
+          addCustomCrops(cardName, url, [{ offSetX: 0, offSetY: 0, width: img.width, height: img.height, isStretch: true }], replaceKey);
         })
         .catch(error => {
-          console.error('Fehler beim Laden des Bildes. Überprüfen Sie die URL.', url, error);
+          console.error('Error loading the image. Check the URL.', url, error);
         });
     }
 
@@ -391,13 +470,14 @@ const DeckInputAndViewer: React.FC = () => {
     if (!apiKey || !link || !apiFactory) return [];
     const cacheName = `link:${link}`;
     const startedAt = performance.now();
+    let run: NetworkLog | undefined;
     try {
       if (await SearchCacheService.hasSearchResult(apiKey, cacheName)) {
         const cached = await SearchCacheService.getSearchResult(apiKey, cacheName);
         return cached?.results || [];
       }
       const config = apiConfigs[apiKey];
-      if (useServerCache && config) {
+      if (serverCacheActive && config) {
         const fromServer = (await serverSearchCache.lookup([{ apiKey, config, term: cacheName }])).get(lookupKey(apiKey, cacheName));
         if (fromServer) {
           await SearchCacheService.setSearchResult(apiKey, cacheName, fromServer);
@@ -405,21 +485,22 @@ const DeckInputAndViewer: React.FC = () => {
           return fromServer.results;
         }
       }
+      run = startNetworkLog(apiKey, cardName, startedAt);
       const fetched = await apiFactory.fetchConnectedCard(apiKey, link, cardName);
       const result = { ...fetched, results: fetched.results.map(card => ({ ...card, connectedCards: undefined })) };
       await SearchCacheService.setSearchResult(apiKey, cacheName, result);
-      if (useServerCache && config) serverSearchCache.put(config, cacheName, result);
-      addToLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+      if (serverCacheActive && config) serverSearchCache.put(config, cacheName, result);
+      finishLog({ configName: apiKey, cardName, source: 'network', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
       return result.results;
     } catch (error) {
-      addToLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+      finishLog({ configName: apiKey, cardName, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
       return [];
     }
   };
 
   // Fragt den Server-Cache gesammelt nach allen Suchen, die der lokale Cache nicht hat
   const lookupServerCache = async (apiKeys: string[], terms: string[]): Promise<Map<string, SearchApiResult>> => {
-    if (!useServerCache) return new Map();
+    if (!serverCacheActive) return new Map();
     const pairs = apiKeys.flatMap(apiKey => terms.map(term => ({ apiKey, term })));
     const locallyCached = await Promise.all(pairs.map(({ apiKey, term }) => SearchCacheService.hasSearchResult(apiKey, term).catch(() => false)));
     const requests: ServerLookup[] = pairs
@@ -430,6 +511,8 @@ const DeckInputAndViewer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Neue Suche = neues Deck: der geladene Snapshot wird ab jetzt nicht mehr überschrieben
+    snapshots.release();
     setIsLoading(true);
     if (!appendMode) {
       setCardResults({});
@@ -486,6 +569,7 @@ const DeckInputAndViewer: React.FC = () => {
         const tasks = entries.map(entry => async () => {
           if (!groupResults[apiKey][entry.name]) {
             const startedAt = performance.now();
+            let run: NetworkLog | undefined;
             try {
               let result: SearchApiResult | undefined;
               if (await SearchCacheService.hasSearchResult(apiKey, entry.name)) {
@@ -501,18 +585,19 @@ const DeckInputAndViewer: React.FC = () => {
                 addToLog({ configName: apiKey, cardName: entry.name, source: 'server', count: fromServer.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: fromServer.rawResponse });
                 groupResults[apiKey][entry.name] = fromServer.results;
               } else {
-                result = await api({ cardname: entry.name });
+                run = startNetworkLog(apiKey, entry.name, startedAt);
+                result = await api({ cardname: entry.name }, run.onPage);
                 if (dropConnected) {
                   result = { ...result, results: result.results.map(card => (card.connectedCards ? { ...card, connectedCards: [] } : card)) };
                 }
                 await SearchCacheService.setSearchResult(apiKey, entry.name, result);
-                if (useServerCache) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
+                if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], entry.name, result);
                 const resultsArr = result?.results || [];
-                addToLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+                finishLog({ configName: apiKey, cardName: entry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
                 groupResults[apiKey][entry.name] = resultsArr;
               }
             } catch (error) {
-              addToLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+              finishLog({ configName: apiKey, cardName: entry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
               groupResults[apiKey][entry.name] = [];
             }
           }
@@ -619,7 +704,16 @@ const DeckInputAndViewer: React.FC = () => {
     setAppendMode(false);
   };
 
-  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+  // Reihenfolge der Kacheln, wie das Raster sie zeigt. Dient dem Blättern im Bildauswahl-Dialog.
+  const deckTiles = useMemo(() => Object.entries(cardResults).flatMap(([name, data]) =>
+    Array.from({ length: uniquePrints ? data.count : 1 }, (_, index) => ({ name, index }))
+  ), [cardResults, uniquePrints]);
+  const currentTilePosition = currentCardName !== null && currentCardIndex !== null
+    ? deckTiles.findIndex(tile => tile.name === currentCardName && tile.index === currentCardIndex)
+    : -1;
+
+  // Speichert die Wahl für die aktuelle Kachel (null = nichts gewählt, nur neu zeichnen)
+  const applyImageChoice = (selectedImage: CardResult | null) => {
     if (selectedImage && currentCardName !== null && currentCardIndex !== null) {
       setSelectedCards(prev => {
         const currentCards = prev[currentCardName] || [];
@@ -645,9 +739,24 @@ const DeckInputAndViewer: React.FC = () => {
       // Ohne neue Wahl kann sich trotzdem der Zuschnitt des gewählten Bildes geändert haben
       setSelectedCards(prev => ({ ...prev }));
     }
+  };
+
+  const handleCloseImageSelectDialog = (selectedImage: CardResult | null) => {
+    applyImageChoice(selectedImage);
     setImageSelectDialogOpen(false);
     setCurrentCardName(null);
     setCurrentCardIndex(null);
+  };
+
+  // Zur vorherigen/nächsten Kachel blättern, der Dialog bleibt offen
+  const handleStepImageSelect = (delta: -1 | 1, selectedImage: CardResult | null) => {
+    if (currentCardName === null || currentCardIndex === null) return;
+    const next = deckTiles[currentTilePosition + delta];
+    if (!next) return;
+    applyImageChoice(selectedImage);
+    imageLoaderService.stopByCategory('selectgrid');
+    setCurrentCardName(next.name);
+    setCurrentCardIndex(next.index);
   };
 
   const handleRemoveCard = (cardName: string, index: number) => {
@@ -808,11 +917,17 @@ const DeckInputAndViewer: React.FC = () => {
 
   const [pdfSizeLimitMb, setPdfSizeLimitMb] = useState(DEFAULT_MAX_PDF_SIZE_MB);
   const [pdfMailEnabled, setPdfMailEnabled] = useState(false);
-  const pdfEmail = pdfMailEnabled ? settings.email.trim() : '';
+  const auth = useAuth();
+  const pdfSendMail = pdfMailEnabled && settings.sendMail && !!auth.email;
   useEffect(() => {
     fetchPdfSizeLimitMb().then(setPdfSizeLimitMb);
     fetchPdfMailEnabled().then(setPdfMailEnabled);
   }, []);
+  // Seitenvorschau im Einstellungsdialog: nur die ersten Karten, so viele wie auf eine Seite passen
+  const settingsPreviewCards = useMemo(
+    () => pdfImageEntries.slice(0, 40).map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
+    [pdfImageEntries]
+  );
   const estimatedPdfBytes = useMemo(() => estimatePdfBytes(pdfImageEntries, settings), [pdfImageEntries, settings]);
   const pdfTooLarge = bytesToMb(estimatedPdfBytes) > pdfSizeLimitMb;
 
@@ -832,7 +947,7 @@ const DeckInputAndViewer: React.FC = () => {
     setSelectedCards(restored.selectedCards);
     setManualPicks(restored.manualPicks);
     setFreshPicks(new Set());
-    setSettings(prev => ({ ...restored.settings, email: prev.email }));
+    setSettings(prev => ({ ...restored.settings, sendMail: prev.sendMail }));
     setEnabledApis(prev => {
       const wanted = new Set(restored.enabledApis);
       const updated: Record<string, boolean> = {};
@@ -845,9 +960,9 @@ const DeckInputAndViewer: React.FC = () => {
 
   const snapshots = useSnapshots({ state: workState, isBusy: isLoading, apply: applySnapshot });
 
-  // Deck zurücksetzen: vorher ein Snapshot, damit man den Stand zurückholen kann.
+  // Deck zurücksetzen: vorher ein Snapshot (bzw. der aktive überschrieben), damit man den Stand zurückholen kann.
   // APIs, Filter und PDF-Einstellungen bleiben, die nächste Analyse setzt die Filter neu.
-  const saveSnapshot = snapshots.save;
+  const saveSnapshot = snapshots.saveAndRelease;
   const resetDeck = useCallback(async () => {
     await saveSnapshot();
     setDecklist('');
@@ -866,7 +981,7 @@ const DeckInputAndViewer: React.FC = () => {
     try {
       setDeckFinderConfigs(await fetchDeckFinderConfigs(await getFingerprint()));
     } catch (e) {
-      console.error('Deckfinder-Configs nicht ladbar:', e);
+      console.error('Could not load deckfinder configs:', e);
     }
   }, []);
   useEffect(() => { reloadDeckFinderConfigs(); }, [reloadDeckFinderConfigs]);
@@ -913,11 +1028,11 @@ const DeckInputAndViewer: React.FC = () => {
     setPdfProgressError(null);
     setPdfProgressDialogOpen(true);
 
-    const { email, ...pdfSettings } = settings;
+    const { sendMail, ...pdfSettings } = settings;
     const createPdfDto = {
       images: pdfImageEntries.map(({ imageUrl, cropSettings }) => ({ imageUrl, cropSettings })),
       settings: pdfSettings,
-      ...(pdfEmail ? { email: pdfEmail } : {})
+      ...(pdfSendMail ? { sendMail: true, language: i18n.language } : {})
     };
     try {
       const response = await fetch('/api/pdf', {
@@ -955,14 +1070,14 @@ const DeckInputAndViewer: React.FC = () => {
         } catch (error) {
           console.error('Error fetching PDF progress:', error);
           stopPdfPolling();
-          setPdfProgressError('Lost connection to the PDF generation. Please try again.');
+          setPdfProgressError(t('deckInput.pdfError.lostConnection'));
         }
       };
       pdfPollingRef.current = setInterval(poll, 1000);
       poll();
     } catch (error) {
       console.error('Error creating PDF:', error);
-      setPdfProgressError('Failed to start PDF generation. Please try again.');
+      setPdfProgressError(t('deckInput.pdfError.startFailed'));
     }
   };
 
@@ -992,7 +1107,7 @@ const DeckInputAndViewer: React.FC = () => {
       }
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      setPdfProgressError('Failed to download PDF. Please try again.');
+      setPdfProgressError(t('deckInput.pdfError.downloadFailed'));
     }
   }, [closePdfProgressDialog]);
 
@@ -1054,7 +1169,7 @@ const DeckInputAndViewer: React.FC = () => {
       indeterminate={isIndeterminate}
       className={labelClass}
       onLongPress={onLongPress}
-      longPressHint={ONLY_THIS_HINT}
+      longPressHint={onlyThisHint()}
       trailing={trailing}
       badge={badge}
     />
@@ -1087,31 +1202,47 @@ const DeckInputAndViewer: React.FC = () => {
   const getImageLabelCategory = (category: string) => {
     switch (category.toLowerCase()) {
       case 'mtg':
-        return <img src='/icons/mtg.png' alt="MTG Icon" className="categoryIcon" />;
+        return <img src='/icons/mtg.png' alt={t('deckInput.categoryIcon.mtg')} className="categoryIcon" />;
       case 'poke':
-        return <img src='/icons/poke.png' alt="Pokemon Icon" className="categoryIcon" />;
+        return <img src='/icons/poke.png' alt={t('deckInput.categoryIcon.poke')} className="categoryIcon" />;
       case 'yugioh':
         return <div className='categoryIcon'><EyeTriangle /></div>;
       case 'misc':
-        return <img src='/icons/misc.webp' alt="Misc Icon" className="categoryIcon" />;
+        return <img src='/icons/misc.webp' alt={t('deckInput.categoryIcon.misc')} className="categoryIcon" />;
       default:
         return null;
     }
   }
 
   const updateCardCount = (cardName: string, increment: number) => {
+    const prevCount = cardResults[cardName]?.count ?? 0;
+    const newCount = Math.max(0, prevCount + increment);
+
     setCardResults(prevResults => ({
       ...prevResults,
       [cardName]: {
         ...prevResults[cardName],
-        count: Math.max(0, prevResults[cardName].count + increment)
+        count: newCount
       }
     }));
+
+    // Inherit selection from first copy when count changes
+    if (increment !== 0) {
+      setSelectedCards(prevSelected => ({
+        ...prevSelected,
+        [cardName]: adjustSelectionForCountChange(prevSelected[cardName], prevCount, newCount)
+      }));
+
+      setManualPicks(prevPicks => ({
+        ...prevPicks,
+        [cardName]: adjustSelectionForCountChange(prevPicks[cardName], prevCount, newCount)
+      }));
+    }
   };
 
   const getLanguageLabel = (lang: string) => (
     <div className="label-container">
-      <span>{lang === NO_LANGUAGE ? 'No Language' : lang}</span>
+      <span>{lang === NO_LANGUAGE ? t('deckInput.noLanguage') : lang}</span>
       <LanguageFlag language={lang} />
     </div>
   );
@@ -1147,7 +1278,8 @@ const DeckInputAndViewer: React.FC = () => {
     setShowImageSettings(event.target.checked);
   }
 
-  const searchForApis = async (cardName: string) => {
+  /** Sucht eine einzelne Karte über alle aktiven APIs, ohne sie schon ins Deck zu legen. */
+  const searchSingleCard = async (cardName: string): Promise<CardResultsMap> => {
     setIsLoading(true);
     setProgress(0);
 
@@ -1173,6 +1305,7 @@ const DeckInputAndViewer: React.FC = () => {
         const api = apiFactory!.createApi(apiKey);
 
         const startedAt = performance.now();
+        let run: NetworkLog | undefined;
         try {
           let result: SearchApiResult | undefined;
           if (await SearchCacheService.hasSearchResult(apiKey, cardEntry.name)) {
@@ -1186,15 +1319,16 @@ const DeckInputAndViewer: React.FC = () => {
             addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'server', count: result.results.length, durationMs: performance.now() - startedAt, requestCount: 0, rawResponse: result.rawResponse });
             groupResults[apiKey][cardEntry.name] = result.results;
           } else {
-            result = await api({ cardname: cardEntry.name });
+            run = startNetworkLog(apiKey, cardEntry.name, startedAt);
+            result = await api({ cardname: cardEntry.name }, run.onPage);
             await SearchCacheService.setSearchResult(apiKey, cardEntry.name, result);
-            if (useServerCache) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
+            if (serverCacheActive) serverSearchCache.put(apiConfigs[apiKey], cardEntry.name, result);
             const resultsArr = result?.results || [];
-            addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse });
+            finishLog({ configName: apiKey, cardName: cardEntry.name, source: 'network', count: resultsArr.length, durationMs: performance.now() - startedAt, requestCount: result.requestCount, rawResponse: result.rawResponse }, run);
             groupResults[apiKey][cardEntry.name] = resultsArr;
           }
         } catch (error) {
-          addToLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) });
+          finishLog({ configName: apiKey, cardName: cardEntry.name, source: 'error', count: 0, durationMs: performance.now() - startedAt, error: error instanceof Error ? error.message : String(error) }, run);
           groupResults[apiKey][cardEntry.name] = [];
         }
 
@@ -1230,9 +1364,13 @@ const DeckInputAndViewer: React.FC = () => {
         })
       }
     };
+    setIsLoading(false);
     // Andere Seiten mehrseitiger Karten werden eigene Einträge, sofern sie nicht schon in der Liste stehen
-    const results = splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name));
+    return splitCardFaces(combinedResults, Object.keys(cardResults).filter(name => name !== cardEntry.name && name !== replaceTarget));
+  };
 
+  /** Bestätigtes Suchergebnis aus Add Single ins Deck legen (oder den Eintrag ohne Fund ersetzen). */
+  const addSearchedCard = (results: CardResultsMap) => {
     // Make filter values that this card brings in for the first time visible
     const newOptions = collectFilterOptions(results);
     const addMissing = (prev: Set<string>, values: Set<string>, known: Set<string>) => {
@@ -1242,13 +1380,8 @@ const DeckInputAndViewer: React.FC = () => {
     setVisibleApis(prev => addMissing(prev, newOptions.apis, availableApis));
     setVisibleLanguages(prev => addMissing(prev, newOptions.languages, availableLanguages));
 
-    // Set CardResults with transformed CardEntry objects
-    setCardResults(prevResults => ({
-      ...prevResults,
-      ...results
-    }));
-
-    setIsLoading(false);
+    insertDeckEntries(results, replaceTarget);
+    if (replaceTarget !== null) handleCloseCustomCardDialog();
   };
 
 
@@ -1289,14 +1422,15 @@ const DeckInputAndViewer: React.FC = () => {
   };
 
   // Kurzinfos für zugeklappte Abschnitte
-  const ratio = (selected: number, total: number, label: string) => (total > 0 ? `${selected} / ${total} ${label}` : undefined);
+  const ratio = (selected: number, total: number, kind: 'active' | 'shown') =>
+    (total > 0 ? (kind === 'active' ? t('deckInput.ratio.active', { selected, total }) : t('deckInput.ratio.shown', { selected, total })) : undefined);
   const allApiNames = Object.keys(apiConfigs);
   const apiSelectionSummary = allApiNames.length > 0 ? (
     <span
       title={[...new Set(Object.values(apiConfigs).map(config => config.category))]
         .map(category => {
           const names = Object.values(apiConfigs).filter(config => config.category === category).map(config => config.name);
-          return `${category}: ${names.filter(name => enabledApis[name]).length} / ${names.length}`;
+          return t('deckInput.apiSelection.categoryRatio', { category, selected: names.filter(name => enabledApis[name]).length, total: names.length });
         })
         .join('\n')}
     >
@@ -1308,7 +1442,11 @@ const DeckInputAndViewer: React.FC = () => {
 
   return (
     <div className="deck-input-and-viewer" style={{ position: 'relative' }}>
-      <ThemeChooser />
+      <div className="top-left-bubbles">
+        <ThemeChooser />
+        <TutorialMenu />
+        <LanguageChooser />
+      </div>
       <MemoryButtons onResetDeck={resetDeck} resetDisabled={isLoading} />
       <TitleDiv progress={isLoading ? progress : null} />
 
@@ -1316,8 +1454,8 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="input-controls">
         <CollapsibleSection
           storageKey="snapshots"
-          title="Snapshots"
-          summary={`${snapshots.sectionProps.snapshots.length || 'none'} saved`}
+          title={t('deckInput.snapshots.title')}
+          summary={snapshots.sectionProps.snapshots.length ? t('deckInput.snapshots.saved', { count: snapshots.sectionProps.snapshots.length }) : t('deckInput.snapshots.noneSaved')}
         >
           <SnapshotSection {...snapshots.sectionProps} />
         </CollapsibleSection>
@@ -1325,10 +1463,10 @@ const DeckInputAndViewer: React.FC = () => {
           <div className="api-toggles checkbox-group">
             <CollapsibleSection
               storageKey="api-selection"
-              title="API Selection"
+              title={t('deckInput.apiSelection.title')}
               summary={apiSelectionSummary}
               defaultOpen={false}
-              action={{ icon: <SettingsIcon />, title: 'Manage APIs', onClick: handleOpenApiConfigDialog }}
+              action={{ icon: <SettingsIcon />, title: t('deckInput.apiSelection.manage'), onClick: handleOpenApiConfigDialog }}
             >
               {Object.entries(categoryStates).map(([category]) => (
                 <div key={category} className="mb-4">
@@ -1369,8 +1507,8 @@ const DeckInputAndViewer: React.FC = () => {
         <div className="decklist-input">
           <CollapsibleSection
             storageKey="decklist"
-            title="Enter Decklist"
-            summary={decklistCardCount > 0 ? `${decklistCardCount} ${decklistCardCount === 1 ? 'card' : 'cards'}` : 'empty'}
+            title={t('deckInput.decklist.title')}
+            summary={decklistCardCount > 0 ? t('deckInput.decklist.cards', { count: decklistCardCount }) : t('deckInput.decklist.empty')}
           >
             <form onSubmit={handleSubmit}>
               <textarea
@@ -1386,11 +1524,12 @@ const DeckInputAndViewer: React.FC = () => {
                 return (
                   <div
                     className="connected-cards-toggle"
+                    data-tour="tokens-extras"
                     title={connectedApis.length > 0 ?
-                      `Add tokens, emblems etc. as separate cards. Provided by: ${connectedApis.join(', ')}` :
-                      'No active API provides tokens or extras'}
+                      t('deckInput.tokens.tooltip', { apis: connectedApis.join(', ') }) :
+                      t('deckInput.tokens.none')}
                   >
-                    {renderCheckbox('searchConnected', 'Tokens & Extras', searchConnected && connectedApis.length > 0, (event) => {
+                    {renderCheckbox('searchConnected', t('deckInput.tokens.label'), searchConnected && connectedApis.length > 0, (event) => {
                       if (connectedApis.length === 0) return;
                       setSearchConnected(event.target.checked);
                       try {
@@ -1404,30 +1543,33 @@ const DeckInputAndViewer: React.FC = () => {
               })()}
               <div
                 className="connected-cards-toggle"
-                title="Use search results other users already found (shared server cache). Uncheck to always search the sources yourself."
+                data-tour="server-cache"
+                title={serverCacheAvailable ?
+                  t('deckInput.serverCache.tooltip') :
+                  t('deckInput.serverCache.disabled')}
               >
-                {renderCheckbox('useServerCache', 'Shared Search Cache', useServerCache, (event) => {
+                {renderCheckbox('useServerCache', t('deckInput.serverCache.label'), serverCacheActive, (event) => {
+                  if (!serverCacheAvailable) return;
                   setUseServerCache(event.target.checked);
                   try {
                     localStorage.setItem(USE_SERVER_CACHE_KEY, String(event.target.checked));
                   } catch {
                     // Ohne localStorage gilt die Wahl nur bis zum Neuladen
                   }
-                })}
+                }, false, serverCacheAvailable ? undefined : 'is-disabled')}
               </div>
-              <div
-                className="connected-cards-toggle"
-                title="Add the analyzed cards to the current selection instead of replacing it."
-              >
-                {renderCheckbox('appendMode', 'Append', appendMode, (event) => setAppendMode(event.target.checked))}
+              <div className="decklist-input-buttons">
+                <div className="decklist-append-checkbox" title={t('deckInput.append.tooltip')}>
+                  {renderCheckbox('appendMode', t('deckInput.append.label'), appendMode, (event) => setAppendMode(event.target.checked))}
+                </div>
+                <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading} data-tour="analyze-deck">{t('deckInput.decklist.analyze')}</ActionButton>
               </div>
-              <ActionButton type="submit" className="is-primary" icon={<SearchIcon />} disabled={isLoading}>Analyze Deck</ActionButton>
             </form>
           </CollapsibleSection>
           <CollapsibleSection
             storageKey="import-deck"
-            title="Import Deck"
-            action={{ icon: <SettingsIcon />, title: 'Deckfinder sources', onClick: () => setDeckImport({ open: true, manage: true }) }}
+            title={t('deckInput.import.title')}
+            action={{ icon: <SettingsIcon />, title: t('deckInput.import.sources'), onClick: () => setDeckImport({ open: true, manage: true }) }}
           >
             <form
               className="import-deck-section"
@@ -1438,48 +1580,48 @@ const DeckInputAndViewer: React.FC = () => {
                 className="import-deck-input"
                 value={deckImportInput}
                 onChange={(e) => { setDeckImportInput(e.target.value); setDeckLinkStatus({ loading: false }); }}
-                placeholder="Deck link, ID or name"
-                aria-label="Deck link, ID or name"
+                placeholder={t('deckInput.import.placeholder')}
+                aria-label={t('deckInput.import.placeholder')}
               />
               {(detectedDeckSource || deckLinkStatus.error) && (
                 <span className={`import-deck-hint ${deckLinkStatus.error ? 'is-error' : ''}`}>
-                  {deckLinkStatus.error || `${detectedDeckSource!.name} link`}
+                  {deckLinkStatus.error || t('deckInput.import.detected', { name: detectedDeckSource!.name })}
                 </span>
               )}
               <div className="add-single-buttons">
                 <ActionButton type="submit" icon={<DownloadIcon />} disabled={isLoading || deckLinkStatus.loading || !deckImportInput.trim()}>
-                  {deckLinkStatus.loading ? 'Loading…' : 'Load Deck'}
+                  {deckLinkStatus.loading ? t('common.loading') : t('deckInput.import.load')}
                 </ActionButton>
                 <ActionButton
                   icon={<SearchIcon />}
                   disabled={isLoading || !deckImportInput.trim() || !!detectedDeckSource}
                   onClick={() => setDeckImport({ open: true, input: deckImportInput.trim(), autoRun: 'search' })}
                 >
-                  Search by Name
+                  {t('deckInput.import.searchByName')}
                 </ActionButton>
                 <ActionButton
                   icon={<TuneIcon />}
                   disabled={isLoading}
                   onClick={() => setDeckImport({ open: true, input: deckImportInput.trim() || undefined })}
                 >
-                  Options
+                  {t('deckInput.import.options')}
                 </ActionButton>
               </div>
             </form>
           </CollapsibleSection>
-          <CollapsibleSection storageKey="add-single" title="Add Single">
+          <CollapsibleSection storageKey="add-single" title={t('deckInput.addSingle.title')}>
             <div className="add-single-buttons">
-              <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>Add</ActionButton>
-              <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog}>Gallery Search</ActionButton>
-              <ActionButton icon={<LinkIcon />} onClick={() => setLinkListDialogOpen(true)}>Add Links</ActionButton>
+              <ActionButton icon={<AddIcon />} onClick={handleAddCustomCard}>{t('common.add')}</ActionButton>
+              <ActionButton icon={<PhotoLibraryIcon />} onClick={handleOpenGalleryDialog} data-tour="gallery-search">{t('deckInput.addSingle.gallery')}</ActionButton>
+              <ActionButton icon={<LinkIcon />} onClick={() => setLinkListDialogOpen(true)}>{t('deckInput.addSingle.links')}</ActionButton>
             </div>
           </CollapsibleSection>
 
         </div>
         <CollapsibleSection
           storageKey="search-log"
-          title="Search Log"
-          summary={`${log.length} ${log.length === 1 ? 'entry' : 'entries'}`}
+          title={t('deckInput.searchLog.title')}
+          summary={t('deckInput.searchLog.entries', { count: log.length })}
           defaultOpen={false}
         >
           <SearchLog entries={log} onShowRaw={setRawDataDialog} />
@@ -1493,6 +1635,7 @@ const DeckInputAndViewer: React.FC = () => {
             <div className="card-grid">
               <div
                 className="card-tiles"
+                data-tour="card-grid"
                 style={{
                   gridTemplateColumns: `repeat(auto-fill, minmax(${gridSize}rem, ${gridSize}rem))`,
                   // Skalierungsfaktor für Text, Abstände und Buttons in den Tiles (10rem = 1)
@@ -1517,8 +1660,8 @@ const DeckInputAndViewer: React.FC = () => {
                       >
                         <div
                           className="card-image-container"
-                          title={selectedCard?.apiName === 'custom' ? 'Crop image' :
-                            cardData.connectedFrom?.length ? `Needed by: ${cardData.connectedFrom.join(', ')}` : undefined}
+                          title={selectedCard?.apiName === 'custom' ? t('deckInput.card.cropImage') :
+                            cardData.connectedFrom?.length ? t('deckInput.card.neededBy', { names: cardData.connectedFrom.join(', ') }) : undefined}
                           onClick={() => {
                             if (selectedCard?.apiName === 'custom') setRecropTarget({ cardKey: cardName, card: selectedCard });
                             else handleCardClick(cardName, index);
@@ -1532,16 +1675,36 @@ const DeckInputAndViewer: React.FC = () => {
                               onLoad={(imageInfo) => handleImageLoad(selectedCard as CardResult, imageInfo)}
                               onError={() => handleImageError(cardName, (selectedCard as CardResult).imageUrl, (selectedCard as CardResult).apiName)}
                             />
+                          ) : cardData.results.length === 0 ? (
+                            // Keine API hat etwas gefunden: Eintrag über Add Single austauschen
+                            <div className="no-image no-results">
+                              <span>{t('deckInput.card.noArt')}</span>
+                              <ActionButton
+                                icon={<FindReplaceIcon />}
+                                title={t('deckInput.card.replaceTooltip')}
+                                onClick={(e) => { e.stopPropagation(); handleReplaceCard(cardName); }}
+                              >
+                                {t('common.replace')}
+                              </ActionButton>
+                              <ActionButton
+                                icon={<DeleteOutlineIcon />}
+                                title={t('deckInput.card.discardTooltip')}
+                                onClick={(e) => { e.stopPropagation(); handleDiscardEntry(cardName); }}
+                              >
+                                {t('deckInput.card.discard')}
+                              </ActionButton>
+                            </div>
                           ) : (
-                            <div className="no-image">No image available</div>
+                            <div className="no-image">{t('deckInput.card.noImage')}</div>
                           )}
                           <CardTitle name={cardName} />
-                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl */}
-                          <div className="card-count" onClick={(e) => e.stopPropagation()}>
+                          {/* Anzahl im gleichen dunklen Verlauf wie der Titel, Klicks öffnen nicht die Bildauswahl.
+                              Ohne einen einzigen Fund gibt es stattdessen Replace und Discard. */}
+                          {cardData.results.length > 0 && <div className="card-count" onClick={(e) => e.stopPropagation()}>
                             {!uniquePrints ? (
                               <button
                                 className="count-button remove-card"
-                                title="Remove card"
+                                title={t('deckInput.card.removeCard')}
                                 onClick={() => handleRemoveCard(cardName, index)}
                               >
                                 ✕
@@ -1550,7 +1713,7 @@ const DeckInputAndViewer: React.FC = () => {
                             <button
                               onClick={() => updateCardCount(cardName, -1)}
                               className="count-button"
-                              title="One less"
+                              title={t('deckInput.card.oneLess')}
                             >
                               <Minus />
                             </button>
@@ -1558,20 +1721,20 @@ const DeckInputAndViewer: React.FC = () => {
                             <button
                               onClick={() => updateCardCount(cardName, 1)}
                               className="count-button"
-                              title="One more"
+                              title={t('deckInput.card.oneMore')}
                             >
                               <Plus />
                             </button>
                             {selectedCard?.apiName === 'custom' && (
                               <button
                                 className="count-button recrop-card"
-                                title="Crop image"
+                                title={t('deckInput.card.cropImage')}
                                 onClick={() => setRecropTarget({ cardKey: cardName, card: selectedCard as CardResult })}
                               >
                                 <CropIcon fontSize="inherit" />
                               </button>
                             )}
-                          </div>
+                          </div>}
                         </div>
                       </div>
                     );
@@ -1586,13 +1749,13 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="right-toolbar">
       <div className="view-selection">
         <div className="filter-controls">
-          <CollapsibleSection storageKey="view-selection" title="View Selection">
+          <CollapsibleSection storageKey="view-selection" title={t('deckInput.view.title')}>
           <div className="checkbox-group">
-            {renderCheckbox('uniquePrints', 'Unique Prints', uniquePrints, (event) => handleUniquePrintsChanged(event))}
-            {renderCheckbox('showImageSettings', 'Show Image Info', showImageSettings, (event) => handleShowImageSettingsChanged(event))}
-            <div className="grid-size-control">
+            {renderCheckbox('uniquePrints', t('deckInput.view.uniquePrints'), uniquePrints, (event) => handleUniquePrintsChanged(event))}
+            {renderCheckbox('showImageSettings', t('deckInput.view.showImageInfo'), showImageSettings, (event) => handleShowImageSettingsChanged(event))}
+            <div className="grid-size-control" data-tour="grid-size">
               <label htmlFor="gridSize" className="block text-sm font-medium text-gray-700">
-                Grid Size {gridSize}
+                {t('deckInput.view.gridSize', { size: gridSize })}
               </label>
             </div>
             <div>
@@ -1611,7 +1774,7 @@ const DeckInputAndViewer: React.FC = () => {
           </CollapsibleSection>
           <CollapsibleSection
             storageKey="language-filter"
-            title="Language Filter"
+            title={t('deckInput.view.languageFilter')}
             summary={ratio(languageOrder.filter(lang => visibleLanguages.has(lang)).length, languageOrder.length, 'shown')}
             defaultOpen={false}
           >
@@ -1627,7 +1790,7 @@ const DeckInputAndViewer: React.FC = () => {
           </CollapsibleSection>
           <CollapsibleSection
             storageKey="api-filter"
-            title="API Filter"
+            title={t('deckInput.view.apiFilter')}
             summary={ratio(apiFilterItems.filter(name => visibleApis.has(name)).length, apiFilterItems.length, 'shown')}
             defaultOpen={false}
           >
@@ -1654,15 +1817,17 @@ const DeckInputAndViewer: React.FC = () => {
       </div>
 
       <div className="pdf-controls">
-        <CollapsibleSection storageKey="pdf-generation" title="PDF Generation">
+        <CollapsibleSection storageKey="pdf-generation" title={t('deckInput.pdf.title')}>
 
-        <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog}>Settings</ActionButton>
-        <ActionButton className="is-primary" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0 || pdfTooLarge} onClick={() => createPDF().catch(console.error)}>Create PDF</ActionButton>
+        <ActionButton icon={<PictureAsPdfOutlinedIcon />} onClick={handleOpenSettingsDialog} data-tour="pdf-settings">{t('common.settings')}</ActionButton>
+        <ActionButton className="is-primary" data-tour="create-pdf" icon={<LocalPrintshopOutlinedIcon />} disabled={Object.keys(cardResults).length === 0 || pdfTooLarge} onClick={() => createPDF().catch(console.error)}>{t('deckInput.pdf.create')}</ActionButton>
         {pdfImageEntries.length > 0 && (
           <p className={`pdf-size-estimate${pdfTooLarge ? ' is-error' : ''}`}>
             {pdfTooLarge
-              ? `The PDF would be about ${formatMb(estimatedPdfBytes)}, the limit is ${pdfSizeLimitMb} MB. Split the deck into several PDFs or lower Max DPI in the settings.`
-              : `Estimated size: about ${formatMb(estimatedPdfBytes)}${Number.isFinite(pdfSizeLimitMb) ? ` of max. ${pdfSizeLimitMb} MB` : ''}`}
+              ? t('deckInput.pdf.tooLarge', { size: formatMb(estimatedPdfBytes), limit: pdfSizeLimitMb })
+              : (Number.isFinite(pdfSizeLimitMb)
+                ? t('deckInput.pdf.estimateWithLimit', { size: formatMb(estimatedPdfBytes), limit: pdfSizeLimitMb })
+                : t('deckInput.pdf.estimate', { size: formatMb(estimatedPdfBytes) }))}
           </p>
         )}
         </CollapsibleSection>
@@ -1681,7 +1846,7 @@ const DeckInputAndViewer: React.FC = () => {
       <ClosableDialog
         open={settingsDialogOpen}
         onClose={handleCloseSettingsDialog}
-        maxWidth='md'
+        maxWidth='lg'
         children={
           <SettingsDialog
             open={settingsDialogOpen}
@@ -1689,6 +1854,7 @@ const DeckInputAndViewer: React.FC = () => {
             settings={settings}
             onSettingsChange={handleSettingsChange}
             mailEnabled={pdfMailEnabled}
+            previewCards={settingsPreviewCards}
           />
         }
       />
@@ -1714,6 +1880,17 @@ const DeckInputAndViewer: React.FC = () => {
             : {}
         }
         onImageLoadError={(card: CardImageError) => handleImageError(card.name, card.imageUrl, card.apiName)}
+        deckNav={
+          currentCardName !== null && currentTilePosition !== -1
+            ? {
+              key: `${currentCardName}#${currentCardIndex}`,
+              cardName: currentCardName,
+              position: currentTilePosition + 1,
+              total: deckTiles.length,
+              onStep: handleStepImageSelect,
+            }
+            : undefined
+        }
       />
 
       <RecropDialog
@@ -1733,7 +1910,9 @@ const DeckInputAndViewer: React.FC = () => {
           open={customCardDialogOpen}
           onClose={handleCloseCustomCardDialog}
           onSave={handleSaveCustomCard}
-          searchForApis={searchForApis}
+          searchCard={searchSingleCard}
+          onAddSearched={addSearchedCard}
+          replaceName={replaceTarget ?? undefined}
           cardAspect={settings.width / settings.height}
           onMaskOpenChange={setCustomCardMaskOpen}
         />}
@@ -1760,15 +1939,15 @@ const DeckInputAndViewer: React.FC = () => {
       />
       <ClosableDialog open={pendingDeck !== null} onClose={() => setPendingDeck(null)} maxWidth="xs">
         <div className="replace-deck-dialog">
-          <h2>Decklist ersetzen?</h2>
+          <h2>{t('deckInput.replaceDeck.title')}</h2>
           <p>
-            {pendingDeck?.deckName ? `„${pendingDeck.deckName}“ ` : 'Das geladene Deck '}
-            ({pendingDeck?.entries.reduce((sum, e) => sum + e.count, 0)} Karten) ersetzt die aktuelle Liste.
-            Der aktuelle Stand wird vorher als Snapshot gespeichert.
+            {pendingDeck?.deckName
+              ? t('deckInput.replaceDeck.messageNamed', { name: pendingDeck.deckName, count: pendingDeck.entries.reduce((sum, e) => sum + e.count, 0) })
+              : t('deckInput.replaceDeck.messageUnnamed', { count: pendingDeck?.entries.reduce((sum, e) => sum + e.count, 0) ?? 0 })}
           </p>
           <div className="replace-deck-actions">
-            <ActionButton icon={<CloseIcon />} onClick={() => setPendingDeck(null)}>Abbrechen</ActionButton>
-            <ActionButton icon={<DownloadIcon />} className="is-primary" onClick={() => pendingDeck && applyLoadedDeck(pendingDeck, true)}>Ersetzen</ActionButton>
+            <ActionButton icon={<CloseIcon />} onClick={() => setPendingDeck(null)}>{t('common.cancel')}</ActionButton>
+            <ActionButton icon={<DownloadIcon />} className="is-primary" onClick={() => pendingDeck && applyLoadedDeck(pendingDeck, true)}>{t('common.replace')}</ActionButton>
           </div>
         </div>
       </ClosableDialog>
@@ -1792,7 +1971,7 @@ const DeckInputAndViewer: React.FC = () => {
           errorMessage={pdfProgressError}
           onFinish={downloadPDF}
           onClose={closePdfProgressDialog}
-          email={pdfEmail}
+          email={pdfSendMail ? auth.email ?? '' : ''}
         />
       </Dialog>
 
