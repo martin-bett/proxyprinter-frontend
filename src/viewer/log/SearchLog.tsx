@@ -34,7 +34,7 @@ interface SearchLogProps {
 export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
   const { t } = useTranslation();
   return (
-    <div className="log">
+    <div className="search-log">
       <table className="search-log-table">
         <colgroup>
           <col className="search-log-api" />
@@ -55,7 +55,8 @@ export default function SearchLog({ entries, onShowRaw }: SearchLogProps) {
           </tr>
         </thead>
         <tbody>
-          {entries.map((entry, index) => {
+          {/* Neueste Einträge oben, damit man beim Suchen nicht nach unten scrollen muss */}
+          {entries.map((entry, index) => ({ entry, index })).reverse().map(({ entry, index }) => {
             const { icon, title: titleKey } = sourceIcon[entry.source];
             const title = t(titleKey);
             const raw = entry.source === 'error' ? entry.error : entry.rawResponse;

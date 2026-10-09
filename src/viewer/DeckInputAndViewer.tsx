@@ -68,7 +68,8 @@ import MemoryButtons from './cache/MemoryButtons';
 import ApiFactory, { ApiConfig, Config, CropSettings, ImageInfo, PageProgress, SearchResult, hasConnectedCards } from '../service/ApiFactory';
 import DisclaimerDialog from './info/DisclaimerDialog';
 import RawDataDialog from './log/RawDataDialog';
-import SearchLog from './log/SearchLog';
+import SearchLogPanel from './log/SearchLogPanel';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { replaceDeckEntry } from './replaceDeckEntry';
 import { splitCardFaces } from './cardFaces';
 import { collectConnectedCards, dedupeResults } from './connectedCards';
@@ -128,6 +129,20 @@ const DeckInputAndViewer: React.FC = () => {
     setLoadingProgressTitle(isLoading ? progress : null);
   }, [isLoading, progress]);
   const [rawDataDialog, setRawDataDialog] = useState<string | null>(null);
+  const [searchLogOpen, setSearchLogOpen] = useState(() => {
+    try {
+      return localStorage.getItem('search-log-open') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('search-log-open', String(searchLogOpen));
+    } catch {
+      // Ohne localStorage bleibt der Zustand nur bis zum Neuladen erhalten
+    }
+  }, [searchLogOpen]);
   const [categoryStates, setCategoryStates] = useState<Record<string, boolean>>({});
   const [apiConfigs, setApiConfigs] = useState<Record<string, Config>>({}); // New state for API configs
   const [apiFactory, setApiFactory] = useState<ApiFactory | null>(null); // State for API factory
@@ -1618,17 +1633,24 @@ const DeckInputAndViewer: React.FC = () => {
           </CollapsibleSection>
 
         </div>
-        <CollapsibleSection
-          storageKey="search-log"
-          title={t('deckInput.searchLog.title')}
-          summary={t('deckInput.searchLog.entries', { count: log.length })}
-          defaultOpen={false}
+        <ActionButton
+          className={`search-log-toggle ${searchLogOpen ? 'is-active' : ''}`}
+          icon={<ReceiptLongIcon />}
+          aria-pressed={searchLogOpen}
+          onClick={() => setSearchLogOpen(open => !open)}
         >
-          <SearchLog entries={log} onShowRaw={setRawDataDialog} />
-        </CollapsibleSection>
+          {t('deckInput.searchLog.title')}
+          <span className="search-log-toggle-count">{t('deckInput.searchLog.entries', { count: log.length })}</span>
+        </ActionButton>
       </div>
 
       <div className="decklist-viewer">
+        <SearchLogPanel
+          open={searchLogOpen}
+          entries={log}
+          onShowRaw={setRawDataDialog}
+          onClose={() => setSearchLogOpen(false)}
+        />
 
         <div className="deck-viewer">
           <div className="deck-viewer-content">

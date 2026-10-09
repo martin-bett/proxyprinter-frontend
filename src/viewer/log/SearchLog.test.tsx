@@ -22,3 +22,13 @@ describe('SearchLog', () => {
     expect(cells()).toEqual(['Scryfall', '', '12', '1.5s', '2', 'Sol Ring']);
   });
 });
+
+describe('SearchLog Reihenfolge', () => {
+  it('zeigt neue Einträge oben', () => {
+    const done = (id: number, cardName: string): LogEntry =>
+      ({ id, configName: 'Scryfall', cardName, source: 'network', count: 1, durationMs: 10, requestCount: 1 });
+    render(<SearchLog entries={[done(1, 'Sol Ring'), done(2, 'Island')]} onShowRaw={() => {}} />);
+    const names = screen.getAllByRole('row').slice(1).map(row => row.lastChild?.textContent);
+    expect(names).toEqual(['Island', 'Sol Ring']);
+  });
+});
