@@ -138,10 +138,22 @@
   padding: 0 0.5rem 0.5rem;
 }
 
-/* Laufende Suchen: fest über dem Log, eine Zeile je API */
+/* Laufende Suchen: fest über dem Log, eine Zeile je Suche, gruppiert nach API */
 .search-log-running-searches {
-  padding: 0.25rem 0.5rem 0.5rem;
+  padding: 0.25rem 0.5rem 1rem;
   border-bottom: 1px solid var(--border);
+}
+
+.search-log .search-log-table td.search-log-group-api {
+  vertical-align: top;
+}
+
+.search-log .search-log-table .search-log-group-start td {
+  border-top: 1px solid var(--border);
+}
+
+.search-log-section-title.search-log-history-title {
+  padding: 0.75rem calc(0.5rem + 6px) 0;
 }
 
 .search-log-section-title {
@@ -150,6 +162,3 @@
   color: var(--accent);
 }
 
-.search-log-more {
-  opacity: 0.7;
-}

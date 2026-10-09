@@ -379,8 +379,10 @@
       "matches": "Найдено"
     },
     "running": {
-      "title": "Текущие поиски",
-      "more": "+{{count}}"
+      "title": "Выполняются"
+    },
+    "history": {
+      "title": "История"
     }
   },
   "deckImport": {

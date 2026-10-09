@@ -371,8 +371,10 @@
       "matches": "Matches"
     },
     "running": {
-      "title": "Running searches",
-      "more": "+{{count}}"
+      "title": "Running"
+    },
+    "history": {
+      "title": "History"
     }
   },
   "deckImport": {
