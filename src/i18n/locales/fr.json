@@ -1011,6 +1011,18 @@
   },
   "version": {
     "build": "Build {{number}}",
-    "backendBuild": "Backend {{number}}"
+    "backendBuild": "Backend {{number}}",
+    "stats": {
+      "sharedSearches_one": "{{number}} recherche partagée",
+      "sharedSearches_other": "{{number}} recherches partagées",
+      "tempImages_one": "{{number}} image temporaire en cache",
+      "tempImages_other": "{{number}} images temporaires en cache",
+      "cachedPdfs_one": "{{number}} PDF en cache",
+      "cachedPdfs_other": "{{number}} PDF en cache",
+      "decksToday_one": "{{number}} deck créé aujourd'hui",
+      "decksToday_other": "{{number}} decks créés aujourd'hui",
+      "decksTotal_one": "{{number}} deck au total",
+      "decksTotal_other": "{{number}} decks au total"
+    }
   }
 }

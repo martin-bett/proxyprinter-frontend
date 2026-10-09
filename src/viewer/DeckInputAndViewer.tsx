@@ -977,6 +977,8 @@ const DeckInputAndViewer: React.FC = () => {
     setProgress(0);
   }, [saveSnapshot, clearSearchActivity]);
   const pdfDownloadNameRef = useRef('deck');
+  // Lädt die Statistik unter der Build-Nummer neu, sobald ein PDF heruntergeladen wurde
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
 
   const reloadDeckFinderConfigs = useCallback(async () => {
     try {
@@ -1104,6 +1106,7 @@ const DeckInputAndViewer: React.FC = () => {
         link.remove();
         window.URL.revokeObjectURL(url);
         closePdfProgressDialog();
+        setStatsRefreshKey(k => k + 1);
       } else {
         throw new Error(`Failed to download PDF, status: ${pdfResponse.status}`);
       }
@@ -1852,7 +1855,7 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="bottom">
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
-        <div><VersionInfo /></div>
+        <div><VersionInfo statsRefreshKey={statsRefreshKey} /></div>
       </div>
       </div>
 

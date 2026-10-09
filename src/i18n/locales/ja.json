@@ -997,6 +997,13 @@
   },
   "version": {
     "build": "ビルド {{number}}",
-    "backendBuild": "バックエンド {{number}}"
+    "backendBuild": "バックエンド {{number}}",
+    "stats": {
+      "sharedSearches_other": "共有検索 {{number}} 件",
+      "tempImages_other": "キャッシュ内の一時画像 {{number}} 件",
+      "cachedPdfs_other": "キャッシュ内の PDF {{number}} 件",
+      "decksToday_other": "今日作成されたデッキ {{number}} 件",
+      "decksTotal_other": "合計 {{number}} デッキ"
+    }
   }
 }
