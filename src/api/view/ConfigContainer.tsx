@@ -6,18 +6,16 @@ import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import PaletteIcon from '@mui/icons-material/Palette';
 import { Star } from 'lucide-react';
-import { ApiConfig, Config, GalleryConfig, isGalleryConfig } from '../../service/ApiFactory';
-import GalleryConfigExecutor from './gallery/GallerConfigExecutor';
+import { ApiConfig, Config } from '../../service/ApiFactory';
 
 interface ConfigContainerProps {
     configs: Config[];
     clickedConfig: Config | null;
     selectedConfigs: number[];
     handleItemClick: (config: Config, event: React.MouseEvent) => void;
-    handleExecute?: (config: GalleryConfig) => void;
 }
 
-const ConfigContainer: React.FC<ConfigContainerProps> = ({ configs, clickedConfig, selectedConfigs, handleItemClick, handleExecute }) => {
+const ConfigContainer: React.FC<ConfigContainerProps> = ({ configs, clickedConfig, selectedConfigs, handleItemClick }) => {
     const { t } = useTranslation();
     const handleWebsiteClick = (url: string, event: React.MouseEvent) => {
         event.stopPropagation();
@@ -76,7 +74,6 @@ const ConfigContainer: React.FC<ConfigContainerProps> = ({ configs, clickedConfi
                     <p>
                       {config.officialWebsite?<span onClick={(e) => handleWebsiteClick(config.officialWebsite!, e)}>{config.name}<ExitToAppIcon className='inline-icon'/></span>:<span>{config.name}</span>}
                     </p>
-                    {isGalleryConfig(config) && config===clickedConfig && handleExecute && (<GalleryConfigExecutor config={config} handleExecute={handleExecute}/>)}
                   </div>
                 </div>
 

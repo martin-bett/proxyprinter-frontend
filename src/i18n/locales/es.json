@@ -171,9 +171,16 @@
       "namePattern": "Regex sobre el nombre leído, p. ej. \\.\\w+$ para la extensión del archivo",
       "nameReplacement": "Reemplazo para el patrón, vacío = quitar"
     },
+    "tabs": {
+      "run": "Ejecutar",
+      "settings": "Ajustes"
+    },
     "executor": {
       "pasteLink": "Pegar el enlace (o todo el código fuente de la página)",
-      "execute": "Ejecutar"
+      "execute": "Ejecutar",
+      "hint": "Carga todas las imágenes de una galería (p. ej., un post de Reddit o un álbum) como ilustraciones de cartas para elegir. Pegar el enlace de la galería y pulsar Ejecutar.",
+      "hintNoInput": "Esta galería no necesita ninguna entrada. Ejecutar carga sus imágenes como ilustraciones de cartas para elegir.",
+      "selectGallery": "Seleccionar arriba una galería para ejecutarla."
     },
     "noImages": "No se encontraron imágenes."
   },

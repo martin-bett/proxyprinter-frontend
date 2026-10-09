@@ -429,3 +429,48 @@
   line-height: 1;
   color: var(--accent);
 }
+
+/* Reiter (TabBar): nebeneinander, oben abgerundet; der aktive Reiter hat keine Unterkante
+   und geht so in das .tab-panel darunter über (wie der Append-Tab am Analyze-Button) */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-bar-tab {
+  width: auto;
+  flex: 0 1 10rem;
+  margin: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.tab-bar-tab:hover .input-tile-lead {
+  color: var(--accent);
+}
+
+.tab-bar-tab.is-active {
+  border-color: var(--accent);
+  border-bottom-color: var(--surface);
+  background: var(--surface);
+  color: var(--text);
+  margin-bottom: -1px;
+}
+
+.tab-bar-tab.is-active .input-tile-lead {
+  background: var(--accent-soft);
+  border-right-color: var(--accent);
+  color: var(--accent);
+}
+
+.tab-panel {
+  padding: 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0 6px 6px 6px;
+  background: var(--surface);
+}

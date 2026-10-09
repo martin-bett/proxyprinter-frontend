@@ -171,9 +171,16 @@
       "namePattern": "Regex auf den gelesenen Namen, z. B. \\.\\w+$ für die Dateiendung",
       "nameReplacement": "Ersetzung für das Muster, leer = entfernen"
     },
+    "tabs": {
+      "run": "Ausführen",
+      "settings": "Einstellungen"
+    },
     "executor": {
       "pasteLink": "Link einfügen (oder den ganzen Seitenquelltext)",
-      "execute": "Ausführen"
+      "execute": "Ausführen",
+      "hint": "Lädt alle Bilder einer Galerie (z. B. ein Reddit-Post oder ein Album) als Kartenbilder zur Auswahl. Link zur Galerie einfügen und auf Ausführen klicken.",
+      "hintNoInput": "Diese Galerie braucht keine Eingabe. Ausführen lädt ihre Bilder als Kartenbilder zur Auswahl.",
+      "selectGallery": "Oben eine Galerie auswählen, um sie auszuführen."
     },
     "noImages": "Keine Bilder gefunden."
   },

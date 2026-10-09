@@ -5,11 +5,15 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
-import { Config } from '../../../service/ApiFactory';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Config, GalleryConfig, isGalleryConfig } from '../../../service/ApiFactory';
 import ConfigFieldTable, { CATEGORY_OPTIONS, ConfigField } from '../ConfigFieldTable';
 import { DEFAULT_LANGUAGE_OPTIONS } from '../defaultLanguages';
 import ActionButton from '../../../container/inputs/ActionButton';
+import TabBar, { tabPanelId } from '../../../container/inputs/TabBar';
 import { useAuth } from '../../../service/auth/auth';
+import GalleryConfigExecutor, { GalleryExecuteStatus } from './GallerConfigExecutor';
 
 export interface GalleryConfigFormState {
   id?: number;
@@ -67,10 +71,16 @@ interface GalleryConfigWizardProps {
   onDelete: (configId: number | undefined) => void;
   onCopy: (configId: number | undefined) => void;
   initialConfig?: Config | null;
+  onExecute: (config: GalleryConfig) => void;
+  executeStatus: GalleryExecuteStatus;
+  onDismissExecuteError: () => void;
 }
 
-const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPublish, onDelete, onCopy, initialConfig }) => {
+type GalleryTab = 'run' | 'settings';
+
+const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPublish, onDelete, onCopy, initialConfig, onExecute, executeStatus, onDismissExecuteError }) => {
   const { t } = useTranslation();
+  const [tab, setTab] = useState<GalleryTab>('run');
   const auth = useAuth();
   const loggedIn = !!auth.email;
   const [isOwner, setIsOwner] = useState(false);
@@ -96,6 +106,11 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     namePattern: '',
     nameReplacement: ''
   });
+
+  // Andere Config gewählt: wieder mit "Run" anfangen
+  useEffect(() => {
+    setTab('run');
+  }, [initialConfig?.id]);
 
   useEffect(() => {
     if (initialConfig) {
@@ -163,33 +178,54 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     onSave(config);
   };
 
+  const idPrefix = 'gallery-config';
+
   return (
     <div className="wizard-container">
-      <h1 className='title is-4'>{t('configCommon.configSettings')}</h1>
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-        <ConfigFieldTable
-          fields={GALLERY_CONFIG_FIELDS}
-          values={config}
-          savedValues={initialConfig as unknown as Record<string, unknown> | null}
-          editable={isOwner}
-          onChange={handleInputChange}
-          onJsonChange={handleParameterMapChange}
-        />
-        <div className="config-actions">
-          {isOwner ? (
-            <>
-              <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>{t('common.save')}</ActionButton>
-              <ActionButton icon={config.published ? <LockIcon /> : <PublicIcon />} onClick={handlePublish}>
-                {config.published ? t('configCommon.unpublish') : t('configCommon.publish')}
-              </ActionButton>
-              <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>{t('common.delete')}</ActionButton>
-            </>
-          ) : null}
-          <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig} disabled={!loggedIn}
-            title={loggedIn ? undefined : t('configCommon.loginToEdit')}>{t('configCommon.copyConfig')}</ActionButton>
-        </div>
-        {!loggedIn && <p className="help">{t('configCommon.loginToEdit')}</p>}
-      </form>
+      <TabBar<GalleryTab>
+        idPrefix={idPrefix}
+        active={tab}
+        onChange={setTab}
+        tabs={[
+          { key: 'run', label: t('galleryConfig.tabs.run'), icon: <PlayArrowIcon /> },
+          { key: 'settings', label: t('galleryConfig.tabs.settings'), icon: <SettingsIcon /> },
+        ]}
+      />
+      <div className="tab-panel" role="tabpanel" id={tabPanelId(idPrefix, tab)} aria-labelledby={`${idPrefix}-tab-${tab}`}>
+        {tab === 'run' ? (
+          <GalleryConfigExecutor
+            config={initialConfig && isGalleryConfig(initialConfig) ? initialConfig : null}
+            handleExecute={onExecute}
+            status={executeStatus}
+            onDismissError={onDismissExecuteError}
+          />
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <ConfigFieldTable
+              fields={GALLERY_CONFIG_FIELDS}
+              values={config}
+              savedValues={initialConfig as unknown as Record<string, unknown> | null}
+              editable={isOwner}
+              onChange={handleInputChange}
+              onJsonChange={handleParameterMapChange}
+            />
+            <div className="config-actions">
+              {isOwner ? (
+                <>
+                  <ActionButton type="submit" className="is-primary" icon={<SaveIcon />}>{t('common.save')}</ActionButton>
+                  <ActionButton icon={config.published ? <LockIcon /> : <PublicIcon />} onClick={handlePublish}>
+                    {config.published ? t('configCommon.unpublish') : t('configCommon.publish')}
+                  </ActionButton>
+                  <ActionButton className="is-danger" icon={<DeleteForeverIcon />} onClick={handleDelete}>{t('common.delete')}</ActionButton>
+                </>
+              ) : null}
+              <ActionButton icon={<ContentCopyIcon />} onClick={handleCopyConfig} disabled={!loggedIn}
+                title={loggedIn ? undefined : t('configCommon.loginToEdit')}>{t('configCommon.copyConfig')}</ActionButton>
+            </div>
+            {!loggedIn && <p className="help">{t('configCommon.loginToEdit')}</p>}
+          </form>
+        )}
+      </div>
     </div>
   );
 };

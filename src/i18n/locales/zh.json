@@ -171,9 +171,16 @@
       "namePattern": "作用于所读名称的正则，例如 \\.\\w+$ 匹配文件扩展名",
       "nameReplacement": "模式的替换内容，留空 = 删除"
     },
+    "tabs": {
+      "run": "运行",
+      "settings": "设置"
+    },
     "executor": {
       "pasteLink": "粘贴链接（或整个页面源代码）",
-      "execute": "执行"
+      "execute": "执行",
+      "hint": "将图库（例如 Reddit 帖子或相册）中的所有图片加载为可选的卡图。粘贴图库链接后点击“执行”。",
+      "hintNoInput": "此图库无需输入。“执行”会将其图片加载为可选的卡图。",
+      "selectGallery": "在上方选择一个图库以运行。"
     },
     "noImages": "未找到图片。"
   },

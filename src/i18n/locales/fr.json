@@ -171,9 +171,16 @@
       "namePattern": "Regex sur le nom lu, p. ex. \\.\\w+$ pour l'extension de fichier",
       "nameReplacement": "Remplacement pour le motif, vide = supprimer"
     },
+    "tabs": {
+      "run": "Exécuter",
+      "settings": "Réglages"
+    },
     "executor": {
       "pasteLink": "Coller le lien (ou tout le code source de la page)",
-      "execute": "Exécuter"
+      "execute": "Exécuter",
+      "hint": "Charge toutes les images d’une galerie (p. ex. un post Reddit ou un album) comme illustrations de cartes à choisir. Coller le lien de la galerie et cliquer sur Exécuter.",
+      "hintNoInput": "Cette galerie ne demande aucune saisie. Exécuter charge ses images comme illustrations de cartes à choisir.",
+      "selectGallery": "Choisir une galerie ci-dessus pour l’exécuter."
     },
     "noImages": "Aucune image trouvée."
   },

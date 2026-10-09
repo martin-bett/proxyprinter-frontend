@@ -171,9 +171,16 @@
       "namePattern": "Regex sul nome letto, ad es. \\.\\w+$ per l'estensione del file",
       "nameReplacement": "Sostituzione per lo schema, vuoto = rimuovi"
     },
+    "tabs": {
+      "run": "Esegui",
+      "settings": "Impostazioni"
+    },
     "executor": {
       "pasteLink": "Incollare il link (o l'intero sorgente della pagina)",
-      "execute": "Esegui"
+      "execute": "Esegui",
+      "hint": "Carica tutte le immagini di una galleria (ad es. un post Reddit o un album) come illustrazioni delle carte da scegliere. Incollare il link della galleria e cliccare su Esegui.",
+      "hintNoInput": "Questa galleria non richiede input. Esegui carica le sue immagini come illustrazioni delle carte da scegliere.",
+      "selectGallery": "Selezionare una galleria qui sopra per eseguirla."
     },
     "noImages": "Nessuna immagine trovata."
   },
