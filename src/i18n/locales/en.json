@@ -245,8 +245,8 @@
       "detectBorderColor": "Detect BorderColor",
       "cornerColor": "Corner Color: ",
       "cornerSize": "Corner Size (mm): ",
-      "cornerSizeAuto": "auto ({{size}})",
-      "cornerSizeHint": "Radius of the rounded corners. Empty: automatic, like real cards (1/8 inch at 88.9 mm), scaled to the card height.",
+      "cornerSizeAutomatic": "Like real cards",
+      "cornerSizeHint": "Radius of the rounded corners in mm. Automatic: like real cards (1/8 inch at 88.9 mm), scaled to the card height.",
       "ok": "Ok",
       "email": {
         "title": "Email delivery",

@@ -55,24 +55,31 @@ describe('SettingsDialog corner size', () => {
   const renderCorners = () => {
     const onSettingsChange = jest.fn();
     render(<SettingsDialog open onClose={jest.fn()} settings={{ ...defaultSettings, corners: true }} onSettingsChange={onSettingsChange} />);
-    return { onSettingsChange, input: screen.getByLabelText(/Corner Size/) as HTMLInputElement };
+    return {
+      onSettingsChange,
+      input: screen.getByLabelText(/Corner Size/) as HTMLInputElement,
+      auto: screen.getByRole('checkbox', { name: 'Like real cards' }) as HTMLInputElement,
+    };
   };
 
-  it('is empty (automatic) by default and leaves the field out of the settings', () => {
-    const { onSettingsChange, input } = renderCorners();
-    expect(input.value).toBe('');
-    expect(input.placeholder).toBe('auto (3.1)');
+  it('is automatic by default: checked, input locked with the computed size, field left out', () => {
+    const { onSettingsChange, input, auto } = renderCorners();
+    expect(auto).toBeChecked();
+    expect(input).toBeDisabled();
+    expect(input.value).toBe('3.1');
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
     expect(onSettingsChange.mock.calls[0][0]).not.toHaveProperty('cornerSize');
   });
 
-  it('saves a corner size in mm and drops it again when cleared', () => {
-    const { onSettingsChange, input } = renderCorners();
+  it('saves a manual corner size and drops it again when automatic is checked', () => {
+    const { onSettingsChange, input, auto } = renderCorners();
+    fireEvent.click(auto);
+    expect(input).toBeEnabled();
     fireEvent.change(input, { target: { value: '3.2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
     expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ cornerSize: 3.2 }));
 
-    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.click(auto);
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
     expect(onSettingsChange.mock.calls[1][0]).not.toHaveProperty('cornerSize');
   });

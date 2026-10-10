@@ -64,12 +64,39 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     handleChange(key, color.hex);
   };
 
-  const handleCornerSizeChange = (value: string) => {
+  // Automatik an = kein cornerSize in den Settings; der Text bleibt beim Umschalten erhalten
+  const [cornerAuto, setCornerAuto] = useState(settings.cornerSize == null);
+  const [cornerText, setCornerText] = useState(String(settings.cornerSize ?? autoCornerSizeMm(settings.height)));
+
+  const setCornerSize = (size: number | undefined) => {
     setLocalSettings(prev => {
       const { cornerSize, ...rest } = prev;
-      const size = parseFloat(value);
-      return value.trim() === '' || isNaN(size) || size < 0 ? rest : { ...rest, cornerSize: size };
+      return size === undefined ? rest : { ...rest, cornerSize: size };
     });
+  };
+
+  const parseCornerSize = (value: string): number | undefined => {
+    const size = parseFloat(value);
+    return value.trim() === '' || isNaN(size) || size < 0 ? undefined : size;
+  };
+
+  const handleCornerAutoChange = (auto: boolean) => {
+    setCornerAuto(auto);
+    if (auto) {
+      setCornerSize(undefined);
+    } else {
+      const size = parseCornerSize(cornerText) ?? autoCornerSizeMm(localSettings.height);
+      setCornerText(String(size));
+      setCornerSize(size);
+    }
+  };
+
+  const handleCornerSizeChange = (value: string) => {
+    setCornerText(value);
+    const size = parseCornerSize(value);
+    if (size !== undefined) {
+      setCornerSize(size);
+    }
   };
 
   const handleSave = () => {
@@ -80,6 +107,8 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
   const handleReset = () => {
     // Der Mailversand ist keine Druckeinstellung, Reset lässt ihn stehen
     setLocalSettings({ ...defaultSettings, sendMail: localSettings.sendMail });
+    setCornerAuto(true);
+    setCornerText(String(autoCornerSizeMm(defaultSettings.height)));
   };
 
   return (
@@ -157,6 +186,10 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
           /></div>
           <div>
             <label htmlFor="pdf-corner-size">{t('pdf.settings.cornerSize')}</label>
+            <div><FormControlLabel
+              control={<Checkbox disabled={!localSettings.corners} checked={cornerAuto} onChange={(e) => handleCornerAutoChange(e.target.checked)} />}
+              label={t('pdf.settings.cornerSizeAutomatic')}
+            /></div>
             <input
               id="pdf-corner-size"
               className="input"
@@ -164,9 +197,8 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
               min="0"
               max="20"
               step="0.1"
-              disabled={!localSettings.corners}
-              placeholder={t('pdf.settings.cornerSizeAuto', { size: autoCornerSizeMm(localSettings.height) })}
-              value={localSettings.cornerSize ?? ''}
+              disabled={!localSettings.corners || cornerAuto}
+              value={cornerAuto ? autoCornerSizeMm(localSettings.height) : cornerText}
               onChange={(e) => handleCornerSizeChange(e.target.value)}
             />
             <p className="help settings-corner-hint">{t('pdf.settings.cornerSizeHint')}</p>
