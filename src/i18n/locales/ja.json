@@ -159,7 +159,8 @@
       "imageUrlPattern": "画像URLパターン",
       "imageUrlReplacement": "画像URLの置換",
       "namePattern": "名前パターン",
-      "nameReplacement": "名前の置換"
+      "nameReplacement": "名前の置換",
+      "hint": "ヒント"
     },
     "titles": {
       "parameterMap": "各項目が入力欄になります。ソースに入力が不要なら空のままにします",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "読み取った画像URLに対する正規表現。一致しない場合、その項目は除外されます（例: 動画、サブフォルダー）",
       "imageUrlReplacement": "パターンの置換先。グループは$1の形式（例: https://i.redd.it/$1）",
       "namePattern": "読み取った名前に対する正規表現（例: 拡張子なら \\.\\w+$）",
-      "nameReplacement": "パターンの置換先。空 = 削除"
+      "nameReplacement": "パターンの置換先。空 = 削除",
+      "hint": "Run タブに表示する短い説明（貼り付ける内容など）。言語は自由で、保存時にサーバーが UI の各言語へ翻訳します"
     },
     "tabs": {
       "run": "実行",

@@ -159,7 +159,8 @@
       "imageUrlPattern": "Image URL Pattern",
       "imageUrlReplacement": "Image URL Replacement",
       "namePattern": "Name Pattern",
-      "nameReplacement": "Name Replacement"
+      "nameReplacement": "Name Replacement",
+      "hint": "Hint"
     },
     "titles": {
       "parameterMap": "Each entry becomes an input field. Leave empty if the source needs no input",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "Regex on the image URL read. If it does not match, the entry is dropped (e.g. videos, subfolders)",
       "imageUrlReplacement": "Replacement for the pattern, groups as $1, e.g. https://i.redd.it/$1",
       "namePattern": "Regex on the name read, e.g. \\.\\w+$ for the file extension",
-      "nameReplacement": "Replacement for the pattern, empty = remove"
+      "nameReplacement": "Replacement for the pattern, empty = remove",
+      "hint": "Short instructions shown on the Run tab, e.g. what to paste. Written in any language; the server translates it into the UI languages when saving"
     },
     "tabs": {
       "run": "Run",

@@ -159,7 +159,8 @@
       "imageUrlPattern": "图片 URL 模式",
       "imageUrlReplacement": "图片 URL 替换",
       "namePattern": "名称模式",
-      "nameReplacement": "名称替换"
+      "nameReplacement": "名称替换",
+      "hint": "提示"
     },
     "titles": {
       "parameterMap": "每个条目对应一个输入框。来源无需输入时留空",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "作用于所读图片 URL 的正则。不匹配时该条目被丢弃（例如视频、子文件夹）",
       "imageUrlReplacement": "模式的替换内容，分组写作 $1，例如 https://i.redd.it/$1",
       "namePattern": "作用于所读名称的正则，例如 \\.\\w+$ 匹配文件扩展名",
-      "nameReplacement": "模式的替换内容，留空 = 删除"
+      "nameReplacement": "模式的替换内容，留空 = 删除",
+      "hint": "显示在 Run 标签页的简短说明，例如要粘贴的内容。可用任意语言，保存时服务器会将其翻译成界面语言"
     },
     "tabs": {
       "run": "运行",

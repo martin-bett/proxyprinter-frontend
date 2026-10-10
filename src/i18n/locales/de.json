@@ -159,7 +159,8 @@
       "imageUrlPattern": "Bild-URL-Muster",
       "imageUrlReplacement": "Bild-URL-Ersetzung",
       "namePattern": "Namensmuster",
-      "nameReplacement": "Namensersetzung"
+      "nameReplacement": "Namensersetzung",
+      "hint": "Hinweis"
     },
     "titles": {
       "parameterMap": "Jeder Eintrag wird ein Eingabefeld. Leer lassen, wenn die Quelle keine Eingabe braucht",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "Regex auf die gelesene Bild-URL. Passt sie nicht, wird der Eintrag verworfen (z. B. Videos, Unterordner)",
       "imageUrlReplacement": "Ersetzung für das Muster, Gruppen als $1, z. B. https://i.redd.it/$1",
       "namePattern": "Regex auf den gelesenen Namen, z. B. \\.\\w+$ für die Dateiendung",
-      "nameReplacement": "Ersetzung für das Muster, leer = entfernen"
+      "nameReplacement": "Ersetzung für das Muster, leer = entfernen",
+      "hint": "Kurze Anleitung im Reiter Run, z. B. was einzufügen ist. In beliebiger Sprache; der Server übersetzt sie beim Speichern in die UI-Sprachen"
     },
     "tabs": {
       "run": "Ausführen",

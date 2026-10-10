@@ -159,7 +159,8 @@
       "imageUrlPattern": "Patrón de URL de imagen",
       "imageUrlReplacement": "Reemplazo de URL de imagen",
       "namePattern": "Patrón de nombre",
-      "nameReplacement": "Reemplazo de nombre"
+      "nameReplacement": "Reemplazo de nombre",
+      "hint": "Indicación"
     },
     "titles": {
       "parameterMap": "Cada entrada se convierte en un campo de entrada. Dejar vacío si el origen no necesita datos",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "Regex sobre la URL de imagen leída. Si no coincide, la entrada se descarta (p. ej. vídeos, subcarpetas)",
       "imageUrlReplacement": "Reemplazo para el patrón, grupos como $1, p. ej. https://i.redd.it/$1",
       "namePattern": "Regex sobre el nombre leído, p. ej. \\.\\w+$ para la extensión del archivo",
-      "nameReplacement": "Reemplazo para el patrón, vacío = quitar"
+      "nameReplacement": "Reemplazo para el patrón, vacío = quitar",
+      "hint": "Instrucciones breves en la pestaña Run, p. ej. qué pegar. En cualquier idioma; el servidor las traduce a los idiomas de la interfaz al guardar"
     },
     "tabs": {
       "run": "Ejecutar",

@@ -159,7 +159,8 @@
       "imageUrlPattern": "Schema URL immagine",
       "imageUrlReplacement": "Sostituzione URL immagine",
       "namePattern": "Schema nome",
-      "nameReplacement": "Sostituzione nome"
+      "nameReplacement": "Sostituzione nome",
+      "hint": "Suggerimento"
     },
     "titles": {
       "parameterMap": "Ogni voce diventa un campo di input. Lasciare vuoto se la fonte non richiede input",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "Regex sull'URL immagine letto. Se non corrisponde, la voce viene scartata (ad es. video, sottocartelle)",
       "imageUrlReplacement": "Sostituzione per lo schema, gruppi come $1, ad es. https://i.redd.it/$1",
       "namePattern": "Regex sul nome letto, ad es. \\.\\w+$ per l'estensione del file",
-      "nameReplacement": "Sostituzione per lo schema, vuoto = rimuovi"
+      "nameReplacement": "Sostituzione per lo schema, vuoto = rimuovi",
+      "hint": "Brevi istruzioni nella scheda Run, ad es. cosa incollare. In qualsiasi lingua; il server le traduce nelle lingue dell’interfaccia al salvataggio"
     },
     "tabs": {
       "run": "Esegui",

@@ -38,6 +38,7 @@ export interface GalleryConfigFormState {
   imageUrlReplacement: string;
   namePattern: string;
   nameReplacement: string;
+  hint: string;
   published?: boolean;
   [key: string]: unknown;
 }
@@ -46,6 +47,7 @@ const GALLERY_CONFIG_FIELDS: ConfigField[] = [
   { group: 'configCommon.groups.baseInfo', name: 'name', label: 'configCommon.fields.name', required: true },
   { group: 'configCommon.groups.baseInfo', name: 'category', label: 'configCommon.fields.category', type: 'select', options: CATEGORY_OPTIONS },
   { group: 'configCommon.groups.baseInfo', name: 'officialWebsite', label: 'configCommon.fields.officialWebsite' },
+  { group: 'configCommon.groups.baseInfo', name: 'hint', label: 'galleryConfig.fields.hint', title: 'galleryConfig.titles.hint' },
   { group: 'configCommon.groups.request', name: 'method', label: 'configCommon.fields.method', type: 'select', options: [['GET', 'configCommon.options.get'], ['POST', 'configCommon.options.post']] },
   { group: 'configCommon.groups.request', name: 'dataFormat', label: 'configCommon.fields.dataFormat', type: 'select', options: [['json', 'configCommon.options.json'], ['html', 'configCommon.options.html']] },
   { group: 'configCommon.groups.request', name: 'baseUrl', label: 'configCommon.fields.baseUrl' },
@@ -104,7 +106,8 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     imageUrlPattern: '',
     imageUrlReplacement: '',
     namePattern: '',
-    nameReplacement: ''
+    nameReplacement: '',
+    hint: ''
   });
 
   // Andere Config gewählt: wieder mit "Run" anfangen

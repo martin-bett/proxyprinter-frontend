@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { Alert, LinearProgress } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { GalleryConfig } from "../../../service/ApiFactory";
+import { GalleryConfig, localizedHint } from "../../../service/ApiFactory";
 import ActionButton from '../../../container/inputs/ActionButton';
 import './GalleryConfigExecutor.css';
 
@@ -27,7 +27,7 @@ interface GalleryConfigExecutorProps {
 
 // Reiter "Run": Hinweis, Eingabefelder für alle $GALLERY_INPUT$-Einträge der parameterMap und Execute
 const GalleryConfigExecutor: React.FC<GalleryConfigExecutorProps> = ({ config, handleExecute, status, onDismissError }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [initialInputs, setInitialInputs] = useState<string[]>([]);
     const [parameterMap, setParameterMap] = useState<ParameterMapState>({
         url: {},
@@ -98,7 +98,8 @@ const GalleryConfigExecutor: React.FC<GalleryConfigExecutorProps> = ({ config, h
     return (
         <form className="gallery-run" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
             <p className="gallery-run-hint">
-                {initialInputs.length > 0 ? t('galleryConfig.executor.hint') : t('galleryConfig.executor.hintNoInput')}
+                {localizedHint(config, i18n.language)
+                    ?? (initialInputs.length > 0 ? t('galleryConfig.executor.hint') : t('galleryConfig.executor.hintNoInput'))}
             </p>
             {renderParameterInputs("url")}
             {renderParameterInputs("request")}

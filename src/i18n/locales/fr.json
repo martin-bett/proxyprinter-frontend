@@ -159,7 +159,8 @@
       "imageUrlPattern": "Motif d'URL d'image",
       "imageUrlReplacement": "Remplacement d'URL d'image",
       "namePattern": "Motif de nom",
-      "nameReplacement": "Remplacement de nom"
+      "nameReplacement": "Remplacement de nom",
+      "hint": "Indication"
     },
     "titles": {
       "parameterMap": "Chaque entrée devient un champ de saisie. Laisser vide si la source n'a besoin d'aucune saisie",
@@ -169,7 +170,8 @@
       "imageUrlPattern": "Regex sur l'URL d'image lue. Sans correspondance, l'entrée est ignorée (p. ex. vidéos, sous-dossiers)",
       "imageUrlReplacement": "Remplacement pour le motif, groupes en $1, p. ex. https://i.redd.it/$1",
       "namePattern": "Regex sur le nom lu, p. ex. \\.\\w+$ pour l'extension de fichier",
-      "nameReplacement": "Remplacement pour le motif, vide = supprimer"
+      "nameReplacement": "Remplacement pour le motif, vide = supprimer",
+      "hint": "Courtes instructions dans l’onglet Run, p. ex. quoi coller. Dans n’importe quelle langue ; le serveur les traduit dans les langues de l’interface à l’enregistrement"
     },
     "tabs": {
       "run": "Exécuter",

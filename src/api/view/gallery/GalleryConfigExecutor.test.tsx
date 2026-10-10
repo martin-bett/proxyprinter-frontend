@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import GalleryConfigExecutor from './GallerConfigExecutor';
-import { GalleryConfig } from '../../../service/ApiFactory';
+import { GalleryConfig, localizedHint } from '../../../service/ApiFactory';
 
 const config = {
   id: 1,
@@ -35,5 +35,26 @@ describe('GalleryConfigExecutor', () => {
     render(<GalleryConfigExecutor config={null} handleExecute={jest.fn()} status={{ loading: false }} onDismissError={() => {}} />);
     expect(screen.getByText('Select a gallery above to run it.')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('zeigt den Hinweis der Config statt des generischen Textes', () => {
+    const withHint = { ...config, hint: 'Paste the Reddit post link' } as GalleryConfig;
+    render(<GalleryConfigExecutor config={withHint} handleExecute={jest.fn()} status={{ loading: false }} onDismissError={() => {}} />);
+    expect(screen.getByText('Paste the Reddit post link')).toBeInTheDocument();
+    expect(screen.queryByText(/Paste the gallery link/)).not.toBeInTheDocument();
+  });
+});
+
+describe('localizedHint', () => {
+  const hinted = { hint: 'Original', hintTranslations: { de: 'Deutsch' } } as unknown as GalleryConfig;
+
+  it('nimmt die Übersetzung der UI-Sprache, auch bei Regionalcode', () => {
+    expect(localizedHint(hinted, 'de')).toBe('Deutsch');
+    expect(localizedHint(hinted, 'de-AT')).toBe('Deutsch');
+  });
+
+  it('fällt auf den Originaltext zurück, ohne Hinweis auf undefined', () => {
+    expect(localizedHint(hinted, 'fr')).toBe('Original');
+    expect(localizedHint({} as GalleryConfig, 'de')).toBeUndefined();
   });
 });
