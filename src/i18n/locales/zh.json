@@ -245,7 +245,7 @@
       "cornerColor": "圆角颜色：",
       "cornerSize": "圆角大小 (mm)：",
       "cornerSizeAuto": "自动 ({{size}})",
-      "cornerSizeHint": "圆角半径。留空：自动，为卡牌高度的 3 %。",
+      "cornerSizeHint": "圆角半径。留空：自动，与实体卡牌相同（高度 88.9 mm 时为 1/8 英寸），随卡牌高度缩放。",
       "ok": "确定",
       "email": {
         "title": "邮件发送",

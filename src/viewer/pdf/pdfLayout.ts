@@ -60,21 +60,24 @@ export const computePageLayout = (settings: Pick<PdfSettings, 'width' | 'height'
 };
 
 /**
- * Radius der Eckmarken in Punkt wie DocumentGenerator.cornerRadius im Backend: ohne cornerSize 3 % der Kartenhöhe,
+ * Radius der Eckmarken in Punkt wie DocumentGenerator.cornerRadius im Backend: ohne cornerSize AUTO_CORNER_RATIO der Kartenhöhe,
  * sonst cornerSize in mm, höchstens die halbe kürzere Kartenseite.
  */
 export const cornerRadius = (cardWidth: number, cardHeight: number, cornerSize?: number | null): number => {
   if (cornerSize == null || cornerSize < 0) {
-    return cardHeight * 0.03;
+    return cardHeight * AUTO_CORNER_RATIO;
   }
   return Math.min(cornerSize * MM_TO_PT, Math.min(cardWidth, cardHeight) / 2);
 };
+
+/** Echte Karten: Eckradius 1/8 Zoll (3,175 mm) bei 88,9 mm Höhe (DocumentGenerator.AUTO_CORNER_RATIO). */
+export const AUTO_CORNER_RATIO = 3.175 / 88.9;
 
 /** Bézier-Faktor für den Viertelkreis der Eckmarken (DocumentGenerator.KAPPA). */
 export const CORNER_KAPPA = 0.5523;
 
 /** Automatischer Eckradius in mm für eine Kartenhöhe in mm, gerundet auf 0,1 mm (Platzhalter im Dialog). */
-export const autoCornerSizeMm = (heightMm: number): number => Math.round((heightMm || 0) * 0.03 * 10) / 10;
+export const autoCornerSizeMm = (heightMm: number): number => Math.round((heightMm || 0) * AUTO_CORNER_RATIO * 10) / 10;
 
 /** Schnittlinien: sortierte, eindeutige Kartenkanten plus die Seitenränder, wie drawGridLines im Backend. */
 export const gridLinePositions = (layout: PageLayout, cardCount: number): { vertical: number[]; horizontal: number[] } => {

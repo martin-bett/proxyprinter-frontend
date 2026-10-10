@@ -246,7 +246,7 @@
       "cornerColor": "Corner Color: ",
       "cornerSize": "Corner Size (mm): ",
       "cornerSizeAuto": "auto ({{size}})",
-      "cornerSizeHint": "Radius of the rounded corners. Empty: automatic, 3 % of the card height.",
+      "cornerSizeHint": "Radius of the rounded corners. Empty: automatic, like real cards (1/8 inch at 88.9 mm), scaled to the card height.",
       "ok": "Ok",
       "email": {
         "title": "Email delivery",

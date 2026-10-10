@@ -246,7 +246,7 @@
       "cornerColor": "Colore angoli: ",
       "cornerSize": "Dimensione angoli (mm): ",
       "cornerSizeAuto": "automatico ({{size}})",
-      "cornerSizeHint": "Raggio degli angoli arrotondati. Vuoto: automatico, 3 % dell'altezza della carta.",
+      "cornerSizeHint": "Raggio degli angoli arrotondati. Vuoto: automatico, come nelle carte reali (1/8 di pollice a 88,9 mm), in base all'altezza della carta.",
       "ok": "Ok",
       "email": {
         "title": "Invio per e-mail",

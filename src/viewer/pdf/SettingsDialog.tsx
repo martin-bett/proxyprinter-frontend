@@ -18,7 +18,7 @@ export interface PdfSettings {
   hmargin: number;
   cornerColor: string;
   cornerColorAuto: boolean;
-  /** Radius der Eckmarken in mm; fehlt = automatisch (3 % der Kartenhöhe). Bleibt bewusst aus defaultSettings, damit alte Hashes gleich bleiben. */
+  /** Radius der Eckmarken in mm; fehlt = automatisch (1/8 Zoll bei echter Kartengröße). Bleibt bewusst aus defaultSettings, damit alte Hashes gleich bleiben. */
   cornerSize?: number;
   maxDpi: number;
   /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */

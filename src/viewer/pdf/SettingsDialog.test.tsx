@@ -61,7 +61,7 @@ describe('SettingsDialog corner size', () => {
   it('is empty (automatic) by default and leaves the field out of the settings', () => {
     const { onSettingsChange, input } = renderCorners();
     expect(input.value).toBe('');
-    expect(input.placeholder).toBe('auto (2.6)');
+    expect(input.placeholder).toBe('auto (3.1)');
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
     expect(onSettingsChange.mock.calls[0][0]).not.toHaveProperty('cornerSize');
   });

@@ -246,7 +246,7 @@
       "cornerColor": "Color de esquina: ",
       "cornerSize": "Tamaño de esquina (mm): ",
       "cornerSizeAuto": "automático ({{size}})",
-      "cornerSizeHint": "Radio de las esquinas redondeadas. Vacío: automático, 3 % de la altura de la carta.",
+      "cornerSizeHint": "Radio de las esquinas redondeadas. Vacío: automático, como en las cartas reales (1/8 de pulgada a 88,9 mm), según la altura de la carta.",
       "ok": "Ok",
       "email": {
         "title": "Envío por correo",

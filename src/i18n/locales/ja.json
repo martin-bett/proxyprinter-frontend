@@ -245,7 +245,7 @@
       "cornerColor": "角の色: ",
       "cornerSize": "角のサイズ (mm): ",
       "cornerSizeAuto": "自動 ({{size}})",
-      "cornerSizeHint": "角丸の半径。空欄の場合は自動（カードの高さの3 %）。",
+      "cornerSizeHint": "角丸の半径。空欄の場合は自動（実物のカードと同じ、高さ88.9 mmで1/8インチ、カードの高さに合わせて調整）。",
       "ok": "OK",
       "email": {
         "title": "メール送信",
