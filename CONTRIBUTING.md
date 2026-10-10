@@ -9,4 +9,4 @@ Thanks for helping out!
 - Prefer generic solutions driven by API/gallery configs over special cases for a single source.
 - Pull requests from forks are built and tested, but get no preview environment.
 
-Changes that need the backend go into [martin-bett/mtgprint](https://github.com/martin-bett/mtgprint) as a separate pull request.
+Changes that need the backend go into [martin-bett/proxyprinter-backend](https://github.com/martin-bett/proxyprinter-backend) as a separate pull request.

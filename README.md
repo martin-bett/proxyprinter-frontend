@@ -4,7 +4,7 @@ Web app behind [proxyprinter.eu](https://proxyprinter.eu): paste a decklist, pic
 API and gallery sources, crop images and generate a printable proxy PDF.
 
 This repository holds the React frontend. The backend (Spring Boot, PDF generation, config storage) lives in
-[martin-bett/mtgprint](https://github.com/martin-bett/mtgprint).
+[martin-bett/proxyprinter-backend](https://github.com/martin-bett/proxyprinter-backend).
 
 ## Run locally
 

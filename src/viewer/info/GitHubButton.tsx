@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 const GitHubButton: React.FC = () => {
   const { t } = useTranslation();
   return (
-  <ActionLink href="https://github.com/martin-bett/mtgprint-front" icon={<Github />}>
+  <ActionLink href="https://github.com/martin-bett/proxyprinter-frontend" icon={<Github />}>
     {t('info.participate')}
   </ActionLink>
   );
