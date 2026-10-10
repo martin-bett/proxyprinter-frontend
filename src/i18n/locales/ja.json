@@ -631,7 +631,8 @@
       "sources": "このサイトは、公開ソースおよびサードパーティAPIからカード画像と情報を読み込みます。これらのソースが提供する内容について、運営者は責任を負いません。アートワークの著作権や所有権を主張するものではなく、すべての権利はそれぞれの権利者に帰属します。",
       "noncommercial": "このプロジェクトは非営利であり、個人的、教育的、または研究目的のみを対象としています。このサイトの利用による利益は得られていません。",
       "accept": "続行することで、この免責事項を理解し、同意したものとみなされます。",
-      "understand": "理解しました"
+      "understand": "理解しました",
+      "operators": "ソースの運営者はサイトをブロックできます:"
     },
     "participate": "参加する",
     "donate": "寄付する"
@@ -978,7 +979,14 @@
       "loginRequired": "ログインが必要です。"
     },
     "blocklist": {
-      "blockedHost": "{{host}} は運営者の要請によりブロックされています。"
+      "blockedHost": "{{host}} は運営者の要請によりブロックされています。",
+      "invalidHost": "ドメイン (example.com) または IP アドレスを入力。",
+      "mailNeedsDomain": "メールでの確認にはドメインが必要です。IP アドレスの場合はファイルを使用。",
+      "invalidMailbox": "不明なメールボックスです。",
+      "mailDisabled": "現在メール送信は利用できません。DNS レコードまたはファイルを使用。",
+      "rateLimited": "リクエストが多すぎます。後でもう一度。",
+      "tokenInvalid": "このリンクまたはトークンは不明か期限切れです。",
+      "notVerified": "{{host}} の DNS レコードにもファイルにもまだトークンがありません。"
     }
   },
   "account": {
@@ -1024,5 +1032,35 @@
       "decksToday_other": "今日作成されたデッキ {{number}} 件",
       "decksTotal_other": "合計 {{number}} デッキ"
     }
+  },
+  "optOut": {
+    "open": "サイトをソースとしてブロック",
+    "title": "サイトをソースとしてブロック",
+    "intro": "サイトの運営者はここでそのサイトをソースとしてブロックできます。ブロック後、Proxyprinter はそのサイトから何も読み込まず、それを使うソース設定も提供されません。所有権はメールのリンク、または DNS レコードかファイルで確認します。",
+    "host": "ドメインまたは IP",
+    "subdomains": "ドメインはすべてのサブドメインもブロックします。",
+    "methodMail": "確認メール",
+    "methodMailHint": "ドメインの標準アドレスにリンクを送信します。",
+    "mailUnavailable": "現在利用できません。DNS レコードまたはファイルを使用。",
+    "mailbox": "メールボックス",
+    "methodChallenge": "DNS レコードまたはファイル",
+    "methodChallengeHint": "ドメインにトークンを設置してから確認。",
+    "sendMail": "確認メールを送信",
+    "getToken": "トークンを取得",
+    "challengeIntro": "{{host}} に次のいずれかを設定してから確認。",
+    "dnsTitle": "DNS レコード",
+    "dnsName": "名前",
+    "dnsType": "タイプ",
+    "dnsValue": "値",
+    "fileTitle": "ファイル",
+    "fileTitleOr": "またはファイル",
+    "fileUrl": "URL",
+    "fileContent": "内容",
+    "challengeValidity": "トークンの有効期間は 7 日です。DNS の変更は反映まで時間がかかる場合があります。",
+    "back": "戻る",
+    "check": "今すぐ確認",
+    "checking": "確認リンクを確認中…",
+    "mailSent": "確認リンクを {{email}} に送信しました。開かれると {{host}} はブロックされます。",
+    "blocked": "{{host}} はソースとしてブロックされました。"
   }
 }

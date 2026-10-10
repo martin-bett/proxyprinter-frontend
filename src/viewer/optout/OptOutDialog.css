@@ -1,0 +1,15 @@
+.optout-dialog { padding: 8px; }
+.optout-title { color: var(--accent); margin-bottom: 12px; font-size: 1.5rem; font-weight: 600; }
+.optout-subtitle { font-weight: 600; margin: 12px 0 6px; }
+.optout-help { margin-bottom: 10px; }
+.optout-hint { display: block; font-size: 0.85em; opacity: 0.75; margin-top: 2px; }
+.optout-methods { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.optout-method { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.optout-method input { margin-top: 4px; }
+.optout-method.is-disabled { opacity: 0.55; cursor: default; }
+.optout-mailbox { display: flex; gap: 4px; align-items: center; margin-left: 24px; }
+.optout-select { padding: 2px 4px; }
+.optout-table { width: 100%; border-collapse: collapse; }
+.optout-table th { text-align: left; padding: 4px 8px 4px 0; white-space: nowrap; vertical-align: top; font-weight: 500; }
+.optout-table td { padding: 4px 0; word-break: break-all; }
+.optout-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }

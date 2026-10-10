@@ -645,7 +645,8 @@
       "sources": "Este sitio web carga imágenes e información de cartas desde fuentes públicas y API de terceros. No me hago responsable del contenido que ofrecen estas fuentes. No se reclama ningún derecho de autor ni de propiedad sobre las ilustraciones, y todos los derechos permanecen con sus respectivos titulares.",
       "noncommercial": "Este proyecto no tiene fines comerciales y está pensado solo para uso personal, educativo o de investigación. No se obtiene ningún beneficio del uso de este sitio.",
       "accept": "Al continuar, se reconoce y se acepta este aviso legal.",
-      "understand": "Entendido"
+      "understand": "Entendido",
+      "operators": "Los operadores de una fuente pueden bloquear su sitio:"
     },
     "participate": "Participar",
     "donate": "Donar"
@@ -992,7 +993,14 @@
       "loginRequired": "Se requiere inicio de sesión."
     },
     "blocklist": {
-      "blockedHost": "{{host}} está bloqueado a petición de su operador."
+      "blockedHost": "{{host}} está bloqueado a petición de su operador.",
+      "invalidHost": "Introducir un dominio (example.com) o una dirección IP.",
+      "mailNeedsDomain": "La confirmación por correo necesita un dominio. Para una dirección IP, usar el archivo.",
+      "invalidMailbox": "Buzón desconocido.",
+      "mailDisabled": "El envío de correos no está disponible ahora. Usar el registro DNS o el archivo.",
+      "rateLimited": "Demasiadas solicitudes. Volver a intentarlo más tarde.",
+      "tokenInvalid": "Este enlace o token es desconocido o ha caducado.",
+      "notVerified": "Ni el registro DNS ni el archivo de {{host}} contienen todavía el token."
     }
   },
   "account": {
@@ -1043,5 +1051,35 @@
       "decksTotal_one": "{{number}} mazo en total",
       "decksTotal_other": "{{number}} mazos en total"
     }
+  },
+  "optOut": {
+    "open": "Bloquear un sitio como fuente",
+    "title": "Bloquear un sitio como fuente",
+    "intro": "Los operadores de un sitio pueden bloquearlo aquí como fuente. Proxyprinter deja de cargar nada de él y las configs de fuente que lo usan dejan de ofrecerse. La propiedad se confirma con un enlace por correo o con un registro DNS o un archivo.",
+    "host": "Dominio o IP",
+    "subdomains": "Un dominio bloquea también todos sus subdominios.",
+    "methodMail": "Correo de confirmación",
+    "methodMailHint": "Se envía un enlace a una dirección estándar del dominio.",
+    "mailUnavailable": "No disponible ahora, usar el registro DNS o el archivo.",
+    "mailbox": "Buzón",
+    "methodChallenge": "Registro DNS o archivo",
+    "methodChallengeHint": "Colocar un token en el dominio y después comprobar.",
+    "sendMail": "Enviar correo de confirmación",
+    "getToken": "Obtener token",
+    "challengeIntro": "Configurar una de las siguientes opciones para {{host}} y después comprobar.",
+    "dnsTitle": "Registro DNS",
+    "dnsName": "Nombre",
+    "dnsType": "Tipo",
+    "dnsValue": "Valor",
+    "fileTitle": "Archivo",
+    "fileTitleOr": "O archivo",
+    "fileUrl": "URL",
+    "fileContent": "Contenido",
+    "challengeValidity": "El token es válido 7 días. Los cambios de DNS pueden tardar en propagarse.",
+    "back": "Volver",
+    "check": "Comprobar ahora",
+    "checking": "Comprobando el enlace de confirmación…",
+    "mailSent": "Se ha enviado un enlace de confirmación a {{email}}. En cuanto se abra, {{host}} queda bloqueado.",
+    "blocked": "{{host}} está ahora bloqueado como fuente."
   }
 }

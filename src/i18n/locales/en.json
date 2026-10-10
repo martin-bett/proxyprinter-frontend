@@ -645,7 +645,8 @@
       "sources": "This website loads card images and information from public sources and third-party APIs. I am not responsible for the content provided by these sources. No copyright or ownership of the artwork is claimed, and all rights remain with their respective owners.",
       "noncommercial": "This project is non-commercial and intended for personal, educational, or research purposes only. No profit is made from the use of this site.",
       "accept": "By continuing, you acknowledge and accept this disclaimer.",
-      "understand": "I Understand"
+      "understand": "I Understand",
+      "operators": "Operators of a source can block their site:"
     },
     "participate": "Participate",
     "donate": "Donate"
@@ -992,7 +993,14 @@
       "loginRequired": "Login required."
     },
     "blocklist": {
-      "blockedHost": "{{host}} is blocked at the request of its operator."
+      "blockedHost": "{{host}} is blocked at the request of its operator.",
+      "invalidHost": "Enter a domain (example.com) or an IP address.",
+      "mailNeedsDomain": "Confirmation by mail needs a domain. For an IP address, use the file.",
+      "invalidMailbox": "Unknown mailbox.",
+      "mailDisabled": "Mail delivery is not available right now. Use the DNS record or file instead.",
+      "rateLimited": "Too many requests. Try again later.",
+      "tokenInvalid": "This link or token is unknown or has expired.",
+      "notVerified": "Neither the DNS record nor the file for {{host}} contains the token yet."
     }
   },
   "account": {
@@ -1043,5 +1051,35 @@
       "decksTotal_one": "{{number}} deck in total",
       "decksTotal_other": "{{number}} decks in total"
     }
+  },
+  "optOut": {
+    "open": "Block a site as source",
+    "title": "Block a site as source",
+    "intro": "Operators of a site can block it as a source here. Proxyprinter then no longer loads anything from it, and source configs using it are no longer offered. Ownership is confirmed by a mail link or a DNS record or file.",
+    "host": "Domain or IP",
+    "subdomains": "A domain also blocks all its subdomains.",
+    "methodMail": "Confirmation mail",
+    "methodMailHint": "A link goes to a standard address of the domain.",
+    "mailUnavailable": "Not available right now, use the DNS record or file instead.",
+    "mailbox": "Mailbox",
+    "methodChallenge": "DNS record or file",
+    "methodChallengeHint": "Place a token on the domain, then check it.",
+    "sendMail": "Send confirmation mail",
+    "getToken": "Get token",
+    "challengeIntro": "Set up one of the following for {{host}}, then check it.",
+    "dnsTitle": "DNS record",
+    "dnsName": "Name",
+    "dnsType": "Type",
+    "dnsValue": "Value",
+    "fileTitle": "File",
+    "fileTitleOr": "Or file",
+    "fileUrl": "URL",
+    "fileContent": "Content",
+    "challengeValidity": "The token is valid for 7 days. DNS changes can take a while to propagate.",
+    "back": "Back",
+    "check": "Check now",
+    "checking": "Checking the confirmation link…",
+    "mailSent": "A confirmation link was sent to {{email}}. Once it is opened, {{host}} is blocked.",
+    "blocked": "{{host}} is now blocked as a source."
   }
 }

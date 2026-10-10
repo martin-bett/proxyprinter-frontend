@@ -43,6 +43,9 @@ import GitHubButton from './info/GitHubButton';
 import TitleDiv from '../svg/TitleDiv';
 import { setLoadingProgressTitle } from '../service/tabTitle';
 import VersionInfo from './info/VersionInfo';
+import OptOutDialog from './optout/OptOutDialog';
+import { takeBlockVerifyToken } from '../service/optout/optOut';
+import { ShieldBan } from 'lucide-react';
 import ThemeChooser from '../theme/ThemeChooser';
 import TutorialMenu from '../tutorial/TutorialMenu';
 import LanguageChooser from '../i18n/LanguageChooser';
@@ -200,7 +203,10 @@ const DeckInputAndViewer: React.FC = () => {
   const [pendingDeck, setPendingDeck] = useState<LoadedDeck | null>(null);
   const [deckLinkStatus, setDeckLinkStatus] = useState<{ loading: boolean; error?: string }>({ loading: false });
   const [apiConfigDialogOpen, setApiConfigDialogOpen] = useState(false);
-  const [disclaimerOpen, setDisclaimerOpen] = useState(true);
+  // Mail-Link der Selbst-Sperre (?blockverify=): Dialog statt Disclaimer öffnen und den Link einlösen
+  const [blockVerifyToken] = useState(() => takeBlockVerifyToken());
+  const [optOutOpen, setOptOutOpen] = useState(!!blockVerifyToken);
+  const [disclaimerOpen, setDisclaimerOpen] = useState(!blockVerifyToken);
   const [gridSize, setGridSize] = useState(10); // Standardwert: 10rem
 
 
@@ -1855,11 +1861,14 @@ const DeckInputAndViewer: React.FC = () => {
       <div className="bottom">
         <div><PayPalDonateButton /></div>
         <div><GitHubButton /></div>
+        <div><ActionButton icon={<ShieldBan />} onClick={() => setOptOutOpen(true)}>{t('optOut.open')}</ActionButton></div>
         <div><VersionInfo statsRefreshKey={statsRefreshKey} /></div>
       </div>
       </div>
 
-      <DisclaimerDialog open={disclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      <DisclaimerDialog open={disclaimerOpen} onClose={() => setDisclaimerOpen(false)}
+        onOptOut={() => { setDisclaimerOpen(false); setOptOutOpen(true); }} />
+      <OptOutDialog open={optOutOpen} onClose={() => setOptOutOpen(false)} linkToken={blockVerifyToken} />
 
 
       <ClosableDialog
