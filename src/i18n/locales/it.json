@@ -244,6 +244,9 @@
       "corners": "Angoli",
       "detectBorderColor": "Rileva colore del bordo",
       "cornerColor": "Colore angoli: ",
+      "cornerSize": "Dimensione angoli (mm): ",
+      "cornerSizeAuto": "automatico ({{size}})",
+      "cornerSizeHint": "Raggio degli angoli arrotondati. Vuoto: automatico, 3 % dell'altezza della carta.",
       "ok": "Ok",
       "email": {
         "title": "Invio per e-mail",

@@ -243,6 +243,9 @@
       "corners": "角",
       "detectBorderColor": "枠の色を検出",
       "cornerColor": "角の色: ",
+      "cornerSize": "角のサイズ (mm): ",
+      "cornerSizeAuto": "自動 ({{size}})",
+      "cornerSizeHint": "角丸の半径。空欄の場合は自動（カードの高さの3 %）。",
       "ok": "OK",
       "email": {
         "title": "メール送信",

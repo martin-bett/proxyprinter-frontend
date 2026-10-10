@@ -5,6 +5,7 @@ import { Checkbox, FormControlLabel } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
 import { useAuth } from '../../service/auth/auth';
 import { PdfPagePreview, PreviewCard } from './PdfPagePreview';
+import { autoCornerSizeMm } from './pdfLayout';
 
 export interface PdfSettings {
   width: number;
@@ -17,6 +18,8 @@ export interface PdfSettings {
   hmargin: number;
   cornerColor: string;
   cornerColorAuto: boolean;
+  /** Radius der Eckmarken in mm; fehlt = automatisch (3 % der Kartenhöhe). Bleibt bewusst aus defaultSettings, damit alte Hashes gleich bleiben. */
+  cornerSize?: number;
   maxDpi: number;
   /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */
   sendMail: boolean;
@@ -59,6 +62,14 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
 
   const handleColorChange = (key: 'cutlineColor' | 'cornerColor', color: ColorResult) => {
     handleChange(key, color.hex);
+  };
+
+  const handleCornerSizeChange = (value: string) => {
+    setLocalSettings(prev => {
+      const { cornerSize, ...rest } = prev;
+      const size = parseFloat(value);
+      return value.trim() === '' || isNaN(size) || size < 0 ? rest : { ...rest, cornerSize: size };
+    });
   };
 
   const handleSave = () => {
@@ -144,6 +155,22 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
             control={<Checkbox disabled={!localSettings.corners} checked={localSettings.cornerColorAuto} onChange={(e) => handleChange('cornerColorAuto', e.target.checked)} />}
             label={t('pdf.settings.detectBorderColor')}
           /></div>
+          <div>
+            <label htmlFor="pdf-corner-size">{t('pdf.settings.cornerSize')}</label>
+            <input
+              id="pdf-corner-size"
+              className="input"
+              type="number"
+              min="0"
+              max="20"
+              step="0.1"
+              disabled={!localSettings.corners}
+              placeholder={t('pdf.settings.cornerSizeAuto', { size: autoCornerSizeMm(localSettings.height) })}
+              value={localSettings.cornerSize ?? ''}
+              onChange={(e) => handleCornerSizeChange(e.target.value)}
+            />
+            <p className="help">{t('pdf.settings.cornerSizeHint')}</p>
+          </div>
           <div> <label>{t('pdf.settings.cornerColor')}</label></div>
         </div>
         <div style={{ position: 'relative', display: 'inline-block' }}>

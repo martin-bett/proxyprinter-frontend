@@ -68,8 +68,7 @@ const borderColor = (img: HTMLImageElement, rect: { x: number; y: number; w: num
   }
 };
 
-const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) => {
-  const r = cornerRadius(h);
+const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, color: string) => {
   ctx.fillStyle = color;
   // dx/dy zeigen von der Ecke ins Kartenfeld; die Kurve bauchte im Backend leicht zur Ecke hin
   const corners: [number, number, number, number][] = [
@@ -156,7 +155,8 @@ const drawPage = async (
       const color = !settings.cornerColorAuto
         ? settings.cornerColor
         : img ? borderColor(img, cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings)) : '#000000';
-      drawCorners(ctx, slot.x, slot.y, layout.cardWidth, layout.cardHeight, color);
+      drawCorners(ctx, slot.x, slot.y, layout.cardWidth, layout.cardHeight,
+        cornerRadius(layout.cardWidth, layout.cardHeight, settings.cornerSize), color);
     }
   });
 
@@ -197,7 +197,7 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
     let current = true;
     drawPage(canvas, layout, settings, cards, () => current).catch(() => undefined);
     return () => { current = false; };
-  }, [layout, cards, settings.cutlines, settings.cutlineColor, settings.cutlineThickness, settings.corners, settings.cornerColor, settings.cornerColorAuto]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [layout, cards, settings.cutlines, settings.cutlineColor, settings.cutlineThickness, settings.corners, settings.cornerColor, settings.cornerColorAuto, settings.cornerSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
   const height = Math.round(width * layout.pageHeight / layout.pageWidth);

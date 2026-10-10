@@ -50,3 +50,30 @@ describe('SettingsDialog preview', () => {
     expect(screen.getByText(/2 × 3 = 6/)).toBeInTheDocument();
   });
 });
+
+describe('SettingsDialog corner size', () => {
+  const renderCorners = () => {
+    const onSettingsChange = jest.fn();
+    render(<SettingsDialog open onClose={jest.fn()} settings={{ ...defaultSettings, corners: true }} onSettingsChange={onSettingsChange} />);
+    return { onSettingsChange, input: screen.getByLabelText(/Corner Size/) as HTMLInputElement };
+  };
+
+  it('is empty (automatic) by default and leaves the field out of the settings', () => {
+    const { onSettingsChange, input } = renderCorners();
+    expect(input.value).toBe('');
+    expect(input.placeholder).toBe('auto (2.6)');
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(onSettingsChange.mock.calls[0][0]).not.toHaveProperty('cornerSize');
+  });
+
+  it('saves a corner size in mm and drops it again when cleared', () => {
+    const { onSettingsChange, input } = renderCorners();
+    fireEvent.change(input, { target: { value: '3.2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ cornerSize: 3.2 }));
+
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(onSettingsChange.mock.calls[1][0]).not.toHaveProperty('cornerSize');
+  });
+});

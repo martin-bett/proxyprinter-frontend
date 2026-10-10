@@ -244,6 +244,9 @@
       "corners": "Coins",
       "detectBorderColor": "Détecter la couleur de bordure",
       "cornerColor": "Couleur des coins : ",
+      "cornerSize": "Taille des coins (mm) : ",
+      "cornerSizeAuto": "auto ({{size}})",
+      "cornerSizeHint": "Rayon des coins arrondis. Vide : automatique, 3 % de la hauteur de la carte.",
       "ok": "OK",
       "email": {
         "title": "Envoi par e-mail",

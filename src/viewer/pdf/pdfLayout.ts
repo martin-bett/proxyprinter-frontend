@@ -59,8 +59,19 @@ export const computePageLayout = (settings: Pick<PdfSettings, 'width' | 'height'
   };
 };
 
-/** Kartenradius der Eckmarken wie im Backend (3 % der Kartenhöhe). */
-export const cornerRadius = (cardHeight: number): number => cardHeight * 0.03;
+/**
+ * Radius der Eckmarken in Punkt wie DocumentGenerator.cornerRadius im Backend: ohne cornerSize 3 % der Kartenhöhe,
+ * sonst cornerSize in mm, höchstens die halbe kürzere Kartenseite.
+ */
+export const cornerRadius = (cardWidth: number, cardHeight: number, cornerSize?: number | null): number => {
+  if (cornerSize == null || cornerSize < 0) {
+    return cardHeight * 0.03;
+  }
+  return Math.min(cornerSize * MM_TO_PT, Math.min(cardWidth, cardHeight) / 2);
+};
+
+/** Automatischer Eckradius in mm für eine Kartenhöhe in mm, gerundet auf 0,1 mm (Platzhalter im Dialog). */
+export const autoCornerSizeMm = (heightMm: number): number => Math.round((heightMm || 0) * 0.03 * 10) / 10;
 
 /** Schnittlinien: sortierte, eindeutige Kartenkanten plus die Seitenränder, wie drawGridLines im Backend. */
 export const gridLinePositions = (layout: PageLayout, cardCount: number): { vertical: number[]; horizontal: number[] } => {

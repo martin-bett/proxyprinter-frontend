@@ -246,6 +246,9 @@
       "corners": "Углы",
       "detectBorderColor": "Определять цвет рамки",
       "cornerColor": "Цвет углов: ",
+      "cornerSize": "Размер углов (мм): ",
+      "cornerSizeAuto": "авто ({{size}})",
+      "cornerSizeHint": "Радиус скруглённых углов. Пусто: автоматически, 3 % высоты карты.",
       "ok": "Ок",
       "email": {
         "title": "Отправка по email",

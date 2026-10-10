@@ -244,6 +244,9 @@
       "corners": "Esquinas",
       "detectBorderColor": "Detectar color del borde",
       "cornerColor": "Color de esquina: ",
+      "cornerSize": "Tamaño de esquina (mm): ",
+      "cornerSizeAuto": "automático ({{size}})",
+      "cornerSizeHint": "Radio de las esquinas redondeadas. Vacío: automático, 3 % de la altura de la carta.",
       "ok": "Ok",
       "email": {
         "title": "Envío por correo",

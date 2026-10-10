@@ -1,4 +1,4 @@
-import { computePageLayout, gridLinePositions } from './pdfLayout';
+import { autoCornerSizeMm, computePageLayout, cornerRadius, gridLinePositions, MM_TO_PT } from './pdfLayout';
 import { cropRect } from './PdfPagePreview';
 
 describe('computePageLayout', () => {
@@ -36,5 +36,24 @@ describe('cropRect', () => {
   it('clamps the crop to the image', () => {
     expect(cropRect(100, 200, { offSetX: 10, offSetY: 20, width: 500, height: 100, isStretch: false }))
       .toEqual({ x: 10, y: 20, w: 90, h: 100 });
+  });
+});
+
+describe('cornerRadius', () => {
+  const w = 63 * MM_TO_PT;
+  const h = 88 * MM_TO_PT;
+
+  it('stays 3 % of the card height without corner size, like the backend default', () => {
+    expect(cornerRadius(w, h)).toBeCloseTo(h * 0.03);
+    expect(cornerRadius(w, h, null)).toBeCloseTo(h * 0.03);
+  });
+
+  it('uses the corner size in mm, capped at half the shorter side', () => {
+    expect(cornerRadius(w, h, 3.2)).toBeCloseTo(3.2 * MM_TO_PT);
+    expect(cornerRadius(w, h, 100)).toBeCloseTo(w / 2);
+  });
+
+  it('shows the automatic size in mm', () => {
+    expect(autoCornerSizeMm(88)).toBe(2.6);
   });
 });

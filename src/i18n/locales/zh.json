@@ -243,6 +243,9 @@
       "corners": "圆角",
       "detectBorderColor": "检测边框颜色",
       "cornerColor": "圆角颜色：",
+      "cornerSize": "圆角大小 (mm)：",
+      "cornerSizeAuto": "自动 ({{size}})",
+      "cornerSizeHint": "圆角半径。留空：自动，为卡牌高度的 3 %。",
       "ok": "确定",
       "email": {
         "title": "邮件发送",

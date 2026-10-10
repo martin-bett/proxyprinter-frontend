@@ -244,6 +244,9 @@
       "corners": "Corners",
       "detectBorderColor": "Detect BorderColor",
       "cornerColor": "Corner Color: ",
+      "cornerSize": "Corner Size (mm): ",
+      "cornerSizeAuto": "auto ({{size}})",
+      "cornerSizeHint": "Radius of the rounded corners. Empty: automatic, 3 % of the card height.",
       "ok": "Ok",
       "email": {
         "title": "Email delivery",

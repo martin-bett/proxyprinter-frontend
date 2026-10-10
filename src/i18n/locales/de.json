@@ -244,6 +244,9 @@
       "corners": "Ecken",
       "detectBorderColor": "Randfarbe erkennen",
       "cornerColor": "Eckenfarbe: ",
+      "cornerSize": "Eckengröße (mm): ",
+      "cornerSizeAuto": "automatisch ({{size}})",
+      "cornerSizeHint": "Radius der abgerundeten Ecken. Leer: automatisch, 3 % der Kartenhöhe.",
       "ok": "OK",
       "email": {
         "title": "E-Mail-Zustellung",
