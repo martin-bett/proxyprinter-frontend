@@ -236,6 +236,7 @@
       "height": "高さ: ",
       "verticalMargin": "上下の余白: ",
       "horizontalMargin": "左右の余白: ",
+      "tenthMm": "0.1ミリ単位",
       "maxDpi": "最大DPI: ",
       "pageLandscape": "横向きページ",
       "cardsLandscape": "カードを横向きに",
@@ -245,6 +246,9 @@
       "corners": "角",
       "detectBorderColor": "枠の色を検出",
       "cornerColor": "角の色: ",
+      "cornerSize": "角のサイズ (mm): ",
+      "cornerSizeAutomatic": "実物のカードと同じ",
+      "cornerSizeHint": "角丸の半径（mm）。自動：実物のカードと同じ（高さ88.9 mmで1/8インチ）、カードの高さに合わせて調整。",
       "ok": "OK",
       "email": {
         "title": "メール送信",
