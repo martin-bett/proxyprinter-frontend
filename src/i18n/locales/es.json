@@ -237,6 +237,7 @@
       "height": "Alto: ",
       "verticalMargin": "Margen vertical: ",
       "horizontalMargin": "Margen horizontal: ",
+      "tenthMm": "Décimas de milímetro",
       "maxDpi": "DPI máx.: ",
       "cutlines": "Líneas de corte",
       "lineThickness": "Grosor de línea: ",
@@ -244,6 +245,9 @@
       "corners": "Esquinas",
       "detectBorderColor": "Detectar color del borde",
       "cornerColor": "Color de esquina: ",
+      "cornerSize": "Tamaño de esquina (mm): ",
+      "cornerSizeAutomatic": "Como las cartas reales",
+      "cornerSizeHint": "Radio de las esquinas redondeadas en mm. Automático: como en las cartas reales (1/8 de pulgada a 88,9 mm), según la altura de la carta.",
       "ok": "Ok",
       "email": {
         "title": "Envío por correo",

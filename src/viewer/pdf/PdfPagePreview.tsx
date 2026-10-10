@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CropSettings } from '../../service/ApiFactory';
 import { PdfSettings } from './SettingsDialog';
-import { computePageLayout, cornerRadius, gridLinePositions, PageLayout } from './pdfLayout';
+import { computePageLayout, CORNER_KAPPA, cornerRadius, gridLinePositions, PageLayout } from './pdfLayout';
 
 export interface PreviewCard {
   imageUrl: string;
@@ -42,44 +42,113 @@ const loadImage = (url: string): Promise<HTMLImageElement | null> => {
   return cached;
 };
 
-/** Mittel der vier Randpixel wie getBorderColor im Backend. */
-const borderColor = (img: HTMLImageElement, rect: { x: number; y: number; w: number; h: number }): string => {
+type Rect = { x: number; y: number; w: number; h: number };
+type Rgb = [number, number, number];
+/** Farben einer Ecke: [waagerechte Kante, senkrechte Kante] */
+type CornerColors = [Rgb, Rgb];
+
+const rgb = (c: Rgb) => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+/**
+ * Automatische Eckfarben wie cornerEdgeColors im Backend: je Ecke (oben links, oben rechts, unten links,
+ * unten rechts) dort gemessen, wo der Bogen auf die beiden Kartenkanten trifft, gemittelt über 3 x 3 Pixel;
+ * durchsichtige Pixel zählen nicht, Rückfall ist das Mittel der vier Randmitten. null, wenn das Bild
+ * wegen CORS nicht lesbar ist.
+ */
+export const cornerEdgeColors = (
+  readPixel: (x: number, y: number) => [number, number, number, number],
+  rect: Rect,
+  radiusOfWidth: number,
+  radiusOfHeight: number,
+): CornerColors[] => {
+  const sample = (x: number, y: number): Rgb | null => {
+    const sum = [0, 0, 0];
+    let n = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const px = Math.max(0, Math.min(rect.w - 1, x + dx));
+        const py = Math.max(0, Math.min(rect.h - 1, y + dy));
+        const [r, g, b, a] = readPixel(rect.x + px, rect.y + py);
+        if (a < 128) continue;
+        sum[0] += r; sum[1] += g; sum[2] += b;
+        n++;
+      }
+    }
+    return n === 0 ? null : [Math.floor(sum[0] / n), Math.floor(sum[1] / n), Math.floor(sum[2] / n)];
+  };
+  const { w, h } = rect;
+  const inset = 2;
+  const along = 3;
+  const rx = Math.min(w - 1 - inset, Math.round(radiusOfWidth * w) + along);
+  const ry = Math.min(h - 1 - inset, Math.round(radiusOfHeight * h) + along);
+  let fallback: Rgb | null = null;
+  const average = (): Rgb => {
+    if (!fallback) {
+      const pts = [[Math.floor(w / 2), 1], [Math.floor(w / 2), h - 2], [1, Math.floor(h / 2)], [w - 2, Math.floor(h / 2)]];
+      const sum = [0, 0, 0];
+      pts.forEach(([x, y]) => { const [r, g, b] = readPixel(rect.x + x, rect.y + y); sum[0] += r; sum[1] += g; sum[2] += b; });
+      fallback = [Math.floor(sum[0] / 4), Math.floor(sum[1] / 4), Math.floor(sum[2] / 4)];
+    }
+    return fallback;
+  };
+  return [0, 1, 2, 3].map(quadrant => {
+    const left = quadrant === 0 || quadrant === 2;
+    const top = quadrant === 0 || quadrant === 1;
+    const edgeX = left ? inset : w - 1 - inset;
+    const edgeY = top ? inset : h - 1 - inset;
+    const horizontal = sample(left ? rx : w - 1 - rx, edgeY) ?? average();
+    const vertical = sample(edgeX, top ? ry : h - 1 - ry) ?? average();
+    return [horizontal, vertical] as CornerColors;
+  });
+};
+
+const readCornerColors = (img: HTMLImageElement, rect: Rect, radiusOfWidth: number, radiusOfHeight: number): CornerColors[] | null => {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return '#000000';
+    if (!ctx) return null;
     ctx.drawImage(img, 0, 0);
-    const pts = [
-      [rect.x + Math.floor(rect.w / 2), rect.y + 1],
-      [rect.x + Math.floor(rect.w / 2), rect.y + rect.h - 2],
-      [rect.x + 1, rect.y + Math.floor(rect.h / 2)],
-      [rect.x + rect.w - 2, rect.y + Math.floor(rect.h / 2)],
-    ];
-    const sum = [0, 0, 0];
-    pts.forEach(([px, py]) => {
-      const d = ctx.getImageData(px, py, 1, 1).data;
-      sum[0] += d[0]; sum[1] += d[1]; sum[2] += d[2];
-    });
-    return `rgb(${Math.floor(sum[0] / 4)},${Math.floor(sum[1] / 4)},${Math.floor(sum[2] / 4)})`;
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const read = (x: number, y: number): [number, number, number, number] => {
+      const i = (y * canvas.width + x) * 4;
+      return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+    };
+    return cornerEdgeColors(read, rect, radiusOfWidth, radiusOfHeight);
   } catch {
-    return '#000000';
+    return null;
   }
 };
 
-const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) => {
-  const r = cornerRadius(h);
-  ctx.fillStyle = color;
-  // dx/dy zeigen von der Ecke ins Kartenfeld; die Kurve bauchte im Backend leicht zur Ecke hin
+/** Wie colorDistance/drawRoundedCorner im Backend: fast gleiche Farben werden einfarbig gemischt. */
+const nearlyEqual = (a: Rgb, b: Rgb) => Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2])) <= 6;
+
+/** colors: eine feste Farbe für alle Ecken oder je Ecke die Farben der beiden angrenzenden Kanten. */
+const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, colors: string | CornerColors[]) => {
+  // dx/dy zeigen von der Ecke ins Kartenfeld; Viertelkreis wie drawRoundedCorner im Backend
   const corners: [number, number, number, number][] = [
     [x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1],
   ];
-  corners.forEach(([cx, cy, dx, dy]) => {
+  corners.forEach(([cx, cy, dx, dy], quadrant) => {
+    if (typeof colors === 'string') {
+      ctx.fillStyle = colors;
+    } else {
+      const [horizontal, vertical] = colors[quadrant];
+      if (nearlyEqual(horizontal, vertical)) {
+        ctx.fillStyle = rgb([0, 1, 2].map(k => Math.floor((horizontal[k] + vertical[k]) / 2)) as Rgb);
+      } else {
+        const gradient = ctx.createLinearGradient(cx + dx * r, cy, cx, cy + dy * r);
+        gradient.addColorStop(0, rgb(horizontal));
+        gradient.addColorStop(1, rgb(vertical));
+        ctx.fillStyle = gradient;
+      }
+    }
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + dx * r, cy);
-    ctx.bezierCurveTo(cx + dx * 0.43 * r, cy + dy * 0.18 * r, cx + dx * 0.18 * r, cy + dy * 0.43 * r, cx, cy + dy * r);
+    const handle = r * (1 - CORNER_KAPPA);
+    ctx.bezierCurveTo(cx + dx * handle, cy, cx, cy + dy * handle, cx, cy + dy * r);
     ctx.closePath();
     ctx.fill();
   });
@@ -153,10 +222,13 @@ const drawPage = async (
     }
     ctx.restore();
     if (settings.corners) {
-      const color = !settings.cornerColorAuto
+      const r = cornerRadius(layout.cardWidth, layout.cardHeight, settings.cornerSize);
+      // Ohne lesbares Bild (Platzhalter, CORS) fällt die automatische Farbe auf Schwarz zurück
+      const colors = !settings.cornerColorAuto
         ? settings.cornerColor
-        : img ? borderColor(img, cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings)) : '#000000';
-      drawCorners(ctx, slot.x, slot.y, layout.cardWidth, layout.cardHeight, color);
+        : (img && readCornerColors(img, cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings),
+            r / layout.cardWidth, r / layout.cardHeight)) || '#000000';
+      drawCorners(ctx, slot.x, slot.y, layout.cardWidth, layout.cardHeight, r, colors);
     }
   });
 
@@ -197,7 +269,7 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
     let current = true;
     drawPage(canvas, layout, settings, cards, () => current).catch(() => undefined);
     return () => { current = false; };
-  }, [layout, cards, settings.cutlines, settings.cutlineColor, settings.cutlineThickness, settings.corners, settings.cornerColor, settings.cornerColorAuto]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [layout, cards, settings.cutlines, settings.cutlineColor, settings.cutlineThickness, settings.corners, settings.cornerColor, settings.cornerColorAuto, settings.cornerSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
   const height = Math.round(width * layout.pageHeight / layout.pageWidth);

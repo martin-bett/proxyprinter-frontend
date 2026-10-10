@@ -236,6 +236,7 @@
       "height": "高度：",
       "verticalMargin": "垂直边距：",
       "horizontalMargin": "水平边距：",
+      "tenthMm": "十分之一毫米",
       "maxDpi": "最大 DPI：",
       "cutlines": "裁切线",
       "lineThickness": "线条粗细：",
@@ -243,6 +244,9 @@
       "corners": "圆角",
       "detectBorderColor": "检测边框颜色",
       "cornerColor": "圆角颜色：",
+      "cornerSize": "圆角大小 (mm)：",
+      "cornerSizeAutomatic": "与实体卡牌相同",
+      "cornerSizeHint": "圆角半径（mm）。自动：与实体卡牌相同（高度 88.9 mm 时为 1/8 英寸），随卡牌高度缩放。",
       "ok": "确定",
       "email": {
         "title": "邮件发送",

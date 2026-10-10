@@ -237,6 +237,7 @@
       "height": "Höhe: ",
       "verticalMargin": "Vertikaler Rand: ",
       "horizontalMargin": "Horizontaler Rand: ",
+      "tenthMm": "Zehntelmillimeter",
       "maxDpi": "Max. DPI: ",
       "cutlines": "Schnittlinien",
       "lineThickness": "Linienstärke: ",
@@ -244,6 +245,9 @@
       "corners": "Ecken",
       "detectBorderColor": "Randfarbe erkennen",
       "cornerColor": "Eckenfarbe: ",
+      "cornerSize": "Eckengröße (mm): ",
+      "cornerSizeAutomatic": "Wie echte Karten",
+      "cornerSizeHint": "Radius der abgerundeten Ecken in mm. Automatisch: wie bei echten Karten (1/8 Zoll bei 88,9 mm), passend zur Kartenhöhe.",
       "ok": "OK",
       "email": {
         "title": "E-Mail-Zustellung",
