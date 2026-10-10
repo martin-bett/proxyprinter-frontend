@@ -1,5 +1,5 @@
 import { AUTO_CORNER_RATIO, autoCornerSizeMm, computePageLayout, cornerRadius, gridLinePositions, MM_TO_PT } from './pdfLayout';
-import { cropRect } from './PdfPagePreview';
+import { cornerEdgeColors, cropRect } from './PdfPagePreview';
 
 describe('computePageLayout', () => {
   it('fits 3 x 3 real-size cards centered on A4 like the backend', () => {
@@ -66,5 +66,30 @@ describe('cornerRadius', () => {
 
   it('shows the automatic size in mm', () => {
     expect(autoCornerSizeMm(88)).toBe(3.1);
+  });
+});
+
+describe('cornerEdgeColors', () => {
+  // 100 x 140 px, 4 px Rahmen: oben/unten rot, links/rechts blau (in den Ecken), innen grau
+  const read = (x: number, y: number): [number, number, number, number] => {
+    if (x < 4 || x >= 96) return [0, 0, 255, 255];
+    if (y < 4 || y >= 136) return [255, 0, 0, 255];
+    return [128, 128, 128, 255];
+  };
+
+  it('measures both edges of each corner like the backend', () => {
+    const colors = cornerEdgeColors(read, { x: 0, y: 0, w: 100, h: 140 }, 0.1, 0.1);
+    expect(colors).toHaveLength(4);
+    colors.forEach(([horizontal, vertical]) => {
+      expect(horizontal).toEqual([255, 0, 0]);
+      expect(vertical).toEqual([0, 0, 255]);
+    });
+  });
+
+  it('falls back to the average border color for transparent pixels', () => {
+    const transparent = (): [number, number, number, number] => [10, 20, 30, 0];
+    const [[horizontal, vertical]] = cornerEdgeColors(transparent, { x: 0, y: 0, w: 100, h: 140 }, 0.1, 0.1);
+    expect(horizontal).toEqual([10, 20, 30]);
+    expect(vertical).toEqual([10, 20, 30]);
   });
 });
