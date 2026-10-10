@@ -66,6 +66,23 @@ const GALLERY_CONFIG_FIELDS: ConfigField[] = [
   { group: 'configCommon.groups.locator', name: 'defaultLanguage', label: 'configCommon.fields.defaultLanguage', type: 'select', options: DEFAULT_LANGUAGE_OPTIONS, title: 'configCommon.titles.defaultLanguage' },
 ];
 
+// Felder, die ein Objekt sind: ohne Wert (null) bleiben sie undefined, ein leerer Text würde das Backend mit 400 ablehnen
+const OBJECT_FIELDS = ['hintTranslations'];
+
+/**
+ * Formularwerte aus der geladenen Config: fehlende Textwerte (null) werden zu '', Objektfelder zu undefined.
+ * Die Objektfelder stehen immer drin, damit beim Wechsel der Config keine Werte der vorigen stehen bleiben.
+ */
+export const configToFormValues = (config: Config): Record<string, unknown> => ({
+  ...Object.fromEntries(OBJECT_FIELDS.map(key => [key, undefined])),
+  ...Object.fromEntries(
+    Object.entries(config).map(([key, value]) => {
+      if (value !== undefined && value !== null) return [key, value];
+      return [key, OBJECT_FIELDS.includes(key) ? undefined : ''];
+    })
+  ),
+});
+
 interface GalleryConfigWizardProps {
   onClose: () => void;
   onSave: (config: GalleryConfigFormState) => void;
@@ -119,12 +136,7 @@ const GalleryConfigWizard: React.FC<GalleryConfigWizardProps> = ({ onSave, onPub
     if (initialConfig) {
       setConfig((prevConfig) => ({
         ...prevConfig,
-        ...Object.fromEntries(
-          Object.entries(initialConfig).map(([key, value]) => [
-            key,
-            value !== undefined && value !== null ? value : ''
-          ])
-        ),
+        ...configToFormValues(initialConfig),
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
