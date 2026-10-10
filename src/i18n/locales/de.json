@@ -248,6 +248,8 @@
       "horizontalMargin": "Horizontaler Rand: ",
       "tenthMm": "Zehntelmillimeter",
       "maxDpi": "Max. DPI: ",
+      "pageLandscape": "Blatt quer",
+      "cardsLandscape": "Karten quer",
       "cutlines": "Schnittlinien",
       "lineThickness": "Linienstärke: ",
       "cutLineColor": "Schnittlinienfarbe: ",

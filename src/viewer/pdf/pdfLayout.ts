@@ -22,6 +22,8 @@ export interface PageLayout {
   pageHeight: number;
   cardWidth: number;
   cardHeight: number;
+  /** Karten liegen quer: das Bild wird im Uhrzeigersinn gedreht */
+  rotated: boolean;
   cardsPerRow: number;
   cardsPerColumn: number;
   slots: CardSlot[];
@@ -38,15 +40,15 @@ const centeredOffset = (pageSize: number, count: number, cardSize: number, gap: 
   Math.max(0, (pageSize - (count * cardSize + Math.max(0, count - 1) * gap)) / 2);
 
 export const computePageLayout = (
-  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'> & { landscape?: boolean },
+  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'> & Partial<Pick<PdfSettings, 'pageLandscape' | 'cardsLandscape'>>,
 ): PageLayout => {
-  // Quer tauschen nur die Seitenmaße, die Karten bleiben aufrecht
-  const pageWidth = settings.landscape ? PAGE_HEIGHT_PT : PAGE_WIDTH_PT;
-  const pageHeight = settings.landscape ? PAGE_WIDTH_PT : PAGE_HEIGHT_PT;
+  const pageWidth = settings.pageLandscape ? PAGE_HEIGHT_PT : PAGE_WIDTH_PT;
+  const pageHeight = settings.pageLandscape ? PAGE_WIDTH_PT : PAGE_HEIGHT_PT;
   const hMargin = (settings.hmargin || 0) * MM_TO_PT;
   const vMargin = (settings.vmargin || 0) * MM_TO_PT;
-  const cardWidth = (settings.width || 0) * MM_TO_PT;
-  const cardHeight = (settings.height || 0) * MM_TO_PT;
+  // Querliegende Karten belegen einen um 90° gedrehten Platz
+  const cardWidth = ((settings.cardsLandscape ? settings.height : settings.width) || 0) * MM_TO_PT;
+  const cardHeight = ((settings.cardsLandscape ? settings.width : settings.height) || 0) * MM_TO_PT;
 
   const fits = cardWidth > 0 && cardHeight > 0;
   const cardsPerRow = fits ? cardsThatFit(pageWidth, cardWidth, hMargin) : 0;
@@ -69,6 +71,7 @@ export const computePageLayout = (
     pageHeight,
     cardWidth,
     cardHeight,
+    rotated: !!settings.cardsLandscape,
     cardsPerRow,
     cardsPerColumn,
     slots,
@@ -77,12 +80,13 @@ export const computePageLayout = (
 };
 
 /**
- * Radius der Eckmarken in Punkt wie DocumentGenerator.cornerRadius im Backend: ohne cornerSize AUTO_CORNER_RATIO der Kartenhöhe,
+ * Radius der Eckmarken in Punkt wie DocumentGenerator.cornerRadius im Backend: ohne cornerSize AUTO_CORNER_RATIO der Kartenhöhe
+ * (der langen Seite, damit querliegende Karten denselben Radius bekommen),
  * sonst cornerSize in mm, höchstens die halbe kürzere Kartenseite.
  */
 export const cornerRadius = (cardWidth: number, cardHeight: number, cornerSize?: number | null): number => {
   if (cornerSize == null || cornerSize < 0) {
-    return cardHeight * AUTO_CORNER_RATIO;
+    return Math.max(cardWidth, cardHeight) * AUTO_CORNER_RATIO;
   }
   return Math.min(cornerSize * MM_TO_PT, Math.min(cardWidth, cardHeight) / 2);
 };

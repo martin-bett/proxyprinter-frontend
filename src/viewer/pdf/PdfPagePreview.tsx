@@ -102,6 +102,13 @@ export const cornerEdgeColors = (
   });
 };
 
+/**
+ * Eckfarben des aufrechten Bildes auf die im Uhrzeigersinn gedrehte Karte umlegen: Ecke links oben kommt
+ * nach rechts oben usw., und die waagerechte Kante wird zur senkrechten.
+ */
+export const rotateCornerColors = (colors: CornerColors[]): CornerColors[] =>
+  [2, 0, 3, 1].map(from => [colors[from][1], colors[from][0]] as CornerColors);
+
 const readCornerColors = (img: HTMLImageElement, rect: Rect, radiusOfWidth: number, radiusOfHeight: number): CornerColors[] | null => {
   try {
     const canvas = document.createElement('canvas');
@@ -211,7 +218,14 @@ const drawPage = async (
     ctx.shadowOffsetY = 2;
     if (img) {
       const rect = cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings);
-      ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, slot.x, slot.y, layout.cardWidth, layout.cardHeight);
+      if (layout.rotated) {
+        // Im Uhrzeigersinn gedreht wie rotateClockwise im Backend
+        ctx.translate(slot.x + layout.cardWidth, slot.y);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, layout.cardHeight, layout.cardWidth);
+      } else {
+        ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, slot.x, slot.y, layout.cardWidth, layout.cardHeight);
+      }
     } else {
       ctx.fillStyle = palette.placeholder;
       ctx.fillRect(slot.x, slot.y, layout.cardWidth, layout.cardHeight);
@@ -224,10 +238,14 @@ const drawPage = async (
     if (settings.corners) {
       const r = cornerRadius(layout.cardWidth, layout.cardHeight, settings.cornerSize);
       // Ohne lesbares Bild (Platzhalter, CORS) fällt die automatische Farbe auf Schwarz zurück
+      // Gedrehte Karten: gemessen wird am aufrechten Bild, dessen Breite auf der Platzhöhe liegt
+      const [imgW, imgH] = layout.rotated ? [layout.cardHeight, layout.cardWidth] : [layout.cardWidth, layout.cardHeight];
+      const measured = settings.cornerColorAuto && img
+        ? readCornerColors(img, cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings), r / imgW, r / imgH)
+        : null;
       const colors = !settings.cornerColorAuto
         ? settings.cornerColor
-        : (img && readCornerColors(img, cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings),
-            r / layout.cardWidth, r / layout.cardHeight)) || '#000000';
+        : (measured && (layout.rotated ? rotateCornerColors(measured) : measured)) || '#000000';
       drawCorners(ctx, slot.x, slot.y, layout.cardWidth, layout.cardHeight, r, colors);
     }
   });
@@ -251,7 +269,7 @@ interface PdfPagePreviewProps {
   width?: number;
 }
 
-/** Eine A4-Beispielseite, die sich mit den Einstellungen im Dialog mitändert. */
+/** Eine A4-Beispielseite (hoch oder quer), die sich mit den Einstellungen im Dialog mitändert. */
 export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewProps) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -259,7 +277,7 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
 
   const layout = useMemo(
     () => computePageLayout(settings),
-    [settings.width, settings.height, settings.hmargin, settings.vmargin] // eslint-disable-line react-hooks/exhaustive-deps
+    [settings.width, settings.height, settings.hmargin, settings.vmargin, settings.pageLandscape, settings.cardsLandscape] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {

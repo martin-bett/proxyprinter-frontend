@@ -248,6 +248,8 @@
       "horizontalMargin": "Marge horizontale : ",
       "tenthMm": "Dixièmes de millimètre",
       "maxDpi": "DPI max. : ",
+      "pageLandscape": "Page au format paysage",
+      "cardsLandscape": "Cartes au format paysage",
       "cutlines": "Traits de coupe",
       "lineThickness": "Épaisseur du trait : ",
       "cutLineColor": "Couleur du trait de coupe : ",

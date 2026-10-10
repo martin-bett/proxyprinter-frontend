@@ -250,6 +250,8 @@
       "horizontalMargin": "Горизонтальное поле: ",
       "tenthMm": "Десятые доли миллиметра",
       "maxDpi": "Макс. DPI: ",
+      "pageLandscape": "Альбомная ориентация листа",
+      "cardsLandscape": "Карты горизонтально",
       "cutlines": "Линии реза",
       "lineThickness": "Толщина линии: ",
       "cutLineColor": "Цвет линии реза: ",

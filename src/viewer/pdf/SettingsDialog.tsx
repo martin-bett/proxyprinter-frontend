@@ -22,6 +22,10 @@ export interface PdfSettings {
   /** Radius der Eckmarken in mm; fehlt = automatisch (1/8 Zoll bei echter Kartengröße). Bleibt bewusst aus defaultSettings, damit alte Hashes gleich bleiben. */
   cornerSize?: number;
   maxDpi: number;
+  /** Blatt im Querformat (A4 quer). */
+  pageLandscape: boolean;
+  /** Karten um 90° gedreht aufs Blatt legen; width/height bleiben die Maße der aufrechten Karte. */
+  cardsLandscape: boolean;
   /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */
   sendMail: boolean;
 }
@@ -38,6 +42,8 @@ const defaultSettings: PdfSettings = {
   cornerColor: '#000000',
   cornerColorAuto: true,
   maxDpi: 300,
+  pageLandscape: false,
+  cardsLandscape: false,
   sendMail: false
 };
 
@@ -119,6 +125,18 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
         <div>
           <label>{t('pdf.settings.maxDpi')}</label>
           <input className="input" type="number" min="0" max="1000" value={localSettings.maxDpi} onChange={(e) => handleChange('maxDpi', Number(e.target.value))} />
+        </div>
+        <div>
+          <FormControlLabel
+            control={<Checkbox checked={!!localSettings.pageLandscape} onChange={(e) => handleChange('pageLandscape', e.target.checked)} />}
+            label={t('pdf.settings.pageLandscape')}
+          />
+        </div>
+        <div>
+          <FormControlLabel
+            control={<Checkbox checked={!!localSettings.cardsLandscape} onChange={(e) => handleChange('cardsLandscape', e.target.checked)} />}
+            label={t('pdf.settings.cardsLandscape')}
+          />
         </div>
       </div>
       <div className="settings-category">

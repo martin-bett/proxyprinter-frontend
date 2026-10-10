@@ -1,5 +1,5 @@
 import { AUTO_CORNER_RATIO, autoCornerSizeMm, computePageLayout, cornerRadius, gridLinePositions, MM_TO_PT } from './pdfLayout';
-import { cornerEdgeColors, cropRect } from './PdfPagePreview';
+import { cornerEdgeColors, cropRect, rotateCornerColors } from './PdfPagePreview';
 
 describe('computePageLayout', () => {
   it('fits 3 x 3 real-size cards centered on A4 like the backend', () => {
@@ -15,7 +15,7 @@ describe('computePageLayout', () => {
   });
 
   it('fits 4 x 2 upright cards on landscape A4', () => {
-    const layout = computePageLayout({ width: 63.5, height: 88.9, hmargin: 0, vmargin: 0, landscape: true });
+    const layout = computePageLayout({ width: 63.5, height: 88.9, hmargin: 0, vmargin: 0, pageLandscape: true });
     expect(layout.pageWidth).toBeGreaterThan(layout.pageHeight);
     expect(layout.cardsPerRow).toBe(4);
     expect(layout.cardsPerColumn).toBe(2);
@@ -24,6 +24,17 @@ describe('computePageLayout', () => {
   it('reduces the grid when margins grow', () => {
     const layout = computePageLayout({ width: 63, height: 88, hmargin: 15, vmargin: 15 });
     expect(layout.cardsPerRow).toBe(2);
+  });
+
+  it('turns the card slot for landscape cards', () => {
+    const portraitPage = computePageLayout({ width: 63.5, height: 88.9, hmargin: 0, vmargin: 0, cardsLandscape: true });
+    expect(portraitPage.rotated).toBe(true);
+    expect(portraitPage.cardWidth).toBeCloseTo(88.9 * MM_TO_PT);
+    expect(portraitPage.cardHeight).toBeCloseTo(63.5 * MM_TO_PT);
+    expect([portraitPage.cardsPerRow, portraitPage.cardsPerColumn]).toEqual([2, 4]);
+
+    const landscapePage = computePageLayout({ width: 63.5, height: 88.9, hmargin: 0, vmargin: 0, pageLandscape: true, cardsLandscape: true });
+    expect([landscapePage.cardsPerRow, landscapePage.cardsPerColumn]).toEqual([3, 3]);
   });
 
   it('returns no slots for oversized cards', () => {
@@ -91,5 +102,18 @@ describe('cornerEdgeColors', () => {
     const [[horizontal, vertical]] = cornerEdgeColors(transparent, { x: 0, y: 0, w: 100, h: 140 }, 0.1, 0.1);
     expect(horizontal).toEqual([10, 20, 30]);
     expect(vertical).toEqual([10, 20, 30]);
+  });
+});
+
+describe('rotateCornerColors', () => {
+  it('moves each corner one step clockwise and swaps its edges', () => {
+    const c = (n: number): [number, number, number] => [n, n, n];
+    // Reihenfolge wie drawCorners: links oben, rechts oben, links unten, rechts unten; je [waagerecht, senkrecht]
+    const upright = [[c(1), c(2)], [c(3), c(4)], [c(5), c(6)], [c(7), c(8)]] as [[number, number, number], [number, number, number]][];
+    const rotated = rotateCornerColors(upright);
+    expect(rotated[1]).toEqual([c(2), c(1)]); // links oben -> rechts oben
+    expect(rotated[3]).toEqual([c(4), c(3)]); // rechts oben -> rechts unten
+    expect(rotated[2]).toEqual([c(8), c(7)]); // rechts unten -> links unten
+    expect(rotated[0]).toEqual([c(6), c(5)]); // links unten -> links oben
   });
 });

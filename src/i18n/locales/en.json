@@ -248,6 +248,8 @@
       "horizontalMargin": "Horizontal Margin: ",
       "tenthMm": "Tenths of a millimetre",
       "maxDpi": "Max Dpi: ",
+      "pageLandscape": "Landscape page",
+      "cardsLandscape": "Landscape cards",
       "cutlines": "Cutlines",
       "lineThickness": "Line Thickness: ",
       "cutLineColor": "Cut Line Color: ",

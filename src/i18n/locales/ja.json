@@ -247,6 +247,8 @@
       "horizontalMargin": "左右の余白: ",
       "tenthMm": "0.1ミリ単位",
       "maxDpi": "最大DPI: ",
+      "pageLandscape": "横向きページ",
+      "cardsLandscape": "カードを横向きに",
       "cutlines": "カットライン",
       "lineThickness": "線の太さ: ",
       "cutLineColor": "カットラインの色: ",

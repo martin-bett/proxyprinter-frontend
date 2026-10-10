@@ -247,6 +247,8 @@
       "horizontalMargin": "水平边距：",
       "tenthMm": "十分之一毫米",
       "maxDpi": "最大 DPI：",
+      "pageLandscape": "横向页面",
+      "cardsLandscape": "卡牌横放",
       "cutlines": "裁切线",
       "lineThickness": "线条粗细：",
       "cutLineColor": "裁切线颜色：",

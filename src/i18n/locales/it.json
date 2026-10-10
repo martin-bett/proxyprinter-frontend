@@ -248,6 +248,8 @@
       "horizontalMargin": "Margine orizzontale: ",
       "tenthMm": "Decimi di millimetro",
       "maxDpi": "DPI max: ",
+      "pageLandscape": "Pagina orizzontale",
+      "cardsLandscape": "Carte orizzontali",
       "cutlines": "Linee di taglio",
       "lineThickness": "Spessore linea: ",
       "cutLineColor": "Colore linea di taglio: ",
