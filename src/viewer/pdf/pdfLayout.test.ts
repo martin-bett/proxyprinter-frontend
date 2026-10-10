@@ -2,13 +2,23 @@ import { AUTO_CORNER_RATIO, autoCornerSizeMm, computePageLayout, cornerRadius, g
 import { cropRect } from './PdfPagePreview';
 
 describe('computePageLayout', () => {
-  it('fits 3 x 3 standard cards on A4 like the backend', () => {
-    const layout = computePageLayout({ width: 63, height: 88, hmargin: 0, vmargin: 0 });
+  it('fits 3 x 3 real-size cards centered on A4 like the backend', () => {
+    const layout = computePageLayout({ width: 63.5, height: 88.9, hmargin: 0, vmargin: 0 });
+    expect(MM_TO_PT * 25.4).toBeCloseTo(72);
     expect(layout.cardsPerRow).toBe(3);
     expect(layout.cardsPerColumn).toBe(3);
     expect(layout.slots).toHaveLength(9);
-    expect(layout.slots[0].x).toBeCloseTo(28.3);
-    expect(layout.slots[1].x - layout.slots[0].x).toBeCloseTo(63 * 2.83);
+    // (210 - 3 * 63,5) / 2 = 9,75 mm, (297 - 3 * 88,9) / 2 = 15,15 mm
+    expect(layout.slots[0].x / MM_TO_PT).toBeCloseTo(9.75, 1);
+    expect(layout.slots[0].y / MM_TO_PT).toBeCloseTo(15.15, 1);
+    expect(layout.slots[1].x - layout.slots[0].x).toBeCloseTo(63.5 * MM_TO_PT);
+  });
+
+  it('fits 4 x 2 upright cards on landscape A4', () => {
+    const layout = computePageLayout({ width: 63.5, height: 88.9, hmargin: 0, vmargin: 0, landscape: true });
+    expect(layout.pageWidth).toBeGreaterThan(layout.pageHeight);
+    expect(layout.cardsPerRow).toBe(4);
+    expect(layout.cardsPerColumn).toBe(2);
   });
 
   it('reduces the grid when margins grow', () => {

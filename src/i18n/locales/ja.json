@@ -236,6 +236,7 @@
       "height": "高さ: ",
       "verticalMargin": "上下の余白: ",
       "horizontalMargin": "左右の余白: ",
+      "tenthMm": "0.1ミリ単位",
       "maxDpi": "最大DPI: ",
       "cutlines": "カットライン",
       "lineThickness": "線の太さ: ",

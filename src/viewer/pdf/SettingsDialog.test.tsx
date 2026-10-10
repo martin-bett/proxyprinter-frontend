@@ -42,6 +42,22 @@ describe('SettingsDialog mail option', () => {
   });
 });
 
+describe('SettingsDialog dimensions', () => {
+  it('defaults to real card size and edits whole and tenth millimetres separately', () => {
+    const onSettingsChange = jest.fn();
+    render(<SettingsDialog open onClose={jest.fn()} settings={defaultSettings} onSettingsChange={onSettingsChange} />);
+    const width = screen.getByLabelText(/Width/) as HTMLInputElement;
+    const widthTenth = screen.getAllByLabelText('Tenths of a millimetre')[0] as HTMLInputElement;
+    expect(width.value).toBe('63');
+    expect(widthTenth.value).toBe('5');
+
+    fireEvent.change(width, { target: { value: '62' } });
+    fireEvent.change(widthTenth, { target: { value: '8' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ width: 62.8, height: 88.9 }));
+  });
+});
+
 describe('SettingsDialog preview', () => {
   it('shows the slot count and updates it with the dimensions', () => {
     render(<SettingsDialog open onClose={jest.fn()} settings={defaultSettings} onSettingsChange={jest.fn()} />);
@@ -66,7 +82,8 @@ describe('SettingsDialog corner size', () => {
     const { onSettingsChange, input, auto } = renderCorners();
     expect(auto).toBeChecked();
     expect(input).toBeDisabled();
-    expect(input.value).toBe('3.1');
+    expect(input.value).toBe('3');
+    expect((screen.getAllByLabelText('Tenths of a millimetre').pop() as HTMLInputElement).value).toBe('2');
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
     expect(onSettingsChange.mock.calls[0][0]).not.toHaveProperty('cornerSize');
   });
@@ -75,9 +92,10 @@ describe('SettingsDialog corner size', () => {
     const { onSettingsChange, input, auto } = renderCorners();
     fireEvent.click(auto);
     expect(input).toBeEnabled();
-    fireEvent.change(input, { target: { value: '3.2' } });
+    fireEvent.change(input, { target: { value: '4' } });
+    fireEvent.change(screen.getAllByLabelText('Tenths of a millimetre').pop()!, { target: { value: '5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
-    expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ cornerSize: 3.2 }));
+    expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ cornerSize: 4.5 }));
 
     fireEvent.click(auto);
     fireEvent.click(screen.getByRole('button', { name: 'Ok' }));

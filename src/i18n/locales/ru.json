@@ -239,6 +239,7 @@
       "height": "Высота: ",
       "verticalMargin": "Вертикальное поле: ",
       "horizontalMargin": "Горизонтальное поле: ",
+      "tenthMm": "Десятые доли миллиметра",
       "maxDpi": "Макс. DPI: ",
       "cutlines": "Линии реза",
       "lineThickness": "Толщина линии: ",

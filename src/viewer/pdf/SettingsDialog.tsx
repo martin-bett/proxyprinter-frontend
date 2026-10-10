@@ -6,6 +6,7 @@ import { ChromePicker, ColorResult } from 'react-color';
 import { useAuth } from '../../service/auth/auth';
 import { PdfPagePreview, PreviewCard } from './PdfPagePreview';
 import { autoCornerSizeMm } from './pdfLayout';
+import { MmInput } from './MmInput';
 
 export interface PdfSettings {
   width: number;
@@ -26,8 +27,8 @@ export interface PdfSettings {
 }
 
 const defaultSettings: PdfSettings = {
-  width: 63,
-  height: 88,
+  width: 63.5,
+  height: 88.9,
   cutlines: false,
   cutlineColor: '#43FE43',
   cutlineThickness: 1,
@@ -66,7 +67,6 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
 
   // Automatik an = kein cornerSize in den Settings; der Text bleibt beim Umschalten erhalten
   const [cornerAuto, setCornerAuto] = useState(settings.cornerSize == null);
-  const [cornerText, setCornerText] = useState(String(settings.cornerSize ?? autoCornerSizeMm(settings.height)));
 
   const setCornerSize = (size: number | undefined) => {
     setLocalSettings(prev => {
@@ -75,28 +75,9 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     });
   };
 
-  const parseCornerSize = (value: string): number | undefined => {
-    const size = parseFloat(value);
-    return value.trim() === '' || isNaN(size) || size < 0 ? undefined : size;
-  };
-
   const handleCornerAutoChange = (auto: boolean) => {
     setCornerAuto(auto);
-    if (auto) {
-      setCornerSize(undefined);
-    } else {
-      const size = parseCornerSize(cornerText) ?? autoCornerSizeMm(localSettings.height);
-      setCornerText(String(size));
-      setCornerSize(size);
-    }
-  };
-
-  const handleCornerSizeChange = (value: string) => {
-    setCornerText(value);
-    const size = parseCornerSize(value);
-    if (size !== undefined) {
-      setCornerSize(size);
-    }
+    setCornerSize(auto ? undefined : localSettings.cornerSize ?? autoCornerSizeMm(localSettings.height));
   };
 
   const handleSave = () => {
@@ -108,7 +89,6 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     // Der Mailversand ist keine Druckeinstellung, Reset lässt ihn stehen
     setLocalSettings({ ...defaultSettings, sendMail: localSettings.sendMail });
     setCornerAuto(true);
-    setCornerText(String(autoCornerSizeMm(defaultSettings.height)));
   };
 
   return (
@@ -121,20 +101,20 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
       <div className="settings-category">
         <h3 className="title is-4">{t('pdf.settings.dimensions')}</h3>
         <div>
-          <label>{t('pdf.settings.width')}</label>
-          <input className="input" type="number" min="31" max="189" value={localSettings.width} onChange={(e) => handleChange('width', Number(e.target.value))} />
+          <label htmlFor="pdf-width">{t('pdf.settings.width')}</label>
+          <MmInput id="pdf-width" min={31} max={189} value={localSettings.width} onChange={(v) => handleChange('width', v)} />
         </div>
         <div>
-          <label>{t('pdf.settings.height')}</label>
-          <input className="input" type="number" min="44" max="264" value={localSettings.height} onChange={(e) => handleChange('height', Number(e.target.value))} />
+          <label htmlFor="pdf-height">{t('pdf.settings.height')}</label>
+          <MmInput id="pdf-height" min={44} max={264} value={localSettings.height} onChange={(v) => handleChange('height', v)} />
         </div>
         <div>
-          <label>{t('pdf.settings.verticalMargin')}</label>
-          <input className="input" type="number" min="0" max="15" value={localSettings.vmargin} onChange={(e) => handleChange('vmargin', Number(e.target.value))} />
+          <label htmlFor="pdf-vmargin">{t('pdf.settings.verticalMargin')}</label>
+          <MmInput id="pdf-vmargin" min={0} max={15} value={localSettings.vmargin} onChange={(v) => handleChange('vmargin', v)} />
         </div>
         <div>
-          <label>{t('pdf.settings.horizontalMargin')}</label>
-          <input className="input" type="number" min="0" max="15" value={localSettings.hmargin} onChange={(e) => handleChange('hmargin', Number(e.target.value))} />
+          <label htmlFor="pdf-hmargin">{t('pdf.settings.horizontalMargin')}</label>
+          <MmInput id="pdf-hmargin" min={0} max={15} value={localSettings.hmargin} onChange={(v) => handleChange('hmargin', v)} />
         </div>
         <div>
           <label>{t('pdf.settings.maxDpi')}</label>
@@ -190,16 +170,12 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
               control={<Checkbox disabled={!localSettings.corners} checked={cornerAuto} onChange={(e) => handleCornerAutoChange(e.target.checked)} />}
               label={t('pdf.settings.cornerSizeAutomatic')}
             /></div>
-            <input
+            <MmInput
               id="pdf-corner-size"
-              className="input"
-              type="number"
-              min="0"
-              max="20"
-              step="0.1"
+              max={20}
               disabled={!localSettings.corners || cornerAuto}
-              value={cornerAuto ? autoCornerSizeMm(localSettings.height) : cornerText}
-              onChange={(e) => handleCornerSizeChange(e.target.value)}
+              value={cornerAuto ? autoCornerSizeMm(localSettings.height) : localSettings.cornerSize ?? 0}
+              onChange={(v) => setCornerSize(v)}
             />
             <p className="help settings-corner-hint">{t('pdf.settings.cornerSizeHint')}</p>
           </div>
