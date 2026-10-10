@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CropSettings } from '../../service/ApiFactory';
 import { PdfSettings } from './SettingsDialog';
-import { computePageLayout, cornerRadius, gridLinePositions, PageLayout } from './pdfLayout';
+import { computePageLayout, CORNER_KAPPA, cornerRadius, gridLinePositions, PageLayout } from './pdfLayout';
 
 export interface PreviewCard {
   imageUrl: string;
@@ -70,7 +70,7 @@ const borderColor = (img: HTMLImageElement, rect: { x: number; y: number; w: num
 
 const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, color: string) => {
   ctx.fillStyle = color;
-  // dx/dy zeigen von der Ecke ins Kartenfeld; die Kurve bauchte im Backend leicht zur Ecke hin
+  // dx/dy zeigen von der Ecke ins Kartenfeld; Viertelkreis wie drawRoundedCorner im Backend
   const corners: [number, number, number, number][] = [
     [x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1],
   ];
@@ -78,7 +78,8 @@ const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: num
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + dx * r, cy);
-    ctx.bezierCurveTo(cx + dx * 0.43 * r, cy + dy * 0.18 * r, cx + dx * 0.18 * r, cy + dy * 0.43 * r, cx, cy + dy * r);
+    const handle = r * (1 - CORNER_KAPPA);
+    ctx.bezierCurveTo(cx + dx * handle, cy, cx, cy + dy * handle, cx, cy + dy * r);
     ctx.closePath();
     ctx.fill();
   });

@@ -267,6 +267,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
+/* Hinweis nicht breiter als der Farbwähler darunter, sonst bricht die Zeile um */
+.settings-corner-hint {
+  max-width: 225px;
+}
+
 .settings-category.settings-email {
   display: block;
   max-width: 420px;

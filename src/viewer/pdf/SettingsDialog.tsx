@@ -169,7 +169,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
               value={localSettings.cornerSize ?? ''}
               onChange={(e) => handleCornerSizeChange(e.target.value)}
             />
-            <p className="help">{t('pdf.settings.cornerSizeHint')}</p>
+            <p className="help settings-corner-hint">{t('pdf.settings.cornerSizeHint')}</p>
           </div>
           <div> <label>{t('pdf.settings.cornerColor')}</label></div>
         </div>

@@ -70,6 +70,9 @@ export const cornerRadius = (cardWidth: number, cardHeight: number, cornerSize?:
   return Math.min(cornerSize * MM_TO_PT, Math.min(cardWidth, cardHeight) / 2);
 };
 
+/** Bézier-Faktor für den Viertelkreis der Eckmarken (DocumentGenerator.KAPPA). */
+export const CORNER_KAPPA = 0.5523;
+
 /** Automatischer Eckradius in mm für eine Kartenhöhe in mm, gerundet auf 0,1 mm (Platzhalter im Dialog). */
 export const autoCornerSizeMm = (heightMm: number): number => Math.round((heightMm || 0) * 0.03 * 10) / 10;
 
