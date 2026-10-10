@@ -114,7 +114,8 @@
     "publish": "Publier",
     "unpublish": "Dépublier",
     "copyConfig": "Copier la config",
-    "loginToEdit": "Connexion (bulle en haut à droite) pour créer, copier et modifier ses propres configs."
+    "loginToEdit": "Connexion (bulle en haut à droite) pour créer, copier et modifier ses propres configs.",
+    "operationFailed": "Échec de l'action (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -646,7 +647,8 @@
       "sources": "Ce site charge des images et des informations de cartes depuis des sources publiques et des API tierces. Aucune responsabilité n'est assumée pour le contenu fourni par ces sources. Aucun droit d'auteur ni de propriété sur les illustrations n'est revendiqué, tous les droits restent à leurs détenteurs respectifs.",
       "noncommercial": "Ce projet est non commercial et destiné uniquement à un usage personnel, pédagogique ou de recherche. Aucun profit n'est tiré de l'utilisation de ce site.",
       "accept": "En poursuivant, cet avertissement est reconnu et accepté.",
-      "understand": "J'ai compris"
+      "understand": "J'ai compris",
+      "operators": "Les exploitants d'une source peuvent bloquer leur site :"
     },
     "participate": "Participer",
     "donate": "Faire un don"
@@ -991,6 +993,16 @@
     },
     "auth": {
       "loginRequired": "Connexion requise."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} est bloqué à la demande de son exploitant.",
+      "invalidHost": "Saisir un domaine (example.com) ou une adresse IP.",
+      "mailNeedsDomain": "La confirmation par mail nécessite un domaine. Pour une adresse IP, utiliser le fichier.",
+      "invalidMailbox": "Boîte mail inconnue.",
+      "mailDisabled": "L'envoi de mails n'est pas disponible pour le moment. Utiliser l'enregistrement DNS ou le fichier.",
+      "rateLimited": "Trop de demandes. Réessayer plus tard.",
+      "tokenInvalid": "Ce lien ou ce jeton est inconnu ou a expiré.",
+      "notVerified": "Ni l'enregistrement DNS ni le fichier de {{host}} ne contient encore le jeton."
     }
   },
   "account": {
@@ -1041,5 +1053,35 @@
       "decksTotal_one": "{{number}} deck au total",
       "decksTotal_other": "{{number}} decks au total"
     }
+  },
+  "optOut": {
+    "open": "Bloquer un site comme source",
+    "title": "Bloquer un site comme source",
+    "intro": "Les exploitants d'un site peuvent le bloquer ici comme source. Proxyprinter ne charge alors plus rien depuis ce site, et les configs de source qui l'utilisent ne sont plus proposées. La propriété est confirmée par un lien envoyé par mail ou par un enregistrement DNS ou un fichier.",
+    "host": "Domaine ou IP",
+    "subdomains": "Un domaine bloque aussi tous ses sous-domaines.",
+    "methodMail": "Mail de confirmation",
+    "methodMailHint": "Un lien est envoyé à une adresse standard du domaine.",
+    "mailUnavailable": "Indisponible pour le moment, utiliser l'enregistrement DNS ou le fichier.",
+    "mailbox": "Boîte mail",
+    "methodChallenge": "Enregistrement DNS ou fichier",
+    "methodChallengeHint": "Placer un jeton sur le domaine, puis vérifier.",
+    "sendMail": "Envoyer le mail de confirmation",
+    "getToken": "Obtenir un jeton",
+    "challengeIntro": "Mettre en place l'une des options suivantes pour {{host}}, puis vérifier.",
+    "dnsTitle": "Enregistrement DNS",
+    "dnsName": "Nom",
+    "dnsType": "Type",
+    "dnsValue": "Valeur",
+    "fileTitle": "Fichier",
+    "fileTitleOr": "Ou fichier",
+    "fileUrl": "URL",
+    "fileContent": "Contenu",
+    "challengeValidity": "Le jeton est valable 7 jours. Les modifications DNS peuvent mettre du temps à se propager.",
+    "back": "Retour",
+    "check": "Vérifier",
+    "checking": "Vérification du lien de confirmation…",
+    "mailSent": "Un lien de confirmation a été envoyé à {{email}}. Dès son ouverture, {{host}} est bloqué.",
+    "blocked": "{{host}} est désormais bloqué comme source."
   }
 }

@@ -1,4 +1,4 @@
-import { backendErrorText } from './backendError';
+import { backendErrorText, responseErrorText } from './backendError';
 
 describe('backendErrorText', () => {
   it('uses the translated text for a known code and fills the params', () => {
@@ -12,5 +12,17 @@ describe('backendErrorText', () => {
   it('returns an empty string for anything else', () => {
     expect(backendErrorText(null)).toBe('');
     expect(backendErrorText('text')).toBe('');
+  });
+});
+
+describe('responseErrorText', () => {
+  const json = (body: unknown) => ({ json: async () => body } as unknown as Response);
+  it('translates the blocklist code', async () => {
+    expect(await responseErrorText(json({ error: 'x', code: 'blocklist.blockedHost', params: { host: 'api.example.com' } }), 'fallback'))
+      .toBe('api.example.com is blocked at the request of its operator.');
+  });
+  it('uses the fallback without a JSON body', async () => {
+    const broken = { json: async () => { throw new Error('no json'); } } as unknown as Response;
+    expect(await responseErrorText(broken, 'fallback')).toBe('fallback');
   });
 });

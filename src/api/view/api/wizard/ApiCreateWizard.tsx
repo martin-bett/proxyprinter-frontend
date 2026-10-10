@@ -11,6 +11,7 @@ import { ROLES, roleClass } from './roles';
 import JsonTreeView from './JsonTreeView';
 import HtmlTreeView from './HtmlTreeView';
 import './ApiCreateWizard.css';
+import { responseErrorText } from '../../../../i18n/backendError';
 
 interface Props {
   existingNames: string[];
@@ -221,7 +222,7 @@ const ApiCreateWizard: React.FC<Props> = ({ existingNames, onCancel, onCreateEmp
         headers,
         body: JSON.stringify({ ...config, id, name: meta.name.trim(), published: false }),
       });
-      if (!edited.ok) throw new Error(t('wizard.save.saveFailed', { status: edited.status }));
+      if (!edited.ok) throw new Error(await responseErrorText(edited, t('wizard.save.saveFailed', { status: edited.status })));
       onCreated(id);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : String(e));
