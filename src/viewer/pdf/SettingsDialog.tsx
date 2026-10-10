@@ -18,6 +18,8 @@ export interface PdfSettings {
   cornerColor: string;
   cornerColorAuto: boolean;
   maxDpi: number;
+  /** Seite im Querformat; die Karten bleiben aufrecht. */
+  landscape: boolean;
   /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */
   sendMail: boolean;
 }
@@ -34,6 +36,7 @@ const defaultSettings: PdfSettings = {
   cornerColor: '#000000',
   cornerColorAuto: true,
   maxDpi: 300,
+  landscape: false,
   sendMail: false
 };
 
@@ -100,6 +103,10 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
           <label>{t('pdf.settings.maxDpi')}</label>
           <input className="input" type="number" min="0" max="1000" value={localSettings.maxDpi} onChange={(e) => handleChange('maxDpi', Number(e.target.value))} />
         </div>
+        <FormControlLabel
+          control={<Checkbox checked={!!localSettings.landscape} onChange={(e) => handleChange('landscape', e.target.checked)} />}
+          label={t('pdf.settings.landscape')}
+        />
       </div>
       <div className="settings-category">
         <FormControlLabel

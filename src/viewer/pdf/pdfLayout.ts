@@ -1,7 +1,7 @@
 import { PdfSettings } from './SettingsDialog';
 
 /**
- * Seitenlayout wie in DocumentGenerator.java (Backend): A4 in Punkt, 10 mm Seitenrand,
+ * Seitenlayout wie in DocumentGenerator.java (Backend): A4 (hoch oder quer) in Punkt, 10 mm Seitenrand,
  * Karten von links oben zeilenweise. Wer dort etwas ändert, muss das hier nachziehen.
  */
 export const MM_TO_PT = 2.83;
@@ -27,15 +27,20 @@ export interface PageLayout {
   gridMargin: number;
 }
 
-export const computePageLayout = (settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'>): PageLayout => {
+export const computePageLayout = (
+  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'> & Partial<Pick<PdfSettings, 'landscape'>>,
+): PageLayout => {
+  // Quer tauschen nur die Seitenmaße, die Karten bleiben aufrecht
+  const pageWidth = settings.landscape ? PAGE_HEIGHT_PT : PAGE_WIDTH_PT;
+  const pageHeight = settings.landscape ? PAGE_WIDTH_PT : PAGE_HEIGHT_PT;
   const hMargin = (settings.hmargin || 0) * MM_TO_PT;
   const vMargin = (settings.vmargin || 0) * MM_TO_PT;
   const cardWidth = (settings.width || 0) * MM_TO_PT;
   const cardHeight = (settings.height || 0) * MM_TO_PT;
 
   const fits = cardWidth > 0 && cardHeight > 0;
-  const cardsPerRow = fits ? Math.max(0, Math.floor((PAGE_WIDTH_PT - 2 * PAGE_MARGIN_PT + hMargin) / (cardWidth + hMargin))) : 0;
-  const cardsPerColumn = fits ? Math.max(0, Math.floor((PAGE_HEIGHT_PT - 2 * PAGE_MARGIN_PT + vMargin) / (cardHeight + vMargin))) : 0;
+  const cardsPerRow = fits ? Math.max(0, Math.floor((pageWidth - 2 * PAGE_MARGIN_PT + hMargin) / (cardWidth + hMargin))) : 0;
+  const cardsPerColumn = fits ? Math.max(0, Math.floor((pageHeight - 2 * PAGE_MARGIN_PT + vMargin) / (cardHeight + vMargin))) : 0;
 
   const slots: CardSlot[] = [];
   for (let row = 0; row < cardsPerColumn; row++) {
@@ -48,8 +53,8 @@ export const computePageLayout = (settings: Pick<PdfSettings, 'width' | 'height'
   }
 
   return {
-    pageWidth: PAGE_WIDTH_PT,
-    pageHeight: PAGE_HEIGHT_PT,
+    pageWidth,
+    pageHeight,
     cardWidth,
     cardHeight,
     cardsPerRow,

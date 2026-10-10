@@ -179,7 +179,7 @@ interface PdfPagePreviewProps {
   width?: number;
 }
 
-/** Eine A4-Beispielseite, die sich mit den Einstellungen im Dialog mitändert. */
+/** Eine A4-Beispielseite (hoch oder quer), die sich mit den Einstellungen im Dialog mitändert. */
 export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewProps) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -187,7 +187,7 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
 
   const layout = useMemo(
     () => computePageLayout(settings),
-    [settings.width, settings.height, settings.hmargin, settings.vmargin] // eslint-disable-line react-hooks/exhaustive-deps
+    [settings.width, settings.height, settings.hmargin, settings.vmargin, settings.landscape] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {

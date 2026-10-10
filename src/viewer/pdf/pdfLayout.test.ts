@@ -16,6 +16,14 @@ describe('computePageLayout', () => {
     expect(layout.cardsPerRow).toBe(2);
   });
 
+  it('fits 4 x 2 upright cards on landscape A4 like the backend', () => {
+    const layout = computePageLayout({ width: 63, height: 88, hmargin: 0, vmargin: 0, landscape: true });
+    expect(layout.pageWidth).toBeGreaterThan(layout.pageHeight);
+    expect(layout.cardsPerRow).toBe(4);
+    expect(layout.cardsPerColumn).toBe(2);
+    expect(layout.cardWidth).toBeCloseTo(63 * 2.83);
+  });
+
   it('returns no slots for oversized cards', () => {
     expect(computePageLayout({ width: 200, height: 300, hmargin: 0, vmargin: 0 }).slots).toHaveLength(0);
   });
