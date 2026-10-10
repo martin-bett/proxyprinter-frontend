@@ -20,6 +20,8 @@ export interface PageLayout {
   pageHeight: number;
   cardWidth: number;
   cardHeight: number;
+  /** Karten liegen quer: das Bild wird im Uhrzeigersinn gedreht */
+  rotated: boolean;
   cardsPerRow: number;
   cardsPerColumn: number;
   slots: CardSlot[];
@@ -28,15 +30,15 @@ export interface PageLayout {
 }
 
 export const computePageLayout = (
-  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'> & Partial<Pick<PdfSettings, 'landscape'>>,
+  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'> & Partial<Pick<PdfSettings, 'pageLandscape' | 'cardsLandscape'>>,
 ): PageLayout => {
-  // Quer tauschen nur die Seitenmaße, die Karten bleiben aufrecht
-  const pageWidth = settings.landscape ? PAGE_HEIGHT_PT : PAGE_WIDTH_PT;
-  const pageHeight = settings.landscape ? PAGE_WIDTH_PT : PAGE_HEIGHT_PT;
+  const pageWidth = settings.pageLandscape ? PAGE_HEIGHT_PT : PAGE_WIDTH_PT;
+  const pageHeight = settings.pageLandscape ? PAGE_WIDTH_PT : PAGE_HEIGHT_PT;
   const hMargin = (settings.hmargin || 0) * MM_TO_PT;
   const vMargin = (settings.vmargin || 0) * MM_TO_PT;
-  const cardWidth = (settings.width || 0) * MM_TO_PT;
-  const cardHeight = (settings.height || 0) * MM_TO_PT;
+  // Querliegende Karten belegen einen um 90° gedrehten Platz
+  const cardWidth = ((settings.cardsLandscape ? settings.height : settings.width) || 0) * MM_TO_PT;
+  const cardHeight = ((settings.cardsLandscape ? settings.width : settings.height) || 0) * MM_TO_PT;
 
   const fits = cardWidth > 0 && cardHeight > 0;
   const cardsPerRow = fits ? Math.max(0, Math.floor((pageWidth - 2 * PAGE_MARGIN_PT + hMargin) / (cardWidth + hMargin))) : 0;
@@ -57,6 +59,7 @@ export const computePageLayout = (
     pageHeight,
     cardWidth,
     cardHeight,
+    rotated: !!settings.cardsLandscape,
     cardsPerRow,
     cardsPerColumn,
     slots,
@@ -64,8 +67,8 @@ export const computePageLayout = (
   };
 };
 
-/** Kartenradius der Eckmarken wie im Backend (3 % der Kartenhöhe). */
-export const cornerRadius = (cardHeight: number): number => cardHeight * 0.03;
+/** Kartenradius der Eckmarken wie im Backend (3 % der langen Kartenseite). */
+export const cornerRadius = (cardWidth: number, cardHeight: number): number => Math.max(cardWidth, cardHeight) * 0.03;
 
 /** Schnittlinien: sortierte, eindeutige Kartenkanten plus die Seitenränder, wie drawGridLines im Backend. */
 export const gridLinePositions = (layout: PageLayout, cardCount: number): { vertical: number[]; horizontal: number[] } => {

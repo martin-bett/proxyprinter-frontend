@@ -18,8 +18,10 @@ export interface PdfSettings {
   cornerColor: string;
   cornerColorAuto: boolean;
   maxDpi: number;
-  /** Seite im Querformat; die Karten bleiben aufrecht. */
-  landscape: boolean;
+  /** Blatt im Querformat (A4 quer). */
+  pageLandscape: boolean;
+  /** Karten um 90° gedreht aufs Blatt legen; width/height bleiben die Maße der aufrechten Karte. */
+  cardsLandscape: boolean;
   /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */
   sendMail: boolean;
 }
@@ -36,7 +38,8 @@ const defaultSettings: PdfSettings = {
   cornerColor: '#000000',
   cornerColorAuto: true,
   maxDpi: 300,
-  landscape: false,
+  pageLandscape: false,
+  cardsLandscape: false,
   sendMail: false
 };
 
@@ -103,10 +106,18 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
           <label>{t('pdf.settings.maxDpi')}</label>
           <input className="input" type="number" min="0" max="1000" value={localSettings.maxDpi} onChange={(e) => handleChange('maxDpi', Number(e.target.value))} />
         </div>
-        <FormControlLabel
-          control={<Checkbox checked={!!localSettings.landscape} onChange={(e) => handleChange('landscape', e.target.checked)} />}
-          label={t('pdf.settings.landscape')}
-        />
+        <div>
+          <FormControlLabel
+            control={<Checkbox checked={!!localSettings.pageLandscape} onChange={(e) => handleChange('pageLandscape', e.target.checked)} />}
+            label={t('pdf.settings.pageLandscape')}
+          />
+        </div>
+        <div>
+          <FormControlLabel
+            control={<Checkbox checked={!!localSettings.cardsLandscape} onChange={(e) => handleChange('cardsLandscape', e.target.checked)} />}
+            label={t('pdf.settings.cardsLandscape')}
+          />
+        </div>
       </div>
       <div className="settings-category">
         <FormControlLabel

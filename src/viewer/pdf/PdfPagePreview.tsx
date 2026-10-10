@@ -69,7 +69,7 @@ const borderColor = (img: HTMLImageElement, rect: { x: number; y: number; w: num
 };
 
 const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) => {
-  const r = cornerRadius(h);
+  const r = cornerRadius(w, h);
   ctx.fillStyle = color;
   // dx/dy zeigen von der Ecke ins Kartenfeld; die Kurve bauchte im Backend leicht zur Ecke hin
   const corners: [number, number, number, number][] = [
@@ -142,7 +142,14 @@ const drawPage = async (
     ctx.shadowOffsetY = 2;
     if (img) {
       const rect = cropRect(img.naturalWidth, img.naturalHeight, cards[i].cropSettings);
-      ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, slot.x, slot.y, layout.cardWidth, layout.cardHeight);
+      if (layout.rotated) {
+        // Im Uhrzeigersinn gedreht wie rotateClockwise im Backend
+        ctx.translate(slot.x + layout.cardWidth, slot.y);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, layout.cardHeight, layout.cardWidth);
+      } else {
+        ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, slot.x, slot.y, layout.cardWidth, layout.cardHeight);
+      }
     } else {
       ctx.fillStyle = palette.placeholder;
       ctx.fillRect(slot.x, slot.y, layout.cardWidth, layout.cardHeight);
@@ -187,7 +194,7 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
 
   const layout = useMemo(
     () => computePageLayout(settings),
-    [settings.width, settings.height, settings.hmargin, settings.vmargin, settings.landscape] // eslint-disable-line react-hooks/exhaustive-deps
+    [settings.width, settings.height, settings.hmargin, settings.vmargin, settings.pageLandscape, settings.cardsLandscape] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {

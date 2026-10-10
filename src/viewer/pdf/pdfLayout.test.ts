@@ -17,11 +17,22 @@ describe('computePageLayout', () => {
   });
 
   it('fits 4 x 2 upright cards on landscape A4 like the backend', () => {
-    const layout = computePageLayout({ width: 63, height: 88, hmargin: 0, vmargin: 0, landscape: true });
+    const layout = computePageLayout({ width: 63, height: 88, hmargin: 0, vmargin: 0, pageLandscape: true });
     expect(layout.pageWidth).toBeGreaterThan(layout.pageHeight);
     expect(layout.cardsPerRow).toBe(4);
     expect(layout.cardsPerColumn).toBe(2);
     expect(layout.cardWidth).toBeCloseTo(63 * 2.83);
+  });
+
+  it('turns the card slot for landscape cards', () => {
+    const portraitPage = computePageLayout({ width: 63, height: 88, hmargin: 0, vmargin: 0, cardsLandscape: true });
+    expect(portraitPage.rotated).toBe(true);
+    expect(portraitPage.cardWidth).toBeCloseTo(88 * 2.83);
+    expect(portraitPage.cardHeight).toBeCloseTo(63 * 2.83);
+    expect([portraitPage.cardsPerRow, portraitPage.cardsPerColumn]).toEqual([2, 4]);
+
+    const landscapePage = computePageLayout({ width: 63, height: 88, hmargin: 0, vmargin: 0, pageLandscape: true, cardsLandscape: true });
+    expect([landscapePage.cardsPerRow, landscapePage.cardsPerColumn]).toEqual([3, 3]);
   });
 
   it('returns no slots for oversized cards', () => {
