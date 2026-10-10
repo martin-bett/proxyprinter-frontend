@@ -114,7 +114,8 @@
     "publish": "公開",
     "unpublish": "非公開にする",
     "copyConfig": "コンフィグをコピー",
-    "loginToEdit": "ログイン（右上のバブル）すると、自分のコンフィグを作成・コピー・編集できます。"
+    "loginToEdit": "ログイン（右上のバブル）すると、自分のコンフィグを作成・コピー・編集できます。",
+    "operationFailed": "操作に失敗しました (HTTP {{status}})。"
   },
   "apiConfig": {
     "fields": {
@@ -975,6 +976,9 @@
     },
     "auth": {
       "loginRequired": "ログインが必要です。"
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} は運営者の要請によりブロックされています。"
     }
   },
   "account": {

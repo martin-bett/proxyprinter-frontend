@@ -31,7 +31,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import TuneIcon from '@mui/icons-material/Tune';
 import ApiConfigDialog from '../api/view/api/ApiConfigDialog';
-import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelection } from '../api/view/api/configSelection';
+import { fetchVisibleConfigs, markConfigsUsed, refreshStoredSelectionChecked } from '../api/view/api/configSelection';
 import TranslateIcon from '@mui/icons-material/Translate';
 import AddIcon from '@mui/icons-material/Add';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
@@ -217,8 +217,8 @@ const DeckInputAndViewer: React.FC = () => {
       handleSaveApiConfigs(saved);
       // Gespeicherte Auswahl kann veraltet sein, aktuelle Fassung nachladen
       fetchVisibleConfigs()
-        .then(fresh => {
-          const updated = refreshStoredSelection(fresh);
+        .then(refreshStoredSelectionChecked)
+        .then(updated => {
           if (updated) handleSaveApiConfigs(updated);
         })
         .catch(error => console.error('Error refreshing configs:', error));

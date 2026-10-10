@@ -114,7 +114,8 @@
     "publish": "发布",
     "unpublish": "取消发布",
     "copyConfig": "复制配置",
-    "loginToEdit": "登录（右上角气泡）后可创建、复制和编辑自己的配置。"
+    "loginToEdit": "登录（右上角气泡）后可创建、复制和编辑自己的配置。",
+    "operationFailed": "操作失败 (HTTP {{status}})。"
   },
   "apiConfig": {
     "fields": {
@@ -975,6 +976,9 @@
     },
     "auth": {
       "loginRequired": "需要登录。"
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} 应其运营方要求已被屏蔽。"
     }
   },
   "account": {

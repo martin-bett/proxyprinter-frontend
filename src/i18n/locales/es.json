@@ -114,7 +114,8 @@
     "publish": "Publicar",
     "unpublish": "Despublicar",
     "copyConfig": "Copiar configuración",
-    "loginToEdit": "Inicio de sesión (burbuja arriba a la derecha) para crear, copiar y editar configuraciones propias."
+    "loginToEdit": "Inicio de sesión (burbuja arriba a la derecha) para crear, copiar y editar configuraciones propias.",
+    "operationFailed": "La acción ha fallado (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -989,6 +990,9 @@
     },
     "auth": {
       "loginRequired": "Se requiere inicio de sesión."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} está bloqueado a petición de su operador."
     }
   },
   "account": {

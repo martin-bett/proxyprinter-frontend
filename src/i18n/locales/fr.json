@@ -114,7 +114,8 @@
     "publish": "Publier",
     "unpublish": "Dépublier",
     "copyConfig": "Copier la config",
-    "loginToEdit": "Connexion (bulle en haut à droite) pour créer, copier et modifier ses propres configs."
+    "loginToEdit": "Connexion (bulle en haut à droite) pour créer, copier et modifier ses propres configs.",
+    "operationFailed": "Échec de l'action (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -989,6 +990,9 @@
     },
     "auth": {
       "loginRequired": "Connexion requise."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} est bloqué à la demande de son exploitant."
     }
   },
   "account": {

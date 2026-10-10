@@ -14,7 +14,9 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import IconBar, { IconBarElement } from '../../../container/IconBar';
 import ConfigContainer from '../ConfigContainer';
 import { ApiConfig, Config } from '../../../service/ApiFactory';
-import { refreshStoredSelection } from './configSelection';
+import { refreshStoredSelectionChecked } from './configSelection';
+import { responseErrorText } from '../../../i18n/backendError';
+import { Alert } from '@mui/material';
 import ApiCreateWizard from './wizard/ApiCreateWizard';
 import { useAuth } from '../../../service/auth/auth';
 
@@ -34,6 +36,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   const [showControls, setShowControls] = useState(false);
   const [filterSelection, setFilterSelection] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
+  const [operationError, setOperationError] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedConfigs');
@@ -78,8 +81,11 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
       setConfigs(data.sort((a, b) => ('' + a.category).localeCompare(b.category)));
       setClickedConfig(data.find(c => c.id == clickConfig) || null);
       // Aktive Auswahl auf den neuen Stand bringen (z.B. nach dem Speichern einer Config)
-      const updated = refreshStoredSelection(data);
-      if (updated) onSave(updated);
+      const updated = await refreshStoredSelectionChecked(data);
+      if (updated) {
+        onSave(updated);
+        setSelectedConfigs(prev => prev.filter(id => updated.some(c => c.id === id) || data.some(c => c.id === id)));
+      }
       return data;
     } catch (error) {
       console.error('Error fetching configs:', error);
@@ -105,6 +111,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
   };
 
   const handleConfigOperation = async (method: string, operation: string, body?: unknown) => {
+    setOperationError(null);
     try {
       const response = await fetch(`/api/configs/${operation}`, {
         method: method,
@@ -113,7 +120,8 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create config');
+        setOperationError(await responseErrorText(response, t('configCommon.operationFailed', { status: response.status })));
+        return;
       }
 
       const responseBody = await response.text();
@@ -264,6 +272,7 @@ const ApiConfigDialog: React.FC<ApiConfigDialogProps> = ({ open, onClose, onSave
                   initialSelection={filterSelection}
                   elements={getSearchIconElements()}
                   />
+          {operationError && <Alert severity="warning" sx={{ mt: 1 }} onClose={() => setOperationError(null)}>{operationError}</Alert>}
         </div>
 
         <ConfigContainer

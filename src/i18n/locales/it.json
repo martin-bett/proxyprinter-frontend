@@ -114,7 +114,8 @@
     "publish": "Pubblica",
     "unpublish": "Ritira",
     "copyConfig": "Copia config",
-    "loginToEdit": "Accesso (bolla in alto a destra) per creare, copiare e modificare config proprie."
+    "loginToEdit": "Accesso (bolla in alto a destra) per creare, copiare e modificare config proprie.",
+    "operationFailed": "Azione non riuscita (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -989,6 +990,9 @@
     },
     "auth": {
       "loginRequired": "Accesso richiesto."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} è bloccato su richiesta del gestore."
     }
   },
   "account": {

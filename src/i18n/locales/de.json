@@ -114,7 +114,8 @@
     "publish": "Veröffentlichen",
     "unpublish": "Zurückziehen",
     "copyConfig": "Config kopieren",
-    "loginToEdit": "Anmelden (Bubble oben rechts), um eigene Configs anzulegen, zu kopieren und zu bearbeiten."
+    "loginToEdit": "Anmelden (Bubble oben rechts), um eigene Configs anzulegen, zu kopieren und zu bearbeiten.",
+    "operationFailed": "Aktion fehlgeschlagen (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -989,6 +990,9 @@
     },
     "auth": {
       "loginRequired": "Anmeldung erforderlich."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} ist auf Wunsch des Betreibers gesperrt."
     }
   },
   "account": {

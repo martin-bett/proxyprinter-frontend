@@ -114,7 +114,8 @@
     "publish": "Publish",
     "unpublish": "Unpublish",
     "copyConfig": "Copy Config",
-    "loginToEdit": "Log in (bubble at the top right) to create, copy and edit own configs."
+    "loginToEdit": "Log in (bubble at the top right) to create, copy and edit own configs.",
+    "operationFailed": "Action failed (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -989,6 +990,9 @@
     },
     "auth": {
       "loginRequired": "Login required."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} is blocked at the request of its operator."
     }
   },
   "account": {
