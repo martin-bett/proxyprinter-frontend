@@ -35,6 +35,16 @@ npm run build
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: see [SECURITY.md](SECURITY.md).
 
+## License
+
+Copyright (C) 2024-2026 martin-bett and the ProxyPrinter contributors.
+
+The source code is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+If you run a modified version as a web service, you must offer its source code to its users.
+
+Not covered by this license: names, logos and trademarks of games and publishers (for example the icons in the
+frontend's `public/icons/` and `public/flags/`) belong to their respective owners, as does all card artwork.
+
 ## Disclaimer
 
 ProxyPrinter is an unofficial, non-commercial fan project. It is not affiliated with, endorsed or sponsored by
