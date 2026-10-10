@@ -2,6 +2,7 @@
   "name": "mtg-deck-analyzer",
   "version": "1.0.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "homepage": ".",
   "dependencies": {
     "@emotion/react": "^11.13.3",

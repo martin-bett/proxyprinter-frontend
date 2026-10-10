@@ -1,7 +1,7 @@
 # CLAUDE.md – mtgprint-front (Frontend)
 
 React frontend for proxyprinter.eu: paste a decklist, search card art via configurable API/gallery sources,
-pick and crop images, generate a printable proxy PDF. Backend lives in `martin-bett/mtgprint` (all `/api/*` calls).
+pick and crop images, generate a printable proxy PDF. Backend lives in `martin-bett/proxyprinter-backend` (all `/api/*` calls).
 
 ## Stack
 - Create React App (`react-scripts` 5), TypeScript 5, React 18, MUI 6 + Bulma, `mana-font` for theme icons

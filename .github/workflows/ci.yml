@@ -19,7 +19,9 @@ concurrency:
 jobs:
   labels:
     # legt die Labels an, falls sie fehlen (idempotent)
-    if: github.event_name != 'pull_request' || github.event.action == 'opened'
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.action == 'opened' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
@@ -99,6 +101,8 @@ jobs:
           BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE: ${{ github.base_ref }}
           SKIP_PREVIEW: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'skip-preview') }}
+          # PRs aus Forks bekommen keine Secrets und kein Schreibrecht auf ghcr.io: nur bauen und testen
+          FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           BEFORE: ${{ github.event.before }}
         run: |
           slug=$(printf '%s' "$BRANCH" | sha256sum | cut -c1-6)
@@ -109,6 +113,10 @@ jobs:
             [ "$BASE" = develop ] && preview=true
             if [ "$SKIP_PREVIEW" = true ]; then
               echo "::notice::Label skip-preview, keine Testumgebung"
+              preview=false
+            fi
+            if [ "$FORK" = true ]; then
+              echo "::notice::PR aus einem Fork, keine Testumgebung"
               preview=false
             fi
             tag="br-$slug"; range="origin/$BASE...HEAD"
