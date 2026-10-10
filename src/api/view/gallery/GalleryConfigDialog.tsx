@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../service/auth/auth';
-import { Alert, LinearProgress } from '@mui/material';
 import ConfigContainer from '../ConfigContainer';
 import GalleryConfigWizard, { GalleryConfigFormState } from './GalleryConfigWizard';
-import GalleryConfigExecutor from './GallerConfigExecutor';
+import { GalleryExecuteStatus } from './GallerConfigExecutor';
 import ApiFactory, { Config, GalleryConfig, SearchResult } from '../../../service/ApiFactory';
 
 interface GalleryConfigDialogProps {
@@ -19,7 +18,7 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
     const [selectedConfigs, setSelectedConfigs] = useState<number[]>([]);
     const [clickedConfig, setClickedConfig] = useState<Config | null>(null); //
     const auth = useAuth();
-    const [galleryStatus, setGalleryStatus] = useState<{ loading: boolean; error?: string }>({ loading: false });
+    const [galleryStatus, setGalleryStatus] = useState<GalleryExecuteStatus>({ loading: false });
 
     const fetchGalleryResults = async (config: GalleryConfig) => {
       const singleConfigRecord = {
@@ -135,18 +134,11 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
       };
 
     return (<>
-        {galleryStatus.loading && <LinearProgress sx={{ mb: 1 }} />}
-        {galleryStatus.error && (
-          <Alert severity="warning" sx={{ mb: 1 }} onClose={() => setGalleryStatus({ loading: false })}>
-            {galleryStatus.error}
-          </Alert>
-        )}
         <ConfigContainer
             configs={configs}
             clickedConfig={clickedConfig}
             selectedConfigs={selectedConfigs}
             handleItemClick={handleConfigItemClick}
-            handleExecute={fetchGalleryResults}
             />
         <GalleryConfigWizard initialConfig={clickedConfig}
               onClose={onClose}
@@ -154,6 +146,9 @@ const GalleryConfigDialog: React.FC<GalleryConfigDialogProps> = ({ onClose, hand
               onDelete={(confId) => handleApiDelete(confId)}
               onCopy={(confId) => handleApiCopy(confId)}
               onSave={(conf) => handleApiEdit(conf)}
+              onExecute={fetchGalleryResults}
+              executeStatus={galleryStatus}
+              onDismissExecuteError={() => setGalleryStatus({ loading: false })}
            />
     </>);
 }

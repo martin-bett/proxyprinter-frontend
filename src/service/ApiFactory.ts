@@ -114,6 +114,17 @@ export interface GalleryConfig extends BaseConfig{
   imageUrlReplacement?: string;
   namePattern?: string;
   nameReplacement?: string;
+
+  // Hinweistext für die Ausführung in der Sprache des Autors; das Backend übersetzt ihn beim Speichern
+  // (Sprachcode -> Text). Gezeigt wird der Eintrag der UI-Sprache, sonst der Originaltext.
+  hint?: string;
+  hintTranslations?: Record<string, string>;
+}
+
+/** Hinweistext einer Config in der UI-Sprache (z. B. "de-AT" -> "de"), sonst der Originaltext, sonst undefined. */
+export function localizedHint(config: GalleryConfig, language: string): string | undefined {
+  const translated = config.hintTranslations?.[language.toLowerCase().split('-')[0]];
+  return translated || config.hint || undefined;
 }
 
 /** Läuft die Config über das Backend, weil sie Link-Pattern oder Zugang braucht? */
