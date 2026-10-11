@@ -1,5 +1,5 @@
 // SettingsDialog.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
@@ -85,6 +85,11 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     setCornerAuto(auto);
     setCornerSize(auto ? undefined : localSettings.cornerSize ?? autoCornerSizeMm(localSettings.height));
   };
+
+  // Schließen per Klick neben den Dialog übernimmt die Änderungen genauso wie Ok, sonst gehen sie stillschweigend verloren
+  const latest = useRef({ localSettings, onSettingsChange });
+  latest.current = { localSettings, onSettingsChange };
+  useEffect(() => () => latest.current.onSettingsChange(latest.current.localSettings), []);
 
   const handleSave = () => {
     onSettingsChange(localSettings);

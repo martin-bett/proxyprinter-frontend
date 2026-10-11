@@ -58,6 +58,17 @@ describe('SettingsDialog dimensions', () => {
   });
 });
 
+describe('SettingsDialog closing', () => {
+  it('keeps the changes when the dialog closes without Ok (click beside it)', () => {
+    const onSettingsChange = jest.fn();
+    const { unmount } = render(<SettingsDialog open onClose={jest.fn()} settings={defaultSettings} onSettingsChange={onSettingsChange} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Corners/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Cutlines/ }));
+    unmount();
+    expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ corners: true, cutlines: true }));
+  });
+});
+
 describe('SettingsDialog preview', () => {
   it('shows the slot count and updates it with the dimensions', () => {
     render(<SettingsDialog open onClose={jest.fn()} settings={defaultSettings} onSettingsChange={jest.fn()} />);
@@ -74,7 +85,7 @@ describe('SettingsDialog corner size', () => {
     return {
       onSettingsChange,
       input: screen.getByLabelText(/Corner Size/) as HTMLInputElement,
-      auto: screen.getByRole('checkbox', { name: 'Like real cards' }) as HTMLInputElement,
+      auto: screen.getByRole('checkbox', { name: 'Original ratio' }) as HTMLInputElement,
     };
   };
 
