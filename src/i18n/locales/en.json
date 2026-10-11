@@ -1003,6 +1003,14 @@
       "rateLimited": "Too many requests. Try again later.",
       "tokenInvalid": "This link or token is unknown or has expired.",
       "notVerified": "Neither the DNS record nor the file for {{host}} contains the token yet."
+    },
+    "admin": {
+      "forbidden": "Admins only.",
+      "valueOutOfRange": "Allowed: {{min}} to {{max}}.",
+      "invalidValue": "Enter a whole number.",
+      "unknownSetting": "Unknown setting {{key}}.",
+      "unknownCache": "Unknown cache {{name}}.",
+      "pdfJobsRunning": "{{jobs}} PDF jobs are running right now. Try again later."
     }
   },
   "account": {
@@ -1083,5 +1091,56 @@
     "checking": "Checking the confirmation link…",
     "mailSent": "A confirmation link was sent to {{email}}. Once it is opened, {{host}} is blocked.",
     "blocked": "{{host}} is now blocked as a source."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Back to Proxyprinter",
+    "loginNeeded": "The admin page needs an admin account. Log in below.",
+    "forbidden": "{{email}} has no admin rights.",
+    "loadFailed": "Admin data could not be loaded.",
+    "settingsTitle": "Cache lifetimes",
+    "settingsHint": "Changes apply immediately and override the server configuration until reset.",
+    "defaultValue": "Server default: {{value}} {{unit}}",
+    "range": "Allowed: {{min}} to {{max}}",
+    "saved": "Saved.",
+    "saveFailed": "Saving failed",
+    "resetToDefault": "Reset to default",
+    "settings": {
+      "searchcacheRetention": "Shared searches",
+      "searchcacheMaxEntry": "Max. size of one shared search",
+      "pdfRetention": "Finished PDFs",
+      "uploadRetention": "Uploaded images (from last use)",
+      "logRetention": "Log entries in the database"
+    },
+    "units": {
+      "days": "days",
+      "kb": "KB"
+    },
+    "cachesTitle": "Caches",
+    "refresh": "Refresh",
+    "columns": {
+      "cache": "Cache",
+      "entries": "Entries",
+      "size": "Size",
+      "oldest": "Oldest",
+      "lifetime": "Kept for"
+    },
+    "caches": {
+      "searchCache": "Shared searches",
+      "pdfs": "Finished PDFs",
+      "uploads": "Uploaded images",
+      "images": "Downloaded card images",
+      "memory": "In memory (PDF images, failed image URLs, deck finder)"
+    },
+    "lifetime": {
+      "days": "{{days}} days",
+      "unlimited": "Unlimited",
+      "minutes": "10–30 minutes"
+    },
+    "clearNow": "Clear now",
+    "clearConfirm": "Clear",
+    "clearFailed": "Clearing failed",
+    "cleared": "{{number}} entries deleted.",
+    "uploadsWarning": "Snapshots that use these images lose them."
   }
 }

@@ -1003,6 +1003,14 @@
       "rateLimited": "Demasiadas solicitudes. Volver a intentarlo más tarde.",
       "tokenInvalid": "Este enlace o token es desconocido o ha caducado.",
       "notVerified": "Ni el registro DNS ni el archivo de {{host}} contienen todavía el token."
+    },
+    "admin": {
+      "forbidden": "Solo para administradores.",
+      "valueOutOfRange": "Permitido: de {{min}} a {{max}}.",
+      "invalidValue": "Introducir un número entero.",
+      "unknownSetting": "Ajuste desconocido {{key}}.",
+      "unknownCache": "Caché desconocida {{name}}.",
+      "pdfJobsRunning": "Ahora mismo hay {{jobs}} trabajos de PDF en curso. Volver a intentarlo más tarde."
     }
   },
   "account": {
@@ -1083,5 +1091,56 @@
     "checking": "Comprobando el enlace de confirmación…",
     "mailSent": "Se ha enviado un enlace de confirmación a {{email}}. En cuanto se abra, {{host}} queda bloqueado.",
     "blocked": "{{host}} está ahora bloqueado como fuente."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Volver a Proxyprinter",
+    "loginNeeded": "La página de administración requiere una cuenta de administrador. Inicio de sesión abajo.",
+    "forbidden": "{{email}} no tiene permisos de administrador.",
+    "loadFailed": "No se pudieron cargar los datos de administración.",
+    "settingsTitle": "Duración de las cachés",
+    "settingsHint": "Los cambios se aplican de inmediato y prevalecen sobre la configuración del servidor hasta restablecerlos.",
+    "defaultValue": "Valor del servidor: {{value}} {{unit}}",
+    "range": "Permitido: de {{min}} a {{max}}",
+    "saved": "Guardado.",
+    "saveFailed": "Error al guardar",
+    "resetToDefault": "Restablecer",
+    "settings": {
+      "searchcacheRetention": "Búsquedas compartidas",
+      "searchcacheMaxEntry": "Tamaño máx. de una búsqueda compartida",
+      "pdfRetention": "PDF terminados",
+      "uploadRetention": "Imágenes subidas (desde el último uso)",
+      "logRetention": "Entradas de registro en la base de datos"
+    },
+    "units": {
+      "days": "días",
+      "kb": "KB"
+    },
+    "cachesTitle": "Cachés",
+    "refresh": "Actualizar",
+    "columns": {
+      "cache": "Caché",
+      "entries": "Entradas",
+      "size": "Tamaño",
+      "oldest": "Más antigua",
+      "lifetime": "Se conserva"
+    },
+    "caches": {
+      "searchCache": "Búsquedas compartidas",
+      "pdfs": "PDF terminados",
+      "uploads": "Imágenes subidas",
+      "images": "Imágenes de cartas descargadas",
+      "memory": "En memoria (imágenes de PDF, URL de imágenes fallidas, buscador de mazos)"
+    },
+    "lifetime": {
+      "days": "{{days}} días",
+      "unlimited": "Sin límite",
+      "minutes": "10–30 minutos"
+    },
+    "clearNow": "Vaciar ahora",
+    "clearConfirm": "Vaciar",
+    "clearFailed": "Error al vaciar",
+    "cleared": "{{number}} entradas eliminadas.",
+    "uploadsWarning": "Los Snapshots que usan estas imágenes las pierden."
   }
 }

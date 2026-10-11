@@ -989,6 +989,14 @@
       "rateLimited": "リクエストが多すぎます。後でもう一度。",
       "tokenInvalid": "このリンクまたはトークンは不明か期限切れです。",
       "notVerified": "{{host}} の DNS レコードにもファイルにもまだトークンがありません。"
+    },
+    "admin": {
+      "forbidden": "管理者専用です。",
+      "valueOutOfRange": "許可範囲: {{min}}〜{{max}}。",
+      "invalidValue": "整数を入力。",
+      "unknownSetting": "不明な設定 {{key}}。",
+      "unknownCache": "不明なキャッシュ {{name}}。",
+      "pdfJobsRunning": "現在 {{jobs}} 件の PDF ジョブが実行中です。後でもう一度実行。"
     }
   },
   "account": {
@@ -1064,5 +1072,56 @@
     "checking": "確認リンクを確認中…",
     "mailSent": "確認リンクを {{email}} に送信しました。開かれると {{host}} はブロックされます。",
     "blocked": "{{host}} はソースとしてブロックされました。"
+  },
+  "admin": {
+    "title": "管理",
+    "backToApp": "Proxyprinter に戻る",
+    "loginNeeded": "管理ページには管理者アカウントが必要です。下でログイン。",
+    "forbidden": "{{email}} には管理者権限がありません。",
+    "loadFailed": "管理データを読み込めませんでした。",
+    "settingsTitle": "キャッシュの保持期間",
+    "settingsHint": "変更はすぐに反映され、リセットするまでサーバー設定より優先されます。",
+    "defaultValue": "サーバー既定値: {{value}} {{unit}}",
+    "range": "許可範囲: {{min}}〜{{max}}",
+    "saved": "保存しました。",
+    "saveFailed": "保存に失敗しました",
+    "resetToDefault": "既定値に戻す",
+    "settings": {
+      "searchcacheRetention": "共有検索",
+      "searchcacheMaxEntry": "共有検索1件の最大サイズ",
+      "pdfRetention": "完成した PDF",
+      "uploadRetention": "アップロード画像（最終使用から）",
+      "logRetention": "データベースのログ"
+    },
+    "units": {
+      "days": "日",
+      "kb": "KB"
+    },
+    "cachesTitle": "キャッシュ",
+    "refresh": "更新",
+    "columns": {
+      "cache": "キャッシュ",
+      "entries": "件数",
+      "size": "サイズ",
+      "oldest": "最古",
+      "lifetime": "保持期間"
+    },
+    "caches": {
+      "searchCache": "共有検索",
+      "pdfs": "完成した PDF",
+      "uploads": "アップロード画像",
+      "images": "ダウンロードしたカード画像",
+      "memory": "メモリ内（PDF 用画像、失敗した画像 URL、デッキ検索）"
+    },
+    "lifetime": {
+      "days": "{{days}} 日",
+      "unlimited": "無制限",
+      "minutes": "10〜30 分"
+    },
+    "clearNow": "今すぐ削除",
+    "clearConfirm": "削除",
+    "clearFailed": "削除に失敗しました",
+    "cleared": "{{number}} 件を削除しました。",
+    "uploadsWarning": "これらの画像を使う Snapshot は画像を失います。"
   }
 }

@@ -1003,6 +1003,14 @@
       "rateLimited": "Trop de demandes. Réessayer plus tard.",
       "tokenInvalid": "Ce lien ou ce jeton est inconnu ou a expiré.",
       "notVerified": "Ni l'enregistrement DNS ni le fichier de {{host}} ne contient encore le jeton."
+    },
+    "admin": {
+      "forbidden": "Réservé aux administrateurs.",
+      "valueOutOfRange": "Autorisé : de {{min}} à {{max}}.",
+      "invalidValue": "Saisir un nombre entier.",
+      "unknownSetting": "Paramètre inconnu {{key}}.",
+      "unknownCache": "Cache inconnu {{name}}.",
+      "pdfJobsRunning": "{{jobs}} tâches PDF sont en cours. Réessayer plus tard."
     }
   },
   "account": {
@@ -1083,5 +1091,56 @@
     "checking": "Vérification du lien de confirmation…",
     "mailSent": "Un lien de confirmation a été envoyé à {{email}}. Dès son ouverture, {{host}} est bloqué.",
     "blocked": "{{host}} est désormais bloqué comme source."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Retour à Proxyprinter",
+    "loginNeeded": "La page d'administration nécessite un compte administrateur. Connexion ci-dessous.",
+    "forbidden": "{{email}} n'a pas de droits d'administration.",
+    "loadFailed": "Impossible de charger les données d'administration.",
+    "settingsTitle": "Durée des caches",
+    "settingsHint": "Les modifications s'appliquent immédiatement et remplacent la configuration du serveur jusqu'à leur réinitialisation.",
+    "defaultValue": "Valeur du serveur : {{value}} {{unit}}",
+    "range": "Autorisé : de {{min}} à {{max}}",
+    "saved": "Enregistré.",
+    "saveFailed": "Échec de l'enregistrement",
+    "resetToDefault": "Réinitialiser",
+    "settings": {
+      "searchcacheRetention": "Recherches partagées",
+      "searchcacheMaxEntry": "Taille max. d'une recherche partagée",
+      "pdfRetention": "PDF terminés",
+      "uploadRetention": "Images envoyées (depuis la dernière utilisation)",
+      "logRetention": "Entrées de journal dans la base de données"
+    },
+    "units": {
+      "days": "jours",
+      "kb": "Ko"
+    },
+    "cachesTitle": "Caches",
+    "refresh": "Actualiser",
+    "columns": {
+      "cache": "Cache",
+      "entries": "Entrées",
+      "size": "Taille",
+      "oldest": "Plus ancienne",
+      "lifetime": "Conservé"
+    },
+    "caches": {
+      "searchCache": "Recherches partagées",
+      "pdfs": "PDF terminés",
+      "uploads": "Images envoyées",
+      "images": "Images de cartes téléchargées",
+      "memory": "En mémoire (images PDF, URL d'images en échec, recherche de decks)"
+    },
+    "lifetime": {
+      "days": "{{days}} jours",
+      "unlimited": "Illimité",
+      "minutes": "10–30 minutes"
+    },
+    "clearNow": "Vider maintenant",
+    "clearConfirm": "Vider",
+    "clearFailed": "Échec du vidage",
+    "cleared": "{{number}} entrées supprimées.",
+    "uploadsWarning": "Les Snapshots qui utilisent ces images les perdent."
   }
 }
