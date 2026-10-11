@@ -279,9 +279,16 @@ export function migrateSnapshot(raw: any): Snapshot {
     },
     pdf: {
       ...snapshot.pdf,
-      settings: { ...withoutEmail(defaultSettings), ...(snapshot.pdf?.settings ?? {}) },
+      settings: realCardSize({ ...withoutEmail(defaultSettings), ...(snapshot.pdf?.settings ?? {}) }),
     },
   };
+}
+
+/** Frühere Standardgröße 63 × 88 mm; seit den Zehntelmillimetern gilt das echte Kartenmaß 63,5 × 88,9 mm. */
+function realCardSize(settings: SnapshotPdfSettings): SnapshotPdfSettings {
+  return settings.width === 63 && settings.height === 88
+    ? { ...settings, width: defaultSettings.width, height: defaultSettings.height }
+    : settings;
 }
 
 function withoutEmail(settings: PdfSettings): SnapshotPdfSettings {

@@ -258,8 +258,8 @@
       "detectBorderColor": "Rileva colore del bordo",
       "cornerColor": "Colore angoli: ",
       "cornerSize": "Dimensione angoli (mm): ",
-      "cornerSizeAutomatic": "Come le carte reali",
-      "cornerSizeHint": "Raggio degli angoli arrotondati in mm. Automatico: come nelle carte reali (1/8 di pollice a 88,9 mm), in base all'altezza della carta.",
+      "cornerSizeAutomatic": "Proporzioni originali",
+      "cornerSizeHint": "Raggio degli angoli arrotondati in mm. Proporzioni originali: come nelle carte reali (1/8 di pollice a 88,9 mm), in base all'altezza della carta.",
       "ok": "Ok",
       "email": {
         "title": "Invio per e-mail",

@@ -257,8 +257,8 @@
       "detectBorderColor": "检测边框颜色",
       "cornerColor": "圆角颜色：",
       "cornerSize": "圆角大小 (mm)：",
-      "cornerSizeAutomatic": "与实体卡牌相同",
-      "cornerSizeHint": "圆角半径（mm）。自动：与实体卡牌相同（高度 88.9 mm 时为 1/8 英寸），随卡牌高度缩放。",
+      "cornerSizeAutomatic": "原始比例",
+      "cornerSizeHint": "圆角半径（mm）。原始比例：与实体卡牌相同（高度 88.9 mm 时为 1/8 英寸），随卡牌高度缩放。",
       "ok": "确定",
       "email": {
         "title": "邮件发送",

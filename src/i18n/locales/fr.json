@@ -258,8 +258,8 @@
       "detectBorderColor": "Détecter la couleur de bordure",
       "cornerColor": "Couleur des coins : ",
       "cornerSize": "Taille des coins (mm) : ",
-      "cornerSizeAutomatic": "Comme les vraies cartes",
-      "cornerSizeHint": "Rayon des coins arrondis en mm. Automatique : comme sur les vraies cartes (1/8 de pouce pour 88,9 mm), selon la hauteur de la carte.",
+      "cornerSizeAutomatic": "Proportions d'origine",
+      "cornerSizeHint": "Rayon des coins arrondis en mm. Proportions d'origine : comme sur les vraies cartes (1/8 de pouce pour 88,9 mm), selon la hauteur de la carte.",
       "ok": "OK",
       "email": {
         "title": "Envoi par e-mail",
