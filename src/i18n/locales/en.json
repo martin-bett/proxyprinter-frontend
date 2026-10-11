@@ -1100,6 +1100,7 @@
     "loginNeeded": "The admin page needs an admin account. Log in below.",
     "forbidden": "{{email}} has no admin rights.",
     "loadFailed": "Admin data could not be loaded.",
+    "cacheSettingsTitle": "Cache settings",
     "usageTitle": "Usage",
     "usageHint": "Counts per day (UTC), last 30 days. Only totals are stored: no IP addresses or other personal data. Visitors are counted once per day and browser.",
     "usage": {

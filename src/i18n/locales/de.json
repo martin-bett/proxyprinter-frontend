@@ -1100,6 +1100,7 @@
     "loginNeeded": "Die Admin-Seite braucht ein Admin-Konto. Anmeldung unten.",
     "forbidden": "{{email}} hat keine Admin-Rechte.",
     "loadFailed": "Admin-Daten konnten nicht geladen werden.",
+    "cacheSettingsTitle": "Cache-Einstellungen",
     "usageTitle": "Nutzung",
     "usageHint": "Zählung pro Tag (UTC), letzte 30 Tage. Gespeichert werden nur Summen, keine IP-Adressen oder anderen personenbezogenen Daten. Besucher zählen einmal pro Tag und Browser.",
     "usage": {

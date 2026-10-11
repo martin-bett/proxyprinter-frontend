@@ -1081,6 +1081,7 @@
     "loginNeeded": "管理页面需要管理员账户。请在下方登录。",
     "forbidden": "{{email}} 没有管理员权限。",
     "loadFailed": "无法加载管理数据。",
+    "cacheSettingsTitle": "缓存设置",
     "usageTitle": "使用情况",
     "usageHint": "按天统计（UTC），最近 30 天。只保存总数，不保存 IP 地址或其他个人数据。每个浏览器每天只计为一位访客。",
     "usage": {

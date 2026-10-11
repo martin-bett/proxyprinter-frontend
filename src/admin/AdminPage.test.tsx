@@ -84,6 +84,12 @@ describe('AdminPage', () => {
     const { unmount } = render(<AdminPage />);
 
     expect(await screen.findByText('Usage')).toBeInTheDocument();
+    // Zwei ausklappbare Sektionen, Nutzung unter den Cache-Einstellungen
+    const toggles = screen.getAllByRole('button', { expanded: true });
+    expect(toggles.map(b => b.textContent)).toEqual(['Cache settings', 'Usage']);
+    fireEvent.click(toggles[0]);
+    expect(screen.getByRole('button', { name: 'Cache settings' })).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'Cache settings' }));
     expect(screen.getByText('Page views')).toBeInTheDocument();
     expect(screen.getByText('99,999')).toBeInTheDocument();
     expect(screen.getByText('1,234')).toBeInTheDocument();

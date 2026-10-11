@@ -1100,6 +1100,7 @@
     "loginNeeded": "La pagina di amministrazione richiede un account amministratore. Accesso qui sotto.",
     "forbidden": "{{email}} non ha diritti di amministratore.",
     "loadFailed": "Impossibile caricare i dati di amministrazione.",
+    "cacheSettingsTitle": "Impostazioni della cache",
     "usageTitle": "Utilizzo",
     "usageHint": "Conteggio giornaliero (UTC), ultimi 30 giorni. Vengono salvati solo i totali: nessun indirizzo IP né altri dati personali. I visitatori vengono contati una volta al giorno per browser.",
     "usage": {

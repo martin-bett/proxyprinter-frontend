@@ -1100,6 +1100,7 @@
     "loginNeeded": "La page d'administration nécessite un compte administrateur. Connexion ci-dessous.",
     "forbidden": "{{email}} n'a pas de droits d'administration.",
     "loadFailed": "Impossible de charger les données d'administration.",
+    "cacheSettingsTitle": "Paramètres du cache",
     "usageTitle": "Utilisation",
     "usageHint": "Comptage par jour (UTC), 30 derniers jours. Seuls des totaux sont enregistrés : aucune adresse IP ni autre donnée personnelle. Les visiteurs sont comptés une fois par jour et par navigateur.",
     "usage": {

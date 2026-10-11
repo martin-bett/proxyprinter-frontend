@@ -1,4 +1,5 @@
-.admin-page { max-width: 1100px; margin: 0 auto; padding: 16px; color: var(--text); }
+/* Eigener Scroll-Container, weil html overflow: hidden hat (App.css); Inhalt höchstens 1100px breit */
+.admin-page { height: 100vh; overflow-y: auto; padding: 16px max(16px, calc((100% - 1100px) / 2)); color: var(--text); }
 .admin-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .admin-header h1 { font-size: 1.6rem; font-weight: 600; color: var(--accent); }
 .admin-header a, .admin-page .account-dialog a { color: var(--accent-strong, var(--text)); text-decoration: underline; }
@@ -19,3 +20,5 @@
 .admin-error { display: block; color: var(--danger); font-size: 0.9em; }
 .admin-ok { display: block; color: var(--success); font-size: 0.9em; }
 .admin-total th, .admin-total td { font-weight: 600 !important; }
+.admin-collapsible { margin-bottom: 16px; text-align: left; }
+.admin-collapsible .collapsible-body { padding-top: 8px; }

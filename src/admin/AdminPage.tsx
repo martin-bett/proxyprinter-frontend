@@ -6,6 +6,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import CloseIcon from '@mui/icons-material/Close';
 import ActionButton from '../container/inputs/ActionButton';
+import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import AccountDialog from '../viewer/account/AccountDialog';
 import '../viewer/account/AccountDialog.css';
 import { handleLoginLink, refreshAuth, useAuth } from '../service/auth/auth';
@@ -233,50 +234,52 @@ export default function AdminPage() {
       )}
       {result?.status === 'ok' && (
         <>
-          {result.data.usage && (
+          <CollapsibleSection storageKey="admin-cache-settings" title={t('admin.cacheSettingsTitle')}
+            className="admin-collapsible">
             <section className="admin-section">
-              <div className="admin-section-head">
-                <h2>{t('admin.usageTitle')}</h2>
-                <ActionButton icon={<RefreshIcon />} onClick={reload}>{t('admin.refresh')}</ActionButton>
-              </div>
-              <p className="admin-hint">{t('admin.usageHint')}</p>
-              <UsageTable usage={result.data.usage} />
-            </section>
-          )}
-          <section className="admin-section">
-            <h2>{t('admin.settingsTitle')}</h2>
-            <p className="admin-hint">{t('admin.settingsHint')}</p>
-            <table className="admin-table">
-              <tbody>
-                {result.data.settings.map(s => <SettingRow key={s.key} setting={s} onChanged={updateSetting} />)}
-              </tbody>
-            </table>
-          </section>
-          <section className="admin-section">
-            <div className="admin-section-head">
-              <h2>{t('admin.cachesTitle')}</h2>
-              <ActionButton icon={<RefreshIcon />} onClick={reload}>{t('admin.refresh')}</ActionButton>
-            </div>
-            <div className="admin-scroll">
+              <h2>{t('admin.settingsTitle')}</h2>
+              <p className="admin-hint">{t('admin.settingsHint')}</p>
               <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>{t('admin.columns.cache')}</th>
-                    <th>{t('admin.columns.entries')}</th>
-                    <th>{t('admin.columns.size')}</th>
-                    <th>{t('admin.columns.oldest')}</th>
-                    <th>{t('admin.columns.lifetime')}</th>
-                    <th />
-                  </tr>
-                </thead>
                 <tbody>
-                  {result.data.caches.map(c => (
-                    <CacheRow key={c.name} cache={c} settings={result.data.settings} onCleared={reload} />
-                  ))}
+                  {result.data.settings.map(s => <SettingRow key={s.key} setting={s} onChanged={updateSetting} />)}
                 </tbody>
               </table>
-            </div>
-          </section>
+            </section>
+            <section className="admin-section">
+              <div className="admin-section-head">
+                <h2>{t('admin.cachesTitle')}</h2>
+                <ActionButton icon={<RefreshIcon />} onClick={reload}>{t('admin.refresh')}</ActionButton>
+              </div>
+              <div className="admin-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>{t('admin.columns.cache')}</th>
+                      <th>{t('admin.columns.entries')}</th>
+                      <th>{t('admin.columns.size')}</th>
+                      <th>{t('admin.columns.oldest')}</th>
+                      <th>{t('admin.columns.lifetime')}</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.data.caches.map(c => (
+                      <CacheRow key={c.name} cache={c} settings={result.data.settings} onCleared={reload} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </CollapsibleSection>
+          {result.data.usage && (
+            <CollapsibleSection storageKey="admin-usage" title={t('admin.usageTitle')} className="admin-collapsible"
+              action={{ icon: <RefreshIcon />, title: t('admin.refresh'), onClick: reload }}>
+              <section className="admin-section">
+                <p className="admin-hint">{t('admin.usageHint')}</p>
+                <UsageTable usage={result.data.usage} />
+              </section>
+            </CollapsibleSection>
+          )}
         </>
       )}
     </div>
