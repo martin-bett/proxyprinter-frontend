@@ -6,11 +6,13 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import CloseIcon from '@mui/icons-material/Close';
 import ActionButton from '../container/inputs/ActionButton';
+import CollapsibleSection from '../container/inputs/CollapsibleSection';
 import AccountDialog from '../viewer/account/AccountDialog';
 import '../viewer/account/AccountDialog.css';
 import { handleLoginLink, refreshAuth, useAuth } from '../service/auth/auth';
 import {
-  AdminCache, AdminLoadResult, AdminSetting, clearCache, formatBytes, loadAdmin, resetSetting, saveSetting,
+  AdminCache, AdminLoadResult, AdminSetting, AdminSystem, AdminUsage, clearCache, formatBytes, loadAdmin, resetSetting,
+  saveSetting, splitDuration, USAGE_METRICS,
 } from '../service/admin/adminApi';
 import './AdminPage.css';
 
@@ -156,6 +158,72 @@ function CacheRow({ cache, settings, onCleared }: CacheRowProps) {
   );
 }
 
+function SystemTable({ system }: { system: AdminSystem }) {
+  const { t, i18n } = useTranslation();
+  const bytes = (value: number) => (value >= 0 ? formatBytes(value) : '–');
+  const rows = [
+    ['admin.system.database', (
+      <span className={system.database === 'UP' ? 'admin-ok' : 'admin-error'}>
+        {t(system.database === 'UP' ? 'admin.system.up' : 'admin.system.down')}
+      </span>
+    )],
+    ['admin.system.uptime', t('admin.system.uptimeValue', splitDuration(system.uptimeMs))],
+    ['admin.system.startedAt', new Date(system.startedAt).toLocaleString(i18n.language)],
+    ['admin.system.heap', t('admin.system.ofMax', { used: bytes(system.heapUsed), max: bytes(system.heapMax) })],
+    ['admin.system.heapCommitted', bytes(system.heapCommitted)],
+    ['admin.system.nonHeap', bytes(system.nonHeapUsed)],
+    ['admin.system.disk', t('admin.system.diskValue', { free: bytes(system.diskFree), total: bytes(system.diskTotal) })],
+    ['admin.system.pdfJobs', t('admin.system.pdfJobsValue',
+      { active: system.pdfJobsActive, max: system.pdfJobsMax, queued: system.pdfJobsQueued })],
+    ['admin.system.threads', system.threads],
+    ['admin.system.systemLoad', system.systemLoad >= 0 ? system.systemLoad.toFixed(2) : '–'],
+    ['admin.system.javaVersion', system.javaVersion],
+  ] as const;
+  return (
+    <table className="admin-table">
+      <tbody>
+        {rows.map(([label, value]) => (
+          <tr key={label}>
+            <th scope="row">{t(label)}</th>
+            <td>{value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function UsageTable({ usage }: { usage: AdminUsage }) {
+  const { t, i18n } = useTranslation();
+  const number = (value: number | undefined) => (value ?? 0).toLocaleString(i18n.language);
+  // Tag als UTC lesen, sonst rutscht er westlich von Greenwich auf den Vortag
+  const date = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString(i18n.language, { timeZone: 'UTC' });
+  return (
+    <div className="admin-scroll">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>{t('admin.usage.day')}</th>
+            {USAGE_METRICS.map(m => <th key={m} className="admin-number">{t(`admin.usage.${m}`)}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="admin-total">
+            <th scope="row">{t('admin.usage.total')}</th>
+            {USAGE_METRICS.map(m => <td key={m} className="admin-number">{number(usage.totals[m])}</td>)}
+          </tr>
+          {usage.days.map(d => (
+            <tr key={d.day}>
+              <th scope="row">{date(d.day)}</th>
+              {USAGE_METRICS.map(m => <td key={m} className="admin-number">{number(d.counts[m])}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { t } = useTranslation();
   const auth = useAuth();
@@ -201,40 +269,61 @@ export default function AdminPage() {
       )}
       {result?.status === 'ok' && (
         <>
-          <section className="admin-section">
-            <h2>{t('admin.settingsTitle')}</h2>
-            <p className="admin-hint">{t('admin.settingsHint')}</p>
-            <table className="admin-table">
-              <tbody>
-                {result.data.settings.map(s => <SettingRow key={s.key} setting={s} onChanged={updateSetting} />)}
-              </tbody>
-            </table>
-          </section>
-          <section className="admin-section">
-            <div className="admin-section-head">
-              <h2>{t('admin.cachesTitle')}</h2>
-              <ActionButton icon={<RefreshIcon />} onClick={reload}>{t('admin.refresh')}</ActionButton>
-            </div>
-            <div className="admin-scroll">
+          {result.data.system && (
+            <CollapsibleSection storageKey="admin-system" title={t('admin.system.title')} className="admin-collapsible"
+              action={{ icon: <RefreshIcon />, title: t('admin.refresh'), onClick: reload }}>
+              <section className="admin-section">
+                <p className="admin-hint">{t('admin.system.hint')}</p>
+                <SystemTable system={result.data.system} />
+              </section>
+            </CollapsibleSection>
+          )}
+          <CollapsibleSection storageKey="admin-cache-settings" title={t('admin.cacheSettingsTitle')}
+            className="admin-collapsible">
+            <section className="admin-section">
+              <h2>{t('admin.settingsTitle')}</h2>
+              <p className="admin-hint">{t('admin.settingsHint')}</p>
               <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>{t('admin.columns.cache')}</th>
-                    <th>{t('admin.columns.entries')}</th>
-                    <th>{t('admin.columns.size')}</th>
-                    <th>{t('admin.columns.oldest')}</th>
-                    <th>{t('admin.columns.lifetime')}</th>
-                    <th />
-                  </tr>
-                </thead>
                 <tbody>
-                  {result.data.caches.map(c => (
-                    <CacheRow key={c.name} cache={c} settings={result.data.settings} onCleared={reload} />
-                  ))}
+                  {result.data.settings.map(s => <SettingRow key={s.key} setting={s} onChanged={updateSetting} />)}
                 </tbody>
               </table>
-            </div>
-          </section>
+            </section>
+            <section className="admin-section">
+              <div className="admin-section-head">
+                <h2>{t('admin.cachesTitle')}</h2>
+                <ActionButton icon={<RefreshIcon />} onClick={reload}>{t('admin.refresh')}</ActionButton>
+              </div>
+              <div className="admin-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>{t('admin.columns.cache')}</th>
+                      <th>{t('admin.columns.entries')}</th>
+                      <th>{t('admin.columns.size')}</th>
+                      <th>{t('admin.columns.oldest')}</th>
+                      <th>{t('admin.columns.lifetime')}</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.data.caches.map(c => (
+                      <CacheRow key={c.name} cache={c} settings={result.data.settings} onCleared={reload} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </CollapsibleSection>
+          {result.data.usage && (
+            <CollapsibleSection storageKey="admin-usage" title={t('admin.usageTitle')} className="admin-collapsible"
+              action={{ icon: <RefreshIcon />, title: t('admin.refresh'), onClick: reload }}>
+              <section className="admin-section">
+                <p className="admin-hint">{t('admin.usageHint')}</p>
+                <UsageTable usage={result.data.usage} />
+              </section>
+            </CollapsibleSection>
+          )}
         </>
       )}
     </div>

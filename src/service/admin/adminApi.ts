@@ -1,5 +1,5 @@
 /**
- * Admin-Seite (/admin): Laufzeiten der Backend-Caches und "Jetzt leeren" über /api/admin.
+ * Admin-Seite (/admin): Backend-Laufzeitwerte, Nutzungszähler, Laufzeiten der Backend-Caches und "Jetzt leeren" über /api/admin.
  * Nur für Konten, die das Backend als Admin kennt (ADMIN_EMAILS auf dem Server).
  */
 import { responseErrorText } from '../../i18n/backendError';
@@ -26,9 +26,48 @@ export interface AdminCache {
   setting: string | null;
 }
 
+/** Kennzahlen der Nutzung, Schlüssel wie UsageMetric im Backend */
+export const USAGE_METRICS = ['pageViews', 'visitors', 'searchTerms', 'decks', 'deckImports', 'logins'] as const;
+export type UsageMetric = (typeof USAGE_METRICS)[number];
+
+export interface UsageDay {
+  /** ISO-Datum (UTC), z. B. 2026-10-11 */
+  day: string;
+  counts: Partial<Record<UsageMetric, number>>;
+}
+
+export interface AdminUsage {
+  /** Neuester Tag zuerst */
+  days: UsageDay[];
+  totals: Partial<Record<UsageMetric, number>>;
+}
+
+/** Laufzeitwerte des Backends (SystemStatusService): Zeiten in ms, Speicher in Bytes, -1 = unbekannt */
+export interface AdminSystem {
+  database: 'UP' | 'DOWN';
+  startedAt: number;
+  uptimeMs: number;
+  javaVersion: string;
+  systemLoad: number;
+  heapUsed: number;
+  heapCommitted: number;
+  heapMax: number;
+  nonHeapUsed: number;
+  threads: number;
+  diskFree: number;
+  diskTotal: number;
+  pdfJobsActive: number;
+  pdfJobsQueued: number;
+  pdfJobsMax: number;
+}
+
 export interface AdminOverview {
   settings: AdminSetting[];
   caches: AdminCache[];
+  /** Fehlt bei älteren Backends */
+  usage?: AdminUsage;
+  /** Fehlt bei älteren Backends */
+  system?: AdminSystem;
 }
 
 export type AdminLoadResult =
@@ -88,4 +127,10 @@ export const formatBytes = (bytes: number): string => {
     unit++;
   }
   return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+};
+
+/** 93_784_000 ms -> { days: 1, hours: 2, minutes: 3 } */
+export const splitDuration = (ms: number) => {
+  const minutes = Math.floor(ms / 60_000);
+  return { days: Math.floor(minutes / 1440), hours: Math.floor(minutes / 60) % 24, minutes: minutes % 60 };
 };
