@@ -11,8 +11,8 @@ import AccountDialog from '../viewer/account/AccountDialog';
 import '../viewer/account/AccountDialog.css';
 import { handleLoginLink, refreshAuth, useAuth } from '../service/auth/auth';
 import {
-  AdminCache, AdminLoadResult, AdminSetting, AdminUsage, clearCache, formatBytes, loadAdmin, resetSetting, saveSetting,
-  USAGE_METRICS,
+  AdminCache, AdminLoadResult, AdminSetting, AdminSystem, AdminUsage, clearCache, formatBytes, loadAdmin, resetSetting,
+  saveSetting, splitDuration, USAGE_METRICS,
 } from '../service/admin/adminApi';
 import './AdminPage.css';
 
@@ -158,6 +158,42 @@ function CacheRow({ cache, settings, onCleared }: CacheRowProps) {
   );
 }
 
+function SystemTable({ system }: { system: AdminSystem }) {
+  const { t, i18n } = useTranslation();
+  const bytes = (value: number) => (value >= 0 ? formatBytes(value) : '–');
+  const rows = [
+    ['admin.system.database', (
+      <span className={system.database === 'UP' ? 'admin-ok' : 'admin-error'}>
+        {t(system.database === 'UP' ? 'admin.system.up' : 'admin.system.down')}
+      </span>
+    )],
+    ['admin.system.uptime', t('admin.system.uptimeValue', splitDuration(system.uptimeMs))],
+    ['admin.system.startedAt', new Date(system.startedAt).toLocaleString(i18n.language)],
+    ['admin.system.heap', t('admin.system.ofMax', { used: bytes(system.heapUsed), max: bytes(system.heapMax) })],
+    ['admin.system.heapCommitted', bytes(system.heapCommitted)],
+    ['admin.system.nonHeap', bytes(system.nonHeapUsed)],
+    ['admin.system.disk', t('admin.system.diskValue', { free: bytes(system.diskFree), total: bytes(system.diskTotal) })],
+    ['admin.system.pdfJobs', t('admin.system.pdfJobsValue',
+      { active: system.pdfJobsActive, max: system.pdfJobsMax, queued: system.pdfJobsQueued })],
+    ['admin.system.threads', system.threads],
+    ['admin.system.processors', system.processors],
+    ['admin.system.systemLoad', system.systemLoad >= 0 ? system.systemLoad.toFixed(2) : '–'],
+    ['admin.system.javaVersion', system.javaVersion],
+  ] as const;
+  return (
+    <table className="admin-table">
+      <tbody>
+        {rows.map(([label, value]) => (
+          <tr key={label}>
+            <th scope="row">{t(label)}</th>
+            <td>{value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function UsageTable({ usage }: { usage: AdminUsage }) {
   const { t, i18n } = useTranslation();
   const number = (value: number | undefined) => (value ?? 0).toLocaleString(i18n.language);
@@ -234,6 +270,15 @@ export default function AdminPage() {
       )}
       {result?.status === 'ok' && (
         <>
+          {result.data.system && (
+            <CollapsibleSection storageKey="admin-system" title={t('admin.system.title')} className="admin-collapsible"
+              action={{ icon: <RefreshIcon />, title: t('admin.refresh'), onClick: reload }}>
+              <section className="admin-section">
+                <p className="admin-hint">{t('admin.system.hint')}</p>
+                <SystemTable system={result.data.system} />
+              </section>
+            </CollapsibleSection>
+          )}
           <CollapsibleSection storageKey="admin-cache-settings" title={t('admin.cacheSettingsTitle')}
             className="admin-collapsible">
             <section className="admin-section">

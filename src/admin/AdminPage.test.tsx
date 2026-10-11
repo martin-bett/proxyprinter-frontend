@@ -103,6 +103,27 @@ describe('AdminPage', () => {
     expect(screen.queryByText('Usage')).not.toBeInTheDocument();
   });
 
+  it('shows backend values first', async () => {
+    serve({
+      '/api/auth/me': me,
+      '/api/admin': { body: { ...overview.body, usage: { days: [], totals: {} }, system: {
+        database: 'UP', startedAt: Date.UTC(2026, 9, 10), uptimeMs: 93_784_000, javaVersion: '25', processors: 4,
+        systemLoad: -1, heapUsed: 512 * 1024 * 1024, heapCommitted: 768 * 1024 * 1024, heapMax: 2 * 1024 * 1024 * 1024,
+        nonHeapUsed: 100 * 1024 * 1024, threads: 42, diskFree: 10 * 1024 ** 3, diskTotal: 50 * 1024 ** 3,
+        pdfJobsActive: 1, pdfJobsQueued: 3, pdfJobsMax: 2,
+      } } },
+    });
+    render(<AdminPage />);
+
+    expect(await screen.findByText('Reachable')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { expanded: true }).map(b => b.textContent))
+      .toEqual(['Backend', 'Cache settings', 'Usage']);
+    expect(screen.getByText('1 d 2 h 3 min')).toBeInTheDocument();
+    expect(screen.getByText('512 MB of 2.0 GB')).toBeInTheDocument();
+    expect(screen.getByText('10 GB free of 50 GB')).toBeInTheDocument();
+    expect(screen.getByText('1 of 2 running, 3 waiting')).toBeInTheDocument();
+  });
+
   it('asks for login without a session and says so for other accounts', async () => {
     serve({ '/api/auth/me': { body: { loginEnabled: true } }, '/api/admin': { status: 401, body: {} } });
     const { unmount } = render(<AdminPage />);
