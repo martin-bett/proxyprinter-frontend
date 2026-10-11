@@ -1118,7 +1118,6 @@
       "pdfJobs": "PDF-Jobs",
       "pdfJobsValue": "{{active}} von {{max}} laufen, {{queued}} warten",
       "threads": "Threads",
-      "processors": "Prozessoren",
       "systemLoad": "Systemlast (1 Min)",
       "javaVersion": "Java-Version"
     },

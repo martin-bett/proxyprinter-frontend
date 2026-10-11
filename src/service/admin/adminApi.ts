@@ -48,7 +48,6 @@ export interface AdminSystem {
   startedAt: number;
   uptimeMs: number;
   javaVersion: string;
-  processors: number;
   systemLoad: number;
   heapUsed: number;
   heapCommitted: number;

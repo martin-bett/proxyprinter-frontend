@@ -176,7 +176,6 @@ function SystemTable({ system }: { system: AdminSystem }) {
     ['admin.system.pdfJobs', t('admin.system.pdfJobsValue',
       { active: system.pdfJobsActive, max: system.pdfJobsMax, queued: system.pdfJobsQueued })],
     ['admin.system.threads', system.threads],
-    ['admin.system.processors', system.processors],
     ['admin.system.systemLoad', system.systemLoad >= 0 ? system.systemLoad.toFixed(2) : '–'],
     ['admin.system.javaVersion', system.javaVersion],
   ] as const;

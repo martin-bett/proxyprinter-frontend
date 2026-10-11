@@ -1099,7 +1099,6 @@
       "pdfJobs": "PDFジョブ",
       "pdfJobsValue": "実行中 {{active}} / {{max}}、待機中 {{queued}}",
       "threads": "スレッド",
-      "processors": "プロセッサ",
       "systemLoad": "システム負荷（1分）",
       "javaVersion": "Javaバージョン"
     },

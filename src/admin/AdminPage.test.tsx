@@ -107,7 +107,7 @@ describe('AdminPage', () => {
     serve({
       '/api/auth/me': me,
       '/api/admin': { body: { ...overview.body, usage: { days: [], totals: {} }, system: {
-        database: 'UP', startedAt: Date.UTC(2026, 9, 10), uptimeMs: 93_784_000, javaVersion: '25', processors: 4,
+        database: 'UP', startedAt: Date.UTC(2026, 9, 10), uptimeMs: 93_784_000, javaVersion: '25', 
         systemLoad: -1, heapUsed: 512 * 1024 * 1024, heapCommitted: 768 * 1024 * 1024, heapMax: 2 * 1024 * 1024 * 1024,
         nonHeapUsed: 100 * 1024 * 1024, threads: 42, diskFree: 10 * 1024 ** 3, diskTotal: 50 * 1024 ** 3,
         pdfJobsActive: 1, pdfJobsQueued: 3, pdfJobsMax: 2,

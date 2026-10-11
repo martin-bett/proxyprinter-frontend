@@ -1156,7 +1156,6 @@
       "pdfJobs": "Задания PDF",
       "pdfJobsValue": "{{active}} из {{max}} выполняются, {{queued}} в очереди",
       "threads": "Потоки",
-      "processors": "Процессоры",
       "systemLoad": "Нагрузка системы (1 мин)",
       "javaVersion": "Версия Java"
     },
