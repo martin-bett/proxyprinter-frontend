@@ -82,6 +82,6 @@ describe('AdminPage', () => {
     resetAuthForTests();
     serve({ '/api/auth/me': { body: { loginEnabled: true, email: 'user@example.org' } }, '/api/admin': { status: 403, body: {} } });
     render(<AdminPage />);
-    await waitFor(() => expect(screen.getByText('user@example.org has no admin rights.')).toBeInTheDocument());
+    expect(await screen.findByText('user@example.org has no admin rights.')).toBeInTheDocument();
   });
 });
