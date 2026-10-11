@@ -1003,6 +1003,14 @@
       "rateLimited": "Zu viele Anfragen. Später erneut versuchen.",
       "tokenInvalid": "Dieser Link oder Token ist unbekannt oder abgelaufen.",
       "notVerified": "Weder der DNS-Eintrag noch die Datei von {{host}} enthält den Token bisher."
+    },
+    "admin": {
+      "forbidden": "Nur für Admins.",
+      "valueOutOfRange": "Erlaubt: {{min}} bis {{max}}.",
+      "invalidValue": "Ganze Zahl eingeben.",
+      "unknownSetting": "Unbekannte Einstellung {{key}}.",
+      "unknownCache": "Unbekannter Cache {{name}}.",
+      "pdfJobsRunning": "Gerade laufen {{jobs}} PDF-Jobs. Später noch einmal versuchen."
     }
   },
   "account": {
@@ -1083,5 +1091,56 @@
     "checking": "Bestätigungslink wird geprüft…",
     "mailSent": "Ein Bestätigungslink ging an {{email}}. Sobald er geöffnet wird, ist {{host}} gesperrt.",
     "blocked": "{{host}} ist jetzt als Quelle gesperrt."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Zurück zu Proxyprinter",
+    "loginNeeded": "Die Admin-Seite braucht ein Admin-Konto. Anmeldung unten.",
+    "forbidden": "{{email}} hat keine Admin-Rechte.",
+    "loadFailed": "Admin-Daten konnten nicht geladen werden.",
+    "settingsTitle": "Cache-Laufzeiten",
+    "settingsHint": "Änderungen gelten sofort und gehen der Server-Konfiguration vor, bis sie zurückgesetzt werden.",
+    "defaultValue": "Server-Standard: {{value}} {{unit}}",
+    "range": "Erlaubt: {{min}} bis {{max}}",
+    "saved": "Gespeichert.",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "resetToDefault": "Auf Standard zurück",
+    "settings": {
+      "searchcacheRetention": "Geteilte Suchen",
+      "searchcacheMaxEntry": "Max. Größe einer geteilten Suche",
+      "pdfRetention": "Fertige PDFs",
+      "uploadRetention": "Hochgeladene Bilder (ab letzter Nutzung)",
+      "logRetention": "Log-Einträge in der Datenbank"
+    },
+    "units": {
+      "days": "Tage",
+      "kb": "KB"
+    },
+    "cachesTitle": "Caches",
+    "refresh": "Aktualisieren",
+    "columns": {
+      "cache": "Cache",
+      "entries": "Einträge",
+      "size": "Größe",
+      "oldest": "Ältester",
+      "lifetime": "Aufbewahrt"
+    },
+    "caches": {
+      "searchCache": "Geteilte Suchen",
+      "pdfs": "Fertige PDFs",
+      "uploads": "Hochgeladene Bilder",
+      "images": "Heruntergeladene Kartenbilder",
+      "memory": "Im Speicher (PDF-Bilder, fehlgeschlagene Bild-URLs, Deckfinder)"
+    },
+    "lifetime": {
+      "days": "{{days}} Tage",
+      "unlimited": "Unbegrenzt",
+      "minutes": "10–30 Minuten"
+    },
+    "clearNow": "Jetzt leeren",
+    "clearConfirm": "Leeren",
+    "clearFailed": "Leeren fehlgeschlagen",
+    "cleared": "{{number}} Einträge gelöscht.",
+    "uploadsWarning": "Snapshots, die diese Bilder nutzen, verlieren sie."
   }
 }

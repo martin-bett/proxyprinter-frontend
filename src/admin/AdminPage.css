@@ -1,0 +1,20 @@
+.admin-page { max-width: 1100px; margin: 0 auto; padding: 16px; color: var(--text); }
+.admin-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.admin-header h1 { font-size: 1.6rem; font-weight: 600; color: var(--accent); }
+.admin-header a, .admin-page .account-dialog a { color: var(--accent-strong, var(--text)); text-decoration: underline; }
+.admin-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius, 8px);
+  padding: 12px 16px; margin-bottom: 16px; }
+.admin-section h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
+.admin-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.admin-scroll { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.admin-table th, .admin-table td { padding: 6px 8px; text-align: left; vertical-align: top; border-top: 1px solid var(--border); }
+.admin-table thead th { border-top: none; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+.admin-table tbody th { font-weight: 500; }
+.admin-number { text-align: right !important; white-space: nowrap; }
+.admin-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
+.admin-setting-input { display: flex; align-items: center; gap: 6px; }
+.admin-setting-input input { width: 7em; background: var(--input-bg); color: var(--text); }
+.admin-hint { display: block; font-size: 0.85em; color: var(--text-muted); font-weight: 400; }
+.admin-error { display: block; color: var(--danger); font-size: 0.9em; }
+.admin-ok { display: block; color: var(--success); font-size: 0.9em; }

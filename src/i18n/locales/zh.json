@@ -989,6 +989,14 @@
       "rateLimited": "请求过多。请稍后再试。",
       "tokenInvalid": "此链接或令牌未知或已过期。",
       "notVerified": "{{host}} 的 DNS 记录和文件中都还没有令牌。"
+    },
+    "admin": {
+      "forbidden": "仅限管理员。",
+      "valueOutOfRange": "允许范围：{{min}} 至 {{max}}。",
+      "invalidValue": "请输入整数。",
+      "unknownSetting": "未知设置 {{key}}。",
+      "unknownCache": "未知缓存 {{name}}。",
+      "pdfJobsRunning": "当前有 {{jobs}} 个 PDF 任务正在运行。请稍后重试。"
     }
   },
   "account": {
@@ -1064,5 +1072,56 @@
     "checking": "正在检查确认链接…",
     "mailSent": "确认链接已发送至 {{email}}。打开后 {{host}} 即被屏蔽。",
     "blocked": "{{host}} 现已作为来源被屏蔽。"
+  },
+  "admin": {
+    "title": "管理",
+    "backToApp": "返回 Proxyprinter",
+    "loginNeeded": "管理页面需要管理员账户。请在下方登录。",
+    "forbidden": "{{email}} 没有管理员权限。",
+    "loadFailed": "无法加载管理数据。",
+    "settingsTitle": "缓存保留时间",
+    "settingsHint": "更改立即生效，并在重置前优先于服务器配置。",
+    "defaultValue": "服务器默认值：{{value}} {{unit}}",
+    "range": "允许范围：{{min}} 至 {{max}}",
+    "saved": "已保存。",
+    "saveFailed": "保存失败",
+    "resetToDefault": "恢复默认",
+    "settings": {
+      "searchcacheRetention": "共享搜索",
+      "searchcacheMaxEntry": "单个共享搜索的最大大小",
+      "pdfRetention": "已完成的 PDF",
+      "uploadRetention": "上传的图片（自最后一次使用起）",
+      "logRetention": "数据库中的日志"
+    },
+    "units": {
+      "days": "天",
+      "kb": "KB"
+    },
+    "cachesTitle": "缓存",
+    "refresh": "刷新",
+    "columns": {
+      "cache": "缓存",
+      "entries": "条目",
+      "size": "大小",
+      "oldest": "最早",
+      "lifetime": "保留"
+    },
+    "caches": {
+      "searchCache": "共享搜索",
+      "pdfs": "已完成的 PDF",
+      "uploads": "上传的图片",
+      "images": "已下载的卡牌图片",
+      "memory": "内存中（PDF 图片、失败的图片 URL、牌组查找）"
+    },
+    "lifetime": {
+      "days": "{{days}} 天",
+      "unlimited": "无限制",
+      "minutes": "10–30 分钟"
+    },
+    "clearNow": "立即清空",
+    "clearConfirm": "清空",
+    "clearFailed": "清空失败",
+    "cleared": "已删除 {{number}} 个条目。",
+    "uploadsWarning": "使用这些图片的 Snapshot 将失去它们。"
   }
 }

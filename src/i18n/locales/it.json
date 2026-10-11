@@ -1003,6 +1003,14 @@
       "rateLimited": "Troppe richieste. Riprovare più tardi.",
       "tokenInvalid": "Questo link o token è sconosciuto o scaduto.",
       "notVerified": "Né il record DNS né il file di {{host}} contengono ancora il token."
+    },
+    "admin": {
+      "forbidden": "Solo per amministratori.",
+      "valueOutOfRange": "Consentito: da {{min}} a {{max}}.",
+      "invalidValue": "Inserire un numero intero.",
+      "unknownSetting": "Impostazione sconosciuta {{key}}.",
+      "unknownCache": "Cache sconosciuta {{name}}.",
+      "pdfJobsRunning": "Sono in corso {{jobs}} lavori PDF. Riprovare più tardi."
     }
   },
   "account": {
@@ -1083,5 +1091,56 @@
     "checking": "Verifica del link di conferma…",
     "mailSent": "Un link di conferma è stato inviato a {{email}}. Appena viene aperto, {{host}} è bloccato.",
     "blocked": "{{host}} è ora bloccato come fonte."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Torna a Proxyprinter",
+    "loginNeeded": "La pagina di amministrazione richiede un account amministratore. Accesso qui sotto.",
+    "forbidden": "{{email}} non ha diritti di amministratore.",
+    "loadFailed": "Impossibile caricare i dati di amministrazione.",
+    "settingsTitle": "Durata delle cache",
+    "settingsHint": "Le modifiche valgono subito e hanno la precedenza sulla configurazione del server finché non vengono ripristinate.",
+    "defaultValue": "Valore del server: {{value}} {{unit}}",
+    "range": "Consentito: da {{min}} a {{max}}",
+    "saved": "Salvato.",
+    "saveFailed": "Salvataggio non riuscito",
+    "resetToDefault": "Ripristina",
+    "settings": {
+      "searchcacheRetention": "Ricerche condivise",
+      "searchcacheMaxEntry": "Dimensione max. di una ricerca condivisa",
+      "pdfRetention": "PDF completati",
+      "uploadRetention": "Immagini caricate (dall'ultimo uso)",
+      "logRetention": "Voci di log nel database"
+    },
+    "units": {
+      "days": "giorni",
+      "kb": "KB"
+    },
+    "cachesTitle": "Cache",
+    "refresh": "Aggiorna",
+    "columns": {
+      "cache": "Cache",
+      "entries": "Voci",
+      "size": "Dimensione",
+      "oldest": "Più vecchia",
+      "lifetime": "Conservata"
+    },
+    "caches": {
+      "searchCache": "Ricerche condivise",
+      "pdfs": "PDF completati",
+      "uploads": "Immagini caricate",
+      "images": "Immagini delle carte scaricate",
+      "memory": "In memoria (immagini PDF, URL di immagini non riuscite, ricerca mazzi)"
+    },
+    "lifetime": {
+      "days": "{{days}} giorni",
+      "unlimited": "Illimitata",
+      "minutes": "10–30 minuti"
+    },
+    "clearNow": "Svuota ora",
+    "clearConfirm": "Svuota",
+    "clearFailed": "Svuotamento non riuscito",
+    "cleared": "{{number}} voci eliminate.",
+    "uploadsWarning": "Gli Snapshot che usano queste immagini le perdono."
   }
 }
