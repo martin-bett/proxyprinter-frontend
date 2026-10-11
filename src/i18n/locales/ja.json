@@ -114,7 +114,8 @@
     "publish": "公開",
     "unpublish": "非公開にする",
     "copyConfig": "コンフィグをコピー",
-    "loginToEdit": "ログイン（右上のバブル）すると、自分のコンフィグを作成・コピー・編集できます。"
+    "loginToEdit": "ログイン（右上のバブル）すると、自分のコンフィグを作成・コピー・編集できます。",
+    "operationFailed": "操作に失敗しました (HTTP {{status}})。"
   },
   "apiConfig": {
     "fields": {
@@ -159,7 +160,8 @@
       "imageUrlPattern": "画像URLパターン",
       "imageUrlReplacement": "画像URLの置換",
       "namePattern": "名前パターン",
-      "nameReplacement": "名前の置換"
+      "nameReplacement": "名前の置換",
+      "hint": "ヒント"
     },
     "titles": {
       "parameterMap": "各項目が入力欄になります。ソースに入力が不要なら空のままにします",
@@ -169,11 +171,19 @@
       "imageUrlPattern": "読み取った画像URLに対する正規表現。一致しない場合、その項目は除外されます（例: 動画、サブフォルダー）",
       "imageUrlReplacement": "パターンの置換先。グループは$1の形式（例: https://i.redd.it/$1）",
       "namePattern": "読み取った名前に対する正規表現（例: 拡張子なら \\.\\w+$）",
-      "nameReplacement": "パターンの置換先。空 = 削除"
+      "nameReplacement": "パターンの置換先。空 = 削除",
+      "hint": "Run タブに表示する短い説明（貼り付ける内容など）。言語は自由で、保存時にサーバーが UI の各言語へ翻訳します"
+    },
+    "tabs": {
+      "run": "実行",
+      "settings": "設定"
     },
     "executor": {
       "pasteLink": "リンクを貼り付け（またはページのソース全体）",
-      "execute": "実行"
+      "execute": "実行",
+      "hint": "ギャラリー（Reddit の投稿やアルバムなど）のすべての画像を、選択用のカード画像として読み込みます。ギャラリーのリンクを貼り付けて「実行」をクリック。",
+      "hintNoInput": "このギャラリーは入力不要です。「実行」で画像を選択用のカード画像として読み込みます。",
+      "selectGallery": "上のギャラリーを選択して実行。"
     },
     "noImages": "画像が見つかりません。"
   },
@@ -236,13 +246,19 @@
       "height": "高さ: ",
       "verticalMargin": "上下の余白: ",
       "horizontalMargin": "左右の余白: ",
+      "tenthMm": "0.1ミリ単位",
       "maxDpi": "最大DPI: ",
+      "pageLandscape": "横向きページ",
+      "cardsLandscape": "カードを横向きに",
       "cutlines": "カットライン",
       "lineThickness": "線の太さ: ",
       "cutLineColor": "カットラインの色: ",
       "corners": "角",
       "detectBorderColor": "枠の色を検出",
       "cornerColor": "角の色: ",
+      "cornerSize": "角のサイズ (mm): ",
+      "cornerSizeAutomatic": "実物のカードと同じ",
+      "cornerSizeHint": "角丸の半径（mm）。自動：実物のカードと同じ（高さ88.9 mmで1/8インチ）、カードの高さに合わせて調整。",
       "ok": "OK",
       "email": {
         "title": "メール送信",
@@ -367,8 +383,10 @@
       "matches": "件数"
     },
     "running": {
-      "title": "実行中の検索",
-      "more": "+{{count}}"
+      "title": "実行中"
+    },
+    "history": {
+      "title": "履歴"
     }
   },
   "deckImport": {
@@ -615,7 +633,8 @@
       "sources": "このサイトは、公開ソースおよびサードパーティAPIからカード画像と情報を読み込みます。これらのソースが提供する内容について、運営者は責任を負いません。アートワークの著作権や所有権を主張するものではなく、すべての権利はそれぞれの権利者に帰属します。",
       "noncommercial": "このプロジェクトは非営利であり、個人的、教育的、または研究目的のみを対象としています。このサイトの利用による利益は得られていません。",
       "accept": "続行することで、この免責事項を理解し、同意したものとみなされます。",
-      "understand": "理解しました"
+      "understand": "理解しました",
+      "operators": "ソースの運営者はサイトをブロックできます:"
     },
     "participate": "参加する",
     "donate": "寄付する"
@@ -960,6 +979,16 @@
     },
     "auth": {
       "loginRequired": "ログインが必要です。"
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} は運営者の要請によりブロックされています。",
+      "invalidHost": "ドメイン (example.com) または IP アドレスを入力。",
+      "mailNeedsDomain": "メールでの確認にはドメインが必要です。IP アドレスの場合はファイルを使用。",
+      "invalidMailbox": "不明なメールボックスです。",
+      "mailDisabled": "現在メール送信は利用できません。DNS レコードまたはファイルを使用。",
+      "rateLimited": "リクエストが多すぎます。後でもう一度。",
+      "tokenInvalid": "このリンクまたはトークンは不明か期限切れです。",
+      "notVerified": "{{host}} の DNS レコードにもファイルにもまだトークンがありません。"
     }
   },
   "account": {
@@ -1005,5 +1034,35 @@
       "decksToday_other": "今日作成されたデッキ {{number}} 件",
       "decksTotal_other": "合計 {{number}} デッキ"
     }
+  },
+  "optOut": {
+    "open": "サイトをソースとしてブロック",
+    "title": "サイトをソースとしてブロック",
+    "intro": "サイトの運営者はここでそのサイトをソースとしてブロックできます。ブロック後、Proxyprinter はそのサイトから何も読み込まず、それを使うソース設定も提供されません。所有権はメールのリンク、または DNS レコードかファイルで確認します。",
+    "host": "ドメインまたは IP",
+    "subdomains": "ドメインはすべてのサブドメインもブロックします。",
+    "methodMail": "確認メール",
+    "methodMailHint": "ドメインの標準アドレスにリンクを送信します。",
+    "mailUnavailable": "現在利用できません。DNS レコードまたはファイルを使用。",
+    "mailbox": "メールボックス",
+    "methodChallenge": "DNS レコードまたはファイル",
+    "methodChallengeHint": "ドメインにトークンを設置してから確認。",
+    "sendMail": "確認メールを送信",
+    "getToken": "トークンを取得",
+    "challengeIntro": "{{host}} に次のいずれかを設定してから確認。",
+    "dnsTitle": "DNS レコード",
+    "dnsName": "名前",
+    "dnsType": "タイプ",
+    "dnsValue": "値",
+    "fileTitle": "ファイル",
+    "fileTitleOr": "またはファイル",
+    "fileUrl": "URL",
+    "fileContent": "内容",
+    "challengeValidity": "トークンの有効期間は 7 日です。DNS の変更は反映まで時間がかかる場合があります。",
+    "back": "戻る",
+    "check": "今すぐ確認",
+    "checking": "確認リンクを確認中…",
+    "mailSent": "確認リンクを {{email}} に送信しました。開かれると {{host}} はブロックされます。",
+    "blocked": "{{host}} はソースとしてブロックされました。"
   }
 }

@@ -114,7 +114,8 @@
     "publish": "Publish",
     "unpublish": "Unpublish",
     "copyConfig": "Copy Config",
-    "loginToEdit": "Log in (bubble at the top right) to create, copy and edit own configs."
+    "loginToEdit": "Log in (bubble at the top right) to create, copy and edit own configs.",
+    "operationFailed": "Action failed (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -159,7 +160,8 @@
       "imageUrlPattern": "Image URL Pattern",
       "imageUrlReplacement": "Image URL Replacement",
       "namePattern": "Name Pattern",
-      "nameReplacement": "Name Replacement"
+      "nameReplacement": "Name Replacement",
+      "hint": "Hint"
     },
     "titles": {
       "parameterMap": "Each entry becomes an input field. Leave empty if the source needs no input",
@@ -169,11 +171,19 @@
       "imageUrlPattern": "Regex on the image URL read. If it does not match, the entry is dropped (e.g. videos, subfolders)",
       "imageUrlReplacement": "Replacement for the pattern, groups as $1, e.g. https://i.redd.it/$1",
       "namePattern": "Regex on the name read, e.g. \\.\\w+$ for the file extension",
-      "nameReplacement": "Replacement for the pattern, empty = remove"
+      "nameReplacement": "Replacement for the pattern, empty = remove",
+      "hint": "Short instructions shown on the Run tab, e.g. what to paste. Written in any language; the server translates it into the UI languages when saving"
+    },
+    "tabs": {
+      "run": "Run",
+      "settings": "Settings"
     },
     "executor": {
       "pasteLink": "Paste link (or the whole page source)",
-      "execute": "Execute"
+      "execute": "Execute",
+      "hint": "Loads all images of a gallery (e.g. a Reddit post or an album) as card art to choose from. Paste the gallery link and click Execute.",
+      "hintNoInput": "This gallery needs no input. Execute loads its images as card art to choose from.",
+      "selectGallery": "Select a gallery above to run it."
     },
     "noImages": "No images found."
   },
@@ -237,13 +247,19 @@
       "height": "Height: ",
       "verticalMargin": "Vertical Margin: ",
       "horizontalMargin": "Horizontal Margin: ",
+      "tenthMm": "Tenths of a millimetre",
       "maxDpi": "Max Dpi: ",
+      "pageLandscape": "Landscape page",
+      "cardsLandscape": "Landscape cards",
       "cutlines": "Cutlines",
       "lineThickness": "Line Thickness: ",
       "cutLineColor": "Cut Line Color: ",
       "corners": "Corners",
       "detectBorderColor": "Detect BorderColor",
       "cornerColor": "Corner Color: ",
+      "cornerSize": "Corner Size (mm): ",
+      "cornerSizeAutomatic": "Like real cards",
+      "cornerSizeHint": "Radius of the rounded corners in mm. Automatic: like real cards (1/8 inch at 88.9 mm), scaled to the card height.",
       "ok": "Ok",
       "email": {
         "title": "Email delivery",
@@ -371,8 +387,10 @@
       "matches": "Matches"
     },
     "running": {
-      "title": "Running searches",
-      "more": "+{{count}}"
+      "title": "Running"
+    },
+    "history": {
+      "title": "History"
     }
   },
   "deckImport": {
@@ -629,7 +647,8 @@
       "sources": "This website loads card images and information from public sources and third-party APIs. I am not responsible for the content provided by these sources. No copyright or ownership of the artwork is claimed, and all rights remain with their respective owners.",
       "noncommercial": "This project is non-commercial and intended for personal, educational, or research purposes only. No profit is made from the use of this site.",
       "accept": "By continuing, you acknowledge and accept this disclaimer.",
-      "understand": "I Understand"
+      "understand": "I Understand",
+      "operators": "Operators of a source can block their site:"
     },
     "participate": "Participate",
     "donate": "Donate"
@@ -974,6 +993,16 @@
     },
     "auth": {
       "loginRequired": "Login required."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} is blocked at the request of its operator.",
+      "invalidHost": "Enter a domain (example.com) or an IP address.",
+      "mailNeedsDomain": "Confirmation by mail needs a domain. For an IP address, use the file.",
+      "invalidMailbox": "Unknown mailbox.",
+      "mailDisabled": "Mail delivery is not available right now. Use the DNS record or file instead.",
+      "rateLimited": "Too many requests. Try again later.",
+      "tokenInvalid": "This link or token is unknown or has expired.",
+      "notVerified": "Neither the DNS record nor the file for {{host}} contains the token yet."
     }
   },
   "account": {
@@ -1024,5 +1053,35 @@
       "decksTotal_one": "{{number}} deck in total",
       "decksTotal_other": "{{number}} decks in total"
     }
+  },
+  "optOut": {
+    "open": "Block a site as source",
+    "title": "Block a site as source",
+    "intro": "Operators of a site can block it as a source here. Proxyprinter then no longer loads anything from it, and source configs using it are no longer offered. Ownership is confirmed by a mail link or a DNS record or file.",
+    "host": "Domain or IP",
+    "subdomains": "A domain also blocks all its subdomains.",
+    "methodMail": "Confirmation mail",
+    "methodMailHint": "A link goes to a standard address of the domain.",
+    "mailUnavailable": "Not available right now, use the DNS record or file instead.",
+    "mailbox": "Mailbox",
+    "methodChallenge": "DNS record or file",
+    "methodChallengeHint": "Place a token on the domain, then check it.",
+    "sendMail": "Send confirmation mail",
+    "getToken": "Get token",
+    "challengeIntro": "Set up one of the following for {{host}}, then check it.",
+    "dnsTitle": "DNS record",
+    "dnsName": "Name",
+    "dnsType": "Type",
+    "dnsValue": "Value",
+    "fileTitle": "File",
+    "fileTitleOr": "Or file",
+    "fileUrl": "URL",
+    "fileContent": "Content",
+    "challengeValidity": "The token is valid for 7 days. DNS changes can take a while to propagate.",
+    "back": "Back",
+    "check": "Check now",
+    "checking": "Checking the confirmation link…",
+    "mailSent": "A confirmation link was sent to {{email}}. Once it is opened, {{host}} is blocked.",
+    "blocked": "{{host}} is now blocked as a source."
   }
 }

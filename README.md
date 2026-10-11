@@ -1,70 +1,54 @@
-# Getting Started with Create React App
+# ProxyPrinter – Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Web app behind [proxyprinter.eu](https://proxyprinter.eu): paste a decklist, pick card art from configurable
+API and gallery sources, crop images and generate a printable proxy PDF.
 
-## Available Scripts
+This repository holds the React frontend. The backend (Spring Boot, PDF generation, config storage) lives in
+[martin-bett/proxyprinter-backend](https://github.com/martin-bett/proxyprinter-backend).
 
-In the project directory, you can run:
+## Run locally
 
-### `npm start`
+Requirements: Node 18, a running backend on `http://localhost:8080` (see the backend README).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+npm ci --legacy-peer-deps   # plain npm ci fails: TypeScript 5 vs react-scripts 5
+npm start                   # dev server on http://localhost:3000, /api is proxied to :8080
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Checks (the same ones CI runs):
 
-### `npm test`
+```bash
+npx tsc --noEmit
+CI=true npx react-scripts test --watchAll=false
+npm run build
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Project layout
 
-### `npm run build`
+- `src/viewer/` – main page (`DeckInputAndViewer.tsx`) and UI parts
+- `src/service/` – search over API/gallery configs, caches, decklist parser
+- `src/api/view/` – dialogs and wizards for API, gallery and deckfinder configs
+- `src/i18n/` – translations; every visible text is a key in `src/i18n/locales/en.json` and the other locale files
+- `CLAUDE.md` – short developer notes (also used by AI coding agents)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Contributing
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: see [SECURITY.md](SECURITY.md).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## License
 
-### `npm run eject`
+Copyright (C) 2024-2026 martin-bett and the ProxyPrinter contributors.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The source code is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+If you run a modified version as a web service, you must offer its source code to its users.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Not covered by this license: names, logos and trademarks of games and publishers (for example the icons in the
+frontend's `public/icons/` and `public/flags/`) belong to their respective owners, as does all card artwork.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Disclaimer
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+ProxyPrinter is an unofficial, non-commercial fan project. It is not affiliated with, endorsed or sponsored by
+Wizards of the Coast or any other publisher. Magic: The Gathering and all related names, symbols and logos are
+trademarks of their respective owners. This repository contains no card images; the app loads them at runtime
+from public sources and third-party APIs, and all rights to the artwork remain with their owners.
+Logos of games and publishers in `public/icons/` and `public/flags/` belong to their respective owners.

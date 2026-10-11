@@ -114,7 +114,8 @@
     "publish": "发布",
     "unpublish": "取消发布",
     "copyConfig": "复制配置",
-    "loginToEdit": "登录（右上角气泡）后可创建、复制和编辑自己的配置。"
+    "loginToEdit": "登录（右上角气泡）后可创建、复制和编辑自己的配置。",
+    "operationFailed": "操作失败 (HTTP {{status}})。"
   },
   "apiConfig": {
     "fields": {
@@ -159,7 +160,8 @@
       "imageUrlPattern": "图片 URL 模式",
       "imageUrlReplacement": "图片 URL 替换",
       "namePattern": "名称模式",
-      "nameReplacement": "名称替换"
+      "nameReplacement": "名称替换",
+      "hint": "提示"
     },
     "titles": {
       "parameterMap": "每个条目对应一个输入框。来源无需输入时留空",
@@ -169,11 +171,19 @@
       "imageUrlPattern": "作用于所读图片 URL 的正则。不匹配时该条目被丢弃（例如视频、子文件夹）",
       "imageUrlReplacement": "模式的替换内容，分组写作 $1，例如 https://i.redd.it/$1",
       "namePattern": "作用于所读名称的正则，例如 \\.\\w+$ 匹配文件扩展名",
-      "nameReplacement": "模式的替换内容，留空 = 删除"
+      "nameReplacement": "模式的替换内容，留空 = 删除",
+      "hint": "显示在 Run 标签页的简短说明，例如要粘贴的内容。可用任意语言，保存时服务器会将其翻译成界面语言"
+    },
+    "tabs": {
+      "run": "运行",
+      "settings": "设置"
     },
     "executor": {
       "pasteLink": "粘贴链接（或整个页面源代码）",
-      "execute": "执行"
+      "execute": "执行",
+      "hint": "将图库（例如 Reddit 帖子或相册）中的所有图片加载为可选的卡图。粘贴图库链接后点击“执行”。",
+      "hintNoInput": "此图库无需输入。“执行”会将其图片加载为可选的卡图。",
+      "selectGallery": "在上方选择一个图库以运行。"
     },
     "noImages": "未找到图片。"
   },
@@ -236,13 +246,19 @@
       "height": "高度：",
       "verticalMargin": "垂直边距：",
       "horizontalMargin": "水平边距：",
+      "tenthMm": "十分之一毫米",
       "maxDpi": "最大 DPI：",
+      "pageLandscape": "横向页面",
+      "cardsLandscape": "卡牌横放",
       "cutlines": "裁切线",
       "lineThickness": "线条粗细：",
       "cutLineColor": "裁切线颜色：",
       "corners": "圆角",
       "detectBorderColor": "检测边框颜色",
       "cornerColor": "圆角颜色：",
+      "cornerSize": "圆角大小 (mm)：",
+      "cornerSizeAutomatic": "与实体卡牌相同",
+      "cornerSizeHint": "圆角半径（mm）。自动：与实体卡牌相同（高度 88.9 mm 时为 1/8 英寸），随卡牌高度缩放。",
       "ok": "确定",
       "email": {
         "title": "邮件发送",
@@ -367,8 +383,10 @@
       "matches": "结果"
     },
     "running": {
-      "title": "正在进行的搜索",
-      "more": "+{{count}}"
+      "title": "进行中"
+    },
+    "history": {
+      "title": "历史"
     }
   },
   "deckImport": {
@@ -615,7 +633,8 @@
       "sources": "本网站从公开来源和第三方 API 加载卡牌图片和信息。对这些来源提供的内容，本站不承担责任。本站不主张图片的任何版权或所有权，所有权利归各自所有者所有。",
       "noncommercial": "本项目为非商业项目，仅供个人、教育或研究用途。使用本站不产生任何盈利。",
       "accept": "继续使用即表示已知悉并接受此免责声明。",
-      "understand": "我已了解"
+      "understand": "我已了解",
+      "operators": "来源运营方可以屏蔽其网站："
     },
     "participate": "参与",
     "donate": "捐赠"
@@ -960,6 +979,16 @@
     },
     "auth": {
       "loginRequired": "需要登录。"
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} 应其运营方要求已被屏蔽。",
+      "invalidHost": "输入域名 (example.com) 或 IP 地址。",
+      "mailNeedsDomain": "邮件确认需要域名。IP 地址请使用文件。",
+      "invalidMailbox": "未知邮箱。",
+      "mailDisabled": "当前无法发送邮件。请改用 DNS 记录或文件。",
+      "rateLimited": "请求过多。请稍后再试。",
+      "tokenInvalid": "此链接或令牌未知或已过期。",
+      "notVerified": "{{host}} 的 DNS 记录和文件中都还没有令牌。"
     }
   },
   "account": {
@@ -1005,5 +1034,35 @@
       "decksToday_other": "今天已创建 {{number}} 副套牌",
       "decksTotal_other": "共 {{number}} 副套牌"
     }
+  },
+  "optOut": {
+    "open": "屏蔽网站作为来源",
+    "title": "屏蔽网站作为来源",
+    "intro": "网站运营方可以在此将其网站作为来源屏蔽。之后 Proxyprinter 不再从该网站加载任何内容，使用它的来源配置也不再提供。所有权通过邮件链接或 DNS 记录、文件来确认。",
+    "host": "域名或 IP",
+    "subdomains": "域名同时屏蔽其所有子域名。",
+    "methodMail": "确认邮件",
+    "methodMailHint": "链接发送到该域名的标准地址。",
+    "mailUnavailable": "当前不可用，请改用 DNS 记录或文件。",
+    "mailbox": "邮箱",
+    "methodChallenge": "DNS 记录或文件",
+    "methodChallengeHint": "在域名上放置令牌，然后检查。",
+    "sendMail": "发送确认邮件",
+    "getToken": "获取令牌",
+    "challengeIntro": "为 {{host}} 设置以下任一项，然后检查。",
+    "dnsTitle": "DNS 记录",
+    "dnsName": "名称",
+    "dnsType": "类型",
+    "dnsValue": "值",
+    "fileTitle": "文件",
+    "fileTitleOr": "或文件",
+    "fileUrl": "URL",
+    "fileContent": "内容",
+    "challengeValidity": "令牌有效期为 7 天。DNS 更改可能需要一段时间才能生效。",
+    "back": "返回",
+    "check": "立即检查",
+    "checking": "正在检查确认链接…",
+    "mailSent": "确认链接已发送至 {{email}}。打开后 {{host}} 即被屏蔽。",
+    "blocked": "{{host}} 现已作为来源被屏蔽。"
   }
 }

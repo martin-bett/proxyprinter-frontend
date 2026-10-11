@@ -16,7 +16,7 @@ describe('RunningSearches', () => {
 
   it('zeigt je API eine Zeile, auch ohne Ergebnis und für wartende APIs', () => {
     render(<RunningSearches running={[search({})]} pendingByApi={{ Scryfall: 3, MPCFill: 2 }} />);
-    expect(screen.getByText('Running searches')).toBeInTheDocument();
+    expect(screen.getByText('Running')).toBeInTheDocument();
     const rows = rowCells();
     expect(rows[0][0]).toBe('Scryfall');
     expect(rows[0][1]).toBe('0');
@@ -26,14 +26,16 @@ describe('RunningSearches', () => {
     expect(rows[1]).toEqual(['MPCFill', '–', '–', '–', '–']);
   });
 
-  it('fasst gleichzeitige Suchen einer API zusammen', () => {
+  it('zeigt gleichzeitige Suchen einer API als eigene Zeilen mit dem API-Namen nur einmal', () => {
     render(<RunningSearches
       running={[search({ count: 4, requestCount: 1 }), search({ id: 2, cardName: 'Island', count: 6, requestCount: 2 })]}
       pendingByApi={{ Scryfall: 2 }}
     />);
-    const [row] = rowCells();
-    expect(row[1]).toBe('3');
-    expect(row[3]).toBe('Sol Ring +1');
-    expect(row[4]).toBe('10');
+    const [first, second] = rowCells();
+    expect(first[0]).toBe('Scryfall');
+    expect([first[1], first[3], first[4]]).toEqual(['1', 'Sol Ring', '4']);
+    expect(second).toHaveLength(4);
+    expect([second[0], second[2], second[3]]).toEqual(['2', 'Island', '6']);
+    expect(screen.getByText('Scryfall')).toHaveAttribute('rowspan', '2');
   });
 });

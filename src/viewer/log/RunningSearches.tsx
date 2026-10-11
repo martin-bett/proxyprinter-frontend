@@ -11,13 +11,13 @@ interface RunningSearchesProps {
   pendingByApi: Record<string, number>;
 }
 
-interface ApiRow {
+interface ApiGroup {
   configName: string;
   searches: RunningSearch[];
 }
 
-// Eine Zeile je API-Config, solange sie noch offene Suchen hat (auch wartende ohne Ergebnis)
-export function toApiRows(running: RunningSearch[], pendingByApi: Record<string, number>): ApiRow[] {
+// Eine Gruppe je API-Config, solange sie noch offene Suchen hat (auch wartende ohne laufende Suche)
+export function toApiGroups(running: RunningSearch[], pendingByApi: Record<string, number>): ApiGroup[] {
   return Object.keys(pendingByApi).map(configName => ({
     configName,
     searches: running.filter(search => search.configName === configName),
@@ -26,11 +26,11 @@ export function toApiRows(running: RunningSearch[], pendingByApi: Record<string,
 
 export default function RunningSearches({ running, pendingByApi }: RunningSearchesProps) {
   const { t } = useTranslation();
-  const rows = toApiRows(running, pendingByApi);
+  const groups = toApiGroups(running, pendingByApi);
   const [now, setNow] = useState(() => performance.now());
 
   // Dauer läuft live mit, solange gesucht wird
-  const active = rows.length > 0;
+  const active = groups.length > 0;
   useEffect(() => {
     if (!active) return;
     setNow(performance.now());
@@ -60,25 +60,31 @@ export default function RunningSearches({ running, pendingByApi }: RunningSearch
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ configName, searches }) => {
-            const first = searches[0];
-            // Mehrere gleichzeitige Suchen einer API: Werte summiert, Dauer der ältesten
-            const requests = searches.reduce((sum, search) => sum + search.requestCount, 0);
-            const count = searches.reduce((sum, search) => sum + search.count, 0);
-            const startedAt = Math.min(...searches.map(search => search.startedAt));
-            const names = searches.map(search => search.cardName).join(', ');
-            return (
-              <tr key={configName} className="search-log-row">
-                <td className="search-log-cell-api" title={configName}>{configName}</td>
-                <td className="search-log-cell-number">{first ? requests : '–'}</td>
-                <td className="search-log-cell-number">{first ? formatDuration(Math.max(0, now - startedAt)) : '–'}</td>
-                <td className="search-log-cell-name" title={names}>
-                  {first ? first.cardName : '–'}
-                  {searches.length > 1 && <span className="search-log-more"> {t('log.running.more', { count: searches.length - 1 })}</span>}
-                </td>
-                <td className="search-log-cell-number">{first ? count : '–'}</td>
-              </tr>
+          {groups.map(({ configName, searches }) => {
+            // Je Suche eine Zeile; der API-Name steht nur einmal und überspannt die Gruppe
+            const apiCell = (rowSpan: number) => (
+              <td className="search-log-cell-api search-log-group-api" rowSpan={rowSpan} title={configName}>{configName}</td>
             );
+            if (searches.length === 0) {
+              return (
+                <tr key={configName} className="search-log-row search-log-group-start">
+                  {apiCell(1)}
+                  <td className="search-log-cell-number">–</td>
+                  <td className="search-log-cell-number">–</td>
+                  <td className="search-log-cell-name">–</td>
+                  <td className="search-log-cell-number">–</td>
+                </tr>
+              );
+            }
+            return searches.map((search, index) => (
+              <tr key={search.id} className={`search-log-row ${index === 0 ? 'search-log-group-start' : ''}`}>
+                {index === 0 && apiCell(searches.length)}
+                <td className="search-log-cell-number">{search.requestCount}</td>
+                <td className="search-log-cell-number">{formatDuration(Math.max(0, now - search.startedAt))}</td>
+                <td className="search-log-cell-name" title={search.cardName}>{search.cardName}</td>
+                <td className="search-log-cell-number">{search.count}</td>
+              </tr>
+            ));
           })}
         </tbody>
       </table>

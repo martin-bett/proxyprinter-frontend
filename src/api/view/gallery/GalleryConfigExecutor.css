@@ -1,0 +1,45 @@
+/* Reiter "Run" der Gallery-Config: Hinweis, Eingaben, Execute */
+.gallery-run {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gallery-run-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.gallery-run-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gallery-run-label {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.gallery-run-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.gallery-run-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.gallery-run .action-button {
+  margin: 0;
+}

@@ -114,7 +114,8 @@
     "publish": "Veröffentlichen",
     "unpublish": "Zurückziehen",
     "copyConfig": "Config kopieren",
-    "loginToEdit": "Anmelden (Bubble oben rechts), um eigene Configs anzulegen, zu kopieren und zu bearbeiten."
+    "loginToEdit": "Anmelden (Bubble oben rechts), um eigene Configs anzulegen, zu kopieren und zu bearbeiten.",
+    "operationFailed": "Aktion fehlgeschlagen (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -159,7 +160,8 @@
       "imageUrlPattern": "Bild-URL-Muster",
       "imageUrlReplacement": "Bild-URL-Ersetzung",
       "namePattern": "Namensmuster",
-      "nameReplacement": "Namensersetzung"
+      "nameReplacement": "Namensersetzung",
+      "hint": "Hinweis"
     },
     "titles": {
       "parameterMap": "Jeder Eintrag wird ein Eingabefeld. Leer lassen, wenn die Quelle keine Eingabe braucht",
@@ -169,11 +171,19 @@
       "imageUrlPattern": "Regex auf die gelesene Bild-URL. Passt sie nicht, wird der Eintrag verworfen (z. B. Videos, Unterordner)",
       "imageUrlReplacement": "Ersetzung für das Muster, Gruppen als $1, z. B. https://i.redd.it/$1",
       "namePattern": "Regex auf den gelesenen Namen, z. B. \\.\\w+$ für die Dateiendung",
-      "nameReplacement": "Ersetzung für das Muster, leer = entfernen"
+      "nameReplacement": "Ersetzung für das Muster, leer = entfernen",
+      "hint": "Kurze Anleitung im Reiter Run, z. B. was einzufügen ist. In beliebiger Sprache; der Server übersetzt sie beim Speichern in die UI-Sprachen"
+    },
+    "tabs": {
+      "run": "Ausführen",
+      "settings": "Einstellungen"
     },
     "executor": {
       "pasteLink": "Link einfügen (oder den ganzen Seitenquelltext)",
-      "execute": "Ausführen"
+      "execute": "Ausführen",
+      "hint": "Lädt alle Bilder einer Galerie (z. B. ein Reddit-Post oder ein Album) als Kartenbilder zur Auswahl. Link zur Galerie einfügen und auf Ausführen klicken.",
+      "hintNoInput": "Diese Galerie braucht keine Eingabe. Ausführen lädt ihre Bilder als Kartenbilder zur Auswahl.",
+      "selectGallery": "Oben eine Galerie auswählen, um sie auszuführen."
     },
     "noImages": "Keine Bilder gefunden."
   },
@@ -237,13 +247,19 @@
       "height": "Höhe: ",
       "verticalMargin": "Vertikaler Rand: ",
       "horizontalMargin": "Horizontaler Rand: ",
+      "tenthMm": "Zehntelmillimeter",
       "maxDpi": "Max. DPI: ",
+      "pageLandscape": "Blatt quer",
+      "cardsLandscape": "Karten quer",
       "cutlines": "Schnittlinien",
       "lineThickness": "Linienstärke: ",
       "cutLineColor": "Schnittlinienfarbe: ",
       "corners": "Ecken",
       "detectBorderColor": "Randfarbe erkennen",
       "cornerColor": "Eckenfarbe: ",
+      "cornerSize": "Eckengröße (mm): ",
+      "cornerSizeAutomatic": "Wie echte Karten",
+      "cornerSizeHint": "Radius der abgerundeten Ecken in mm. Automatisch: wie bei echten Karten (1/8 Zoll bei 88,9 mm), passend zur Kartenhöhe.",
       "ok": "OK",
       "email": {
         "title": "E-Mail-Zustellung",
@@ -371,8 +387,10 @@
       "matches": "Treffer"
     },
     "running": {
-      "title": "Laufende Suchen",
-      "more": "+{{count}}"
+      "title": "Laufend"
+    },
+    "history": {
+      "title": "Verlauf"
     }
   },
   "deckImport": {
@@ -629,7 +647,8 @@
       "sources": "Diese Website lädt Kartenbilder und Informationen aus öffentlichen Quellen und APIs Dritter. Für die Inhalte dieser Quellen übernehme ich keine Verantwortung. Es wird kein Urheberrecht und kein Eigentum an den Artworks beansprucht, alle Rechte verbleiben bei den jeweiligen Inhabern.",
       "noncommercial": "Dieses Projekt ist nicht kommerziell und nur für den persönlichen, schulischen oder Forschungsgebrauch gedacht. Mit der Nutzung dieser Seite wird kein Gewinn erzielt.",
       "accept": "Mit dem Fortfahren wird dieser Haftungsausschluss zur Kenntnis genommen und akzeptiert.",
-      "understand": "Verstanden"
+      "understand": "Verstanden",
+      "operators": "Betreiber einer Quelle können ihre Seite sperren:"
     },
     "participate": "Mitmachen",
     "donate": "Spenden"
@@ -974,6 +993,16 @@
     },
     "auth": {
       "loginRequired": "Anmeldung erforderlich."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} ist auf Wunsch des Betreibers gesperrt.",
+      "invalidHost": "Domain (example.com) oder IP-Adresse eingeben.",
+      "mailNeedsDomain": "Die Bestätigung per Mail braucht eine Domain. Für eine IP-Adresse die Datei nutzen.",
+      "invalidMailbox": "Unbekanntes Postfach.",
+      "mailDisabled": "Mailversand ist gerade nicht verfügbar. Stattdessen DNS-Eintrag oder Datei nutzen.",
+      "rateLimited": "Zu viele Anfragen. Später erneut versuchen.",
+      "tokenInvalid": "Dieser Link oder Token ist unbekannt oder abgelaufen.",
+      "notVerified": "Weder der DNS-Eintrag noch die Datei von {{host}} enthält den Token bisher."
     }
   },
   "account": {
@@ -1024,5 +1053,35 @@
       "decksTotal_one": "{{number}} Deck insgesamt",
       "decksTotal_other": "{{number}} Decks insgesamt"
     }
+  },
+  "optOut": {
+    "open": "Seite als Quelle sperren",
+    "title": "Seite als Quelle sperren",
+    "intro": "Betreiber einer Seite können sie hier als Quelle sperren. Proxyprinter lädt dann nichts mehr von ihr, und Quell-Configs, die sie nutzen, werden nicht mehr angeboten. Der Nachweis läuft über einen Mail-Link oder einen DNS-Eintrag bzw. eine Datei.",
+    "host": "Domain oder IP",
+    "subdomains": "Eine Domain sperrt auch alle ihre Subdomains.",
+    "methodMail": "Bestätigungsmail",
+    "methodMailHint": "Ein Link geht an eine Standardadresse der Domain.",
+    "mailUnavailable": "Gerade nicht verfügbar, stattdessen DNS-Eintrag oder Datei nutzen.",
+    "mailbox": "Postfach",
+    "methodChallenge": "DNS-Eintrag oder Datei",
+    "methodChallengeHint": "Einen Token auf der Domain hinterlegen und dann prüfen.",
+    "sendMail": "Bestätigungsmail senden",
+    "getToken": "Token anfordern",
+    "challengeIntro": "Für {{host}} eines der folgenden einrichten und dann prüfen.",
+    "dnsTitle": "DNS-Eintrag",
+    "dnsName": "Name",
+    "dnsType": "Typ",
+    "dnsValue": "Wert",
+    "fileTitle": "Datei",
+    "fileTitleOr": "Oder Datei",
+    "fileUrl": "URL",
+    "fileContent": "Inhalt",
+    "challengeValidity": "Der Token gilt 7 Tage. DNS-Änderungen können etwas dauern, bis sie sichtbar sind.",
+    "back": "Zurück",
+    "check": "Jetzt prüfen",
+    "checking": "Bestätigungslink wird geprüft…",
+    "mailSent": "Ein Bestätigungslink ging an {{email}}. Sobald er geöffnet wird, ist {{host}} gesperrt.",
+    "blocked": "{{host}} ist jetzt als Quelle gesperrt."
   }
 }

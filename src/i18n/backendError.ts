@@ -13,3 +13,14 @@ export const backendErrorText = (body: unknown): string => {
   }
   return typeof error === 'string' ? error : '';
 };
+
+/** Text for a failed response: the backend's error body if it has one, else `fallback` (e.g. with the HTTP status). */
+export const responseErrorText = async (response: Response, fallback: string): Promise<string> => {
+  try {
+    const text = backendErrorText(await response.json());
+    if (text) return text;
+  } catch {
+    // kein JSON
+  }
+  return fallback;
+};

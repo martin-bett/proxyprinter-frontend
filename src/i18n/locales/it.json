@@ -114,7 +114,8 @@
     "publish": "Pubblica",
     "unpublish": "Ritira",
     "copyConfig": "Copia config",
-    "loginToEdit": "Accesso (bolla in alto a destra) per creare, copiare e modificare config proprie."
+    "loginToEdit": "Accesso (bolla in alto a destra) per creare, copiare e modificare config proprie.",
+    "operationFailed": "Azione non riuscita (HTTP {{status}})."
   },
   "apiConfig": {
     "fields": {
@@ -159,7 +160,8 @@
       "imageUrlPattern": "Schema URL immagine",
       "imageUrlReplacement": "Sostituzione URL immagine",
       "namePattern": "Schema nome",
-      "nameReplacement": "Sostituzione nome"
+      "nameReplacement": "Sostituzione nome",
+      "hint": "Suggerimento"
     },
     "titles": {
       "parameterMap": "Ogni voce diventa un campo di input. Lasciare vuoto se la fonte non richiede input",
@@ -169,11 +171,19 @@
       "imageUrlPattern": "Regex sull'URL immagine letto. Se non corrisponde, la voce viene scartata (ad es. video, sottocartelle)",
       "imageUrlReplacement": "Sostituzione per lo schema, gruppi come $1, ad es. https://i.redd.it/$1",
       "namePattern": "Regex sul nome letto, ad es. \\.\\w+$ per l'estensione del file",
-      "nameReplacement": "Sostituzione per lo schema, vuoto = rimuovi"
+      "nameReplacement": "Sostituzione per lo schema, vuoto = rimuovi",
+      "hint": "Brevi istruzioni nella scheda Run, ad es. cosa incollare. In qualsiasi lingua; il server le traduce nelle lingue dell’interfaccia al salvataggio"
+    },
+    "tabs": {
+      "run": "Esegui",
+      "settings": "Impostazioni"
     },
     "executor": {
       "pasteLink": "Incollare il link (o l'intero sorgente della pagina)",
-      "execute": "Esegui"
+      "execute": "Esegui",
+      "hint": "Carica tutte le immagini di una galleria (ad es. un post Reddit o un album) come illustrazioni delle carte da scegliere. Incollare il link della galleria e cliccare su Esegui.",
+      "hintNoInput": "Questa galleria non richiede input. Esegui carica le sue immagini come illustrazioni delle carte da scegliere.",
+      "selectGallery": "Selezionare una galleria qui sopra per eseguirla."
     },
     "noImages": "Nessuna immagine trovata."
   },
@@ -237,13 +247,19 @@
       "height": "Altezza: ",
       "verticalMargin": "Margine verticale: ",
       "horizontalMargin": "Margine orizzontale: ",
+      "tenthMm": "Decimi di millimetro",
       "maxDpi": "DPI max: ",
+      "pageLandscape": "Pagina orizzontale",
+      "cardsLandscape": "Carte orizzontali",
       "cutlines": "Linee di taglio",
       "lineThickness": "Spessore linea: ",
       "cutLineColor": "Colore linea di taglio: ",
       "corners": "Angoli",
       "detectBorderColor": "Rileva colore del bordo",
       "cornerColor": "Colore angoli: ",
+      "cornerSize": "Dimensione angoli (mm): ",
+      "cornerSizeAutomatic": "Come le carte reali",
+      "cornerSizeHint": "Raggio degli angoli arrotondati in mm. Automatico: come nelle carte reali (1/8 di pollice a 88,9 mm), in base all'altezza della carta.",
       "ok": "Ok",
       "email": {
         "title": "Invio per e-mail",
@@ -371,8 +387,10 @@
       "matches": "Risultati"
     },
     "running": {
-      "title": "Ricerche in corso",
-      "more": "+{{count}}"
+      "title": "In corso"
+    },
+    "history": {
+      "title": "Cronologia"
     }
   },
   "deckImport": {
@@ -629,7 +647,8 @@
       "sources": "Questo sito carica immagini e informazioni delle carte da fonti pubbliche e API di terzi. Il gestore non è responsabile dei contenuti forniti da queste fonti. Non viene rivendicato alcun copyright o proprietà sulle illustrazioni, tutti i diritti restano ai rispettivi titolari.",
       "noncommercial": "Questo progetto è senza scopo di lucro ed è destinato esclusivamente a uso personale, didattico o di ricerca. L'uso del sito non genera alcun profitto.",
       "accept": "Proseguendo, questa avvertenza si considera letta e accettata.",
-      "understand": "Ho capito"
+      "understand": "Ho capito",
+      "operators": "I gestori di una fonte possono bloccare il proprio sito:"
     },
     "participate": "Partecipa",
     "donate": "Dona"
@@ -974,6 +993,16 @@
     },
     "auth": {
       "loginRequired": "Accesso richiesto."
+    },
+    "blocklist": {
+      "blockedHost": "{{host}} è bloccato su richiesta del gestore.",
+      "invalidHost": "Inserire un dominio (example.com) o un indirizzo IP.",
+      "mailNeedsDomain": "La conferma via mail richiede un dominio. Per un indirizzo IP usare il file.",
+      "invalidMailbox": "Casella sconosciuta.",
+      "mailDisabled": "L'invio di mail non è disponibile al momento. Usare il record DNS o il file.",
+      "rateLimited": "Troppe richieste. Riprovare più tardi.",
+      "tokenInvalid": "Questo link o token è sconosciuto o scaduto.",
+      "notVerified": "Né il record DNS né il file di {{host}} contengono ancora il token."
     }
   },
   "account": {
@@ -1024,5 +1053,35 @@
       "decksTotal_one": "{{number}} mazzo in totale",
       "decksTotal_other": "{{number}} mazzi in totale"
     }
+  },
+  "optOut": {
+    "open": "Bloccare un sito come fonte",
+    "title": "Bloccare un sito come fonte",
+    "intro": "I gestori di un sito possono bloccarlo qui come fonte. Proxyprinter non carica più nulla da esso e le config di fonte che lo usano non vengono più offerte. La proprietà si conferma con un link via mail oppure con un record DNS o un file.",
+    "host": "Dominio o IP",
+    "subdomains": "Un dominio blocca anche tutti i suoi sottodomini.",
+    "methodMail": "Mail di conferma",
+    "methodMailHint": "Un link viene inviato a un indirizzo standard del dominio.",
+    "mailUnavailable": "Non disponibile al momento, usare il record DNS o il file.",
+    "mailbox": "Casella",
+    "methodChallenge": "Record DNS o file",
+    "methodChallengeHint": "Inserire un token sul dominio e poi verificare.",
+    "sendMail": "Invia mail di conferma",
+    "getToken": "Ottieni token",
+    "challengeIntro": "Configurare una delle seguenti opzioni per {{host}} e poi verificare.",
+    "dnsTitle": "Record DNS",
+    "dnsName": "Nome",
+    "dnsType": "Tipo",
+    "dnsValue": "Valore",
+    "fileTitle": "File",
+    "fileTitleOr": "Oppure file",
+    "fileUrl": "URL",
+    "fileContent": "Contenuto",
+    "challengeValidity": "Il token è valido 7 giorni. Le modifiche DNS possono richiedere tempo per propagarsi.",
+    "back": "Indietro",
+    "check": "Verifica ora",
+    "checking": "Verifica del link di conferma…",
+    "mailSent": "Un link di conferma è stato inviato a {{email}}. Appena viene aperto, {{host}} è bloccato.",
+    "blocked": "{{host}} è ora bloccato come fonte."
   }
 }
