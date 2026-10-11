@@ -10,7 +10,8 @@ import AccountDialog from '../viewer/account/AccountDialog';
 import '../viewer/account/AccountDialog.css';
 import { handleLoginLink, refreshAuth, useAuth } from '../service/auth/auth';
 import {
-  AdminCache, AdminLoadResult, AdminSetting, clearCache, formatBytes, loadAdmin, resetSetting, saveSetting,
+  AdminCache, AdminLoadResult, AdminSetting, AdminUsage, clearCache, formatBytes, loadAdmin, resetSetting, saveSetting,
+  USAGE_METRICS,
 } from '../service/admin/adminApi';
 import './AdminPage.css';
 
@@ -156,6 +157,37 @@ function CacheRow({ cache, settings, onCleared }: CacheRowProps) {
   );
 }
 
+function UsageTable({ usage }: { usage: AdminUsage }) {
+  const { t, i18n } = useTranslation();
+  const number = (value: number | undefined) => (value ?? 0).toLocaleString(i18n.language);
+  // Tag als UTC lesen, sonst rutscht er westlich von Greenwich auf den Vortag
+  const date = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString(i18n.language, { timeZone: 'UTC' });
+  return (
+    <div className="admin-scroll">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>{t('admin.usage.day')}</th>
+            {USAGE_METRICS.map(m => <th key={m} className="admin-number">{t(`admin.usage.${m}`)}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="admin-total">
+            <th scope="row">{t('admin.usage.total')}</th>
+            {USAGE_METRICS.map(m => <td key={m} className="admin-number">{number(usage.totals[m])}</td>)}
+          </tr>
+          {usage.days.map(d => (
+            <tr key={d.day}>
+              <th scope="row">{date(d.day)}</th>
+              {USAGE_METRICS.map(m => <td key={m} className="admin-number">{number(d.counts[m])}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { t } = useTranslation();
   const auth = useAuth();
@@ -201,6 +233,16 @@ export default function AdminPage() {
       )}
       {result?.status === 'ok' && (
         <>
+          {result.data.usage && (
+            <section className="admin-section">
+              <div className="admin-section-head">
+                <h2>{t('admin.usageTitle')}</h2>
+                <ActionButton icon={<RefreshIcon />} onClick={reload}>{t('admin.refresh')}</ActionButton>
+              </div>
+              <p className="admin-hint">{t('admin.usageHint')}</p>
+              <UsageTable usage={result.data.usage} />
+            </section>
+          )}
           <section className="admin-section">
             <h2>{t('admin.settingsTitle')}</h2>
             <p className="admin-hint">{t('admin.settingsHint')}</p>

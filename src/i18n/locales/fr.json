@@ -1100,6 +1100,18 @@
     "loginNeeded": "La page d'administration nécessite un compte administrateur. Connexion ci-dessous.",
     "forbidden": "{{email}} n'a pas de droits d'administration.",
     "loadFailed": "Impossible de charger les données d'administration.",
+    "usageTitle": "Utilisation",
+    "usageHint": "Comptage par jour (UTC), 30 derniers jours. Seuls des totaux sont enregistrés : aucune adresse IP ni autre donnée personnelle. Les visiteurs sont comptés une fois par jour et par navigateur.",
+    "usage": {
+      "day": "Jour",
+      "total": "Total",
+      "pageViews": "Pages vues",
+      "visitors": "Visiteurs",
+      "searchTerms": "Termes recherchés",
+      "decks": "PDF",
+      "deckImports": "Decks importés",
+      "logins": "Connexions"
+    },
     "settingsTitle": "Durée des caches",
     "settingsHint": "Les modifications s'appliquent immédiatement et remplacent la configuration du serveur jusqu'à leur réinitialisation.",
     "defaultValue": "Valeur du serveur : {{value}} {{unit}}",

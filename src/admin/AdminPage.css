@@ -18,3 +18,4 @@
 .admin-hint { display: block; font-size: 0.85em; color: var(--text-muted); font-weight: 400; }
 .admin-error { display: block; color: var(--danger); font-size: 0.9em; }
 .admin-ok { display: block; color: var(--success); font-size: 0.9em; }
+.admin-total th, .admin-total td { font-weight: 600 !important; }

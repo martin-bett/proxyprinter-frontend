@@ -1100,6 +1100,18 @@
     "loginNeeded": "The admin page needs an admin account. Log in below.",
     "forbidden": "{{email}} has no admin rights.",
     "loadFailed": "Admin data could not be loaded.",
+    "usageTitle": "Usage",
+    "usageHint": "Counts per day (UTC), last 30 days. Only totals are stored: no IP addresses or other personal data. Visitors are counted once per day and browser.",
+    "usage": {
+      "day": "Day",
+      "total": "Total",
+      "pageViews": "Page views",
+      "visitors": "Visitors",
+      "searchTerms": "Searched terms",
+      "decks": "PDFs",
+      "deckImports": "Deck imports",
+      "logins": "Logins"
+    },
     "settingsTitle": "Cache lifetimes",
     "settingsHint": "Changes apply immediately and override the server configuration until reset.",
     "defaultValue": "Server default: {{value}} {{unit}}",

@@ -1081,6 +1081,18 @@
     "loginNeeded": "管理ページには管理者アカウントが必要です。下でログイン。",
     "forbidden": "{{email}} には管理者権限がありません。",
     "loadFailed": "管理データを読み込めませんでした。",
+    "usageTitle": "利用状況",
+    "usageHint": "日別（UTC）、過去30日間の集計。保存されるのは合計値のみで、IPアドレスなどの個人データは保存されません。訪問者は1日・ブラウザごとに1回数えられます。",
+    "usage": {
+      "day": "日付",
+      "total": "合計",
+      "pageViews": "ページビュー",
+      "visitors": "訪問者",
+      "searchTerms": "検索語",
+      "decks": "PDF",
+      "deckImports": "デッキのインポート",
+      "logins": "ログイン"
+    },
     "settingsTitle": "キャッシュの保持期間",
     "settingsHint": "変更はすぐに反映され、リセットするまでサーバー設定より優先されます。",
     "defaultValue": "サーバー既定値: {{value}} {{unit}}",

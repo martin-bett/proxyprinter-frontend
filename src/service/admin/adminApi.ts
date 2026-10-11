@@ -1,5 +1,5 @@
 /**
- * Admin-Seite (/admin): Laufzeiten der Backend-Caches und "Jetzt leeren" über /api/admin.
+ * Admin-Seite (/admin): Nutzungszähler, Laufzeiten der Backend-Caches und "Jetzt leeren" über /api/admin.
  * Nur für Konten, die das Backend als Admin kennt (ADMIN_EMAILS auf dem Server).
  */
 import { responseErrorText } from '../../i18n/backendError';
@@ -26,9 +26,27 @@ export interface AdminCache {
   setting: string | null;
 }
 
+/** Kennzahlen der Nutzung, Schlüssel wie UsageMetric im Backend */
+export const USAGE_METRICS = ['pageViews', 'visitors', 'searchTerms', 'decks', 'deckImports', 'logins'] as const;
+export type UsageMetric = (typeof USAGE_METRICS)[number];
+
+export interface UsageDay {
+  /** ISO-Datum (UTC), z. B. 2026-10-11 */
+  day: string;
+  counts: Partial<Record<UsageMetric, number>>;
+}
+
+export interface AdminUsage {
+  /** Neuester Tag zuerst */
+  days: UsageDay[];
+  totals: Partial<Record<UsageMetric, number>>;
+}
+
 export interface AdminOverview {
   settings: AdminSetting[];
   caches: AdminCache[];
+  /** Fehlt bei älteren Backends */
+  usage?: AdminUsage;
 }
 
 export type AdminLoadResult =

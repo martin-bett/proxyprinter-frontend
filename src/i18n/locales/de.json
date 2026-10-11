@@ -1100,6 +1100,18 @@
     "loginNeeded": "Die Admin-Seite braucht ein Admin-Konto. Anmeldung unten.",
     "forbidden": "{{email}} hat keine Admin-Rechte.",
     "loadFailed": "Admin-Daten konnten nicht geladen werden.",
+    "usageTitle": "Nutzung",
+    "usageHint": "Zählung pro Tag (UTC), letzte 30 Tage. Gespeichert werden nur Summen, keine IP-Adressen oder anderen personenbezogenen Daten. Besucher zählen einmal pro Tag und Browser.",
+    "usage": {
+      "day": "Tag",
+      "total": "Gesamt",
+      "pageViews": "Seitenaufrufe",
+      "visitors": "Besucher",
+      "searchTerms": "Gesuchte Begriffe",
+      "decks": "PDFs",
+      "deckImports": "Deck-Importe",
+      "logins": "Logins"
+    },
     "settingsTitle": "Cache-Laufzeiten",
     "settingsHint": "Änderungen gelten sofort und gehen der Server-Konfiguration vor, bis sie zurückgesetzt werden.",
     "defaultValue": "Server-Standard: {{value}} {{unit}}",

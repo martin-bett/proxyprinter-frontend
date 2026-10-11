@@ -73,6 +73,30 @@ describe('AdminPage', () => {
     expect(await screen.findByText('12 entries deleted.')).toBeInTheDocument();
   });
 
+  it('shows usage per day with totals and hides it for older backends', async () => {
+    serve({
+      '/api/auth/me': me,
+      '/api/admin': { body: { ...overview.body, usage: {
+        days: [{ day: '2026-10-11', counts: { pageViews: 1234, visitors: 56 } }, { day: '2026-10-10', counts: {} }],
+        totals: { pageViews: 99999, decks: 7 },
+      } } },
+    });
+    const { unmount } = render(<AdminPage />);
+
+    expect(await screen.findByText('Usage')).toBeInTheDocument();
+    expect(screen.getByText('Page views')).toBeInTheDocument();
+    expect(screen.getByText('99,999')).toBeInTheDocument();
+    expect(screen.getByText('1,234')).toBeInTheDocument();
+    expect(screen.getByText(new Date(Date.UTC(2026, 9, 11)).toLocaleDateString('en', { timeZone: 'UTC' }))).toBeInTheDocument();
+    unmount();
+
+    resetAuthForTests();
+    serve({ '/api/auth/me': me, '/api/admin': overview });
+    render(<AdminPage />);
+    expect(await screen.findByText('Caches')).toBeInTheDocument();
+    expect(screen.queryByText('Usage')).not.toBeInTheDocument();
+  });
+
   it('asks for login without a session and says so for other accounts', async () => {
     serve({ '/api/auth/me': { body: { loginEnabled: true } }, '/api/admin': { status: 401, body: {} } });
     const { unmount } = render(<AdminPage />);
