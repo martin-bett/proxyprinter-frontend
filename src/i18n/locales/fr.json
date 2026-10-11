@@ -288,6 +288,8 @@
     "deleteAria": "Supprimer {{label}}",
     "storedInBrowser": "Stocké dans ce navigateur · {{size}}",
     "deleteAll": "Tout supprimer",
+    "scrollUp": "Afficher le Snapshot précédent",
+    "scrollDown": "Afficher le Snapshot suivant",
     "saveFailed": "Le Snapshot n'a pas pu être enregistré.",
     "customCardsGone_one": "{{count}} carte perso n'est plus disponible sur le serveur, à téléverser de nouveau.",
     "customCardsGone_other": "{{count}} cartes perso ne sont plus disponibles sur le serveur, à téléverser de nouveau.",

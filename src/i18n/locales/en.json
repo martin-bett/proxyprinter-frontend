@@ -288,6 +288,8 @@
     "deleteAria": "Delete {{label}}",
     "storedInBrowser": "Stored in this browser · {{size}}",
     "deleteAll": "Delete all",
+    "scrollUp": "Show previous snapshot",
+    "scrollDown": "Show next snapshot",
     "saveFailed": "The snapshot could not be saved.",
     "customCardsGone_one": "{{count}} custom card is no longer available on the server, please upload again.",
     "customCardsGone_other": "{{count}} custom cards are no longer available on the server, please upload again.",
