@@ -286,6 +286,8 @@
     "deleteAria": "{{label}}を削除",
     "storedInBrowser": "このブラウザーに保存済み · {{size}}",
     "deleteAll": "すべて削除",
+    "scrollUp": "前のスナップショットを表示",
+    "scrollDown": "次のスナップショットを表示",
     "saveFailed": "スナップショットを保存できませんでした。",
     "customCardsGone_other": "カスタムカード{{count}}枚がサーバー上に存在しません。再度アップロードしてください。",
     "pdfLinkRemoved": "このPDFへのリンクは削除されます。",

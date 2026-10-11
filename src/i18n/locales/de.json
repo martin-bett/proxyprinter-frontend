@@ -288,6 +288,8 @@
     "deleteAria": "{{label}} löschen",
     "storedInBrowser": "In diesem Browser gespeichert · {{size}}",
     "deleteAll": "Alle löschen",
+    "scrollUp": "Vorherigen Snapshot anzeigen",
+    "scrollDown": "Nächsten Snapshot anzeigen",
     "saveFailed": "Der Snapshot konnte nicht gespeichert werden.",
     "customCardsGone_one": "{{count}} eigene Karte ist auf dem Server nicht mehr verfügbar, bitte erneut hochladen.",
     "customCardsGone_other": "{{count}} eigene Karten sind auf dem Server nicht mehr verfügbar, bitte erneut hochladen.",

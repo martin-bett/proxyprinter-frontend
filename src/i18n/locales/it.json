@@ -288,6 +288,8 @@
     "deleteAria": "Elimina {{label}}",
     "storedInBrowser": "Salvato in questo browser · {{size}}",
     "deleteAll": "Elimina tutto",
+    "scrollUp": "Mostra snapshot precedente",
+    "scrollDown": "Mostra snapshot successivo",
     "saveFailed": "Impossibile salvare lo Snapshot.",
     "customCardsGone_one": "{{count}} carta personalizzata non è più disponibile sul server, caricarla di nuovo.",
     "customCardsGone_other": "{{count}} carte personalizzate non sono più disponibili sul server, caricarle di nuovo.",

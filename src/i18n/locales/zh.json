@@ -286,6 +286,8 @@
     "deleteAria": "删除 {{label}}",
     "storedInBrowser": "保存在此浏览器 · {{size}}",
     "deleteAll": "全部删除",
+    "scrollUp": "显示上一个快照",
+    "scrollDown": "显示下一个快照",
     "saveFailed": "无法保存快照。",
     "customCardsGone_other": "{{count}} 张自定义卡牌已不在服务器上，请重新上传。",
     "pdfLinkRemoved": "其 PDF 链接将被移除。",

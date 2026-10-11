@@ -138,3 +138,34 @@
 .snapshot-row.is-active .snapshot-label {
   font-weight: 600;
 }
+
+/* Flacher Blätter-Knopf über/unter der Liste, wenn mehr Snapshots da sind als sichtbar */
+.snapshot-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 1.1rem;
+  margin: 0 0 6px 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.snapshot-page svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.snapshot-page:hover {
+  color: var(--accent);
+}
+
+.snapshot-page:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
