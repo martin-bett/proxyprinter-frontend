@@ -520,7 +520,9 @@
       "language": "语言：",
       "imageSize": "图片尺寸：",
       "crop": "裁剪：",
-      "cropValue": "{{width}} × {{height}}，起点 {{x}}, {{y}}"
+      "cropValue": "{{width}} × {{height}}，起点 {{x}}, {{y}}",
+      "download": "下载图片",
+      "downloadHint": "以完整分辨率保存原图，例如用于个人收藏"
     },
     "iconBar": {
       "viewFiltering": "视图筛选"
