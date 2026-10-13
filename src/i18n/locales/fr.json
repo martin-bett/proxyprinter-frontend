@@ -530,7 +530,9 @@
       "language": "Langue :",
       "imageSize": "Taille de l'image :",
       "crop": "Recadrage :",
-      "cropValue": "{{width}} × {{height}} à partir de {{x}}, {{y}}"
+      "cropValue": "{{width}} × {{height}} à partir de {{x}}, {{y}}",
+      "download": "Télécharger l'image",
+      "downloadHint": "Enregistrer l'image originale en pleine résolution, p. ex. pour une collection personnelle"
     },
     "iconBar": {
       "viewFiltering": "Filtrage de l'affichage"

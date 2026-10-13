@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Tab, Tabs } from "@mui/material";
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CropIcon from '@mui/icons-material/Crop';
+import DownloadIcon from '@mui/icons-material/Download';
+import IconButton from '@mui/material/IconButton';
 import { CropSettings } from "../service/ApiFactory";
 import { CardResult } from "../api/types/types";
 import CropMask from "../viewer/grid/crop/CropMask";
 import { fetchImageViaProxy, imageLoaderService } from "../service/cache/ImageLoaderService";
 import { useTranslation } from 'react-i18next';
+import { downloadFileName, saveBlob } from "./imageDownload";
 
 interface CropImageOverlayProps {
   selectedImage: CardResult | null;
@@ -80,9 +83,40 @@ const CropImageOverlay: React.FC<CropImageOverlayProps> = ({ selectedImage, card
   const hasCrop = !!crop && (crop.width || 0) > 0 && (crop.height || 0) > 0;
   const maxImageHeight = Math.round(window.innerHeight * 0.48);
 
+  const [downloading, setDownloading] = useState(false);
+  // Original in voller Auflösung speichern: aus dem Cache, sonst über den Proxy; klappt beides nicht, im neuen Tab öffnen
+  const handleDownload = async () => {
+    if (!selectedImage?.imageUrl) return;
+    setDownloading(true);
+    try {
+      const cached = await imageLoaderService.getCachedBlobs(selectedImage);
+      const blob = cached?.blob || (await fetchImageViaProxy(selectedImage.imageUrl));
+      saveBlob(blob, downloadFileName(selectedImage, blob.type));
+    } catch (error) {
+      console.error("Image could not be downloaded:", error);
+      window.open(selectedImage.imageUrl, '_blank', 'noopener');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="crop-image-overlay">
-      <div style={{ fontSize: "small", wordBreak: "break-all" }}>{selectedImage?.imageUrl}</div>
+      <div className="crop-image-header">
+        <div style={{ fontSize: "small", wordBreak: "break-all" }}>{selectedImage?.imageUrl}</div>
+        {selectedImage?.imageUrl && (
+          <IconButton
+            size="small"
+            className="crop-image-download"
+            aria-label={t('container.cropOverlay.download')}
+            title={t('container.cropOverlay.downloadHint')}
+            disabled={downloading}
+            onClick={handleDownload}
+          >
+            <DownloadIcon fontSize="small" />
+          </IconButton>
+        )}
+      </div>
       <Tabs value={tab} onChange={(_, value: OverlayTab) => setTab(value)} variant="fullWidth" className="crop-image-tabs">
         <Tab value="info" icon={<InfoOutlinedIcon fontSize="small" />} iconPosition="start" label={t('common.info')} />
         <Tab value="crop" icon={<CropIcon fontSize="small" />} iconPosition="start" label={t('container.cropOverlay.tabCrop')} disabled={!selectedImage} />

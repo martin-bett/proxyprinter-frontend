@@ -530,7 +530,9 @@
       "language": "Language:",
       "imageSize": "Image size:",
       "crop": "Crop:",
-      "cropValue": "{{width}} × {{height}} from {{x}}, {{y}}"
+      "cropValue": "{{width}} × {{height}} from {{x}}, {{y}}",
+      "download": "Download image",
+      "downloadHint": "Save the original image in full resolution, e.g. for an own collection"
     },
     "iconBar": {
       "viewFiltering": "View Filtering"

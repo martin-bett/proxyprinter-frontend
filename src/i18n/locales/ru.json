@@ -550,7 +550,9 @@
       "language": "Язык:",
       "imageSize": "Размер изображения:",
       "crop": "Кадр:",
-      "cropValue": "{{width}} × {{height}} от {{x}}, {{y}}"
+      "cropValue": "{{width}} × {{height}} от {{x}}, {{y}}",
+      "download": "Скачать изображение",
+      "downloadHint": "Сохранить оригинал в полном разрешении, например для своей коллекции"
     },
     "iconBar": {
       "viewFiltering": "Фильтрация вида"

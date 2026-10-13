@@ -520,7 +520,9 @@
       "language": "言語:",
       "imageSize": "画像サイズ:",
       "crop": "トリミング:",
-      "cropValue": "{{x}}, {{y}}から {{width}} × {{height}}"
+      "cropValue": "{{x}}, {{y}}から {{width}} × {{height}}",
+      "download": "画像をダウンロード",
+      "downloadHint": "元の画像をフル解像度で保存（自分のコレクション用など）"
     },
     "iconBar": {
       "viewFiltering": "表示フィルター"
