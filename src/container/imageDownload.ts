@@ -18,16 +18,25 @@ const extensionOf = (mimeType: string | undefined, imageUrl: string | undefined)
   return 'jpg';
 };
 
-/** Dateiname für ein heruntergeladenes Kartenbild: "Name (SET 123, Quelle, de).jpg" ohne unerlaubte Zeichen. */
+/**
+ * Dateiname für ein heruntergeladenes Kartenbild: "Name [SET 123, Quelle, de].jpg" ohne unerlaubte Zeichen.
+ * Eckige Klammern kommen in Kartennamen nicht vor, so findet cardNameFromFileName den Namen beim Hochladen wieder.
+ */
 export const downloadFileName = (card: Pick<CardResult, 'name' | 'set' | 'setNumber' | 'apiName' | 'languageCode' | 'imageUrl'>, mimeType?: string): string => {
   const setPart = [card.set, card.setNumber].filter(Boolean).join(' ');
   const details = [setPart, card.apiName, card.languageCode].filter(Boolean).join(', ');
-  const base = `${card.name || 'card'}${details ? ` (${details})` : ''}`
+  const base = `${card.name || 'card'}${details ? ` [${details}]` : ''}`
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 150);
   return `${base}.${extensionOf(mimeType, card.imageUrl)}`;
+};
+
+/** Kartenname aus einem hochgeladenen Dateinamen: ohne Endung und ohne den "[…]"-Zusatz aus downloadFileName. */
+export const cardNameFromFileName = (fileName: string): string => {
+  const name = fileName.replace(/\.[a-z0-9]{2,5}$/i, '').replace(/\s*\[[^\]]*\]$/, '').trim();
+  return name || fileName;
 };
 
 /** Startet den Download einer Datei im Browser. */
