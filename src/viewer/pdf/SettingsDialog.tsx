@@ -5,7 +5,7 @@ import { Checkbox, FormControlLabel, Radio, RadioGroup } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
 import { useAuth } from '../../service/auth/auth';
 import { PdfPagePreview, PreviewCard } from './PdfPagePreview';
-import { autoCornerSizeMm, computePageLayout, cornerRadius, REGISTRATION } from './pdfLayout';
+import { autoCornerSizeMm, computePageLayout, cornerRadius, MM_TO_PT, REGISTRATION } from './pdfLayout';
 import { downloadCutFile } from './cutFile';
 import { MmInput } from './MmInput';
 
@@ -270,6 +270,14 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
                 thickness: formatMm(REGISTRATION.thicknessMm),
               })}
             </p>
+            {layout.slots.length > 0 && (
+              <p className="help">
+                {t('pdf.settings.plotter.cutFilePosition', {
+                  x: formatMm(Math.round(layout.slots[0].x / MM_TO_PT * 10) / 10),
+                  y: formatMm(Math.round(layout.slots[0].y / MM_TO_PT * 10) / 10),
+                })}
+              </p>
+            )}
             <button
               className="button is-small"
               disabled={layout.slots.length === 0}

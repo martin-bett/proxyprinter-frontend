@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CropSettings } from '../../service/ApiFactory';
 import { PdfSettings } from './SettingsDialog';
-import { computePageLayout, CORNER_KAPPA, cornerRadius, gridLinePositions, MM_TO_PT, PageLayout, REGISTRATION } from './pdfLayout';
+import { computePageLayout, CORNER_KAPPA, cornerRadius, gridLinePositions, MM_TO_PT, PageLayout, REGISTRATION, registrationInsetsMm } from './pdfLayout';
 
 export interface PreviewCard {
   imageUrl: string;
@@ -164,13 +164,15 @@ const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: num
 /** Passmarken wie RegistrationMarks.draw im Backend (Canvas: Ursprung oben links). */
 const drawRegistrationMarks = (ctx: CanvasRenderingContext2D, layout: PageLayout) => {
   if (!layout.registration) return;
-  const inset = REGISTRATION.insetMm * MM_TO_PT;
+  const landscape = layout.pageWidth > layout.pageHeight;
+  const [l, t, r, b] = registrationInsetsMm(landscape).map(v => v * MM_TO_PT);
   const length = layout.registration.lengthMm * MM_TO_PT;
-  const left = inset;
-  const right = layout.pageWidth - inset;
-  const top = inset;
-  const bottom = layout.pageHeight - inset;
+  const left = l;
+  const right = layout.pageWidth - r;
+  const top = t;
+  const bottom = layout.pageHeight - b;
   const four = layout.registration.style === 'SILHOUETTE_4';
+  const square = REGISTRATION.squareMm * MM_TO_PT;
   ctx.save();
   ctx.strokeStyle = '#000000';
   ctx.fillStyle = '#000000';
@@ -184,15 +186,19 @@ const drawRegistrationMarks = (ctx: CanvasRenderingContext2D, layout: PageLayout
     ctx.lineTo(x, y + dy * length);
     ctx.stroke();
   };
-  if (four) {
-    angle(left, top, 1, 1);
+  if (landscape) {
+    // Quadrat oben links, Winkel oben rechts und unten links (vier Marken: auch unten rechts)
+    if (four) angle(left, top, 1, 1); else ctx.fillRect(left, top, square, square);
+    angle(right, top, -1, 1);
+    angle(left, bottom, 1, -1);
+    if (four) angle(right, bottom, -1, -1);
   } else {
-    const square = REGISTRATION.squareMm * MM_TO_PT;
-    ctx.fillRect(left, top, square, square);
+    // Um 90° gedreht: Quadrat unten links, Winkel oben links und unten rechts (vier Marken: auch oben rechts)
+    if (four) angle(left, bottom, 1, -1); else ctx.fillRect(left, bottom - square, square, square);
+    angle(left, top, 1, 1);
+    angle(right, bottom, -1, -1);
+    if (four) angle(right, top, -1, 1);
   }
-  angle(right, top, -1, 1);
-  angle(left, bottom, 1, -1);
-  if (four) angle(right, bottom, -1, -1);
   ctx.restore();
 };
 

@@ -20,11 +20,11 @@ describe('buildCutDxf', () => {
     expect(p.filter(([c]) => c === '42')).toHaveLength(8 * 4);
     expect(dxf.endsWith('0\r\nEOF\r\n')).toBe(true);
 
-    // Erste Karte links oben: x 21,5 mm, Oberkante 210 - 16,1 mm; Bogen beginnt einen Radius weiter
+    // Erste Karte links oben: x 14 mm (mittig zwischen 10 und 25 mm), Oberkante 210 - 16,1 mm; Bogen beginnt einen Radius weiter
     const xs = p.filter(([c]) => c === '10').map(([, v]) => Number(v)).filter(v => v > 0);
     const r = cornerRadius(layout.cardWidth, layout.cardHeight) / MM_TO_PT;
-    expect(Math.min(...xs)).toBeCloseTo(21.5, 2);
-    expect(xs[0]).toBeCloseTo(21.5 + r, 2);
+    expect(Math.min(...xs)).toBeCloseTo(14, 2);
+    expect(xs[0]).toBeCloseTo(14 + r, 2);
     const ys = p.filter(([c]) => c === '20').map(([, v]) => Number(v)).filter(v => v > 0);
     expect(Math.max(...ys)).toBeCloseTo(210 - 16.1, 2);
   });
@@ -36,6 +36,6 @@ describe('buildCutDxf', () => {
   });
 
   it('names the page, the card count and the Studio mark settings', () => {
-    expect(cutFileName(layout)).toBe('proxyprinter-cut-a4-landscape-8cards-3marks-9mm.dxf');
+    expect(cutFileName(layout)).toBe('proxyprinter-cut-a4-landscape-8cards-3marks-5mm.dxf');
   });
 });

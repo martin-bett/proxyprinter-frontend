@@ -265,9 +265,10 @@
         "threeMarks": "3 repères (CAMEO 3/4/5, Portrait)",
         "fourMarks": "4 repères (CAMEO 5α, CAMEO Pro MK II)",
         "hint": "Pour Print & Cut avec une machine Silhouette. Les coins restent libres pour les repères, donc moins de cartes par page ; pas de lignes de coupe.",
-        "studioValues": "Repères dans Silhouette Studio : marge {{inset}} mm sur les quatre côtés (paramètres avancés : gauche, haut, droite, bas), longueur {{length}} mm, épaisseur {{thickness}} mm",
+        "studioValues": "Silhouette Studio (Print & Cut) : longueur {{length}} mm, épaisseur {{thickness}} mm, marge {{inset}} mm, autres marges inchangées",
+        "cutFilePosition": "Position du fichier de découpe dans Studio : X {{x}} mm, Y {{y}} mm",
         "cutFile": "Fichier de découpe (DXF)",
-        "cutFileHint": "Ouvrir dans Silhouette Studio, tout sélectionner, centrer sur la page, puis découper."
+        "cutFileHint": "Ouvrir dans Silhouette Studio (import DXF « tel quel »), tout sélectionner, grouper, saisir cette position, puis découper."
       },
       "ok": "OK",
       "email": {

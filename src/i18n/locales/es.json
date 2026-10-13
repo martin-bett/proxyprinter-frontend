@@ -265,9 +265,10 @@
         "threeMarks": "3 marcas (CAMEO 3/4/5, Portrait)",
         "fourMarks": "4 marcas (CAMEO 5α, CAMEO Pro MK II)",
         "hint": "Para Print & Cut con una plotter Silhouette. Las esquinas quedan libres para las marcas, por eso caben menos cartas por página; sin líneas de corte.",
-        "studioValues": "Marcas de registro en Silhouette Studio: margen {{inset}} mm en los cuatro lados (ajustes avanzados: izquierda, arriba, derecha, abajo), longitud {{length}} mm, grosor {{thickness}} mm",
+        "studioValues": "Silhouette Studio (Print & Cut): longitud {{length}} mm, grosor {{thickness}} mm, margen {{inset}} mm, resto de márgenes sin cambios",
+        "cutFilePosition": "Posición del archivo de corte en Studio: X {{x}} mm, Y {{y}} mm",
         "cutFile": "Archivo de corte (DXF)",
-        "cutFileHint": "Abrir en Silhouette Studio, seleccionar todo, centrar en la página y cortar."
+        "cutFileHint": "Abrir en Silhouette Studio (importación DXF «tal cual»), seleccionar todo, agrupar, introducir esta posición y cortar."
       },
       "ok": "Ok",
       "email": {
