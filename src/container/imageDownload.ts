@@ -26,7 +26,7 @@ export const downloadFileName = (card: Pick<CardResult, 'name' | 'set' | 'setNum
   const setPart = [card.set, card.setNumber].filter(Boolean).join(' ');
   const details = [setPart, card.apiName, card.languageCode].filter(Boolean).join(', ');
   const base = `${card.name || 'card'}${details ? ` [${details}]` : ''}`
-    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_')
+    .replace(/[\\/:*?"<>|]/g, '_')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 150);
