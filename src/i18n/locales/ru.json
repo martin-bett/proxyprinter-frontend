@@ -267,7 +267,7 @@
         "threeMarks": "3 метки (CAMEO 3/4/5, Portrait)",
         "fourMarks": "4 метки (CAMEO 5α, CAMEO Pro MK II)",
         "hint": "Для Print & Cut на плоттере Silhouette. Углы остаются свободными для меток, поэтому на странице помещается меньше карт; линии реза не печатаются.",
-        "studioValues": "Метки в Silhouette Studio: отступ {{inset}} мм, длина {{length}} мм, толщина {{thickness}} мм",
+        "studioValues": "Метки в Silhouette Studio: отступ {{inset}} мм со всех четырёх сторон (доп. настройки: слева, сверху, справа, снизу), длина {{length}} мм, толщина {{thickness}} мм",
         "cutFile": "Файл резки (DXF)",
         "cutFileHint": "Открыть в Silhouette Studio, выделить всё, выровнять по центру страницы и резать."
       },

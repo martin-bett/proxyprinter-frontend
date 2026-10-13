@@ -264,7 +264,7 @@
         "threeMarks": "3 个标记 (CAMEO 3/4/5, Portrait)",
         "fourMarks": "4 个标记 (CAMEO 5α, CAMEO Pro MK II)",
         "hint": "用于 Silhouette 刻字机的 Print & Cut。四角留给标记，因此每页可放的卡牌较少；不绘制裁切线。",
-        "studioValues": "Silhouette Studio 中的定位标记：边距 {{inset}} mm，长度 {{length}} mm，粗细 {{thickness}} mm",
+        "studioValues": "Silhouette Studio 中的定位标记：四边边距均为 {{inset}} mm（高级设置：左、上、右、下），长度 {{length}} mm，粗细 {{thickness}} mm",
         "cutFile": "切割文件 (DXF)",
         "cutFileHint": "在 Silhouette Studio 中打开，全选，居中到页面，然后切割。"
       },

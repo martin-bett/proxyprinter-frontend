@@ -265,7 +265,7 @@
         "threeMarks": "3 crocini (CAMEO 3/4/5, Portrait)",
         "fourMarks": "4 crocini (CAMEO 5α, CAMEO Pro MK II)",
         "hint": "Per Print & Cut con un plotter Silhouette. Gli angoli restano liberi per i crocini, quindi entrano meno carte per pagina; niente linee di taglio.",
-        "studioValues": "Crocini in Silhouette Studio: margine {{inset}} mm, lunghezza {{length}} mm, spessore {{thickness}} mm",
+        "studioValues": "Crocini in Silhouette Studio: margine {{inset}} mm su tutti e quattro i lati (impostazioni avanzate: sinistra, alto, destra, basso), lunghezza {{length}} mm, spessore {{thickness}} mm",
         "cutFile": "File di taglio (DXF)",
         "cutFileHint": "Aprire in Silhouette Studio, selezionare tutto, centrare sulla pagina e tagliare."
       },

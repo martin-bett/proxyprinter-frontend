@@ -119,7 +119,7 @@ describe('SettingsDialog registration marks', () => {
     const onSettingsChange = jest.fn();
     render(<SettingsDialog open onClose={jest.fn()} settings={{ ...defaultSettings, cutlines: true }} onSettingsChange={onSettingsChange} />);
     fireEvent.click(screen.getByRole('checkbox', { name: /registration marks/i }));
-    expect(screen.getByText(/inset 10 mm, length 20 mm, thickness 0.5 mm/)).toBeInTheDocument();
+    expect(screen.getByText(/inset 10 mm on all four sides.*length 20 mm, thickness 0.5 mm/)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Cutlines' })).toBeDisabled();
     expect(screen.getByText('2 × 3 = 6')).toBeInTheDocument();
 

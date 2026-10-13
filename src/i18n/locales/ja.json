@@ -264,7 +264,7 @@
         "threeMarks": "3 マーク (CAMEO 3/4/5, Portrait)",
         "fourMarks": "4 マーク (CAMEO 5α, CAMEO Pro MK II)",
         "hint": "Silhouette カッターでの Print & Cut 用。四隅はマーク用に空けるため、1 ページのカード数が減ります。カットラインは描画されません。",
-        "studioValues": "Silhouette Studio のトンボ設定：余白 {{inset}} mm、長さ {{length}} mm、太さ {{thickness}} mm",
+        "studioValues": "Silhouette Studio のトンボ設定：余白 {{inset}} mm を四辺すべてに（詳細設定：左・上・右・下）、長さ {{length}} mm、太さ {{thickness}} mm",
         "cutFile": "カットファイル (DXF)",
         "cutFileHint": "Silhouette Studio で開き、すべて選択してページ中央に揃え、カット。"
       },
