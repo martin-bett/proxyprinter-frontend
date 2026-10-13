@@ -259,6 +259,16 @@
       "cornerSize": "角のサイズ (mm): ",
       "cornerSizeAutomatic": "元の比率",
       "cornerSizeHint": "角丸の半径（mm）。元の比率：実物のカードと同じ（高さ88.9 mmで1/8インチ）、カードの高さに合わせて調整。",
+      "plotter": {
+        "marks": "Silhouette トンボ（位置合わせマーク）",
+        "threeMarks": "3 マーク (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 マーク (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "Silhouette カッターでの Print & Cut 用。四隅はマーク用に空けるため、1 ページのカード数が減ります。カットラインは描画されません。",
+        "studioValues": "Silhouette Studio（Print & Cut）：長さ {{length}} mm、太さ {{thickness}} mm、余白 {{inset}} mm、その他の余白は既定のまま",
+        "cutFilePosition": "Studio でのカットファイルの位置：X {{x}} mm、Y {{y}} mm",
+        "cutFile": "カットファイル (DXF)",
+        "cutFileHint": "Silhouette Studio で開き（DXF 読み込みは「そのまま」）、すべて選択してグループ化し、この位置を入力してカット。"
+      },
       "ok": "OK",
       "email": {
         "title": "メール送信",

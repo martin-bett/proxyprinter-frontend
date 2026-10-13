@@ -1,4 +1,4 @@
-import { PdfSettings } from './SettingsDialog';
+import { PdfSettings, RegistrationMarkStyle } from './SettingsDialog';
 
 /**
  * Seitenlayout wie in DocumentGenerator.java (Backend): A4 (hoch oder quer) in Punkt, exakte mm,
@@ -29,6 +29,14 @@ export interface PageLayout {
   slots: CardSlot[];
   /** Abstand der Schnittlinien zum Seitenrand */
   gridMargin: number;
+  /** Passmarken für den Schneideplotter; fehlt = keine */
+  registration?: RegistrationLayout;
+}
+
+export interface RegistrationLayout {
+  style: RegistrationMarkStyle;
+  /** Armlänge in mm, wie sie in Silhouette Studio eingestellt werden muss */
+  lengthMm: number;
 }
 
 /** Wie DocumentGenerator.cardsThatFit: Karten pro Reihe bzw. Spalte mit Mindestrand auf beiden Seiten. */
@@ -39,8 +47,67 @@ const cardsThatFit = (pageSize: number, cardSize: number, gap: number): number =
 const centeredOffset = (pageSize: number, count: number, cardSize: number, gap: number): number =>
   Math.max(0, (pageSize - (count * cardSize + Math.max(0, count - 1) * gap)) / 2);
 
+/**
+ * Silhouette-Passmarken wie RegistrationMarks.java im Backend: Abstand zur Blattkante, auf der Seite gegenüber dem
+ * Einzug (quer rechts, hoch oben) farInset; Armlänge 5 bis 20 mm, Linienstärke und Quadrat (3 Marken) in mm;
+ * zwischen Marke und Karte bleibt clearance frei.
+ */
+export const REGISTRATION = {
+  insetMm: 10,
+  farInsetMm: 25,
+  minLengthMm: 5,
+  maxLengthMm: 20,
+  thicknessMm: 0.5,
+  squareMm: 5,
+  clearanceMm: 1,
+};
+
+/** Wie RegistrationMarks.insetsMm: Abstände der Marken zu den Blattkanten in mm (links, oben, rechts, unten). */
+export const registrationInsetsMm = (landscape: boolean): [number, number, number, number] => {
+  const { insetMm: i, farInsetMm: far } = REGISTRATION;
+  return landscape ? [i, i, far, i] : [i, far, i, i];
+};
+
+/** Wie RegistrationMarks.markLength: längste Armlänge in ganzen mm bei freeMm Abstand zu den Marken, höchstens 20 mm. */
+export const registrationMarkLength = (freeMm: number): number =>
+  Math.floor(Math.min(REGISTRATION.maxLengthMm, freeMm - REGISTRATION.clearanceMm) + 0.001);
+
+/**
+ * Wie RegistrationMarks.grid: meiste Karten mittig zwischen den Marken, ohne in einen Eckbereich zu reichen,
+ * bei Gleichstand längere Arme; passt keine Karte frei, eine Karte mittig mit kürzesten Armen.
+ */
+const registrationGrid = (pageWidth: number, pageHeight: number, cardWidth: number, cardHeight: number, hGap: number, vGap: number) => {
+  const [l, t, r, b] = registrationInsetsMm(pageWidth > pageHeight).map(v => v * MM_TO_PT);
+  const width = pageWidth - l - r;
+  const height = pageHeight - t - b;
+  const between = (space: number, card: number, gap: number) =>
+    card > 0 && space > 0 ? Math.max(0, Math.floor((space + gap) / (card + gap))) : 0;
+  const maxCols = between(width, cardWidth, hGap);
+  const maxRows = between(height, cardHeight, vGap);
+  const place = (cols: number, rows: number, lengthMm: number) => ({
+    cols, rows, lengthMm,
+    left: l + centeredOffset(width, cols, cardWidth, hGap),
+    top: t + centeredOffset(height, rows, cardHeight, vGap),
+  });
+  let best: ReturnType<typeof place> | null = null;
+  for (let cols = maxCols; cols >= 1; cols--) {
+    for (let rows = maxRows; rows >= 1; rows--) {
+      const free = Math.max(centeredOffset(width, cols, cardWidth, hGap), centeredOffset(height, rows, cardHeight, vGap));
+      const lengthMm = registrationMarkLength(free / MM_TO_PT);
+      if (lengthMm < REGISTRATION.minLengthMm) continue;
+      const count = cols * rows;
+      const bestCount = best ? best.cols * best.rows : 0;
+      if (!best || count > bestCount || (count === bestCount && lengthMm > best.lengthMm)) {
+        best = place(cols, rows, lengthMm);
+      }
+    }
+  }
+  return best ?? place(1, 1, REGISTRATION.minLengthMm);
+};
+
 export const computePageLayout = (
-  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'> & Partial<Pick<PdfSettings, 'pageLandscape' | 'cardsLandscape'>>,
+  settings: Pick<PdfSettings, 'width' | 'height' | 'hmargin' | 'vmargin'>
+    & Partial<Pick<PdfSettings, 'pageLandscape' | 'cardsLandscape' | 'registrationMarks'>>,
 ): PageLayout => {
   const pageWidth = settings.pageLandscape ? PAGE_HEIGHT_PT : PAGE_WIDTH_PT;
   const pageHeight = settings.pageLandscape ? PAGE_WIDTH_PT : PAGE_HEIGHT_PT;
@@ -51,10 +118,11 @@ export const computePageLayout = (
   const cardHeight = ((settings.cardsLandscape ? settings.width : settings.height) || 0) * MM_TO_PT;
 
   const fits = cardWidth > 0 && cardHeight > 0;
-  const cardsPerRow = fits ? cardsThatFit(pageWidth, cardWidth, hMargin) : 0;
-  const cardsPerColumn = fits ? cardsThatFit(pageHeight, cardHeight, vMargin) : 0;
-  const startX = centeredOffset(pageWidth, cardsPerRow, cardWidth, hMargin);
-  const startY = centeredOffset(pageHeight, cardsPerColumn, cardHeight, vMargin);
+  const marks = fits && settings.registrationMarks ? registrationGrid(pageWidth, pageHeight, cardWidth, cardHeight, hMargin, vMargin) : null;
+  const cardsPerRow = marks ? marks.cols : fits ? cardsThatFit(pageWidth, cardWidth, hMargin) : 0;
+  const cardsPerColumn = marks ? marks.rows : fits ? cardsThatFit(pageHeight, cardHeight, vMargin) : 0;
+  const startX = marks ? marks.left : centeredOffset(pageWidth, cardsPerRow, cardWidth, hMargin);
+  const startY = marks ? marks.top : centeredOffset(pageHeight, cardsPerColumn, cardHeight, vMargin);
 
   const slots: CardSlot[] = [];
   for (let row = 0; row < cardsPerColumn; row++) {
@@ -76,6 +144,7 @@ export const computePageLayout = (
     cardsPerColumn,
     slots,
     gridMargin: GRID_MARGIN_PT,
+    ...(marks && settings.registrationMarks ? { registration: { style: settings.registrationMarks, lengthMm: marks.lengthMm } } : {}),
   };
 };
 

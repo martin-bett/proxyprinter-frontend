@@ -260,6 +260,16 @@
       "cornerSize": "Eckengröße (mm): ",
       "cornerSizeAutomatic": "Originalverhältnis",
       "cornerSizeHint": "Radius der abgerundeten Ecken in mm. Originalverhältnis: wie bei echten Karten (1/8 Zoll bei 88,9 mm), passend zur Kartenhöhe.",
+      "plotter": {
+        "marks": "Silhouette-Passermarken",
+        "threeMarks": "3 Marken (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 Marken (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "Für Print & Cut mit einem Silhouette-Plotter. Die Ecken bleiben für die Marken frei, dadurch passen weniger Karten auf eine Seite; Schnittlinien entfallen.",
+        "studioValues": "Silhouette Studio (Print & Cut): Länge {{length}} mm, Dicke {{thickness}} mm, Einlage {{inset}} mm, übrige Einzüge unverändert",
+        "cutFilePosition": "Position der Schnittdatei in Studio: X {{x}} mm, Y {{y}} mm",
+        "cutFile": "Schnittdatei (DXF)",
+        "cutFileHint": "In Silhouette Studio öffnen (DXF-Import „Wie Original“), alles auswählen, gruppieren, diese Position eintragen, dann schneiden."
+      },
       "ok": "OK",
       "email": {
         "title": "E-Mail-Zustellung",

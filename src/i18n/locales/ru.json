@@ -262,6 +262,16 @@
       "cornerSize": "Размер углов (мм): ",
       "cornerSizeAutomatic": "Исходные пропорции",
       "cornerSizeHint": "Радиус скруглённых углов в мм. Исходные пропорции: как у настоящих карт (1/8 дюйма при 88,9 мм), по высоте карты.",
+      "plotter": {
+        "marks": "Метки совмещения Silhouette",
+        "threeMarks": "3 метки (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 метки (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "Для Print & Cut на плоттере Silhouette. Углы остаются свободными для меток, поэтому на странице помещается меньше карт; линии реза не печатаются.",
+        "studioValues": "Silhouette Studio (Print & Cut): длина {{length}} мм, толщина {{thickness}} мм, отступ {{inset}} мм, остальные отступы без изменений",
+        "cutFilePosition": "Положение файла резки в Studio: X {{x}} мм, Y {{y}} мм",
+        "cutFile": "Файл резки (DXF)",
+        "cutFileHint": "Открыть в Silhouette Studio (импорт DXF «как есть»), выделить всё, сгруппировать, задать это положение и резать."
+      },
       "ok": "Ок",
       "email": {
         "title": "Отправка по email",

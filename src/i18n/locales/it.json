@@ -260,6 +260,16 @@
       "cornerSize": "Dimensione angoli (mm): ",
       "cornerSizeAutomatic": "Proporzioni originali",
       "cornerSizeHint": "Raggio degli angoli arrotondati in mm. Proporzioni originali: come nelle carte reali (1/8 di pollice a 88,9 mm), in base all'altezza della carta.",
+      "plotter": {
+        "marks": "Crocini di registro Silhouette",
+        "threeMarks": "3 crocini (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 crocini (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "Per Print & Cut con un plotter Silhouette. Gli angoli restano liberi per i crocini, quindi entrano meno carte per pagina; niente linee di taglio.",
+        "studioValues": "Silhouette Studio (Print & Cut): lunghezza {{length}} mm, spessore {{thickness}} mm, margine {{inset}} mm, altri margini invariati",
+        "cutFilePosition": "Posizione del file di taglio in Studio: X {{x}} mm, Y {{y}} mm",
+        "cutFile": "File di taglio (DXF)",
+        "cutFileHint": "Aprire in Silhouette Studio (importazione DXF «così com'è»), selezionare tutto, raggruppare, inserire questa posizione e tagliare."
+      },
       "ok": "Ok",
       "email": {
         "title": "Invio per e-mail",

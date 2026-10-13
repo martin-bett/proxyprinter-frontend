@@ -259,6 +259,16 @@
       "cornerSize": "圆角大小 (mm)：",
       "cornerSizeAutomatic": "原始比例",
       "cornerSizeHint": "圆角半径（mm）。原始比例：与实体卡牌相同（高度 88.9 mm 时为 1/8 英寸），随卡牌高度缩放。",
+      "plotter": {
+        "marks": "Silhouette 定位标记",
+        "threeMarks": "3 个标记 (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 个标记 (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "用于 Silhouette 刻字机的 Print & Cut。四角留给标记，因此每页可放的卡牌较少；不绘制裁切线。",
+        "studioValues": "Silhouette Studio（Print & Cut）：长度 {{length}} mm，粗细 {{thickness}} mm，边距 {{inset}} mm，其余边距保持默认",
+        "cutFilePosition": "切割文件在 Studio 中的位置：X {{x}} mm，Y {{y}} mm",
+        "cutFile": "切割文件 (DXF)",
+        "cutFileHint": "在 Silhouette Studio 中打开（DXF 导入选“原样”），全选并编组，输入此位置，然后切割。"
+      },
       "ok": "确定",
       "email": {
         "title": "邮件发送",

@@ -260,6 +260,16 @@
       "cornerSize": "Tamaño de esquina (mm): ",
       "cornerSizeAutomatic": "Proporción original",
       "cornerSizeHint": "Radio de las esquinas redondeadas en mm. Proporción original: como en las cartas reales (1/8 de pulgada a 88,9 mm), según la altura de la carta.",
+      "plotter": {
+        "marks": "Marcas de registro Silhouette",
+        "threeMarks": "3 marcas (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 marcas (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "Para Print & Cut con una plotter Silhouette. Las esquinas quedan libres para las marcas, por eso caben menos cartas por página; sin líneas de corte.",
+        "studioValues": "Silhouette Studio (Print & Cut): longitud {{length}} mm, grosor {{thickness}} mm, margen {{inset}} mm, resto de márgenes sin cambios",
+        "cutFilePosition": "Posición del archivo de corte en Studio: X {{x}} mm, Y {{y}} mm",
+        "cutFile": "Archivo de corte (DXF)",
+        "cutFileHint": "Abrir en Silhouette Studio (importación DXF «tal cual»), seleccionar todo, agrupar, introducir esta posición y cortar."
+      },
       "ok": "Ok",
       "email": {
         "title": "Envío por correo",

@@ -287,6 +287,10 @@
   max-width: 225px;
 }
 
+.settings-category.settings-plotter {
+  max-width: 260px;
+}
+
 .settings-category.settings-email {
   display: block;
   max-width: 420px;

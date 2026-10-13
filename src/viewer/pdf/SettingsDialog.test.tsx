@@ -113,3 +113,27 @@ describe('SettingsDialog corner size', () => {
     expect(onSettingsChange.mock.calls[1][0]).not.toHaveProperty('cornerSize');
   });
 });
+
+describe('SettingsDialog registration marks', () => {
+  it('turns marks on, shows the Silhouette Studio values and locks the cutlines', () => {
+    const onSettingsChange = jest.fn();
+    render(<SettingsDialog open onClose={jest.fn()} settings={{ ...defaultSettings, cutlines: true }} onSettingsChange={onSettingsChange} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /registration marks/i }));
+    expect(screen.getByText(/length 20 mm, thickness 0.5 mm, inset 10 mm/)).toBeInTheDocument();
+    expect(screen.getByText('Position of the cut file in Studio: X 41.5 mm, Y 67.1 mm')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Cutlines' })).toBeDisabled();
+    expect(screen.getByText('2 × 2 = 4')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: /4 marks/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(onSettingsChange).toHaveBeenLastCalledWith(expect.objectContaining({ registrationMarks: 'SILHOUETTE_4' }));
+  });
+
+  it('leaves the field out while marks are off', () => {
+    const onSettingsChange = jest.fn();
+    render(<SettingsDialog open onClose={jest.fn()} settings={{ ...defaultSettings, registrationMarks: 'SILHOUETTE_3' }} onSettingsChange={onSettingsChange} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /registration marks/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(onSettingsChange.mock.calls[onSettingsChange.mock.calls.length - 1][0]).not.toHaveProperty('registrationMarks');
+  });
+});
