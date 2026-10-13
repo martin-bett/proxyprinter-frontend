@@ -260,6 +260,15 @@
       "cornerSize": "Corner Size (mm): ",
       "cornerSizeAutomatic": "Original ratio",
       "cornerSizeHint": "Radius of the rounded corners in mm. Original ratio: like real cards (1/8 inch at 88.9 mm), scaled to the card height.",
+      "plotter": {
+        "marks": "Silhouette registration marks",
+        "threeMarks": "3 marks (CAMEO 3/4/5, Portrait)",
+        "fourMarks": "4 marks (CAMEO 5α, CAMEO Pro MK II)",
+        "hint": "For Print & Cut on a Silhouette cutter. The corners stay free for the marks, so fewer cards fit on a page; cutlines are left out.",
+        "studioValues": "Registration marks in Silhouette Studio: inset {{inset}} mm, length {{length}} mm, thickness {{thickness}} mm",
+        "cutFile": "Cut file (DXF)",
+        "cutFileHint": "Open in Silhouette Studio, select all, center to page, then cut."
+      },
       "ok": "Ok",
       "email": {
         "title": "Email delivery",

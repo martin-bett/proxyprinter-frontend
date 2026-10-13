@@ -1,4 +1,4 @@
-import { AUTO_CORNER_RATIO, autoCornerSizeMm, computePageLayout, cornerRadius, gridLinePositions, MM_TO_PT } from './pdfLayout';
+import { AUTO_CORNER_RATIO, autoCornerSizeMm, computePageLayout, cornerRadius, gridLinePositions, MM_TO_PT, registrationMarkLength, REGISTRATION } from './pdfLayout';
 import { cornerEdgeColors, cropRect, rotateCornerColors } from './PdfPagePreview';
 
 describe('computePageLayout', () => {
@@ -115,5 +115,44 @@ describe('rotateCornerColors', () => {
     expect(rotated[3]).toEqual([c(4), c(3)]); // rechts oben -> rechts unten
     expect(rotated[2]).toEqual([c(8), c(7)]); // rechts unten -> links unten
     expect(rotated[0]).toEqual([c(6), c(5)]); // links unten -> links oben
+  });
+});
+
+describe('registration marks (like RegistrationMarks.java)', () => {
+  const real = { width: 63.5, height: 88.9, hmargin: 0, vmargin: 0 };
+
+  it('fits 2 x 3 real cards on portrait A4 with full-length marks', () => {
+    const layout = computePageLayout({ ...real, registrationMarks: 'SILHOUETTE_3' });
+    expect([layout.cardsPerRow, layout.cardsPerColumn]).toEqual([2, 3]);
+    expect(layout.slots[0].x / MM_TO_PT).toBeCloseTo(41.5, 1);
+    expect(layout.registration).toEqual({ style: 'SILHOUETTE_3', lengthMm: 20 });
+  });
+
+  it('fits 4 x 2 on landscape A4 with 9 mm marks', () => {
+    const layout = computePageLayout({ ...real, pageLandscape: true, registrationMarks: 'SILHOUETTE_4' });
+    expect([layout.cardsPerRow, layout.cardsPerColumn]).toEqual([4, 2]);
+    expect(layout.registration).toEqual({ style: 'SILHOUETTE_4', lengthMm: 9 });
+  });
+
+  it('keeps every card out of the corner areas', () => {
+    [false, true].forEach(pageLandscape => [false, true].forEach(cardsLandscape => {
+      const layout = computePageLayout({ ...real, pageLandscape, cardsLandscape, registrationMarks: 'SILHOUETTE_3' });
+      const corner = (REGISTRATION.insetMm + layout.registration!.lengthMm + REGISTRATION.clearanceMm) * MM_TO_PT;
+      const { x, y } = layout.slots[0];
+      expect(x >= corner - 0.01 || y >= corner - 0.01).toBe(true);
+      expect(x).toBeGreaterThanOrEqual(REGISTRATION.insetMm * MM_TO_PT);
+      expect(layout.registration!.lengthMm).toBeGreaterThanOrEqual(REGISTRATION.minLengthMm);
+    }));
+  });
+
+  it('rounds the arm length down to whole millimetres between 5 and 20', () => {
+    expect(registrationMarkLength(41.5)).toBe(20);
+    expect(registrationMarkLength(21.5)).toBe(9);
+    expect(registrationMarkLength(17)).toBe(5);
+  });
+
+  it('leaves the layout unchanged without marks', () => {
+    expect(computePageLayout(real).registration).toBeUndefined();
+    expect(computePageLayout(real).slots).toHaveLength(9);
   });
 });

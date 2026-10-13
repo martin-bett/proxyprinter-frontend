@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CropSettings } from '../../service/ApiFactory';
 import { PdfSettings } from './SettingsDialog';
-import { computePageLayout, CORNER_KAPPA, cornerRadius, gridLinePositions, PageLayout } from './pdfLayout';
+import { computePageLayout, CORNER_KAPPA, cornerRadius, gridLinePositions, MM_TO_PT, PageLayout, REGISTRATION } from './pdfLayout';
 
 export interface PreviewCard {
   imageUrl: string;
@@ -161,6 +161,41 @@ const drawCorners = (ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   });
 };
 
+/** Passmarken wie RegistrationMarks.draw im Backend (Canvas: Ursprung oben links). */
+const drawRegistrationMarks = (ctx: CanvasRenderingContext2D, layout: PageLayout) => {
+  if (!layout.registration) return;
+  const inset = REGISTRATION.insetMm * MM_TO_PT;
+  const length = layout.registration.lengthMm * MM_TO_PT;
+  const left = inset;
+  const right = layout.pageWidth - inset;
+  const top = inset;
+  const bottom = layout.pageHeight - inset;
+  const four = layout.registration.style === 'SILHOUETTE_4';
+  ctx.save();
+  ctx.strokeStyle = '#000000';
+  ctx.fillStyle = '#000000';
+  ctx.lineWidth = REGISTRATION.thicknessMm * MM_TO_PT;
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  const angle = (x: number, y: number, dx: number, dy: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x + dx * length, y);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x, y + dy * length);
+    ctx.stroke();
+  };
+  if (four) {
+    angle(left, top, 1, 1);
+  } else {
+    const square = REGISTRATION.squareMm * MM_TO_PT;
+    ctx.fillRect(left, top, square, square);
+  }
+  angle(right, top, -1, 1);
+  angle(left, bottom, 1, -1);
+  if (four) angle(right, bottom, -1, -1);
+  ctx.restore();
+};
+
 interface PreviewPalette {
   paper: string;
   slotLine: string;
@@ -250,7 +285,10 @@ const drawPage = async (
     }
   });
 
-  if (settings.cutlines) {
+  drawRegistrationMarks(ctx, layout);
+
+  // Mit Passmarken entfallen die Schnittlinien wie im Backend
+  if (settings.cutlines && !layout.registration) {
     const { vertical, horizontal } = gridLinePositions(layout, placed);
     ctx.strokeStyle = settings.cutlineColor;
     ctx.lineWidth = (settings.cutlineThickness || 3) * 0.5;
@@ -277,7 +315,7 @@ export function PdfPagePreview({ settings, cards, width = 340 }: PdfPagePreviewP
 
   const layout = useMemo(
     () => computePageLayout(settings),
-    [settings.width, settings.height, settings.hmargin, settings.vmargin, settings.pageLandscape, settings.cardsLandscape] // eslint-disable-line react-hooks/exhaustive-deps
+    [settings.width, settings.height, settings.hmargin, settings.vmargin, settings.pageLandscape, settings.cardsLandscape, settings.registrationMarks] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {

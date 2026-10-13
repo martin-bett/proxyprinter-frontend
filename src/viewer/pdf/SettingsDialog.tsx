@@ -1,12 +1,16 @@
 // SettingsDialog.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, FormControlLabel } from '@mui/material';
+import { Checkbox, FormControlLabel, Radio, RadioGroup } from '@mui/material';
 import { ChromePicker, ColorResult } from 'react-color';
 import { useAuth } from '../../service/auth/auth';
 import { PdfPagePreview, PreviewCard } from './PdfPagePreview';
-import { autoCornerSizeMm } from './pdfLayout';
+import { autoCornerSizeMm, computePageLayout, cornerRadius, REGISTRATION } from './pdfLayout';
+import { downloadCutFile } from './cutFile';
 import { MmInput } from './MmInput';
+
+/** Passmarken-Muster für Silhouette Print and Cut: 3 Marken (CAMEO 3/4/5) oder 4 Marken (CAMEO 5α, Pro MK II). */
+export type RegistrationMarkStyle = 'SILHOUETTE_3' | 'SILHOUETTE_4';
 
 export interface PdfSettings {
   width: number;
@@ -26,6 +30,8 @@ export interface PdfSettings {
   pageLandscape: boolean;
   /** Karten um 90° gedreht aufs Blatt legen; width/height bleiben die Maße der aufrechten Karte. */
   cardsLandscape: boolean;
+  /** Passmarken für den Schneideplotter; fehlt = keine. Bleibt aus defaultSettings, damit alte Hashes gleich bleiben. */
+  registrationMarks?: RegistrationMarkStyle;
   /** Geht nicht in die PDF-Settings, sondern als eigenes Feld in den Request. Das Backend nimmt die Adresse des Kontos. */
   sendMail: boolean;
 }
@@ -59,7 +65,7 @@ interface SettingsDialogProps {
 }
 
 function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = false, previewCards = [] }: SettingsDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [localSettings, setLocalSettings] = useState<PdfSettings>(settings);
   const auth = useAuth();
 
@@ -81,6 +87,24 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     });
   };
 
+  // Zuletzt gewähltes Muster bleibt beim Aus- und Einschalten der Passmarken erhalten
+  const [markStyle, setMarkStyle] = useState<RegistrationMarkStyle>(settings.registrationMarks ?? 'SILHOUETTE_3');
+
+  const setRegistrationMarks = (style: RegistrationMarkStyle | undefined) => {
+    setLocalSettings(prev => {
+      const { registrationMarks, ...rest } = prev;
+      return style === undefined ? rest : { ...rest, registrationMarks: style };
+    });
+  };
+
+  const handleMarkStyleChange = (style: RegistrationMarkStyle) => {
+    setMarkStyle(style);
+    if (localSettings.registrationMarks) setRegistrationMarks(style);
+  };
+
+  const layout = useMemo(() => computePageLayout(localSettings), [localSettings]);
+  const formatMm = (mm: number) => new Intl.NumberFormat(i18n.language).format(mm);
+
   const handleCornerAutoChange = (auto: boolean) => {
     setCornerAuto(auto);
     setCornerSize(auto ? undefined : localSettings.cornerSize ?? autoCornerSizeMm(localSettings.height));
@@ -100,6 +124,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
     // Der Mailversand ist keine Druckeinstellung, Reset lässt ihn stehen
     setLocalSettings({ ...defaultSettings, sendMail: localSettings.sendMail });
     setCornerAuto(true);
+    setMarkStyle('SILHOUETTE_3');
   };
 
   return (
@@ -147,7 +172,7 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
       <div className="settings-category">
         <FormControlLabel
           className="title is-4"
-          control={<Checkbox checked={localSettings.cutlines} onChange={(e) => handleChange('cutlines', e.target.checked)} />}
+          control={<Checkbox checked={localSettings.cutlines && !localSettings.registrationMarks} disabled={!!localSettings.registrationMarks} onChange={(e) => handleChange('cutlines', e.target.checked)} />}
           label={t('pdf.settings.cutlines')}
         />
 
@@ -224,6 +249,37 @@ function SettingsDialog({ onClose, settings, onSettingsChange, mailEnabled = fal
             ></div>
           )}
         </div>
+      </div>
+      <div className="settings-category settings-plotter">
+        <FormControlLabel
+          className="title is-4"
+          control={<Checkbox checked={!!localSettings.registrationMarks} onChange={(e) => setRegistrationMarks(e.target.checked ? markStyle : undefined)} />}
+          label={t('pdf.settings.plotter.marks')}
+        />
+        <RadioGroup value={markStyle} onChange={(e) => handleMarkStyleChange(e.target.value as RegistrationMarkStyle)}>
+          <FormControlLabel value="SILHOUETTE_3" disabled={!localSettings.registrationMarks} control={<Radio size="small" />} label={t('pdf.settings.plotter.threeMarks')} />
+          <FormControlLabel value="SILHOUETTE_4" disabled={!localSettings.registrationMarks} control={<Radio size="small" />} label={t('pdf.settings.plotter.fourMarks')} />
+        </RadioGroup>
+        <p className="help">{t('pdf.settings.plotter.hint')}</p>
+        {layout.registration && (
+          <>
+            <p className="help">
+              {t('pdf.settings.plotter.studioValues', {
+                inset: formatMm(REGISTRATION.insetMm),
+                length: formatMm(layout.registration.lengthMm),
+                thickness: formatMm(REGISTRATION.thicknessMm),
+              })}
+            </p>
+            <button
+              className="button is-small"
+              disabled={layout.slots.length === 0}
+              onClick={() => downloadCutFile(layout, cornerRadius(layout.cardWidth, layout.cardHeight, localSettings.cornerSize))}
+            >
+              {t('pdf.settings.plotter.cutFile')}
+            </button>
+            <p className="help">{t('pdf.settings.plotter.cutFileHint')}</p>
+          </>
+        )}
       </div>
       </div>
       <div className="settings-category settings-email">
