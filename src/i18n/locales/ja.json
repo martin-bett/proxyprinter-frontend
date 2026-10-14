@@ -257,8 +257,8 @@
       "detectBorderColor": "枠の色を検出",
       "cornerColor": "角の色: ",
       "cornerSize": "角のサイズ (mm): ",
-      "cornerSizeAutomatic": "実物のカードと同じ",
-      "cornerSizeHint": "角丸の半径（mm）。自動：実物のカードと同じ（高さ88.9 mmで1/8インチ）、カードの高さに合わせて調整。",
+      "cornerSizeAutomatic": "元の比率",
+      "cornerSizeHint": "角丸の半径（mm）。元の比率：実物のカードと同じ（高さ88.9 mmで1/8インチ）、カードの高さに合わせて調整。",
       "ok": "OK",
       "email": {
         "title": "メール送信",
@@ -286,6 +286,8 @@
     "deleteAria": "{{label}}を削除",
     "storedInBrowser": "このブラウザーに保存済み · {{size}}",
     "deleteAll": "すべて削除",
+    "scrollUp": "前のスナップショットを表示",
+    "scrollDown": "次のスナップショットを表示",
     "saveFailed": "スナップショットを保存できませんでした。",
     "customCardsGone_other": "カスタムカード{{count}}枚がサーバー上に存在しません。再度アップロードしてください。",
     "pdfLinkRemoved": "このPDFへのリンクは削除されます。",
@@ -518,7 +520,9 @@
       "language": "言語:",
       "imageSize": "画像サイズ:",
       "crop": "トリミング:",
-      "cropValue": "{{x}}, {{y}}から {{width}} × {{height}}"
+      "cropValue": "{{x}}, {{y}}から {{width}} × {{height}}",
+      "download": "画像をダウンロード",
+      "downloadHint": "元の画像をフル解像度で保存（自分のコレクション用など）"
     },
     "iconBar": {
       "viewFiltering": "表示フィルター"
@@ -989,6 +993,14 @@
       "rateLimited": "リクエストが多すぎます。後でもう一度。",
       "tokenInvalid": "このリンクまたはトークンは不明か期限切れです。",
       "notVerified": "{{host}} の DNS レコードにもファイルにもまだトークンがありません。"
+    },
+    "admin": {
+      "forbidden": "管理者専用です。",
+      "valueOutOfRange": "許可範囲: {{min}}〜{{max}}。",
+      "invalidValue": "整数を入力。",
+      "unknownSetting": "不明な設定 {{key}}。",
+      "unknownCache": "不明なキャッシュ {{name}}。",
+      "pdfJobsRunning": "現在 {{jobs}} 件の PDF ジョブが実行中です。後でもう一度実行。"
     }
   },
   "account": {
@@ -1064,5 +1076,90 @@
     "checking": "確認リンクを確認中…",
     "mailSent": "確認リンクを {{email}} に送信しました。開かれると {{host}} はブロックされます。",
     "blocked": "{{host}} はソースとしてブロックされました。"
+  },
+  "admin": {
+    "title": "管理",
+    "backToApp": "Proxyprinter に戻る",
+    "loginNeeded": "管理ページには管理者アカウントが必要です。下でログイン。",
+    "forbidden": "{{email}} には管理者権限がありません。",
+    "loadFailed": "管理データを読み込めませんでした。",
+    "system": {
+      "title": "バックエンド",
+      "hint": "読み込み時点のバックエンドの実測値。",
+      "database": "データベース",
+      "up": "接続可能",
+      "down": "接続不可",
+      "uptime": "稼働時間",
+      "uptimeValue": "{{days}}日 {{hours}}時間 {{minutes}}分",
+      "startedAt": "起動日時",
+      "heap": "ヒープメモリ",
+      "ofMax": "{{used}} / {{max}}",
+      "heapCommitted": "確保済みヒープ",
+      "nonHeap": "非ヒープメモリ",
+      "disk": "ディスク",
+      "diskValue": "{{total}} 中 {{free}} 空き",
+      "pdfJobs": "PDFジョブ",
+      "pdfJobsValue": "実行中 {{active}} / {{max}}、待機中 {{queued}}",
+      "threads": "スレッド",
+      "systemLoad": "システム負荷（1分）",
+      "javaVersion": "Javaバージョン"
+    },
+    "cacheSettingsTitle": "キャッシュ設定",
+    "usageTitle": "利用状況",
+    "usageHint": "日別（UTC）、過去30日間の集計。保存されるのは合計値のみで、IPアドレスなどの個人データは保存されません。訪問者は1日・ブラウザごとに1回数えられます。",
+    "usage": {
+      "day": "日付",
+      "total": "合計",
+      "pageViews": "ページビュー",
+      "visitors": "訪問者",
+      "searchTerms": "検索語",
+      "decks": "PDF",
+      "deckImports": "デッキのインポート",
+      "logins": "ログイン"
+    },
+    "settingsTitle": "キャッシュの保持期間",
+    "settingsHint": "変更はすぐに反映され、リセットするまでサーバー設定より優先されます。",
+    "defaultValue": "サーバー既定値: {{value}} {{unit}}",
+    "range": "許可範囲: {{min}}〜{{max}}",
+    "saved": "保存しました。",
+    "saveFailed": "保存に失敗しました",
+    "resetToDefault": "既定値に戻す",
+    "settings": {
+      "searchcacheRetention": "共有検索",
+      "searchcacheMaxEntry": "共有検索1件の最大サイズ",
+      "pdfRetention": "完成した PDF",
+      "uploadRetention": "アップロード画像（最終使用から）",
+      "logRetention": "データベースのログ"
+    },
+    "units": {
+      "days": "日",
+      "kb": "KB"
+    },
+    "cachesTitle": "キャッシュ",
+    "refresh": "更新",
+    "columns": {
+      "cache": "キャッシュ",
+      "entries": "件数",
+      "size": "サイズ",
+      "oldest": "最古",
+      "lifetime": "保持期間"
+    },
+    "caches": {
+      "searchCache": "共有検索",
+      "pdfs": "完成した PDF",
+      "uploads": "アップロード画像",
+      "images": "ダウンロードしたカード画像",
+      "memory": "メモリ内（PDF 用画像、失敗した画像 URL、デッキ検索）"
+    },
+    "lifetime": {
+      "days": "{{days}} 日",
+      "unlimited": "無制限",
+      "minutes": "10〜30 分"
+    },
+    "clearNow": "今すぐ削除",
+    "clearConfirm": "削除",
+    "clearFailed": "削除に失敗しました",
+    "cleared": "{{number}} 件を削除しました。",
+    "uploadsWarning": "これらの画像を使う Snapshot は画像を失います。"
   }
 }

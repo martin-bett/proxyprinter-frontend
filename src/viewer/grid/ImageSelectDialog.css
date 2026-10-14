@@ -49,6 +49,26 @@
   gap: 10px;
 }
 
+.image-select-dialog .crop-image-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.image-select-dialog .crop-image-header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.image-select-dialog .crop-image-download {
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.image-select-dialog .crop-image-download:hover {
+  color: var(--accent);
+}
+
 .image-select-dialog .crop-image-tabs {
   min-height: 40px;
   border-bottom: 1px solid var(--border);

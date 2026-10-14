@@ -258,8 +258,8 @@
       "detectBorderColor": "Detectar color del borde",
       "cornerColor": "Color de esquina: ",
       "cornerSize": "Tamaño de esquina (mm): ",
-      "cornerSizeAutomatic": "Como las cartas reales",
-      "cornerSizeHint": "Radio de las esquinas redondeadas en mm. Automático: como en las cartas reales (1/8 de pulgada a 88,9 mm), según la altura de la carta.",
+      "cornerSizeAutomatic": "Proporción original",
+      "cornerSizeHint": "Radio de las esquinas redondeadas en mm. Proporción original: como en las cartas reales (1/8 de pulgada a 88,9 mm), según la altura de la carta.",
       "ok": "Ok",
       "email": {
         "title": "Envío por correo",
@@ -288,6 +288,8 @@
     "deleteAria": "Eliminar {{label}}",
     "storedInBrowser": "Guardado en este navegador · {{size}}",
     "deleteAll": "Eliminar todo",
+    "scrollUp": "Mostrar Snapshot anterior",
+    "scrollDown": "Mostrar Snapshot siguiente",
     "saveFailed": "No se pudo guardar el Snapshot.",
     "customCardsGone_one": "{{count}} carta propia ya no está disponible en el servidor, volver a subirla.",
     "customCardsGone_other": "{{count}} cartas propias ya no están disponibles en el servidor, volver a subirlas.",
@@ -528,7 +530,9 @@
       "language": "Idioma:",
       "imageSize": "Tamaño de imagen:",
       "crop": "Recorte:",
-      "cropValue": "{{width}} × {{height}} desde {{x}}, {{y}}"
+      "cropValue": "{{width}} × {{height}} desde {{x}}, {{y}}",
+      "download": "Descargar imagen",
+      "downloadHint": "Guardar la imagen original en resolución completa, p. ej. para una colección propia"
     },
     "iconBar": {
       "viewFiltering": "Filtros de vista"
@@ -1003,6 +1007,14 @@
       "rateLimited": "Demasiadas solicitudes. Volver a intentarlo más tarde.",
       "tokenInvalid": "Este enlace o token es desconocido o ha caducado.",
       "notVerified": "Ni el registro DNS ni el archivo de {{host}} contienen todavía el token."
+    },
+    "admin": {
+      "forbidden": "Solo para administradores.",
+      "valueOutOfRange": "Permitido: de {{min}} a {{max}}.",
+      "invalidValue": "Introducir un número entero.",
+      "unknownSetting": "Ajuste desconocido {{key}}.",
+      "unknownCache": "Caché desconocida {{name}}.",
+      "pdfJobsRunning": "Ahora mismo hay {{jobs}} trabajos de PDF en curso. Volver a intentarlo más tarde."
     }
   },
   "account": {
@@ -1083,5 +1095,90 @@
     "checking": "Comprobando el enlace de confirmación…",
     "mailSent": "Se ha enviado un enlace de confirmación a {{email}}. En cuanto se abra, {{host}} queda bloqueado.",
     "blocked": "{{host}} está ahora bloqueado como fuente."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Volver a Proxyprinter",
+    "loginNeeded": "La página de administración requiere una cuenta de administrador. Inicio de sesión abajo.",
+    "forbidden": "{{email}} no tiene permisos de administrador.",
+    "loadFailed": "No se pudieron cargar los datos de administración.",
+    "system": {
+      "title": "Backend",
+      "hint": "Valores actuales del backend en el momento de la carga.",
+      "database": "Base de datos",
+      "up": "Accesible",
+      "down": "No accesible",
+      "uptime": "Tiempo activo",
+      "uptimeValue": "{{days}} d {{hours}} h {{minutes}} min",
+      "startedAt": "Iniciado",
+      "heap": "Memoria heap",
+      "ofMax": "{{used}} de {{max}}",
+      "heapCommitted": "Heap reservado",
+      "nonHeap": "Memoria no heap",
+      "disk": "Disco",
+      "diskValue": "{{free}} libres de {{total}}",
+      "pdfJobs": "Trabajos PDF",
+      "pdfJobsValue": "{{active}} de {{max}} en curso, {{queued}} en espera",
+      "threads": "Hilos",
+      "systemLoad": "Carga del sistema (1 min)",
+      "javaVersion": "Versión de Java"
+    },
+    "cacheSettingsTitle": "Ajustes de caché",
+    "usageTitle": "Uso",
+    "usageHint": "Recuento por día (UTC), últimos 30 días. Solo se guardan totales: ni direcciones IP ni otros datos personales. Los visitantes cuentan una vez por día y navegador.",
+    "usage": {
+      "day": "Día",
+      "total": "Total",
+      "pageViews": "Visitas a la página",
+      "visitors": "Visitantes",
+      "searchTerms": "Términos buscados",
+      "decks": "PDF",
+      "deckImports": "Mazos importados",
+      "logins": "Inicios de sesión"
+    },
+    "settingsTitle": "Duración de las cachés",
+    "settingsHint": "Los cambios se aplican de inmediato y prevalecen sobre la configuración del servidor hasta restablecerlos.",
+    "defaultValue": "Valor del servidor: {{value}} {{unit}}",
+    "range": "Permitido: de {{min}} a {{max}}",
+    "saved": "Guardado.",
+    "saveFailed": "Error al guardar",
+    "resetToDefault": "Restablecer",
+    "settings": {
+      "searchcacheRetention": "Búsquedas compartidas",
+      "searchcacheMaxEntry": "Tamaño máx. de una búsqueda compartida",
+      "pdfRetention": "PDF terminados",
+      "uploadRetention": "Imágenes subidas (desde el último uso)",
+      "logRetention": "Entradas de registro en la base de datos"
+    },
+    "units": {
+      "days": "días",
+      "kb": "KB"
+    },
+    "cachesTitle": "Cachés",
+    "refresh": "Actualizar",
+    "columns": {
+      "cache": "Caché",
+      "entries": "Entradas",
+      "size": "Tamaño",
+      "oldest": "Más antigua",
+      "lifetime": "Se conserva"
+    },
+    "caches": {
+      "searchCache": "Búsquedas compartidas",
+      "pdfs": "PDF terminados",
+      "uploads": "Imágenes subidas",
+      "images": "Imágenes de cartas descargadas",
+      "memory": "En memoria (imágenes de PDF, URL de imágenes fallidas, buscador de mazos)"
+    },
+    "lifetime": {
+      "days": "{{days}} días",
+      "unlimited": "Sin límite",
+      "minutes": "10–30 minutos"
+    },
+    "clearNow": "Vaciar ahora",
+    "clearConfirm": "Vaciar",
+    "clearFailed": "Error al vaciar",
+    "cleared": "{{number}} entradas eliminadas.",
+    "uploadsWarning": "Los Snapshots que usan estas imágenes las pierden."
   }
 }

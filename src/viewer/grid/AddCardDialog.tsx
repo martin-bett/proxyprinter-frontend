@@ -6,6 +6,7 @@ import { CropSettings } from '../../service/ApiFactory';
 import { CardResultsMap } from '../../api/types/types';
 import CropMask from './crop/CropMask';
 import { loadViaProxy } from './crop/loadViaProxy';
+import { cardNameFromFileName } from '../../container/imageDownload';
 
 /** crops: fertige Zuschnitte aus der Maske, je Zuschnitt eine Karte. Ohne crops wird das ganze Bild genommen. */
 export type SaveCustomCardFn = (
@@ -117,7 +118,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ open, onClose, onSave, se
     const generatedId = await uploadFile(maskSource.file);
     setIsUploading(false);
     if (generatedId) {
-      onSave(maskSource.file.name, null, generatedId, crops);
+      onSave(cardNameFromFileName(maskSource.file.name), null, generatedId, crops);
       setFile(null);
       setMaskSource(null);
     }

@@ -258,8 +258,8 @@
       "detectBorderColor": "Détecter la couleur de bordure",
       "cornerColor": "Couleur des coins : ",
       "cornerSize": "Taille des coins (mm) : ",
-      "cornerSizeAutomatic": "Comme les vraies cartes",
-      "cornerSizeHint": "Rayon des coins arrondis en mm. Automatique : comme sur les vraies cartes (1/8 de pouce pour 88,9 mm), selon la hauteur de la carte.",
+      "cornerSizeAutomatic": "Proportions d'origine",
+      "cornerSizeHint": "Rayon des coins arrondis en mm. Proportions d'origine : comme sur les vraies cartes (1/8 de pouce pour 88,9 mm), selon la hauteur de la carte.",
       "ok": "OK",
       "email": {
         "title": "Envoi par e-mail",
@@ -288,6 +288,8 @@
     "deleteAria": "Supprimer {{label}}",
     "storedInBrowser": "Stocké dans ce navigateur · {{size}}",
     "deleteAll": "Tout supprimer",
+    "scrollUp": "Afficher le Snapshot précédent",
+    "scrollDown": "Afficher le Snapshot suivant",
     "saveFailed": "Le Snapshot n'a pas pu être enregistré.",
     "customCardsGone_one": "{{count}} carte perso n'est plus disponible sur le serveur, à téléverser de nouveau.",
     "customCardsGone_other": "{{count}} cartes perso ne sont plus disponibles sur le serveur, à téléverser de nouveau.",
@@ -528,7 +530,9 @@
       "language": "Langue :",
       "imageSize": "Taille de l'image :",
       "crop": "Recadrage :",
-      "cropValue": "{{width}} × {{height}} à partir de {{x}}, {{y}}"
+      "cropValue": "{{width}} × {{height}} à partir de {{x}}, {{y}}",
+      "download": "Télécharger l'image",
+      "downloadHint": "Enregistrer l'image originale en pleine résolution, p. ex. pour une collection personnelle"
     },
     "iconBar": {
       "viewFiltering": "Filtrage de l'affichage"
@@ -1003,6 +1007,14 @@
       "rateLimited": "Trop de demandes. Réessayer plus tard.",
       "tokenInvalid": "Ce lien ou ce jeton est inconnu ou a expiré.",
       "notVerified": "Ni l'enregistrement DNS ni le fichier de {{host}} ne contient encore le jeton."
+    },
+    "admin": {
+      "forbidden": "Réservé aux administrateurs.",
+      "valueOutOfRange": "Autorisé : de {{min}} à {{max}}.",
+      "invalidValue": "Saisir un nombre entier.",
+      "unknownSetting": "Paramètre inconnu {{key}}.",
+      "unknownCache": "Cache inconnu {{name}}.",
+      "pdfJobsRunning": "{{jobs}} tâches PDF sont en cours. Réessayer plus tard."
     }
   },
   "account": {
@@ -1083,5 +1095,90 @@
     "checking": "Vérification du lien de confirmation…",
     "mailSent": "Un lien de confirmation a été envoyé à {{email}}. Dès son ouverture, {{host}} est bloqué.",
     "blocked": "{{host}} est désormais bloqué comme source."
+  },
+  "admin": {
+    "title": "Admin",
+    "backToApp": "Retour à Proxyprinter",
+    "loginNeeded": "La page d'administration nécessite un compte administrateur. Connexion ci-dessous.",
+    "forbidden": "{{email}} n'a pas de droits d'administration.",
+    "loadFailed": "Impossible de charger les données d'administration.",
+    "system": {
+      "title": "Backend",
+      "hint": "Valeurs actuelles du backend au moment du chargement.",
+      "database": "Base de données",
+      "up": "Accessible",
+      "down": "Inaccessible",
+      "uptime": "Temps de fonctionnement",
+      "uptimeValue": "{{days}} j {{hours}} h {{minutes}} min",
+      "startedAt": "Démarré",
+      "heap": "Mémoire heap",
+      "ofMax": "{{used}} sur {{max}}",
+      "heapCommitted": "Heap réservé",
+      "nonHeap": "Mémoire non-heap",
+      "disk": "Disque",
+      "diskValue": "{{free}} libres sur {{total}}",
+      "pdfJobs": "Tâches PDF",
+      "pdfJobsValue": "{{active}} sur {{max}} en cours, {{queued}} en attente",
+      "threads": "Threads",
+      "systemLoad": "Charge système (1 min)",
+      "javaVersion": "Version de Java"
+    },
+    "cacheSettingsTitle": "Paramètres du cache",
+    "usageTitle": "Utilisation",
+    "usageHint": "Comptage par jour (UTC), 30 derniers jours. Seuls des totaux sont enregistrés : aucune adresse IP ni autre donnée personnelle. Les visiteurs sont comptés une fois par jour et par navigateur.",
+    "usage": {
+      "day": "Jour",
+      "total": "Total",
+      "pageViews": "Pages vues",
+      "visitors": "Visiteurs",
+      "searchTerms": "Termes recherchés",
+      "decks": "PDF",
+      "deckImports": "Decks importés",
+      "logins": "Connexions"
+    },
+    "settingsTitle": "Durée des caches",
+    "settingsHint": "Les modifications s'appliquent immédiatement et remplacent la configuration du serveur jusqu'à leur réinitialisation.",
+    "defaultValue": "Valeur du serveur : {{value}} {{unit}}",
+    "range": "Autorisé : de {{min}} à {{max}}",
+    "saved": "Enregistré.",
+    "saveFailed": "Échec de l'enregistrement",
+    "resetToDefault": "Réinitialiser",
+    "settings": {
+      "searchcacheRetention": "Recherches partagées",
+      "searchcacheMaxEntry": "Taille max. d'une recherche partagée",
+      "pdfRetention": "PDF terminés",
+      "uploadRetention": "Images envoyées (depuis la dernière utilisation)",
+      "logRetention": "Entrées de journal dans la base de données"
+    },
+    "units": {
+      "days": "jours",
+      "kb": "Ko"
+    },
+    "cachesTitle": "Caches",
+    "refresh": "Actualiser",
+    "columns": {
+      "cache": "Cache",
+      "entries": "Entrées",
+      "size": "Taille",
+      "oldest": "Plus ancienne",
+      "lifetime": "Conservé"
+    },
+    "caches": {
+      "searchCache": "Recherches partagées",
+      "pdfs": "PDF terminés",
+      "uploads": "Images envoyées",
+      "images": "Images de cartes téléchargées",
+      "memory": "En mémoire (images PDF, URL d'images en échec, recherche de decks)"
+    },
+    "lifetime": {
+      "days": "{{days}} jours",
+      "unlimited": "Illimité",
+      "minutes": "10–30 minutes"
+    },
+    "clearNow": "Vider maintenant",
+    "clearConfirm": "Vider",
+    "clearFailed": "Échec du vidage",
+    "cleared": "{{number}} entrées supprimées.",
+    "uploadsWarning": "Les Snapshots qui utilisent ces images les perdent."
   }
 }

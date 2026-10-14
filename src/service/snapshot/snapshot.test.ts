@@ -142,6 +142,16 @@ describe('snapshot', () => {
     expect(minimal.pdf.settings.width).toBe(defaultSettings.width);
   });
 
+  it('moves the old default size 63 × 88 to the real card size and keeps other sizes', () => {
+    const raw = (width: number, height: number) => ({
+      format: 'proxyprinter-snapshot', version: 1, id: 'x', kind: 'manual', createdAt: 1, label: { cardCount: 0, firstCard: '' }, contentHash: '',
+      pdf: { settings: { width, height, corners: true, cutlines: true } },
+    });
+    const old = migrateSnapshot(raw(63, 88)).pdf.settings;
+    expect(old).toEqual(expect.objectContaining({ width: 63.5, height: 88.9, corners: true, cutlines: true }));
+    expect(migrateSnapshot(raw(70, 88)).pdf.settings).toEqual(expect.objectContaining({ width: 70, height: 88 }));
+  });
+
   it('treats a blank page as empty', () => {
     expect(isEmptyState({ decklist: '  ', cardResults: {} })).toBe(true);
     expect(isEmptyState({ decklist: '1 Forest', cardResults: {} })).toBe(false);

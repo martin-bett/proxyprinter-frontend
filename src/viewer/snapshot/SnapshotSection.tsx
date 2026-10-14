@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
 import HistoryIcon from '@mui/icons-material/History';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -7,6 +7,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useTranslation } from 'react-i18next';
 import ActionButton from '../../container/inputs/ActionButton';
 import { Snapshot, snapshotCardsText, snapshotLabel } from '../../service/snapshot/snapshot';
@@ -33,6 +35,9 @@ export interface SnapshotSectionProps {
   onDeleteAll: () => void;
 }
 
+/** Höchstens so viele Snapshots sind gleichzeitig sichtbar, der Rest wird geblättert */
+export const VISIBLE_SNAPSHOTS = 4;
+
 const formatDate = (ms: number) =>
   new Date(ms).toLocaleString(undefined, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -55,6 +60,22 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const listed = snapshots.filter(s => s.kind !== 'session');
+  const [offset, setOffset] = useState(0);
+  const maxOffset = Math.max(0, listed.length - VISIBLE_SNAPSHOTS);
+  const start = Math.min(offset, maxOffset);
+  const activeIndex = listed.findIndex(s => s.id === activeId);
+
+  // Neu aktiver Snapshot (gespeichert, geladen) wird ins Fenster geholt
+  useEffect(() => {
+    if (activeIndex < 0) return;
+    setOffset(current => {
+      const from = Math.min(current, maxOffset);
+      if (activeIndex < from) return activeIndex;
+      if (activeIndex >= from + VISIBLE_SNAPSHOTS) return activeIndex - VISIBLE_SNAPSHOTS + 1;
+      return from;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
 
   const pdfMeta = (snapshot: Snapshot) => {
     if (!snapshot.pdf.generated) return null;
@@ -84,7 +105,19 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
 
       <ActionButton icon={<SaveIcon />} onClick={onSave} disabled={!canSave} data-tour="save-snapshot">{t('snapshot.save')}</ActionButton>
 
-      {listed.map(snapshot => {
+      {start > 0 && (
+        <button
+          type="button"
+          className="snapshot-page"
+          onClick={() => setOffset(start - 1)}
+          title={t('snapshot.scrollUp')}
+          aria-label={t('snapshot.scrollUp')}
+        >
+          <KeyboardArrowUpIcon />
+        </button>
+      )}
+
+      {listed.slice(start, start + VISIBLE_SNAPSHOTS).map(snapshot => {
         const info = pdfInfos[snapshot.id];
         const label = snapshotLabel(snapshot);
         const active = snapshot.id === activeId;
@@ -135,6 +168,18 @@ const SnapshotSection: React.FC<SnapshotSectionProps> = ({
           </div>
         );
       })}
+
+      {start < maxOffset && (
+        <button
+          type="button"
+          className="snapshot-page"
+          onClick={() => setOffset(start + 1)}
+          title={t('snapshot.scrollDown')}
+          aria-label={t('snapshot.scrollDown')}
+        >
+          <KeyboardArrowDownIcon />
+        </button>
+      )}
 
       {listed.length > 0 && (
         <div className="snapshot-footer">
